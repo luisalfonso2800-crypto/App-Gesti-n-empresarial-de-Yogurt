@@ -1,0 +1,7 @@
+﻿{
+  "name": "yogurt-management-system",
+  "private": true,
+  "description": "Sistema de gestión empresarial para la producción y comercialización de yogurt",
+  "scripts": {},
+  "devDependencies": {}
+}
