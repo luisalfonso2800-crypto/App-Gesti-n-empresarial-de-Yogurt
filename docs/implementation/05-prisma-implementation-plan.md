@@ -344,15 +344,15 @@ La secuencia inicial será:
 ```
 
 ```text
-12. PRODUCCIÓN
+12. PRODUCCIÓN (COMPLETADO)
 ```
 
 ```text
-13. DETALLE DE PRODUCCIÓN
+13. DETALLE DE PRODUCCIÓN (COMPLETADO)
 ```
 
 ```text
-14. LOTES
+14. LOTES (COMPLETADO)
 ```
 
 ```text

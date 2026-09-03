@@ -12,6 +12,8 @@ import { ProductsModule } from './products/products.module';
 import { RecipesModule } from './recipes/recipes.module';
 import { PurchasesModule } from './purchases/purchases.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { ProductionModule } from './production/production.module';
+import { LotsModule } from './lots/lots.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { InventoryModule } from './inventory/inventory.module';
     RecipesModule,
     PurchasesModule,
     InventoryModule,
+    ProductionModule,
+    LotsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
