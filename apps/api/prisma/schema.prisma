@@ -21,29 +21,33 @@ model Presentacion {
 }
 
 model Insumo {
-  id            String  @id @default(uuid()) @map("ID_Insumo")
-  nombre        String  @map("Nombre_Insumo")
-  categoria     String  @map("Categoria")
-  subcategoria  String  @map("Subcategoria")
-  marca         String  @map("Marca")
-  unidadBase    String  @map("Unidad_Base")
-  stockMinimo   Decimal @map("Stock_Minimo")
-  activo        Boolean @default(true) @map("Activo")
-  observaciones String? @map("Observaciones")
+  id             String                 @id @default(uuid()) @map("ID_Insumo")
+  nombre         String                 @map("Nombre_Insumo")
+  categoria      String                 @map("Categoria")
+  subcategoria   String                 @map("Subcategoria")
+  marca          String                 @map("Marca")
+  unidadBase     String                 @map("Unidad_Base")
+  stockMinimo    Decimal                @map("Stock_Minimo")
+  activo         Boolean                @default(true) @map("Activo")
+  observaciones  String?                @map("Observaciones")
+  detallesCompra DetalleCompra[]
+  inventario     Inventario?
+  movimientos    MovimientoInventario[]
 
   @@map("Insumos")
 }
 
 model Proveedor {
-  id             String  @id @default(uuid()) @map("ID_Proveedor")
-  nombre         String  @map("Nombre_Proveedor")
-  nitCedula      String  @map("NIT_Cedula")
-  nombreContacto String? @map("Nombre_Contacto")
-  telefono       String? @map("Telefono")
-  email          String? @map("Email")
-  direccion      String? @map("Direccion")
-  activo         Boolean @default(true) @map("Activo")
-  observaciones  String? @map("Observaciones")
+  id             String   @id @default(uuid()) @map("ID_Proveedor")
+  nombre         String   @map("Nombre_Proveedor")
+  nitCedula      String   @map("NIT_Cedula")
+  nombreContacto String?  @map("Nombre_Contacto")
+  telefono       String?  @map("Telefono")
+  email          String?  @map("Email")
+  direccion      String?  @map("Direccion")
+  activo         Boolean  @default(true) @map("Activo")
+  observaciones  String?  @map("Observaciones")
+  compras        Compra[]
 
   @@map("Proveedores")
 }
@@ -78,4 +82,53 @@ model Cliente {
   observaciones String? @map("Observaciones")
 
   @@map("Clientes")
+}
+
+model Compra {
+  id            String          @id @default(uuid()) @map("ID_Compra")
+  idProveedor   String          @map("ID_Proveedor")
+  proveedor     Proveedor       @relation(fields: [idProveedor], references: [id])
+  fechaCompra   DateTime        @map("Fecha_Compra")
+  estado        String          @map("Estado")
+  total         Decimal         @map("Total") @db.Decimal(12, 2)
+  observaciones String?         @map("Observaciones")
+  detalles      DetalleCompra[]
+
+  @@map("Compras")
+}
+
+model DetalleCompra {
+  id             String  @id @default(uuid()) @map("ID_Detalle_Compra")
+  idCompra       String  @map("ID_Compra")
+  compra         Compra  @relation(fields: [idCompra], references: [id])
+  idInsumo       String  @map("ID_Insumo")
+  insumo         Insumo  @relation(fields: [idInsumo], references: [id])
+  cantidad       Decimal @map("Cantidad")
+  precioUnitario Decimal @map("Precio_Unitario") @db.Decimal(12, 2)
+  subtotal       Decimal @map("Subtotal") @db.Decimal(12, 2)
+
+  @@map("Detalle_Compras")
+}
+
+model Inventario {
+  id                 String   @id @default(uuid()) @map("ID_Inventario")
+  idInsumo           String   @unique @map("ID_Insumo")
+  insumo             Insumo   @relation(fields: [idInsumo], references: [id])
+  cantidadActual     Decimal  @map("Cantidad_Actual")
+  fechaActualizacion DateTime @updatedAt @map("Fecha_Actualizacion")
+
+  @@map("Inventario")
+}
+
+model MovimientoInventario {
+  id              String   @id @default(uuid()) @map("ID_Movimiento")
+  idInsumo        String   @map("ID_Insumo")
+  insumo          Insumo   @relation(fields: [idInsumo], references: [id])
+  tipoMovimiento  String   @map("Tipo_Movimiento")
+  cantidad        Decimal  @map("Cantidad")
+  fechaMovimiento DateTime @default(now()) @map("Fecha_Movimiento")
+  motivo          String   @map("Motivo")
+  operacionOrigen String?  @map("Operacion_Origen")
+
+  @@map("Movimientos_Inventario")
 }
