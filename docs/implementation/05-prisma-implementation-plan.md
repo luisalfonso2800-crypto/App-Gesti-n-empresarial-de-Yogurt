@@ -304,7 +304,7 @@ La secuencia inicial será:
 ```
 
 ```text
-2. PRESENTACIONES
+2. PRESENTACIONES (COMPLETADO)
 ```
 
 ```text
