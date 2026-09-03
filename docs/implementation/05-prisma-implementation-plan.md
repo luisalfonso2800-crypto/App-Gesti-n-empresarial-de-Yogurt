@@ -356,23 +356,23 @@ La secuencia inicial será:
 ```
 
 ```text
-15. CLIENTES
+15. CLIENTES (COMPLETADO)
 ```
 
 ```text
-16. VENTAS
+16. VENTAS (COMPLETADO)
 ```
 
 ```text
-17. DETALLE DE VENTAS
+17. DETALLE DE VENTAS (COMPLETADO)
 ```
 
 ```text
-18. PAGOS DE CLIENTES
+18. PAGOS DE CLIENTES (COMPLETADO)
 ```
 
 ```text
-19. GASTOS
+19. GASTOS (COMPLETADO)
 ```
 
 Este orden debe ajustarse únicamente cuando una dependencia técnica o una relación validada exija otro orden.

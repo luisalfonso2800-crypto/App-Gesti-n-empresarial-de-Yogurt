@@ -14,6 +14,10 @@ import { PurchasesModule } from './purchases/purchases.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { ProductionModule } from './production/production.module';
 import { LotsModule } from './lots/lots.module';
+import { ClientsModule } from './clients/clients.module';
+import { SalesModule } from './sales/sales.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ExpensesModule } from './expenses/expenses.module';
 
 @Module({
   imports: [
@@ -32,6 +36,10 @@ import { LotsModule } from './lots/lots.module';
     InventoryModule,
     ProductionModule,
     LotsModule,
+    ClientsModule,
+    SalesModule,
+    PaymentsModule,
+    ExpensesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
