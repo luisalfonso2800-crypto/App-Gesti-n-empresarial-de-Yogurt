@@ -15,6 +15,7 @@ model Presentacion {
   tapilla       String? @map("Tapilla")
   activo        Boolean @default(true) @map("Activo")
   observaciones String? @map("Observaciones")
+  productos     Producto[]
 
   @@map("Presentaciones")
 }
@@ -51,6 +52,7 @@ model Producto {
   id             String  @id @default(uuid()) @map("ID_Producto")
   nombre         String  @map("Nombre_Producto")
   idPresentacion String  @map("ID_Presentacion")
+  presentacion   Presentacion @relation(fields: [idPresentacion], references: [id])
   categoria      String  @map("Categoria_Producto")
   descripcion    String? @map("Descripcion")
   canalVenta     String  @map("Canal_Venta")
