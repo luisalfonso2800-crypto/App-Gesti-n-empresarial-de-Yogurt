@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { validationSchema } from './config/env.validation';
 import { DatabaseModule } from './database/database.module';
 import { PresentationsModule } from './presentations/presentations.module';
+import { SuppliesModule } from './supplies/supplies.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { PresentationsModule } from './presentations/presentations.module';
     }),
     DatabaseModule,
     PresentationsModule,
+    SuppliesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

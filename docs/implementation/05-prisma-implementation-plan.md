@@ -308,7 +308,7 @@ La secuencia inicial será:
 ```
 
 ```text
-3. INSUMOS
+3. INSUMOS (COMPLETADO)
 ```
 
 ```text
