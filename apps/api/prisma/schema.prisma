@@ -37,22 +37,45 @@ model Insumo {
   detallesProduccion DetalleProduccion[]
   lotes              Lote[]
 
+  precios PrecioProveedor[]
+
   @@map("Insumos")
 }
 
 model Proveedor {
-  id             String   @id @default(uuid()) @map("ID_Proveedor")
-  nombre         String   @map("Nombre_Proveedor")
-  nitCedula      String   @map("NIT_Cedula")
-  nombreContacto String?  @map("Nombre_Contacto")
-  telefono       String?  @map("Telefono")
-  email          String?  @map("Email")
-  direccion      String?  @map("Direccion")
-  activo         Boolean  @default(true) @map("Activo")
-  observaciones  String?  @map("Observaciones")
+  id             String            @id @default(uuid()) @map("ID_Proveedor")
+  nombre         String            @map("Nombre_Proveedor")
+  nitCedula      String            @map("NIT_Cedula")
+  nombreContacto String?           @map("Nombre_Contacto")
+  telefono       String?           @map("Telefono")
+  email          String?           @map("Email")
+  direccion      String?           @map("Direccion")
+  activo         Boolean           @default(true) @map("Activo")
+  observaciones  String?           @map("Observaciones")
   compras        Compra[]
+  precios        PrecioProveedor[]
 
   @@map("Proveedores")
+}
+
+model PrecioProveedor {
+  id                      String    @id @default(uuid()) @map("ID_Precio")
+  idInsumo                String    @map("ID_Insumo")
+  insumo                  Insumo    @relation(fields: [idInsumo], references: [id])
+  idProveedor             String    @map("ID_Proveedor")
+  proveedor               Proveedor @relation(fields: [idProveedor], references: [id])
+  presentacionCompra      String    @map("Presentacion_Compra")
+  cantidadPresentacion    Decimal   @map("Cantidad_Presentacion")
+  unidadPresentacion      String    @map("Unidad_Presentacion")
+  cantidadEquivalenteBase Decimal   @map("Cantidad_Equivalente_Base")
+  precioCompra            Decimal   @map("Precio_Compra") @db.Decimal(12, 2)
+  costoUnidadBase         Decimal   @map("Costo_Unidad_Base") @db.Decimal(12, 2)
+  fechaRegistro           DateTime  @default(now()) @map("Fecha_Registro")
+  fechaUltimaCompra       DateTime? @map("Fecha_Ultima_Compra")
+  activo                  Boolean   @default(true) @map("Activo")
+  observaciones           String?   @map("Observaciones")
+
+  @@map("Precios_Proveedores")
 }
 
 model Producto {

@@ -312,23 +312,23 @@ La secuencia inicial será:
 ```
 
 ```text
-4. PROVEEDORES
+4. PROVEEDORES (COMPLETADO)
 ```
 
 ```text
-5. PRECIOS DE PROVEEDORES
+5. PRECIOS DE PROVEEDORES (COMPLETADO)
 ```
 
 ```text
-6. PRODUCTOS
+6. PRODUCTOS (COMPLETADO)
 ```
 
 ```text
-7. RECETAS
+7. RECETAS (COMPLETADO)
 ```
 
 ```text
-8. DETALLE DE RECETAS
+8. DETALLE DE RECETAS (COMPLETADO)
 ```
 
 ```text
