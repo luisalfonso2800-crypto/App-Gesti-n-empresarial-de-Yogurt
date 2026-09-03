@@ -88,6 +88,7 @@ model Cliente {
   activo        Boolean @default(true) @map("Activo")
   observaciones String? @map("Observaciones")
   ventas        Venta[]
+  pagos         Pago[]
 
   @@map("Clientes")
 }
@@ -241,6 +242,7 @@ model Venta {
   estado          String         @map("Estado")
   observaciones   String?        @map("Observaciones")
   detalles        DetalleVenta[]
+  pagos           Pago[]
 
   @@map("Ventas")
 }
@@ -262,4 +264,32 @@ model DetalleVenta {
   utilidadTotal    Decimal  @map("Utilidad_Total") @db.Decimal(12, 2)
 
   @@map("Detalle_Ventas")
+}
+
+model Pago {
+  id            String   @id @default(uuid()) @map("ID_Pago")
+  fechaPago     DateTime @map("Fecha_Pago")
+  idCliente     String   @map("ID_Cliente")
+  cliente       Cliente  @relation(fields: [idCliente], references: [id])
+  idVenta       String   @map("ID_Venta")
+  venta         Venta    @relation(fields: [idVenta], references: [id])
+  valorPagado   Decimal  @map("Valor_Pagado") @db.Decimal(12, 2)
+  metodoPago    String   @map("Metodo_Pago")
+  referencia    String?  @map("Referencia")
+  observaciones String?  @map("Observaciones")
+
+  @@map("Pagos")
+}
+
+model Gasto {
+  id            String   @id @default(uuid()) @map("ID_Gasto")
+  fecha         DateTime @map("Fecha")
+  categoria     String   @map("Categoria")
+  descripcion   String   @map("Descripcion")
+  valor         Decimal  @map("Valor") @db.Decimal(12, 2)
+  tipoGasto     String   @map("Tipo_Gasto")
+  periodo       String   @map("Periodo")
+  observaciones String?  @map("Observaciones")
+
+  @@map("Gastos")
 }
