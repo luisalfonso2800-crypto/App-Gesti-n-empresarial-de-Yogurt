@@ -56,20 +56,21 @@ model Proveedor {
 }
 
 model Producto {
-  id             String       @id @default(uuid()) @map("ID_Producto")
-  nombre         String       @map("Nombre_Producto")
-  idPresentacion String       @map("ID_Presentacion")
-  presentacion   Presentacion @relation(fields: [idPresentacion], references: [id])
-  categoria      String       @map("Categoria_Producto")
-  descripcion    String?      @map("Descripcion")
-  canalVenta     String       @map("Canal_Venta")
-  precioVenta    Decimal      @map("Precio_Venta") @db.Decimal(12, 2)
-  margenObjetivo Decimal      @map("Margen_Objetivo") @db.Decimal(5, 2)
-  activo         Boolean      @default(true) @map("Activo")
-  observaciones  String?      @map("Observaciones")
+  id             String         @id @default(uuid()) @map("ID_Producto")
+  nombre         String         @map("Nombre_Producto")
+  idPresentacion String         @map("ID_Presentacion")
+  presentacion   Presentacion   @relation(fields: [idPresentacion], references: [id])
+  categoria      String         @map("Categoria_Producto")
+  descripcion    String?        @map("Descripcion")
+  canalVenta     String         @map("Canal_Venta")
+  precioVenta    Decimal        @map("Precio_Venta") @db.Decimal(12, 2)
+  margenObjetivo Decimal        @map("Margen_Objetivo") @db.Decimal(5, 2)
+  activo         Boolean        @default(true) @map("Activo")
+  observaciones  String?        @map("Observaciones")
   recetas        Receta[]
   producciones   Produccion[]
   lotes          Lote[]
+  detalleVentas  DetalleVenta[]
 
   @@unique([nombre, idPresentacion])
   @@map("Productos")
@@ -86,6 +87,7 @@ model Cliente {
   diasCredito   Int     @map("Dias_Credito")
   activo        Boolean @default(true) @map("Activo")
   observaciones String? @map("Observaciones")
+  ventas        Venta[]
 
   @@map("Clientes")
 }
@@ -205,21 +207,59 @@ model DetalleProduccion {
 }
 
 model Lote {
-  id                 String     @id @default(uuid()) @map("ID_Lote")
-  tipoLote           String     @map("Tipo_Lote")
-  idProduccion       String     @map("ID_Produccion")
-  produccion         Produccion @relation(fields: [idProduccion], references: [id])
-  idProducto         String?    @map("ID_Producto")
-  producto           Producto?  @relation(fields: [idProducto], references: [id])
-  idInsumo           String?    @map("ID_Insumo")
-  insumo             Insumo?    @relation(fields: [idInsumo], references: [id])
-  fechaProduccion    DateTime   @map("Fecha_Produccion")
-  fechaVencimiento   DateTime?  @map("Fecha_Vencimiento")
-  cantidadInicial    Decimal    @map("Cantidad_Inicial")
-  cantidadDisponible Decimal    @map("Cantidad_Disponible")
-  unidad             String     @map("Unidad")
-  estado             String     @map("Estado")
-  observaciones      String?    @map("Observaciones")
+  id                 String         @id @default(uuid()) @map("ID_Lote")
+  tipoLote           String         @map("Tipo_Lote")
+  idProduccion       String         @map("ID_Produccion")
+  produccion         Produccion     @relation(fields: [idProduccion], references: [id])
+  idProducto         String?        @map("ID_Producto")
+  producto           Producto?      @relation(fields: [idProducto], references: [id])
+  idInsumo           String?        @map("ID_Insumo")
+  insumo             Insumo?        @relation(fields: [idInsumo], references: [id])
+  fechaProduccion    DateTime       @map("Fecha_Produccion")
+  fechaVencimiento   DateTime?      @map("Fecha_Vencimiento")
+  cantidadInicial    Decimal        @map("Cantidad_Inicial")
+  cantidadDisponible Decimal        @map("Cantidad_Disponible")
+  unidad             String         @map("Unidad")
+  estado             String         @map("Estado")
+  observaciones      String?        @map("Observaciones")
+  detalleVentas      DetalleVenta[]
 
   @@map("Lotes")
+}
+
+model Venta {
+  id              String         @id @default(uuid()) @map("ID_Venta")
+  fechaVenta      DateTime       @map("Fecha_Venta")
+  idCliente       String         @map("ID_Cliente")
+  cliente         Cliente        @relation(fields: [idCliente], references: [id])
+  canalVenta      String         @map("Canal_Venta")
+  tipoPago        String         @map("Tipo_Pago")
+  fechaLimitePago DateTime?      @map("Fecha_Limite_Pago")
+  totalVenta      Decimal        @map("Total_Venta") @db.Decimal(12, 2)
+  valorPagado     Decimal        @map("Valor_Pagado") @db.Decimal(12, 2)
+  saldoPendiente  Decimal        @map("Saldo_Pendiente") @db.Decimal(12, 2)
+  estado          String         @map("Estado")
+  observaciones   String?        @map("Observaciones")
+  detalles        DetalleVenta[]
+
+  @@map("Ventas")
+}
+
+model DetalleVenta {
+  id               String   @id @default(uuid()) @map("ID_Detalle_Venta")
+  idVenta          String   @map("ID_Venta")
+  venta            Venta    @relation(fields: [idVenta], references: [id])
+  idProducto       String   @map("ID_Producto")
+  producto         Producto @relation(fields: [idProducto], references: [id])
+  idLote           String?  @map("ID_Lote")
+  lote             Lote?    @relation(fields: [idLote], references: [id])
+  cantidad         Decimal  @map("Cantidad")
+  precioUnitario   Decimal  @map("Precio_Unitario") @db.Decimal(12, 2)
+  descuento        Decimal  @map("Descuento") @db.Decimal(12, 2)
+  totalLinea       Decimal  @map("Total_Linea") @db.Decimal(12, 2)
+  costoUnitario    Decimal  @map("Costo_Unitario") @db.Decimal(12, 2)
+  utilidadUnitaria Decimal  @map("Utilidad_Unitaria") @db.Decimal(12, 2)
+  utilidadTotal    Decimal  @map("Utilidad_Total") @db.Decimal(12, 2)
+
+  @@map("Detalle_Ventas")
 }
