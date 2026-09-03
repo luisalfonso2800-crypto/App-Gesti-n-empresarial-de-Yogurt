@@ -21,18 +21,20 @@ model Presentacion {
 }
 
 model Insumo {
-  id             String                 @id @default(uuid()) @map("ID_Insumo")
-  nombre         String                 @map("Nombre_Insumo")
-  categoria      String                 @map("Categoria")
-  subcategoria   String                 @map("Subcategoria")
-  marca          String                 @map("Marca")
-  unidadBase     String                 @map("Unidad_Base")
-  stockMinimo    Decimal                @map("Stock_Minimo")
-  activo         Boolean                @default(true) @map("Activo")
-  observaciones  String?                @map("Observaciones")
-  detallesCompra DetalleCompra[]
-  inventario     Inventario?
-  movimientos    MovimientoInventario[]
+  id                 String                 @id @default(uuid()) @map("ID_Insumo")
+  nombre             String                 @map("Nombre_Insumo")
+  categoria          String                 @map("Categoria")
+  subcategoria       String                 @map("Subcategoria")
+  marca              String                 @map("Marca")
+  unidadBase         String                 @map("Unidad_Base")
+  stockMinimo        Decimal                @map("Stock_Minimo")
+  activo             Boolean                @default(true) @map("Activo")
+  observaciones      String?                @map("Observaciones")
+  detallesCompra     DetalleCompra[]
+  inventario         Inventario?
+  movimientos        MovimientoInventario[]
+  detallesReceta     DetalleReceta[]
+  detallesProduccion DetalleProduccion[]
 
   @@map("Insumos")
 }
@@ -64,6 +66,8 @@ model Producto {
   margenObjetivo Decimal      @map("Margen_Objetivo") @db.Decimal(5, 2)
   activo         Boolean      @default(true) @map("Activo")
   observaciones  String?      @map("Observaciones")
+  recetas        Receta[]
+  producciones   Produccion[]
 
   @@unique([nombre, idPresentacion])
   @@map("Productos")
@@ -131,4 +135,68 @@ model MovimientoInventario {
   operacionOrigen String?  @map("Operacion_Origen")
 
   @@map("Movimientos_Inventario")
+}
+
+model Receta {
+  id                String          @id @default(uuid()) @map("ID_Receta")
+  idProducto        String          @map("ID_Producto")
+  producto          Producto        @relation(fields: [idProducto], references: [id])
+  nombre            String          @map("Nombre_Receta")
+  rendimientoBase   Decimal         @map("Rendimiento_Base")
+  unidadRendimiento String          @map("Unidad_Rendimiento")
+  activo            Boolean         @default(true) @map("Activo")
+  observaciones     String?         @map("Observaciones")
+  detalles          DetalleReceta[]
+
+  @@map("Recetas")
+}
+
+model DetalleReceta {
+  id                String  @id @default(uuid()) @map("ID_Detalle_Receta")
+  idReceta          String  @map("ID_Receta")
+  receta            Receta  @relation(fields: [idReceta], references: [id])
+  idInsumo          String  @map("ID_Insumo")
+  insumo            Insumo  @relation(fields: [idInsumo], references: [id])
+  cantidadRequerida Decimal @map("Cantidad_Requerida")
+  unidad            String  @map("Unidad")
+  mermaPorcentaje   Decimal @map("Merma_Porcentaje")
+  activo            Boolean @default(true) @map("Activo")
+  observaciones     String? @map("Observaciones")
+
+  @@unique([idReceta, idInsumo])
+  @@map("Detalle_Recetas")
+}
+
+model Produccion {
+  id                    String              @id @default(uuid()) @map("ID_Produccion")
+  fechaPlanificada      DateTime?           @map("Fecha_Planificada")
+  fechaProduccion       DateTime            @map("Fecha_Produccion")
+  idProducto            String              @map("ID_Producto")
+  producto              Producto            @relation(fields: [idProducto], references: [id])
+  cantidadPlanificada   Decimal             @map("Cantidad_Planificada")
+  cantidadProducidaReal Decimal?            @map("Cantidad_Producida_Real")
+  estado                String              @map("Estado")
+  fechaVencimiento      DateTime?           @map("Fecha_Vencimiento")
+  idLote                String?             @map("ID_Lote")
+  observaciones         String?             @map("Observaciones")
+  detalles              DetalleProduccion[]
+
+  @@map("Producciones")
+}
+
+model DetalleProduccion {
+  id                    String     @id @default(uuid()) @map("ID_Detalle_Produccion")
+  idProduccion          String     @map("ID_Produccion")
+  produccion            Produccion @relation(fields: [idProduccion], references: [id])
+  idInsumo              String     @map("ID_Insumo")
+  insumo                Insumo     @relation(fields: [idInsumo], references: [id])
+  cantidadTeorica       Decimal    @map("Cantidad_Teorica")
+  cantidadRealUtilizada Decimal?   @map("Cantidad_Real_Utilizada")
+  diferencia            Decimal?   @map("Diferencia")
+  unidad                String     @map("Unidad")
+  costoTeorico          Decimal?   @map("Costo_Teorico") @db.Decimal(12, 2)
+  costoReal             Decimal?   @map("Costo_Real") @db.Decimal(12, 2)
+  observaciones         String?    @map("Observaciones")
+
+  @@map("Detalle_Producciones")
 }
