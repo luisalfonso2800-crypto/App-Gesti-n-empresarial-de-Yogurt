@@ -7,14 +7,14 @@ datasource db {
 }
 
 model Presentacion {
-  id            String  @id @default(uuid()) @map("ID_Presentacion")
-  nombre        String  @map("Nombre_Presentacion")
-  cantidadOz    Decimal @map("Cantidad_Oz")
-  cantidadMl    Decimal @map("Cantidad_ml")
-  tipoEnvase    String  @map("Tipo_Envase")
-  tapilla       String? @map("Tapilla")
-  activo        Boolean @default(true) @map("Activo")
-  observaciones String? @map("Observaciones")
+  id            String     @id @default(uuid()) @map("ID_Presentacion")
+  nombre        String     @map("Nombre_Presentacion")
+  cantidadOz    Decimal    @map("Cantidad_Oz")
+  cantidadMl    Decimal    @map("Cantidad_ml")
+  tipoEnvase    String     @map("Tipo_Envase")
+  tapilla       String?    @map("Tapilla")
+  activo        Boolean    @default(true) @map("Activo")
+  observaciones String?    @map("Observaciones")
   productos     Producto[]
 
   @@map("Presentaciones")
@@ -49,17 +49,17 @@ model Proveedor {
 }
 
 model Producto {
-  id             String  @id @default(uuid()) @map("ID_Producto")
-  nombre         String  @map("Nombre_Producto")
-  idPresentacion String  @map("ID_Presentacion")
+  id             String       @id @default(uuid()) @map("ID_Producto")
+  nombre         String       @map("Nombre_Producto")
+  idPresentacion String       @map("ID_Presentacion")
   presentacion   Presentacion @relation(fields: [idPresentacion], references: [id])
-  categoria      String  @map("Categoria_Producto")
-  descripcion    String? @map("Descripcion")
-  canalVenta     String  @map("Canal_Venta")
-  precioVenta    Decimal @map("Precio_Venta") @db.Decimal(12, 2)
-  margenObjetivo Decimal @map("Margen_Objetivo") @db.Decimal(5, 2)
-  activo         Boolean @default(true) @map("Activo")
-  observaciones  String? @map("Observaciones")
+  categoria      String       @map("Categoria_Producto")
+  descripcion    String?      @map("Descripcion")
+  canalVenta     String       @map("Canal_Venta")
+  precioVenta    Decimal      @map("Precio_Venta") @db.Decimal(12, 2)
+  margenObjetivo Decimal      @map("Margen_Objetivo") @db.Decimal(5, 2)
+  activo         Boolean      @default(true) @map("Activo")
+  observaciones  String?      @map("Observaciones")
 
   @@unique([nombre, idPresentacion])
   @@map("Productos")
