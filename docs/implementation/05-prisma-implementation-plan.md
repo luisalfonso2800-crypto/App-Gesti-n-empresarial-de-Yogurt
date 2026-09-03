@@ -1972,3 +1972,6 @@ NO LO REDISEÑA
 FASE 19 (INTEGRACION TRANSVERSAL): COMPLETADO 
   
 FASE 20 (ENDURECIMIENTO Y SEGURIDAD): COMPLETADO 
+# #   C I E R R E   D E L   B A C K E N D   V 1  
+ E l   b a c k e n d   V 1   s e   c o n s i d e r a   L I S T O   P A R A   F R O N T E N D .  
+ 
