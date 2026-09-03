@@ -154,8 +154,8 @@ backend/
 └── src/
     │
     ├── database/
-    │   ├── database.module.ts
-    │   └── prisma.service.ts
+    │   ├── database.module.js
+    │   └── prisma.service.js
     │
     └── modules/
 ```
@@ -1339,9 +1339,9 @@ Conceptualmente:
 ```text
 database/
 │
-├── database.module.ts
+├── database.module.js
 │
-└── prisma.service.ts
+└── prisma.service.js
 ```
 
 La responsabilidad de `PrismaService` será proporcionar acceso controlado al cliente.
@@ -1806,17 +1806,17 @@ La implementación práctica seguirá esta secuencia:
 
 ```text
 FASE 1
-CONFIGURAR PRISMA
+CONFIGURAR PRISMA (COMPLETADA)
 ```
 
 ```text
 FASE 2
-CONFIGURAR POSTGRESQL
+CONFIGURAR POSTGRESQL (COMPLETADA)
 ```
 
 ```text
 FASE 3
-VALIDAR CONEXIÓN
+VALIDAR CONEXIÓN (COMPLETADA)
 ```
 
 ```text

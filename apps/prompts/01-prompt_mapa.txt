@@ -1,0 +1,76 @@
+TAREA CONTROLADA — CONSTRUIR MAPA MAESTRO DE DOCUMENTACIÓN
+
+OBJETIVO ÚNICO
+Crear únicamente el archivo:
+docs/00-DOCUMENTATION-MAP.md
+Su finalidad es registrar la estructura documental ACTUAL del proyecto y permitir que una IA futura localice documentación sin explorar innecesariamente todo el repositorio.
+El mapa debe ser un ÍNDICE ESTRUCTURAL + DE NAVEGACIÓN + RELACIONES.
+NO debe convertirse en una segunda documentación consolidada.
+
+1. CONTEXTO YA CONFIRMADO (NO INVESTIGAR)
+
+* Git baseline confirmado: bb2936b906859061aa8afe9eafc3b3be8fc85a7a.
+* La migración de TypeScript a JavaScript es INTENCIONAL.
+* La estructura de apps/api/ forma parte de esa transición; no interpretar archivos untracked como errores.
+* docs/documentacion_consolidada.md ya existe.
+* Los documentos antes en docs/domains/data/ ahora se relacionan con docs/data-model/. No asumir equivalencias sin evidencia explícita.
+
+2. REGLA ESTRICTA DE AHORRO DE CUOTA Y TOKENS (NIVEL 1)
+
+* APLICA ESTRICTAMENTE AI_PROJECT_OPERATING_MANUAL.md (Sección 23 y 23.1).
+* PROHIBIDO cargar o leer el cuerpo completo de docs/documentacion_consolidada.md.
+* Consulta ÚNICAMENTE el índice inicial y los bloques de metadatos ( y las tablas de metadato: Archivo, Carpeta, Ruta Relativa) presentes en docs/documentacion_consolidada.md.
+* PROHIBIDO leer node_modules/, .git/, package-lock.json o archivos fuera de docs/.
+* No utilices razonamiento reflexivo profundo. Genera una salida estructurada y compacta sin explicaciones redundantes.
+
+3. FUENTES DE VERDAD
+4. Estructura física actual de docs/ (archivos y rutas reales).
+5. Índice y tablas de metadatos de docs/documentacion_consolidada.md.
+6. AI_PROJECT_OPERATING_MANUAL.md y PROMPT_DESIGN_MANUAL.md (solo para conducta operativa).
+7. PROCEDIMIENTO CONTROLADO
+
+* PASO 1: Inspeccionar la estructura real de carpetas y archivos dentro de docs/.
+* PASO 2: Leer únicamente el índice y los bloques de metadatos de docs/documentacion_consolidada.md.
+* PASO 3: Cruzar estructura física con los metadatos para mapear: Documento -> Ruta -> Área -> Propósito breve -> Relaciones.
+* PASO 4: Si un dato no se comprueba físicamente, registrar: NO DETERMINABLE.
+* PASO 5: Si la consolidación cita un archivo inexistente físicamente, registrar: REFERENCIADO PERO NO LOCALIZADO.
+* PASO 6: Si hay diferencias reales entre la estructura física y el índice, listarlas como discrepancias sin alterarlas.
+
+5. ESTRUCTURA OBLIGATORIA DE docs/00-DOCUMENTATION-MAP.md
+6. PROPÓSITO: Resumen de máximo 3 líneas sobre el rol de este mapa.
+7. FUENTES DE VERDAD: Relación explícita de las fuentes utilizadas.
+8. ÁRBOL DOCUMENTAL ACTUAL: Diagrama en árbol de las carpetas y archivos reales de docs/.
+9. INVENTARIO COMPACTO (Tabla Markdown estricta):
+| Documento | Ruta Relativa | Área/Dominio | Propósito (1 línea) | Estado | Relaciones Clave |
+10. RELACIONES DOCUMENTALES: Esquema textual conciso de flujos (ej. Negocio -> Modelo de datos -> Backend).
+11. DOCUMENTOS REFERENCIADOS PERO NO LOCALIZADOS: Lista o "Ninguno".
+12. DISCREPANCIAS DOCUMENTALES: Lista o "Ninguna".
+13. REGLAS DE NAVEGACIÓN PARA FUTURAS IAS:
+* Leer primero este mapa.
+* Identificar el área requerida y abrir únicamente los archivos indispensables.
+* Usar el documento original para detalles y documentacion_consolidada.md para vista global.
+* No realizar lecturas completas ni escaneos globales del repositorio.
+
+
+14. PROHIBICIONES ESTRICTAS (NO HACER)
+
+* No duplicar capítulos, tablas o el cuerpo de los documentos originales.
+* No inventar rutas, carpetas, estados o relaciones.
+* No auditar código, backend, frontend, VBA ni arquitectura.
+* No corregir, mover ni renombrar archivos o carpetas existentes.
+* No modificar documentacion_consolidada.md, manuales ni código.
+* No hacer commit en Git.
+* La única escritura autorizada es: docs/00-DOCUMENTATION-MAP.md.
+
+7. VERIFICACIÓN Y REPORTE FINAL
+Realiza una comprobación silenciosa: verificar existencia de docs/00-DOCUMENTATION-MAP.md, consistencia de rutas y ausencia de modificaciones en otros archivos.
+
+Entrega ÚNICAMENTE el siguiente informe sin preámbulos ni despedidas, y DETENTE:
+
+MAPA MAESTRO CREADO
+
+* Archivo: docs/00-DOCUMENTATION-MAP.md
+* Documentos registrados: [cantidad]
+* Referencias no localizadas: [ninguna / lista]
+* Discrepancias: [ninguna / lista]
+* Archivos modificados/creados adicionales: NINGUNO

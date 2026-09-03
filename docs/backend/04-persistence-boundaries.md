@@ -260,11 +260,11 @@ La estructura inicial podrá ser:
 
 ```text
 module/
-├── module.controller.ts
-├── module.service.ts
-├── module.repository.ts
+├── module.controller.js
+├── module.service.js
+├── module.repository.js
 ├── dto/
-└── module.module.ts
+└── module.module.js
 ```
 
 La responsabilidad del repositorio será:
@@ -330,9 +330,9 @@ Por ejemplo, esta estructura puede ser suficiente:
 
 ```text
 products/
-├── products.controller.ts
-├── products.service.ts
-├── products.repository.ts
+├── products.controller.js
+├── products.service.js
+├── products.repository.js
 └── dto/
 ```
 
@@ -341,11 +341,11 @@ No es obligatorio comenzar con:
 ```text
 domain/
     repositories/
-        product-repository.interface.ts
+        product-repository.interface.js
 
 infrastructure/
     persistence/
-        prisma-product.repository.ts
+        prisma-product.repository.js
 ```
 
 Esta separación podrá crearse posteriormente si aparece una necesidad arquitectónica real.

@@ -1,0 +1,9 @@
+{
+  "moduleFileExtensions": ["js", "json"],
+  "rootDir": "..",
+  "testRegex": ".e2e-spec.js$",
+  "transform": {
+    "^.+\\.js$": "babel-jest"
+  },
+  "testEnvironment": "node"
+}

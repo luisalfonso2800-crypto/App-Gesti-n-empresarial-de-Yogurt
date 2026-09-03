@@ -721,7 +721,7 @@ No deben colocarse tipos de entidades de negocio solo para evitar importaciones.
 Ejemplo incorrecto:
 
 ```text
-common/types/Product.ts
+common/types/Product.js
 ```
 
 solo porque varios módulos necesitan información de productos.
@@ -757,7 +757,7 @@ No deben utilizarse para esconder reglas de negocio.
 Ejemplo:
 
 ```text
-common/constants/PROFIT_MARGIN.ts
+common/constants/PROFIT_MARGIN.js
 ```
 
 no debe existir si representa una decisión de negocio específica.
@@ -795,7 +795,7 @@ Una utilidad no debe convertirse en una clase genérica de lógica de negocio.
 Ejemplo incorrecto:
 
 ```text
-common/utils/CalculateProductCost.ts
+common/utils/CalculateProductCost.js
 ```
 
 El cálculo del costo pertenece al contexto funcional correspondiente.
@@ -1639,17 +1639,17 @@ La estructura inicial será:
 ```text
 src/
 │
-├── main.ts
-├── app.module.ts
+├── main.js
+├── app.module.js
 │
 ├── config/
-│   ├── app.config.ts
-│   ├── database.config.ts
-│   └── env.validation.ts
+│   ├── app.config.js
+│   ├── database.config.js
+│   └── env.validation.js
 │
 ├── database/
-│   ├── database.module.ts
-│   └── prisma.service.ts
+│   ├── database.module.js
+│   └── prisma.service.js
 │
 ├── common/
 │   ├── errors/

@@ -1,3 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+allowBuilds:
+  core-js: false
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - joi@18.2.6

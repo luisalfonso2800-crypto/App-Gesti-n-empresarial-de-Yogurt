@@ -109,7 +109,7 @@ BACKEND NESTJS FUNCIONANDO
 Incluye únicamente la infraestructura mínima necesaria:
 
 * NestJS;
-* TypeScript;
+* JavaScript;
 * configuración base;
 * estructura inicial;
 * manejo global de errores;

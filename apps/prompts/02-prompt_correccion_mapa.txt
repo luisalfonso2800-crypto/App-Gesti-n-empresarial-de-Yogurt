@@ -1,0 +1,53 @@
+TAREA CONTROLADA — AJUSTE QUIRÚRGICO DE docs/00-DOCUMENTATION-MAP.md
+
+OBJETIVO ÚNICO
+Modificar ÚNICAMENTE el archivo ya creado: docs/00-DOCUMENTATION-MAP.md.
+No reconstruir desde cero. Conservar el árbol documental y la estructura básica actual, corrigiendo con rigor metodológico los 6 puntos señalados abajo.
+PROHIBIDO modificar cualquier otro archivo del proyecto o de docs/.
+
+1. REGLA ESTRICTA DE CUOTA Y TOKENS (NIVEL 1)
+- Consulta ÚNICAMENTE docs/00-DOCUMENTATION-MAP.md.
+- NO leas ni abras los documentos individuales ni documentacion_consolidada.md.
+- No realices análisis reflexivo profundo ni auditorías adicionales.
+
+2. AJUSTES PUNTUALES A REALIZAR EN docs/00-DOCUMENTATION-MAP.md
+
+PUNTO 1: AJUSTAR SECCIÓN 1 (PROPÓSITO)
+Agregar explícitamente estas declaraciones de no-autoridad técnica:
+- "Este archivo es un índice de navegación y estructura, NO una fuente de verdad del contenido."
+- "No sustituye los documentos originales ni documentacion_consolidada.md."
+- "No constituye especificación técnica ni decisión arquitectónica."
+
+PUNTO 2: AJUSTAR SECCIÓN 2 (FUENTES DE VERDAD)
+Diferenciar la procedencia:
+- Fuente estructural: Filesystem actual (working tree).
+- Fuente documental/metadatos: documentacion_consolidada.md.
+- Fuente operativa: AI_PROJECT_OPERATING_MANUAL.md (conducta del agente).
+
+PUNTO 3: CORREGIR ESTADOS EN LA TABLA DE INVENTARIO (SECCIÓN 4)
+- Salvo los ADRs (que cuentan con ratificación documental explícita: 'Ratificado'), CAMBIAR los estados de los demás documentos de 'Vigente' a:
+  "EXISTENTE (No evaluado)" o "NO DETERMINABLE".
+- No asumir vigencia funcional solo por el hecho de que el archivo exista físicamente.
+
+PUNTO 4: CORREGIR RELACIONES EN LA TABLA DE INVENTARIO (SECCIÓN 4)
+- Eliminar relaciones comodín (ejemplo: `domains/*`, `implementation/*`, `ADRs`).
+- Si una relación específica no cuenta con respaldo documental directo o jerárquico inmediato, marcar: "NO DETERMINABLE" o registrar únicamente dependencias directas evidentes (ej. ADR-001 -> system-architecture.md).
+
+PUNTO 5: ACTUALIZAR SECCIÓN 7 (DISCREPANCIAS DOCUMENTALES)
+Reemplazar "Ninguna" por el registro objetivo de discrepancias conocidas frente al baseline de Git:
+1. Reorganización de modelo de datos: `docs/domains/data/` fue eliminado del tracking de Git y reemplazado en el working tree por `docs/data-model/` (untracked). La correspondencia semántica exacta entre ambos no ha sido evaluada.
+2. Nuevas carpetas documentales untracked: `docs/antigravity/` y `docs/project/reviews/` existen físicamente pero no forman parte del baseline confirmado de Git (commit bb2936b9).
+3. Documento consolidado: `docs/documentacion_consolidada.md` existe únicamente como artefacto local untracked.
+
+PUNTO 6: REGLAS DE NAVEGACIÓN (SECCIÓN 8)
+Mantener las reglas existentes e incluir:
+- "No tratar las descripciones o propósitos de este mapa como especificaciones técnicas definitivas; consultar siempre el archivo original o consolidado."
+
+3. VERIFICACIÓN Y REPORTE FINAL
+Asegurar que solo docs/00-DOCUMENTATION-MAP.md fue actualizado.
+Al terminar, entrega ÚNICAMENTE este reporte y DETENTE:
+
+MAPA MAESTRO CORREGIDO
+- Archivo modificado: docs/00-DOCUMENTATION-MAP.md
+- Ajustes aplicados: Propósito delimitado, estados reclasificados a 'EXISTENTE', discrepancias Git registradas, relaciones acotadas.
+- Otros archivos modificados: NINGUNO

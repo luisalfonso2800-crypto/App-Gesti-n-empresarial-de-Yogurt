@@ -17,10 +17,10 @@ Un módulo backend puede comenzar con:
 
 module-name/
 ├── dto/
-├── module-name.controller.ts
-├── module-name.service.ts
-├── module-name.repository.ts
-└── module-name.module.ts
+├── module-name.controller.js
+├── module-name.service.js
+├── module-name.repository.js
+└── module-name.module.js
 
 No deben crearse capas adicionales sin necesidad real.
 

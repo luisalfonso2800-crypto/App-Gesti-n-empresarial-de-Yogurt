@@ -333,19 +333,19 @@ src/
 └── modules/
     ├── presentations/
     │   ├── ...
-    │   └── *.spec.ts
+    │   └── *.spec.js
     │
     ├── products/
     │   ├── ...
-    │   └── *.spec.ts
+    │   └── *.spec.js
     │
     ├── purchases/
     │   ├── ...
-    │   └── *.spec.ts
+    │   └── *.spec.js
     │
     └── inventory/
         ├── ...
-        └── *.spec.ts
+        └── *.spec.js
 ```
 
 Las pruebas de integración y E2E pueden tener una estructura separada:

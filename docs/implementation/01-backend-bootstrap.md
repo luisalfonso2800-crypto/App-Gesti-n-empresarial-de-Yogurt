@@ -162,7 +162,7 @@ Node.js
 ```
 
 ```text
-TypeScript
+JavaScript
 ```
 
 ```text
@@ -240,8 +240,8 @@ apps/
 └── api/
     │
     ├── src/
-    │   ├── main.ts
-    │   ├── app.module.ts
+    │   ├── main.js
+    │   ├── app.module.js
     │   │
     │   ├── config/
     │   │
@@ -250,7 +250,7 @@ apps/
     ├── test/
     │
     ├── package.json
-    ├── tsconfig.json
+    ├── jsconfig.json
     └── nest-cli.json
 ```
 
@@ -265,7 +265,7 @@ Representa únicamente la base de la aplicación.
 El punto de entrada de la aplicación será:
 
 ```text
-apps/api/src/main.ts
+apps/api/src/main.js
 ```
 
 Su responsabilidad será iniciar la aplicación y registrar la configuración transversal necesaria.
@@ -301,7 +301,7 @@ No debe contener lógica de negocio.
 El módulo raíz será:
 
 ```text
-apps/api/src/app.module.ts
+apps/api/src/app.module.js
 ```
 
 Su responsabilidad será componer la aplicación.
@@ -852,8 +852,8 @@ Inicialmente:
 ```text
 apps/api/src/
 │
-├── main.ts
-├── app.module.ts
+├── main.js
+├── app.module.js
 ├── config/
 └── common/
 ```
@@ -863,8 +863,8 @@ Posteriormente:
 ```text
 apps/api/src/
 │
-├── main.ts
-├── app.module.ts
+├── main.js
+├── app.module.js
 │
 ├── config/
 ├── common/
@@ -902,7 +902,7 @@ NestJS
 ```
 
 ```text
-TypeScript
+JavaScript
 ```
 
 ```text
@@ -992,7 +992,7 @@ Antes de considerar completada esta fase debe verificarse como mínimo:
 ```
 
 ```text
-4. TypeScript puede compilar el proyecto.
+4. JavaScript / Node.js puede ejecutar el proyecto correctamente.
 ```
 
 ```text

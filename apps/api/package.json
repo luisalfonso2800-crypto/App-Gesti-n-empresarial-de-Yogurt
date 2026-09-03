@@ -1,0 +1,44 @@
+{
+  "name": "api",
+  "version": "0.0.1",
+  "description": "Yogurt Management System API",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "format": "prettier --write \"**/*.js\"",
+    "start": "node index.js",
+    "start:dev": "nodemon",
+    "test": "jest",
+    "test:cov": "jest --coverage",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.11",
+    "@nestjs/config": "^3.2.3",
+    "@nestjs/core": "^11.0.11",
+    "@nestjs/platform-express": "^11.0.11",
+    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@prisma/config": "^7.10.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.4",
+    "dotenv": "^17.4.2",
+    "joi": "^18.2.6",
+    "pg": "^8.23.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.9",
+    "@babel/plugin-proposal-decorators": "^7.25.9",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/register": "^7.25.9",
+    "@nestjs/testing": "^11.0.11",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3",
+    "prisma": "^7.10.0",
+    "supertest": "^7.0.0"
+  }
+}

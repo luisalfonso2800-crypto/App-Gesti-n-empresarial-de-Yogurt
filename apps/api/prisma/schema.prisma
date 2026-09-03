@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Presentacion {
+  id            String  @id @default(uuid()) @map("ID_Presentacion")
+  nombre        String  @map("Nombre_Presentacion")
+  cantidadOz    Decimal @map("Cantidad_Oz")
+  cantidadMl    Decimal @map("Cantidad_ml")
+  tipoEnvase    String  @map("Tipo_Envase")
+  tapilla       String? @map("Tapilla")
+  activo        Boolean @default(true) @map("Activo")
+  observaciones String? @map("Observaciones")
+
+  @@map("Presentaciones")
+}
+
+model Insumo {
+  id            String  @id @default(uuid()) @map("ID_Insumo")
+  nombre        String  @map("Nombre_Insumo")
+  categoria     String  @map("Categoria")
+  subcategoria  String  @map("Subcategoria")
+  marca         String  @map("Marca")
+  unidadBase    String  @map("Unidad_Base")
+  stockMinimo   Decimal @map("Stock_Minimo")
+  activo        Boolean @default(true) @map("Activo")
+  observaciones String? @map("Observaciones")
+
+  @@map("Insumos")
+}
+
+model Proveedor {
+  id             String  @id @default(uuid()) @map("ID_Proveedor")
+  nombre         String  @map("Nombre_Proveedor")
+  nitCedula      String  @map("NIT_Cedula")
+  nombreContacto String? @map("Nombre_Contacto")
+  telefono       String? @map("Telefono")
+  email          String? @map("Email")
+  direccion      String? @map("Direccion")
+  activo         Boolean @default(true) @map("Activo")
+  observaciones  String? @map("Observaciones")
+
+  @@map("Proveedores")
+}
+
+model Producto {
+  id             String  @id @default(uuid()) @map("ID_Producto")
+  nombre         String  @map("Nombre_Producto")
+  idPresentacion String  @map("ID_Presentacion")
+  categoria      String  @map("Categoria_Producto")
+  descripcion    String? @map("Descripcion")
+  canalVenta     String  @map("Canal_Venta")
+  precioVenta    Decimal @map("Precio_Venta") @db.Decimal(12, 2)
+  margenObjetivo Decimal @map("Margen_Objetivo") @db.Decimal(5, 2)
+  activo         Boolean @default(true) @map("Activo")
+  observaciones  String? @map("Observaciones")
+
+  @@unique([nombre, idPresentacion])
+  @@map("Productos")
+}
+
+model Cliente {
+  id            String  @id @default(uuid()) @map("ID_Cliente")
+  nombre        String  @map("Nombre_Cliente")
+  tipoCliente   String  @map("Tipo_Cliente")
+  canal         String  @map("Canal")
+  contacto      String? @map("Contacto")
+  telefono      String? @map("Telefono")
+  direccion     String? @map("Direccion")
+  diasCredito   Int     @map("Dias_Credito")
+  activo        Boolean @default(true) @map("Activo")
+  observaciones String? @map("Observaciones")
+
+  @@map("Clientes")
+}

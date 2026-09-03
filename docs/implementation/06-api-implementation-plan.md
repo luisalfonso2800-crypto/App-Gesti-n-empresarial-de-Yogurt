@@ -224,15 +224,15 @@ La estructura conceptual será:
 modules/
 │
 ├── presentations/
-│   ├── presentations.controller.ts
+│   ├── presentations.controller.js
 │   └── ...
 │
 ├── products/
-│   ├── products.controller.ts
+│   ├── products.controller.js
 │   └── ...
 │
 └── purchases/
-    ├── purchases.controller.ts
+    ├── purchases.controller.js
     └── ...
 ```
 

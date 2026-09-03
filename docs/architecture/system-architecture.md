@@ -8,7 +8,7 @@ Backend principal del sistema.
 
 Tecnologías previstas:
 - Node.js
-- TypeScript
+- JavaScript
 - NestJS
 - Prisma ORM
 - PostgreSQL
@@ -20,7 +20,7 @@ Aplicación de escritorio utilizada por el usuario final.
 Tecnologías previstas:
 - Electron
 - React
-- TypeScript
+- JavaScript
 
 ## Paquetes compartidos
 

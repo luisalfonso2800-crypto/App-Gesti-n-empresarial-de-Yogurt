@@ -1,4 +1,4 @@
-﻿# Implementation Readiness Review
+# Implementation Readiness Review
 
 ## Documentos revisados
 
@@ -105,7 +105,7 @@ Se detectaron las siguientes precisiones técnicas menores, todas perfectamente 
 3. **Fraccionamiento de Lotes en Ventas (`SaleDetail`):**
    * Cuando una venta requiera consumir unidades de dos lotes distintos del mismo producto, la capa de servicio de `Sales` generará dos líneas `SaleDetail` independientes (cada una asociada a su `ID_Lote`).
 4. **Catálogos Abiertos vs. Enums:**
-   * Campos como `Canal_Venta`, `Categoria_Insumo`, `Categoria_Gasto` y `Metodo_Pago` deben inicializarse como Enums de TypeScript/Prisma en sus respectivas fases sin requerir tablas maestras adicionales prematuras.
+   * Campos como `Canal_Venta`, `Categoria_Insumo`, `Categoria_Gasto` y `Metodo_Pago` deben inicializarse como Enums de Prisma / constantes en JavaScript en sus respectivas fases sin requerir tablas maestras adicionales prematuras.
 
 ---
 
@@ -135,7 +135,7 @@ Todas las decisiones pendientes identificadas corresponden a detalles de impleme
 * **D-03:** Relación 1:1 estándar de tanda de producción a lote con clave foránea en `Lot` (Fase 9 / 10).
 * **D-04:** Fraccionamiento automático de líneas en `SaleDetail` para múltiples lotes (Fase 12).
 * **D-05:** Persistencia de `InventoryBalance` como tabla de lectura rápida sincronizada por eventos transaccionales (Fase 8).
-* **D-06:** Enums de TypeScript/Prisma para estados, canales y métodos de pago (Fases 1 a 14).
+* **D-06:** Enums de Prisma / constantes en JavaScript para estados, canales y métodos de pago (Fases 1 a 14).
 
 Ninguna de estas decisiones impide comenzar con la Fase 0 y Fase 1.
 
