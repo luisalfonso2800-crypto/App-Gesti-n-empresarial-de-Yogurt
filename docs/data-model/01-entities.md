@@ -1055,7 +1055,6 @@ Cantidad_Planificada
 Cantidad_Producida_Real
 Estado
 Fecha_Vencimiento
-ID_Lote
 Observaciones
 ```
 
@@ -1192,6 +1191,7 @@ ID_Lote
 ```text
 ID_Lote
 Tipo_Lote
+ID_Produccion
 ID_Producto
 ID_Insumo
 Fecha_Produccion

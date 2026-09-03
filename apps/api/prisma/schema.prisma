@@ -35,6 +35,7 @@ model Insumo {
   movimientos        MovimientoInventario[]
   detallesReceta     DetalleReceta[]
   detallesProduccion DetalleProduccion[]
+  lotes              Lote[]
 
   @@map("Insumos")
 }
@@ -68,6 +69,7 @@ model Producto {
   observaciones  String?      @map("Observaciones")
   recetas        Receta[]
   producciones   Produccion[]
+  lotes          Lote[]
 
   @@unique([nombre, idPresentacion])
   @@map("Productos")
@@ -180,6 +182,7 @@ model Produccion {
   idLote                String?             @map("ID_Lote")
   observaciones         String?             @map("Observaciones")
   detalles              DetalleProduccion[]
+  lotes                 Lote[]
 
   @@map("Producciones")
 }
@@ -199,4 +202,24 @@ model DetalleProduccion {
   observaciones         String?    @map("Observaciones")
 
   @@map("Detalle_Producciones")
+}
+
+model Lote {
+  id                 String     @id @default(uuid()) @map("ID_Lote")
+  tipoLote           String     @map("Tipo_Lote")
+  idProduccion       String     @map("ID_Produccion")
+  produccion         Produccion @relation(fields: [idProduccion], references: [id])
+  idProducto         String?    @map("ID_Producto")
+  producto           Producto?  @relation(fields: [idProducto], references: [id])
+  idInsumo           String?    @map("ID_Insumo")
+  insumo             Insumo?    @relation(fields: [idInsumo], references: [id])
+  fechaProduccion    DateTime   @map("Fecha_Produccion")
+  fechaVencimiento   DateTime?  @map("Fecha_Vencimiento")
+  cantidadInicial    Decimal    @map("Cantidad_Inicial")
+  cantidadDisponible Decimal    @map("Cantidad_Disponible")
+  unidad             String     @map("Unidad")
+  estado             String     @map("Estado")
+  observaciones      String?    @map("Observaciones")
+
+  @@map("Lotes")
 }
