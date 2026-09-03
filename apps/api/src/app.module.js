@@ -10,6 +10,8 @@ import { SuppliersModule } from './suppliers/suppliers.module';
 import { SupplierPricesModule } from './supplier-prices/supplier-prices.module';
 import { ProductsModule } from './products/products.module';
 import { RecipesModule } from './recipes/recipes.module';
+import { PurchasesModule } from './purchases/purchases.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { RecipesModule } from './recipes/recipes.module';
     SupplierPricesModule,
     ProductsModule,
     RecipesModule,
+    PurchasesModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

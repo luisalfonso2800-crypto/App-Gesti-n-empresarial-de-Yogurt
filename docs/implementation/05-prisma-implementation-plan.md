@@ -332,15 +332,15 @@ La secuencia inicial será:
 ```
 
 ```text
-9. COMPRAS
+9. COMPRAS (COMPLETADO)
 ```
 
 ```text
-10. DETALLE DE COMPRAS
+10. DETALLE DE COMPRAS (COMPLETADO)
 ```
 
 ```text
-11. INVENTARIO Y MOVIMIENTOS
+11. INVENTARIO Y MOVIMIENTOS (COMPLETADO)
 ```
 
 ```text
