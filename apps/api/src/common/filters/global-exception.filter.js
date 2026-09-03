@@ -7,15 +7,24 @@ export class GlobalExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = { message: 'Internal server error' };
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : { message: 'Internal server error' };
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      message = exception.getResponse();
+    } else if (exception && exception.constructor && exception.constructor.name === 'PrismaClientKnownRequestError') {
+      if (exception.code === 'P2002') {
+        status = HttpStatus.CONFLICT;
+        message = { message: 'Conflict: Unique constraint failed' };
+      } else if (exception.code === 'P2025') {
+        status = HttpStatus.NOT_FOUND;
+        message = { message: 'Not Found: Record to update not found' };
+      } else {
+        status = HttpStatus.BAD_REQUEST;
+        message = { message: 'Bad Request: Invalid database operation' };
+      }
+    }
 
     response.status(status).json({
       statusCode: status,
