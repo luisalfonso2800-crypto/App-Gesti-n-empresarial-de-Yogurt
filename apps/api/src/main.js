@@ -10,7 +10,7 @@ async function bootstrap() {
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.setGlobalPrefix('api/v1');
   app.enableCors({
-    origin: '*',
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,
@@ -23,9 +23,9 @@ async function bootstrap() {
   }));
 
   const configService = app.get(ConfigService);
-  const port = configService.get('PORT');
+  const port = configService.get('PORT') || process.env.PORT || 3001;
 
-  await app.listen(process.env.PORT || 3000);
-  console.log('Application is running on port: ' + (process.env.PORT || 3000));
+  await app.listen(port);
+  console.log('Application is running on port: ' + port);
 }
 bootstrap();
