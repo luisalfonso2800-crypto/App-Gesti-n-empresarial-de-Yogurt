@@ -23,6 +23,15 @@ const navItems = [
       { name: 'Producción', path: '/operations/production' },
       { name: 'Lotes', path: '/operations/lots' },
     ]
+  },
+  {
+    group: 'Comercial',
+    items: [
+      { name: 'Clientes', path: '/commercial/clients' },
+      { name: 'Ventas', path: '/commercial/sales' },
+      { name: 'Pagos y Cobros', path: '/commercial/payments' },
+      { name: 'Gastos', path: '/commercial/expenses' },
+    ]
   }
 ];
 
