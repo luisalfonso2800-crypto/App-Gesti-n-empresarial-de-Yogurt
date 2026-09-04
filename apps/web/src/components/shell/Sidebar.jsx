@@ -10,6 +10,7 @@ const navItems = [
       { name: 'Presentaciones', path: '/catalog/presentations' },
       { name: 'Insumos', path: '/catalog/supplies' },
       { name: 'Proveedores', path: '/catalog/suppliers' },
+      { name: 'Precios de Proveedores', path: '/catalog/supplier-prices' },
       { name: 'Productos', path: '/catalog/products' },
       { name: 'Recetas', path: '/catalog/recipes' },
     ]
