@@ -5,6 +5,12 @@ import styles from './shell.module.css';
 
 const navItems = [
   {
+    group: 'General',
+    items: [
+      { name: 'Dashboard', path: '/' },
+    ]
+  },
+  {
     group: 'Catálogos',
     items: [
       { name: 'Presentaciones', path: '/catalog/presentations' },
@@ -46,7 +52,9 @@ export function Sidebar() {
           <div key={group.group} className={styles.navGroup}>
             <div className={styles.navGroupTitle}>{group.group}</div>
             {group.items.map((item) => {
-              const isActive = pathname === item.path || pathname.startsWith(item.path + '/');
+              const isActive = item.path === '/' 
+                ? pathname === '/'
+                : (pathname === item.path || pathname.startsWith(item.path + '/'));
               return (
                 <Link 
                   key={item.path} 

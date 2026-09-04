@@ -1,69 +1,116 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { apiClient } from '../lib/api-client';
+import styles from './page.module.css';
+
+export default function DashboardPage() {
+  const [metrics, setMetrics] = useState({
+    criticalStock: 0,
+    recentPurchases: 0,
+    todaySales: 0,
+    activeLots: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true);
+        // Fetch all necessary data concurrently
+        const [inventory, purchases, sales, lots] = await Promise.all([
+          apiClient.get('/inventory').catch(() => []),
+          apiClient.get('/purchases').catch(() => []),
+          apiClient.get('/sales').catch(() => []),
+          apiClient.get('/lots').catch(() => [])
+        ]);
+
+        // Calculate metrics
+        // 1. Critical stock: stock <= 10 (or based on minStock if available)
+        const criticalStockCount = Array.isArray(inventory) ? inventory.filter(item => item.quantity <= (item.supply?.minStock || 10)).length : 0;
+        
+        // 2. Recent purchases (last 7 days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const recentPurchasesCount = Array.isArray(purchases) ? purchases.filter(p => new Date(p.purchaseDate) >= sevenDaysAgo).length : 0;
+
+        // 3. Today's sales
+        const today = new Date();
+        const todaySalesCount = Array.isArray(sales) ? sales.filter(s => {
+          const saleDate = new Date(s.saleDate);
+          return saleDate.getDate() === today.getDate() &&
+                 saleDate.getMonth() === today.getMonth() &&
+                 saleDate.getFullYear() === today.getFullYear();
+        }).length : 0;
+
+        // 4. Active lots
+        const activeLotsCount = Array.isArray(lots) ? lots.filter(l => l.status === 'ACTIVE' || l.status === 'IN_PROGRESS' || l.status === 'MATURING').length : 0;
+
+        setMetrics({
+          criticalStock: criticalStockCount,
+          recentPurchases: recentPurchasesCount,
+          todaySales: todaySalesCount,
+          activeLots: activeLotsCount
+        });
+      } catch (err) {
+        setError('Error al cargar los datos del dashboard');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboardData();
+  }, []);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className={styles.dashboard}>
+      <h1 className={styles.title}>Dashboard</h1>
+      
+      {error && <div className={styles.error}>{error}</div>}
+
+      <div className={styles.metricsGrid}>
+        <div className={styles.metricCard}>
+          <h3>Stock Crítico</h3>
+          <div className={styles.metricValue}>{loading ? '...' : metrics.criticalStock}</div>
+          <p>Insumos con bajo inventario</p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className={styles.metricCard}>
+          <h3>Compras Recientes</h3>
+          <div className={styles.metricValue}>{loading ? '...' : metrics.recentPurchases}</div>
+          <p>Últimos 7 días</p>
         </div>
-      </main>
+        <div className={styles.metricCard}>
+          <h3>Ventas de Hoy</h3>
+          <div className={styles.metricValue}>{loading ? '...' : metrics.todaySales}</div>
+          <p>Transacciones del día</p>
+        </div>
+        <div className={styles.metricCard}>
+          <h3>Lotes Activos</h3>
+          <div className={styles.metricValue}>{loading ? '...' : metrics.activeLots}</div>
+          <p>En producción o maduración</p>
+        </div>
+      </div>
+
+      <div className={styles.quickAccessSection}>
+        <h2>Accesos Rápidos</h2>
+        <div className={styles.quickAccessGrid}>
+          <Link href="/operations/purchases" className={styles.quickAccessCard}>
+            <div className={styles.quickAccessIcon}>🛒</div>
+            <span>Registrar Compra</span>
+          </Link>
+          <Link href="/operations/production" className={styles.quickAccessCard}>
+            <div className={styles.quickAccessIcon}>🏭</div>
+            <span>Registrar Producción</span>
+          </Link>
+          <Link href="/commercial/sales" className={styles.quickAccessCard}>
+            <div className={styles.quickAccessIcon}>💰</div>
+            <span>Nueva Venta</span>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
