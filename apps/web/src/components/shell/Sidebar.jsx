@@ -18,11 +18,10 @@ const navItems = [
   {
     group: 'Operaciones',
     items: [
-      { name: 'Abastecimiento', path: '/supply' },
-      { name: 'Inventario', path: '/inventory' },
-      { name: 'Producción', path: '/production' },
-      { name: 'Comercial', path: '/commercial' },
-      { name: 'Finanzas', path: '/finance' },
+      { name: 'Compras', path: '/operations/purchases' },
+      { name: 'Inventario', path: '/operations/inventory' },
+      { name: 'Producción', path: '/operations/production' },
+      { name: 'Lotes', path: '/operations/lots' },
     ]
   }
 ];
