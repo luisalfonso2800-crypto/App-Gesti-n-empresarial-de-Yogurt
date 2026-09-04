@@ -128,6 +128,7 @@ export default function Page() {
               <TH>Insumo</TH>
               <TH>Proveedor</TH>
               <TH>Precio Compra</TH>
+              <TH>Costo Unidad Base</TH>
               <TH>Estado</TH>
               <TH>Acciones</TH>
             </TR>
@@ -135,8 +136,8 @@ export default function Page() {
           <TBody>
             {items.map((item) => (
               <TR key={item.id}>
-                <TD>{item.insumo?.nombre || item.idInsumo}</TD>
-                <TD>{item.proveedor?.nombre || item.idProveedor}</TD>
+                <TD>{item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo}</TD>
+                <TD>{item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor}</TD>
                 <TD>${item.precioCompra}</TD>
                 <TD>${item.costoUnidadBase} / {item.insumo?.unidadBase || 'Unidad'}</TD>
                 <TD>
