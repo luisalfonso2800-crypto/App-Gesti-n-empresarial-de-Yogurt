@@ -1,0 +1,6 @@
+.overlay { position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal { background-color: white; border-radius: 0.5rem; padding: 1.5rem; width: 100%; max-width: 32rem; max-height: 90vh; overflow-y: auto; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.title { font-size: 1.25rem; font-weight: 600; margin: 0; }
+.close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+.close:hover { color: #111827; }
