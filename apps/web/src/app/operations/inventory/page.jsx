@@ -31,7 +31,10 @@ export default function InventoryPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Inventario</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Inventario</h1>
+          <p className={styles.subtitle}>Control de existencias físicas disponibles en bodega, movimientos y alertas de reabastecimiento.</p>
+        </div>
       </div>
 
       {loading ? (

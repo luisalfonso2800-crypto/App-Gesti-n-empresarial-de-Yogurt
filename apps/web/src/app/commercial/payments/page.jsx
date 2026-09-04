@@ -84,7 +84,10 @@ export default function PaymentsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Pagos y Cobros</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Pagos y Cobros</h1>
+          <p className={styles.subtitle}>Control de ingresos por cartera de clientes, recaudos efectivos y saldos pendientes por cobrar.</p>
+        </div>
         <Button onClick={handleOpenModal}>Nuevo Pago</Button>
       </div>
 

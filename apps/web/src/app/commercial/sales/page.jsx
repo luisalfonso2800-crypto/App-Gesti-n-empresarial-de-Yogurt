@@ -91,7 +91,10 @@ export default function SalesPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Ventas</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Ventas</h1>
+          <p className={styles.subtitle}>Facturación, pedidos y despachos de productos terminados a clientes.</p>
+        </div>
         <Button onClick={handleOpenModal}>Nueva Venta</Button>
       </div>
 

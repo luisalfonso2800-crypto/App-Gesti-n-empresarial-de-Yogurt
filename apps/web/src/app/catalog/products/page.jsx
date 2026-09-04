@@ -108,7 +108,10 @@ export default function Page() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Productos</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Productos</h1>
+          <p className={styles.subtitle}>Catálogo de productos terminados listos para distribución comercial, enlazados a sus recetas y presentaciones.</p>
+        </div>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
 

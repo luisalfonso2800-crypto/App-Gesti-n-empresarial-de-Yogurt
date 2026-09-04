@@ -83,7 +83,10 @@ export default function PurchasesPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Compras</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Compras</h1>
+          <p className={styles.subtitle}>Registro y control de órdenes de adquisición de insumos a proveedores externos.</p>
+        </div>
         <Button onClick={handleOpenModal}>Nueva Compra</Button>
       </div>
 

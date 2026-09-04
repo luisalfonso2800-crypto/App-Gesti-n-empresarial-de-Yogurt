@@ -29,24 +29,24 @@ export default function DashboardPage() {
 
         // Calculate metrics
         // 1. Critical stock: stock <= 10 (or based on minStock if available)
-        const criticalStockCount = Array.isArray(inventory) ? inventory.filter(item => item.quantity <= (item.supply?.minStock || 10)).length : 0;
+        const criticalStockCount = Array.isArray(inventory) ? inventory.filter(item => item.cantidadActual <= (item.insumo?.stockMinimo || 10)).length : 0;
         
         // 2. Recent purchases (last 7 days)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const recentPurchasesCount = Array.isArray(purchases) ? purchases.filter(p => new Date(p.purchaseDate) >= sevenDaysAgo).length : 0;
+        const recentPurchasesCount = Array.isArray(purchases) ? purchases.filter(p => new Date(p.fechaCompra) >= sevenDaysAgo).length : 0;
 
         // 3. Today's sales
         const today = new Date();
         const todaySalesCount = Array.isArray(sales) ? sales.filter(s => {
-          const saleDate = new Date(s.saleDate);
+          const saleDate = new Date(s.fechaVenta);
           return saleDate.getDate() === today.getDate() &&
                  saleDate.getMonth() === today.getMonth() &&
                  saleDate.getFullYear() === today.getFullYear();
         }).length : 0;
 
         // 4. Active lots
-        const activeLotsCount = Array.isArray(lots) ? lots.filter(l => l.status === 'ACTIVE' || l.status === 'IN_PROGRESS' || l.status === 'MATURING').length : 0;
+        const activeLotsCount = Array.isArray(lots) ? lots.filter(l => l.estado === 'DISPONIBLE' || l.estado === 'EN_PROCESO' || l.estado === 'ACTIVO').length : 0;
 
         setMetrics({
           criticalStock: criticalStockCount,
@@ -67,7 +67,10 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.dashboard}>
-      <h1 className={styles.title}>Dashboard</h1>
+      <div className={styles.headerTitle}>
+        <h1 className={styles.title}>Dashboard</h1>
+        <p className={styles.subtitle}>Panel de control central con indicadores clave de rendimiento (KPIs), métricas operativas y balance financiero en tiempo real.</p>
+      </div>
       
       {error && <div className={styles.error}>{error}</div>}
 

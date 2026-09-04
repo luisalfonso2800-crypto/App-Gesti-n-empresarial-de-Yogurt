@@ -84,7 +84,10 @@ export default function ExpensesPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Gastos</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Gastos</h1>
+          <p className={styles.subtitle}>Registro de erogaciones operativas, servicios públicos, nómina y costos indirectos de fabricación.</p>
+        </div>
         <Button onClick={handleOpenModal}>Nuevo Gasto</Button>
       </div>
 

@@ -15,6 +15,9 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   
@@ -103,11 +106,43 @@ export default function Page() {
     }
   };
 
+  const generateCode = (item) => {
+    if (item.codigo) return item.codigo;
+    if (item.code) return item.code;
+    return item.id ? item.id.substring(0, 8).toUpperCase() : 'N/A';
+  };
+
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          generateCode(item).toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter ? item.categoria === categoryFilter : true;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div>
       <div className={styles.header}>
         <h1 className={styles.title}>Insumos</h1>
+        <p className={styles.subtitle}>Catálogo maestro de materias primas, envases y suministros requeridos para la formulación y empaque de productos.</p>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
+      </div>
+
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+        <Input 
+          placeholder="Buscar por código o nombre..." 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+        />
+        <select 
+          value={categoryFilter} 
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+        >
+          <option value="">Todas las categorías</option>
+          {[...new Set(items.map(i => i.categoria))].filter(Boolean).map(cat => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
       </div>
 
       {loading ? (
@@ -120,25 +155,27 @@ export default function Page() {
         <Table>
           <THead>
             <TR>
+              <TH>Código</TH>
               <TH>Nombre</TH>
               <TH>Categoría</TH>
               <TH>Marca</TH>
               <TH>Unidad Base</TH>
               <TH>Stock Mínimo</TH>
+              <TH>Costo Ref. (Base)</TH>
               <TH>Estado</TH>
               <TH>Acciones</TH>
             </TR>
           </THead>
           <TBody>
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <TR key={item.id}>
-
+                <TD>{generateCode(item)}</TD>
                 <TD>{item.nombre}</TD>
                 <TD>{item.categoria}</TD>
                 <TD>{item.marca}</TD>
                 <TD>{item.unidadBase}</TD>
                 <TD>{item.stockMinimo}</TD>
-
+                <TD>{item.costoReferencia || item.costoBase || 'N/A'}</TD>
                 <TD>
                   <Badge status={item.activo ? 'active' : 'inactive'}>
                     {item.activo ? 'Activo' : 'Inactivo'}

@@ -32,7 +32,10 @@ export default function LotsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Lotes</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Lotes</h1>
+          <p className={styles.subtitle}>Trazabilidad de producción con fechas de fabricación, vencimiento y control de calidad.</p>
+        </div>
       </div>
 
       {loading ? (

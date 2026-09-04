@@ -103,3 +103,6 @@
 .quickAccessIcon {
   font-size: 2rem;
 }
+
+.headerTitle { display: flex; flex-direction: column; }
+.subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }

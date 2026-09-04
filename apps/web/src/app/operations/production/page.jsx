@@ -83,7 +83,10 @@ export default function ProductionPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Producción</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Producción</h1>
+          <p className={styles.subtitle}>Planificación y registro de órdenes de fabricación ejecutadas a partir de las recetas maestras.</p>
+        </div>
         <Button onClick={handleOpenModal}>Nueva Orden</Button>
       </div>
 

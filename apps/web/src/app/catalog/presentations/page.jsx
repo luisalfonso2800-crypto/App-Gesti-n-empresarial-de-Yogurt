@@ -102,7 +102,10 @@ export default function PresentationsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Presentaciones</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Presentaciones</h1>
+          <p className={styles.subtitle}>Formatos comerciales y tamaños de empaque final en los que se distribuyen los productos terminados.</p>
+        </div>
         <Button onClick={() => handleOpenModal()}>Nueva Presentación</Button>
       </div>
 

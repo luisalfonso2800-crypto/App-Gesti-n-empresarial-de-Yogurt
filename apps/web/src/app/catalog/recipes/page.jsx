@@ -102,7 +102,10 @@ export default function Page() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Recetas</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Recetas</h1>
+          <p className={styles.subtitle}>Fórmulas estándar de elaboración que definen los insumos y cantidades exactas requeridas por lote de producción.</p>
+        </div>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
 

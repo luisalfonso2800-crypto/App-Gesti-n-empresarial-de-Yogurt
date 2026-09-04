@@ -106,7 +106,10 @@ export default function Page() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Proveedores</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Proveedores</h1>
+          <p className={styles.subtitle}>Directorio de fabricantes y distribuidores autorizados de insumos, empaques y servicios.</p>
+        </div>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
 

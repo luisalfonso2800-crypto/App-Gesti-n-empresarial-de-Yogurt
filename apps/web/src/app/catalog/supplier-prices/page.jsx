@@ -111,6 +111,7 @@ export default function Page() {
     <div>
       <div className={styles.header}>
         <h1 className={styles.title}>Precios de Proveedores</h1>
+        <p className={styles.subtitle}>Histórico y lista de tarifas vigentes cotizadas por cada proveedor para los diferentes insumos.</p>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
 
@@ -134,11 +135,10 @@ export default function Page() {
           <TBody>
             {items.map((item) => (
               <TR key={item.id}>
-
-                <TD>{item.idInsumo}</TD>
-                <TD>{item.idProveedor}</TD>
-                <TD>{item.precioCompra}</TD>
-
+                <TD>{item.insumo?.nombre || item.idInsumo}</TD>
+                <TD>{item.proveedor?.nombre || item.idProveedor}</TD>
+                <TD>${item.precioCompra}</TD>
+                <TD>${item.costoUnidadBase} / {item.insumo?.unidadBase || 'Unidad'}</TD>
                 <TD>
                   <Badge status={item.activo ? 'active' : 'inactive'}>
                     {item.activo ? 'Activo' : 'Inactivo'}
