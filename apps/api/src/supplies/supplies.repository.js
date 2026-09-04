@@ -11,6 +11,13 @@ export class SuppliesRepository {
   async findAll() {
     return this.prisma.insumo.findMany({
       orderBy: { nombre: 'asc' },
+      include: {
+        precios: {
+          where: { activo: true },
+          take: 1,
+          orderBy: { fechaRegistro: 'desc' }
+        }
+      }
     });
   }
 
@@ -18,6 +25,13 @@ export class SuppliesRepository {
     return this.prisma.insumo.findMany({
       where: { activo: true },
       orderBy: { nombre: 'asc' },
+      include: {
+        precios: {
+          where: { activo: true },
+          take: 1,
+          orderBy: { fechaRegistro: 'desc' }
+        }
+      }
     });
   }
 

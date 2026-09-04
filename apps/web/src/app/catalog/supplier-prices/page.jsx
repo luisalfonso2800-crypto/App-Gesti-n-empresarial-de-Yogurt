@@ -127,6 +127,8 @@ export default function Page() {
             <TR>
               <TH>Insumo</TH>
               <TH>Proveedor</TH>
+              <TH>Presentación Compra</TH>
+              <TH>Contenido Base</TH>
               <TH>Precio Compra</TH>
               <TH>Costo Unidad Base</TH>
               <TH>Estado</TH>
@@ -138,8 +140,10 @@ export default function Page() {
               <TR key={item.id}>
                 <TD>{item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo}</TD>
                 <TD>{item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor}</TD>
+                <TD>{item.cantidadPresentacion || 1} {item.unidadPresentacion || 'Paquete'}</TD>
+                <TD>{item.cantidadEquivalenteBase} {item.insumo?.Unidad_Base || item.insumo?.unidadBase || ''}</TD>
                 <TD>${item.precioCompra}</TD>
-                <TD>${item.costoUnidadBase} / {item.insumo?.unidadBase || 'Unidad'}</TD>
+                <TD>${item.costoUnidadBase} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</TD>
                 <TD>
                   <Badge status={item.activo ? 'active' : 'inactive'}>
                     {item.activo ? 'Activo' : 'Inactivo'}

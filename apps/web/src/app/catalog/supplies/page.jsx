@@ -175,7 +175,7 @@ export default function Page() {
                 <TD>{item.marca}</TD>
                 <TD>{item.unidadBase}</TD>
                 <TD>{item.stockMinimo}</TD>
-                <TD>{item.costoReferencia || item.costoBase || 'N/A'}</TD>
+                <TD>{item.precios && item.precios.length > 0 ? `$${item.precios[0].costoUnidadBase} / ${item.unidadBase || 'Unidad'}` : '-'}</TD>
                 <TD>
                   <Badge status={item.activo ? 'active' : 'inactive'}>
                     {item.activo ? 'Activo' : 'Inactivo'}
