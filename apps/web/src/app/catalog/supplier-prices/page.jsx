@@ -40,6 +40,60 @@ export default function Page() {
   const [filterSearch, setFilterSearch] = useState('');
   const [filterSort, setFilterSort] = useState('none');
 
+  // Purchase List state
+  const [selectedForPurchase, setSelectedForPurchase] = useState([]);
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('selectedForPurchase');
+      if (stored) {
+        setSelectedForPurchase(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
+
+  const saveToSession = (newSelection) => {
+    setSelectedForPurchase(newSelection);
+    try {
+      sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
+      window.dispatchEvent(new Event('cartUpdated'));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const togglePurchaseItem = (item) => {
+    const isAdded = selectedForPurchase.some(p => p.id === item.id);
+    if (isAdded) {
+      saveToSession(selectedForPurchase.filter(p => p.id !== item.id));
+    } else {
+      const alreadyHasInsumoProveedor = selectedForPurchase.some(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+      if (alreadyHasInsumoProveedor) return;
+      
+      const newItem = {
+        id: item.id,
+        idInsumo: item.idInsumo,
+        nombreInsumo: item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo,
+        idProveedor: item.idProveedor,
+        nombreProveedor: item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor,
+        presentacion: `${item.cantidadPresentacion || 1} ${item.unidadPresentacion || 'Paquete'}`,
+        precioCompra: item.precioCompra,
+        costoUnidadBase: item.costoUnidadBase
+      };
+      saveToSession([...selectedForPurchase, newItem]);
+    }
+  };
+
+  const clearPurchaseList = () => {
+    saveToSession([]);
+  };
+
+  const proceedToPurchase = () => {
+    router.push('/operations/purchases/new');
+  };
+
 
   const fetchItems = async () => {
     setLoading(true);
@@ -318,6 +372,9 @@ export default function Page() {
             ) : (
               filteredItems.map((item) => {
                 const isBestPrice = item.activo && item.costoUnidadBase === bestPricesMap.get(item.idInsumo);
+                const isAdded = selectedForPurchase.some(p => p.id === item.id);
+                const alreadyHasSameProviderAndInsumo = !isAdded && selectedForPurchase.some(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+                
                 return (
                 <TR key={item.id}>
                   <TD>{item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo}</TD>
@@ -349,10 +406,11 @@ export default function Page() {
                       </Button>
                       {item.activo && (
                         <Button 
-                          variant="success" 
-                          onClick={() => router.push(`/operations/purchases/new?idInsumo=${item.idInsumo}&idProveedor=${item.idProveedor}&precio=${item.precioCompra}`)}
+                          variant={isAdded ? "secondary" : "success"} 
+                          disabled={alreadyHasSameProviderAndInsumo}
+                          onClick={() => togglePurchaseItem(item)}
                         >
-                          Comprar
+                          {isAdded ? 'Quitar (✓ Añadido)' : alreadyHasSameProviderAndInsumo ? 'Ya añadido (Mismo Prov.)' : 'Comprar'}
                         </Button>
                       )}
                     </div>
@@ -363,6 +421,18 @@ export default function Page() {
             )}
           </TBody>
         </Table>
+      )}
+
+      {selectedForPurchase.length > 0 && (
+        <div className={styles.floatingCart}>
+          <div className={styles.cartInfo}>
+            <span>{selectedForPurchase.length} insumo(s) seleccionados para compra</span>
+          </div>
+          <div className={styles.cartActions}>
+            <Button variant="secondary" onClick={clearPurchaseList}>Vaciar lista</Button>
+            <Button variant="primary" onClick={proceedToPurchase}>Continuar a Orden de Compra</Button>
+          </div>
+        </div>
       )}
 
       <Modal 

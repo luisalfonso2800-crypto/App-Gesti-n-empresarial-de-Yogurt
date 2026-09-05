@@ -1,0 +1,38 @@
+.container { display: flex; flex-direction: column; gap: 2rem; }
+.header { display: flex; justify-content: space-between; align-items: center; }
+.title { font-size: 1.5rem; font-weight: bold; color: #111827; margin: 0; }
+.subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+.headerActions { display: flex; gap: 1rem; }
+.empty { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 4rem; background-color: white; border-radius: 0.5rem; border: 1px dashed #d1d5db; color: #6b7280; }
+.content { display: flex; flex-direction: column; gap: 2rem; }
+.groupCard { background-color: white; border-radius: 0.5rem; border: 1px solid #e5e7eb; overflow: hidden; }
+.groupTitle { background-color: #f3f4f6; padding: 1rem 1.5rem; margin: 0; font-size: 1.125rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
+.table { width: 100%; border-collapse: collapse; text-align: left; }
+.table th, .table td { padding: 0.75rem 1.5rem; border-bottom: 1px solid #e5e7eb; }
+.table th { font-size: 0.875rem; font-weight: 600; color: #4b5563; text-transform: uppercase; background-color: #f9fafb; }
+.rowMissing { background-color: #fef2f2; }
+.rowMissing td { color: #991b1b; }
+.checkbox { width: 1.25rem; height: 1.25rem; cursor: pointer; }
+.qtyInput { width: 4rem; padding: 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem; text-align: center; }
+.footerActions { display: flex; justify-content: flex-end; gap: 1rem; padding: 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+
+/* Print specific columns */
+.printCheckboxCol { display: none; }
+.printNotesCol { display: none; }
+
+@media print {
+  .headerActions, .reconcileCol, .footerActions, .qtyInput { display: none !important; }
+  .qtyCol { display: none !important; } /* We will show an empty column for qty if needed, or just let them write */
+  
+  .printCheckboxCol { display: table-cell; width: 3rem; text-align: center; }
+  .printNotesCol { display: table-cell; width: 40%; border-left: 1px solid #d1d5db; }
+  
+  .container { gap: 1rem; }
+  .groupCard { border: 2px solid #000; margin-bottom: 2rem; break-inside: avoid; }
+  .groupTitle { background-color: #fff; border-bottom: 2px solid #000; color: #000; }
+  .table th, .table td { border-bottom: 1px solid #000; color: #000; padding: 0.5rem 1rem; }
+  .table th { background-color: #fff; border-bottom: 2px solid #000; }
+  .rowMissing { background-color: transparent; }
+  .rowMissing td { color: #000; }
+  .rowMissing td { color: #000; }
+}
