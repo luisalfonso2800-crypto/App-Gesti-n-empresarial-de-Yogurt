@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiClient } from '../../../lib/api-client';
 import { Button } from '../../../components/ui/Button';
 import { Table, THead, TBody, TR, TH, TD } from '../../../components/ui/Table';
@@ -11,6 +12,7 @@ import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/Sta
 import styles from './supplier-prices.module.css';
 
 export default function Page() {
+  const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,6 +32,14 @@ export default function Page() {
         observaciones: '',
         activo: true
   });
+
+  // Filters state
+  const [filterInsumo, setFilterInsumo] = useState('');
+  const [filterProveedor, setFilterProveedor] = useState('');
+  const [filterEstado, setFilterEstado] = useState('Todos');
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterSort, setFilterSort] = useState('none');
+
 
   const fetchItems = async () => {
     setLoading(true);
@@ -107,13 +117,178 @@ export default function Page() {
     }
   };
 
+  const clearFilters = () => {
+    setFilterInsumo('');
+    setFilterProveedor('');
+    setFilterEstado('Todos');
+    setFilterSearch('');
+    setFilterSort('none');
+  };
+
+  const hasFilters = filterInsumo !== '' || filterProveedor !== '' || filterEstado !== 'Todos' || filterSearch !== '' || filterSort !== 'none';
+
+  const uniqueInsumos = useMemo(() => {
+    const map = new Map();
+    items.forEach(i => {
+      if (i.insumo) map.set(i.idInsumo, i.insumo);
+    });
+    return Array.from(map.values());
+  }, [items]);
+
+  const uniqueProveedores = useMemo(() => {
+    const map = new Map();
+    items.forEach(i => {
+      if (i.proveedor) map.set(i.idProveedor, i.proveedor);
+    });
+    return Array.from(map.values());
+  }, [items]);
+
+  const bestPricesMap = useMemo(() => {
+    const map = new Map();
+    items.forEach(item => {
+      if (item.activo) {
+        const currentMin = map.get(item.idInsumo);
+        if (currentMin === undefined || item.costoUnidadBase < currentMin) {
+          map.set(item.idInsumo, item.costoUnidadBase);
+        }
+      }
+    });
+    return map;
+  }, [items]);
+
+  const summaryCard = useMemo(() => {
+    if (!filterInsumo) return null;
+    const activeItemsForInsumo = items.filter(i => i.idInsumo === filterInsumo && i.activo);
+    if (activeItemsForInsumo.length === 0) return null;
+
+    let minItem = activeItemsForInsumo[0];
+    let maxItem = activeItemsForInsumo[0];
+
+    activeItemsForInsumo.forEach(i => {
+      if (i.costoUnidadBase < minItem.costoUnidadBase) minItem = i;
+      if (i.costoUnidadBase > maxItem.costoUnidadBase) maxItem = i;
+    });
+
+    const optionsCount = activeItemsForInsumo.length;
+    let savingsPercent = 0;
+    if (maxItem.costoUnidadBase > 0 && maxItem.costoUnidadBase !== minItem.costoUnidadBase) {
+      savingsPercent = ((maxItem.costoUnidadBase - minItem.costoUnidadBase) / maxItem.costoUnidadBase) * 100;
+    }
+
+    return {
+      minItem,
+      maxItem,
+      optionsCount,
+      savingsPercent: savingsPercent.toFixed(2)
+    };
+  }, [items, filterInsumo]);
+
+  const filteredItems = useMemo(() => {
+    let result = items.filter(item => {
+      if (filterInsumo && item.idInsumo !== filterInsumo) return false;
+      if (filterProveedor && item.idProveedor !== filterProveedor) return false;
+      if (filterEstado === 'Activos' && !item.activo) return false;
+      if (filterEstado === 'Inactivos' && item.activo) return false;
+      if (filterSearch) {
+        const query = filterSearch.toLowerCase();
+        const insumoName = (item.insumo?.Nombre_Insumo || item.insumo?.nombre || '').toLowerCase();
+        const proveedorName = (item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || '').toLowerCase();
+        const pres = (item.presentacionCompra || '').toLowerCase();
+        if (!insumoName.includes(query) && !proveedorName.includes(query) && !pres.includes(query)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (filterSort === 'asc') {
+      result.sort((a, b) => a.costoUnidadBase - b.costoUnidadBase);
+    }
+    return result;
+  }, [items, filterInsumo, filterProveedor, filterEstado, filterSearch, filterSort]);
+
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Precios de Proveedores</h1>
-        <p className={styles.subtitle}>Histórico y lista de tarifas vigentes cotizadas por cada proveedor para los diferentes insumos.</p>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Precios de Proveedores</h1>
+          <p className={styles.subtitle}>Histórico y lista de tarifas vigentes cotizadas por cada proveedor para los diferentes insumos.</p>
+        </div>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
+
+      <div className={styles.filterBar}>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Insumo</label>
+          <select className={styles.filterSelect} value={filterInsumo} onChange={e => setFilterInsumo(e.target.value)}>
+            <option value="">Todos los insumos</option>
+            {uniqueInsumos.map(ins => (
+              <option key={ins.id || ins.ID_Insumo} value={ins.id || ins.ID_Insumo}>
+                {ins.Nombre_Insumo || ins.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Proveedor</label>
+          <select className={styles.filterSelect} value={filterProveedor} onChange={e => setFilterProveedor(e.target.value)}>
+            <option value="">Todos los proveedores</option>
+            {uniqueProveedores.map(prov => (
+              <option key={prov.id || prov.ID_Proveedor} value={prov.id || prov.ID_Proveedor}>
+                {prov.Nombre_Proveedor || prov.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Estado</label>
+          <select className={styles.filterSelect} value={filterEstado} onChange={e => setFilterEstado(e.target.value)}>
+            <option value="Todos">Todos</option>
+            <option value="Activos">Activos</option>
+            <option value="Inactivos">Inactivos</option>
+          </select>
+        </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Orden</label>
+          <select className={styles.filterSelect} value={filterSort} onChange={e => setFilterSort(e.target.value)}>
+            <option value="none">Por defecto</option>
+            <option value="asc">Menor a mayor costo</option>
+          </select>
+        </div>
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Búsqueda</label>
+          <input 
+            type="text" 
+            className={styles.filterInput} 
+            placeholder="Buscar presentación..." 
+            value={filterSearch}
+            onChange={e => setFilterSearch(e.target.value)}
+          />
+        </div>
+        {hasFilters && (
+          <Button variant="secondary" onClick={clearFilters}>Limpiar Filtros</Button>
+        )}
+      </div>
+
+      {summaryCard && (
+        <div className={styles.summaryCard}>
+          <h3 className={styles.summaryTitle}>Resumen de Aprovisionamiento</h3>
+          <div className={styles.summaryGrid}>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Opciones Disponibles</span>
+              <span className={styles.summaryValue}>{summaryCard.optionsCount}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Mejor Tarifa (Costo Base)</span>
+              <span className={styles.summaryValueSuccess}>${summaryCard.minItem.costoUnidadBase} - {summaryCard.minItem.proveedor?.Nombre_Proveedor || summaryCard.minItem.proveedor?.nombre || 'Proveedor'}</span>
+            </div>
+            <div className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>Ahorro vs Tarifa Alta</span>
+              <span className={styles.summaryValueInfo}>{summaryCard.savingsPercent}%</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <LoadingState />
@@ -136,32 +311,56 @@ export default function Page() {
             </TR>
           </THead>
           <TBody>
-            {items.map((item) => (
-              <TR key={item.id}>
-                <TD>{item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo}</TD>
-                <TD>{item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor}</TD>
-                <TD>{item.cantidadPresentacion || 1} {item.unidadPresentacion || 'Paquete'}</TD>
-                <TD>{item.cantidadEquivalenteBase} {item.insumo?.Unidad_Base || item.insumo?.unidadBase || ''}</TD>
-                <TD>${item.precioCompra}</TD>
-                <TD>${item.costoUnidadBase} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</TD>
-                <TD>
-                  <Badge status={item.activo ? 'active' : 'inactive'}>
-                    {item.activo ? 'Activo' : 'Inactivo'}
-                  </Badge>
-                </TD>
-                <TD>
-                  <div className={styles.actions}>
-                    <Button variant="secondary" onClick={() => handleOpenModal(item)}>Editar</Button>
-                    <Button 
-                      variant={item.activo ? 'danger' : 'primary'} 
-                      onClick={() => handleToggleActive(item)}
-                    >
-                      {item.activo ? 'Desactivar' : 'Activar'}
-                    </Button>
-                  </div>
-                </TD>
+            {filteredItems.length === 0 ? (
+              <TR>
+                <TD colSpan="8" style={{ textAlign: 'center', padding: '2rem' }}>No hay resultados para los filtros aplicados</TD>
               </TR>
-            ))}
+            ) : (
+              filteredItems.map((item) => {
+                const isBestPrice = item.activo && item.costoUnidadBase === bestPricesMap.get(item.idInsumo);
+                return (
+                <TR key={item.id}>
+                  <TD>{item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo}</TD>
+                  <TD>{item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor}</TD>
+                  <TD>{item.cantidadPresentacion || 1} {item.unidadPresentacion || 'Paquete'}</TD>
+                  <TD>{item.cantidadEquivalenteBase} {item.insumo?.Unidad_Base || item.insumo?.unidadBase || ''}</TD>
+                  <TD>${item.precioCompra}</TD>
+                  <TD>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <span>${item.costoUnidadBase} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</span>
+                      {isBestPrice && (
+                        <span className={styles.bestPriceBadge}>★ Más Económico</span>
+                      )}
+                    </div>
+                  </TD>
+                  <TD>
+                    <Badge status={item.activo ? 'active' : 'inactive'}>
+                      {item.activo ? 'Activo' : 'Inactivo'}
+                    </Badge>
+                  </TD>
+                  <TD>
+                    <div className={styles.actions}>
+                      <Button variant="secondary" onClick={() => handleOpenModal(item)}>Editar</Button>
+                      <Button 
+                        variant={item.activo ? 'danger' : 'primary'} 
+                        onClick={() => handleToggleActive(item)}
+                      >
+                        {item.activo ? 'Desactivar' : 'Activar'}
+                      </Button>
+                      {item.activo && (
+                        <Button 
+                          variant="success" 
+                          onClick={() => router.push(`/operations/purchases/new?idInsumo=${item.idInsumo}&idProveedor=${item.idProveedor}&precio=${item.precioCompra}`)}
+                        >
+                          Comprar
+                        </Button>
+                      )}
+                    </div>
+                  </TD>
+                </TR>
+                );
+              })
+            )}
           </TBody>
         </Table>
       )}
@@ -176,7 +375,6 @@ export default function Page() {
           <Input 
             label="ID Insumo" 
             name="idInsumo" 
-            
             value={formData.idInsumo || ''} 
             onChange={handleChange} 
             required 
@@ -184,7 +382,6 @@ export default function Page() {
           <Input 
             label="ID Proveedor" 
             name="idProveedor" 
-            
             value={formData.idProveedor || ''} 
             onChange={handleChange} 
             required 
@@ -192,7 +389,6 @@ export default function Page() {
           <Input 
             label="Presentación Compra" 
             name="presentacionCompra" 
-            
             value={formData.presentacionCompra || ''} 
             onChange={handleChange} 
             required 
@@ -208,7 +404,6 @@ export default function Page() {
           <Input 
             label="Unidad Presentación" 
             name="unidadPresentacion" 
-            
             value={formData.unidadPresentacion || ''} 
             onChange={handleChange} 
             required 
@@ -240,10 +435,8 @@ export default function Page() {
           <Input 
             label="Observaciones" 
             name="observaciones" 
-            
             value={formData.observaciones || ''} 
             onChange={handleChange} 
-            required 
           />
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
             <input 
