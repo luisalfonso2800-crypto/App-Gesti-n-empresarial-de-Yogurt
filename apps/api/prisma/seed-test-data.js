@@ -56,16 +56,50 @@ async function seed() {
     const prodFresaGalon = await prisma.producto.create({ data: { nombre: 'Yogurt Fresa Galón', idPresentacion: presGalon.id, categoria: 'Yogurt', canalVenta: 'Institucional', precioVenta: 25000, margenObjetivo: 25, activo: true } });
 
     console.log('Insertando Recetas...');
-    const recFresa1L = await prisma.receta.create({ data: { idProducto: prodFresa1L.id, nombre: 'Receta Yogurt Fresa 1L', rendimientoBase: 1, unidadRendimiento: 'Litros', activo: true } });
-    
-    await prisma.detalleReceta.createMany({
-      data: [
-        { idReceta: recFresa1L.id, idInsumo: inLeche.id, cantidadRequerida: 0.8, unidad: 'Litros', mermaPorcentaje: 2 },
-        { idReceta: recFresa1L.id, idInsumo: inFresa.id, cantidadRequerida: 0.1, unidad: 'Kilogramos', mermaPorcentaje: 5 },
-        { idReceta: recFresa1L.id, idInsumo: inAzucar.id, cantidadRequerida: 0.08, unidad: 'Kilogramos', mermaPorcentaje: 1 },
-        { idReceta: recFresa1L.id, idInsumo: inCultivo.id, cantidadRequerida: 2, unidad: 'Gramos', mermaPorcentaje: 0 },
-        { idReceta: recFresa1L.id, idInsumo: inBotella1L.id, cantidadRequerida: 1, unidad: 'Unidades', mermaPorcentaje: 1 }
-      ]
+    const recFresa1L = await prisma.receta.create({
+      data: {
+        idProducto: prodFresa1L.id,
+        nombre: 'Receta Yogurt Fresa 1L',
+        rendimientoBase: 1,
+        unidadRendimiento: 'Litros',
+        activo: true,
+        etapas: {
+          create: [
+            {
+              nombre: 'Preparación de Base',
+              orden: 1,
+              tiempoEstandarMin: 60,
+              detalles: {
+                create: [
+                  { idInsumo: inLeche.id, cantidadRequerida: 0.8, unidad: 'Litros', mermaPorcentaje: 2, tipoInsumo: 'BASE' },
+                  { idInsumo: inAzucar.id, cantidadRequerida: 0.08, unidad: 'Kilogramos', mermaPorcentaje: 1, tipoInsumo: 'BASE' },
+                  { idInsumo: inCultivo.id, cantidadRequerida: 2, unidad: 'Gramos', mermaPorcentaje: 0, tipoInsumo: 'BASE' }
+                ]
+              }
+            },
+            {
+              nombre: 'Saborización',
+              orden: 2,
+              tiempoEstandarMin: 30,
+              detalles: {
+                create: [
+                  { idInsumo: inFresa.id, cantidadRequerida: 0.1, unidad: 'Kilogramos', mermaPorcentaje: 5, tipoInsumo: 'COMPLEMENTO', esOpcional: true, grupoVariante: 'SABOR' }
+                ]
+              }
+            },
+            {
+              nombre: 'Empaque',
+              orden: 3,
+              tiempoEstandarMin: 120,
+              detalles: {
+                create: [
+                  { idInsumo: inBotella1L.id, cantidadRequerida: 1, unidad: 'Unidades', mermaPorcentaje: 1, tipoInsumo: 'EMPAQUE_BASE' }
+                ]
+              }
+            }
+          ]
+        }
+      }
     });
 
     // 2. Operación

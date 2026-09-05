@@ -24,6 +24,12 @@ export class RecipesController {
     return this.service.findActive();
   }
 
+  @Get(':id/bom')
+  @Bind(Param('id'))
+  findBom(id) {
+    return this.service.findBom(id);
+  }
+
   @Get(':id')
   @Bind(Param('id'))
   findOne(id) {

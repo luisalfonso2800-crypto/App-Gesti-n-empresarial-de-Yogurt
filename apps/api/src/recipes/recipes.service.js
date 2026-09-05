@@ -24,6 +24,10 @@ export class RecipesService {
     return item;
   }
 
+  async findBom(id) {
+    return this.findOne(id);
+  }
+
   async create(createDto) {
     return this.repository.create(createDto);
   }
