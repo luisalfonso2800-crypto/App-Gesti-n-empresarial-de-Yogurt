@@ -9,6 +9,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './presentations.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function PresentationsPage() {
   const [presentations, setPresentations] = useState([]);
@@ -108,6 +110,8 @@ export default function PresentationsPage() {
         </div>
         <Button onClick={() => handleOpenModal()}>Nueva Presentación</Button>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Aquí se define la estructura y tamaño físico del producto (como el envase y volumen), sin incluir precio o sabor. Es el 'molde' base para envasar el producto terminado." />
+
 
       {loading ? (
         <LoadingState />

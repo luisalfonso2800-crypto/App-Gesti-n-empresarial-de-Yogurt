@@ -9,6 +9,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './supplies.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function Page() {
   const [items, setItems] = useState([]);
@@ -126,6 +128,8 @@ export default function Page() {
         <p className={styles.subtitle}>Catálogo maestro de materias primas, envases y suministros requeridos para la formulación y empaque de productos.</p>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Aquí se registran los materiales que compras (ingredientes y empaques). Todo se maneja en unidades de medida estándar para facilitar el control en la fábrica." />
+
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <Input 

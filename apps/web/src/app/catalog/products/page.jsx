@@ -1,4 +1,6 @@
 'use client';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../../lib/api-client';

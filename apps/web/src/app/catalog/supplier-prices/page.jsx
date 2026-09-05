@@ -10,6 +10,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './supplier-prices.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function Page() {
   const router = useRouter();
@@ -270,6 +272,8 @@ export default function Page() {
         </div>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Permite comparar cuánto cuesta cada insumo dependiendo del proveedor. Ayuda a encontrar la mejor opción de compra mostrando el costo real por unidad mínima." />
+
 
       <div className={styles.filterBar}>
         <div className={styles.filterGroup}>

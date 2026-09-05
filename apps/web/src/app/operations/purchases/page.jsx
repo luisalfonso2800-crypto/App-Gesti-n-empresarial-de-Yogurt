@@ -9,6 +9,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './purchases.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function PurchasesPage() {
   const [purchases, setPurchases] = useState([]);
@@ -89,6 +91,8 @@ export default function PurchasesPage() {
         </div>
         <Button onClick={handleOpenModal}>Nueva Compra</Button>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Aquí se documenta la llegada de nuevos insumos a la planta. Registra qué se recibió, cuánto costó y confirma que la cantidad física coincida con la comprada." />
+
 
       {loading ? (
         <LoadingState />

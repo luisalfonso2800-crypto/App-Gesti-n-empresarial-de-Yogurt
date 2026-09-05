@@ -9,6 +9,8 @@ import { Modal } from '../../../components/ui/Modal';
 import { Input } from '../../../components/ui/Input';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './suppliers.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function Page() {
   const [items, setItems] = useState([]);
@@ -112,6 +114,8 @@ export default function Page() {
         </div>
         <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Directorio de todas las personas y empresas que nos venden los insumos necesarios para operar. Funciona como un directorio centralizado de compras." />
+
 
       {loading ? (
         <LoadingState />

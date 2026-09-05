@@ -8,6 +8,8 @@ import { Badge } from '../../../components/ui/Badge';
 import { Input } from '../../../components/ui/Input';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './recipes.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function Page() {
   const [items, setItems] = useState([]);
@@ -211,6 +213,8 @@ export default function Page() {
           </div>
           <Button variant="secondary" onClick={handleCloseEditor}>Volver al Listado</Button>
         </div>
+      <ContextBanner title="Concepto Técnico" description="Instrucciones paso a paso para fabricar los productos. Incluye la lista de ingredientes, cantidades exactas y los tiempos o temperaturas requeridos en el proceso." />
+
 
         <form onSubmit={handleSubmit} className={styles.editorContainer}>
           <div>

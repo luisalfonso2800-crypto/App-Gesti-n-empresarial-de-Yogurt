@@ -7,6 +7,8 @@ import { Table, THead, TBody, TR, TH, TD } from '../../../components/ui/Table';
 import { Badge } from '../../../components/ui/Badge';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './production.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function ProductionPage() {
   const [productions, setProductions] = useState([]);
@@ -310,6 +312,8 @@ export default function ProductionPage() {
         </div>
         <Button onClick={handleOpenCreate}>Nueva Orden</Button>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Aquí se gestiona el trabajo de fábrica. Permite dar la orden de fabricar, descuenta los insumos usados automáticamente y registra los desperdicios o mermas." />
+
 
       {loading ? (
         <LoadingState />
