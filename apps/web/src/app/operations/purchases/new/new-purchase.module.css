@@ -1,38 +1,346 @@
-.container { display: flex; flex-direction: column; gap: 2rem; }
-.header { display: flex; justify-content: space-between; align-items: center; }
-.title { font-size: 1.5rem; font-weight: bold; color: #111827; margin: 0; }
-.subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
-.headerActions { display: flex; gap: 1rem; }
-.empty { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 4rem; background-color: white; border-radius: 0.5rem; border: 1px dashed #d1d5db; color: #6b7280; }
-.content { display: flex; flex-direction: column; gap: 2rem; }
-.groupCard { background-color: white; border-radius: 0.5rem; border: 1px solid #e5e7eb; overflow: hidden; }
-.groupTitle { background-color: #f3f4f6; padding: 1rem 1.5rem; margin: 0; font-size: 1.125rem; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
-.table { width: 100%; border-collapse: collapse; text-align: left; }
-.table th, .table td { padding: 0.75rem 1.5rem; border-bottom: 1px solid #e5e7eb; }
-.table th { font-size: 0.875rem; font-weight: 600; color: #4b5563; text-transform: uppercase; background-color: #f9fafb; }
-.rowMissing { background-color: #fef2f2; }
-.rowMissing td { color: #991b1b; }
-.checkbox { width: 1.25rem; height: 1.25rem; cursor: pointer; }
-.qtyInput { width: 4rem; padding: 0.25rem; border: 1px solid #d1d5db; border-radius: 0.25rem; text-align: center; }
-.footerActions { display: flex; justify-content: flex-end; gap: 1rem; padding: 1rem; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; }
+.container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: system-ui, -apple-system, sans-serif;
+}
 
-/* Print specific columns */
-.printCheckboxCol { display: none; }
-.printNotesCol { display: none; }
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.cardTitle {
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  color: #374151;
+  border-bottom: 1px solid #f3f4f6;
+  padding-bottom: 0.5rem;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.input, .select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.dropdownItem {
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.dropdownItem:hover {
+  background: #f3f4f6;
+}
+
+.dropdownAction {
+  padding: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: #2563eb;
+  font-weight: 500;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdownAction:hover {
+  background: #eff6ff;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1.5fr auto;
+  gap: 0.5rem;
+  align-items: end;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+}
+
+.rowHeader {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.removeBtn:hover {
+  background: #fee2e2;
+  border-radius: 4px;
+}
+
+.addBtn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.addBtn:hover {
+  background: #1d4ed8;
+}
+
+.toggleBtn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  margin-top: 0.25rem;
+}
+
+.toggleBtn:hover {
+  text-decoration: underline;
+}
+
+.qualitySection {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed #d1d5db;
+}
+
+.summary {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.submitBtn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.submitBtn:hover {
+  background: #059669;
+}
+
+/* Modal styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.cancelBtn {
+  background: white;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancelBtn:hover {
+  background: #f3f4f6;
+}
+
+.saveBtn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.saveBtn:hover {
+  background: #1d4ed8;
+}
+
+.stats {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+.checklistItem:hover {
+  background: #f9fafb;
+}
 
 @media print {
-  .headerActions, .reconcileCol, .footerActions, .qtyInput { display: none !important; }
-  .qtyCol { display: none !important; } /* We will show an empty column for qty if needed, or just let them write */
+  .noPrint {
+    display: none !important;
+  }
+  .container {
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+  .header {
+    margin-bottom: 1rem;
+  }
+  .card {
+    box-shadow: none;
+    border: none;
+    margin-bottom: 2rem;
+    padding: 0;
+  }
+  .cardTitle {
+    font-size: 1.25rem;
+    font-weight: bold;
+    border-bottom: 2px solid #000;
+    margin-bottom: 1rem;
+  }
   
-  .printCheckboxCol { display: table-cell; width: 3rem; text-align: center; }
-  .printNotesCol { display: table-cell; width: 40%; border-left: 1px solid #d1d5db; }
+  .printArea {
+    display: none !important;
+  }
+
+  .printTableContainer {
+    display: block !important;
+  }
+
+  .printTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+  }
   
-  .container { gap: 1rem; }
-  .groupCard { border: 2px solid #000; margin-bottom: 2rem; break-inside: avoid; }
-  .groupTitle { background-color: #fff; border-bottom: 2px solid #000; color: #000; }
-  .table th, .table td { border-bottom: 1px solid #000; color: #000; padding: 0.5rem 1rem; }
-  .table th { background-color: #fff; border-bottom: 2px solid #000; }
-  .rowMissing { background-color: transparent; }
-  .rowMissing td { color: #000; }
-  .rowMissing td { color: #000; }
+  .printTable th, .printTable td {
+    border: 1px solid #000;
+    padding: 0.5rem;
+    text-align: left;
+    font-size: 0.8rem;
+  }
+  
+  .printTable th {
+    background-color: #f3f4f6 !important;
+    -webkit-print-color-adjust: exact;
+    color-adjust: exact;
+  }
+  
+  .printCheckbox {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #000;
+    display: inline-block;
+  }
 }
+
+.printTableContainer {
+  display: none;
+}
+
