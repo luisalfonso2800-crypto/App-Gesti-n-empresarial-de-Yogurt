@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './new-purchase.module.css';
-import { TrashIcon, CheckIcon, XIcon } from '../../../../components/ui/icons';
+import { TrashIcon, CheckIcon, XIcon, AlertCircleIcon, ClockIcon, RotateCcwIcon } from '../../../../components/ui/icons';
 import { apiClient } from '../../../../lib/api-client';
 
 export default function NewPurchasePage() {
@@ -39,15 +39,31 @@ export default function NewPurchasePage() {
   ]);
   const [observaciones, setObservaciones] = useState('');
 
+  // Toast state
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const toastTimeoutRef = useRef(null);
+
+  const showNotification = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    if (toastTimeoutRef.current) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 3500);
+  };
+
   // Modals state
   const [showProvModal, setShowProvModal] = useState(false);
-  const [newProv, setNewProv] = useState({ nombre: '', nitCedula: '', telefono: '', personaContacto: '' });
+  const [newProv, setNewProv] = useState({ nombre: '', nitCedula: '', telefono: '', personaContacto: '', email: '', direccion: '', observaciones: '', activo: true });
   
   const [showInsumoModal, setShowInsumoModal] = useState(false);
   const [targetRowId, setTargetRowId] = useState(null);
   const [newInsumo, setNewInsumo] = useState({ nombre: '', categoria: 'MATERIA_PRIMA', unidadBase: 'KG', stockMinimo: 0, marca: '' });
 
   const [simulationResult, setSimulationResult] = useState({ subtotalGlobal: 0, itemsLiquidados: [] });
+  const [comprasAsentadas, setComprasAsentadas] = useState([]);
+  const [pendingItems, setPendingItems] = useState([]);
 
   // Dropdowns state
   const [provSearch, setProvSearch] = useState('');
@@ -114,10 +130,12 @@ export default function NewPurchasePage() {
 
   useEffect(() => {
     const simulate = async () => {
-      const itemsPayload = checklistItems.map(item => ({
+      const itemsPayload = checklistItems.filter(i => i.estadoOperativo !== 'DESCARTADO').map(item => ({
         idPrecioProveedor: item.idPrecioProveedor || item.priceData?.id,
         cantidadEmpaques: item.cantidadSolicitada || 1,
-        precioEmpaque: item.precioCompraActual || 0
+        precioEmpaque: item.precioCompraActual || 0,
+        factorReal: item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1,
+        unidadBase: item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida
       }));
 
       if (itemsPayload.length > 0) {
@@ -199,20 +217,46 @@ export default function NewPurchasePage() {
   const totalConFlete = totalCompra + parseFloat(flete || 0);
 
   const handleCreateProv = async () => {
+    if (!newProv.nombre || !newProv.nitCedula) {
+      alert("Nombre y NIT/Cédula son obligatorios.");
+      return;
+    }
+    
+    const modalForm = newProv;
+    const payload = {
+      nombre: modalForm.nombre?.trim(),
+      nitCedula: modalForm.nitCedula?.trim(),
+      nombreContacto: modalForm.personaContacto?.trim() || modalForm.nombreContacto?.trim() || null,
+      telefono: modalForm.telefono?.trim() || null,
+      email: modalForm.email?.trim() || null,
+      direccion: modalForm.direccion?.trim() || null,
+      observaciones: modalForm.observaciones?.trim() || null,
+      activo: modalForm.activo !== undefined ? modalForm.activo : true,
+    };
+
     try {
-      const p = await apiClient.post('/suppliers', newProv);
+      const p = await apiClient.post('/suppliers', payload);
       if (p) {
         setProveedoresDB(prev => [...prev, p]);
-        setProveedorSeleccionado(p);
+        
+        if (targetRowId !== null) {
+          updateChecklistItem(targetRowId, 'idProveedorAlternativo', p.id);
+          setTargetRowId(null);
+        } else {
+          setProveedorSeleccionado(p);
+          setProvSearch(p.nombre);
+          setShowProvDropdown(false);
+        }
+        
         setShowProvModal(false);
-        setProvSearch(p.nombre);
-        setShowProvDropdown(false);
+        showNotification(`Proveedor "${payload.nombre}" registrado y asignado.`);
       } else {
         alert("Error al registrar proveedor en el sistema.");
       }
     } catch (err) {
       console.error(err);
-      alert("Error de red");
+      const msg = err?.response?.data?.error || err?.response?.data?.message || err?.message || "Error de red al registrar proveedor (posible NIT duplicado)";
+      alert(msg);
     }
   };
 
@@ -235,12 +279,13 @@ export default function NewPurchasePage() {
         }));
         setShowInsumoModal(false);
         setActiveInsumoDropdown(null);
+        showNotification(`Insumo "${i.nombre}" registrado exitosamente.`, 'success');
       } else {
-        alert("Error al registrar insumo en el sistema.");
+        showNotification("Error al registrar insumo en el sistema.", 'error');
       }
     } catch (err) {
       console.error(err);
-      alert("Error de red");
+      showNotification("Error de red al registrar insumo.", 'error');
     }
   };
 
@@ -278,7 +323,7 @@ export default function NewPurchasePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!proveedorSeleccionado) {
-      alert("Seleccione un proveedor");
+      showNotification("Seleccione un proveedor para continuar.", 'error');
       return;
     }
 
@@ -312,15 +357,15 @@ export default function NewPurchasePage() {
     try {
       const res = await apiClient.post('/purchases', payload);
       if (res) {
-        alert("Compra registrada exitosamente");
+        showNotification("Compra registrada exitosamente", 'success');
         sessionStorage.removeItem('selectedForPurchase');
         router.push('/operations/purchases');
       } else {
-        alert("Error al registrar compra");
+        showNotification("Error al registrar compra", 'error');
       }
     } catch (err) {
       console.error(err);
-      alert("Error de red");
+      showNotification("Error de red al registrar la compra.", 'error');
     }
   };
 
@@ -341,9 +386,102 @@ export default function NewPurchasePage() {
   // Datalist brands extraction
   const todasLasMarcas = Array.from(new Set(insumosDB.map(i => i.marca).filter(Boolean)));
 
-  if (phase === 1) {
-    return (
-      <div className={styles.container}>
+  const renderModals = () => (
+    <>
+      {/* Modal Proveedor */}
+      {showProvModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalTitle}>Nuevo Proveedor</div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Nombre / Razón Social *</label>
+              <input type="text" className={styles.input} value={newProv.nombre} onChange={e => setNewProv({...newProv, nombre: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>NIT / Cédula *</label>
+              <input type="text" className={styles.input} value={newProv.nitCedula} onChange={e => setNewProv({...newProv, nitCedula: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Teléfono</label>
+              <input type="text" className={styles.input} value={newProv.telefono} onChange={e => setNewProv({...newProv, telefono: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Email</label>
+              <input type="email" className={styles.input} value={newProv.email} onChange={e => setNewProv({...newProv, email: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Persona de Contacto</label>
+              <input type="text" className={styles.input} value={newProv.personaContacto} onChange={e => setNewProv({...newProv, personaContacto: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Dirección</label>
+              <input type="text" className={styles.input} value={newProv.direccion} onChange={e => setNewProv({...newProv, direccion: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Observaciones</label>
+              <textarea className={styles.input} value={newProv.observaciones} onChange={e => setNewProv({...newProv, observaciones: e.target.value})} />
+            </div>
+            <div className={styles.formGroup} style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
+              <input type="checkbox" checked={newProv.activo} onChange={e => setNewProv({...newProv, activo: e.target.checked})} />
+              <label className={styles.label} style={{ margin: 0 }}>Activo</label>
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.cancelBtn} onClick={() => setShowProvModal(false)}>Cancelar</button>
+              <button type="button" className={styles.saveBtn} onClick={handleCreateProv}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Insumo */}
+      {showInsumoModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalTitle}>Nuevo Insumo</div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Nombre</label>
+              <input type="text" className={styles.input} value={newInsumo.nombre} onChange={e => setNewInsumo({...newInsumo, nombre: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Marca</label>
+              <input type="text" className={styles.input} value={newInsumo.marca} onChange={e => setNewInsumo({...newInsumo, marca: e.target.value})} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Categoría</label>
+              <select className={styles.select} value={newInsumo.categoria} onChange={e => setNewInsumo({...newInsumo, categoria: e.target.value})}>
+                <option value="MATERIA_PRIMA">Materia Prima</option>
+                <option value="EMPAQUE">Empaque</option>
+                <option value="LIMPIEZA">Limpieza</option>
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Unidad Base</label>
+              <select className={styles.select} value={newInsumo.unidadBase} onChange={e => setNewInsumo({...newInsumo, unidadBase: e.target.value})}>
+                <option value="kg">Kilogramos (kg)</option>
+                <option value="L">Litros (L)</option>
+                <option value="Unidades">Unidad (Unidades)</option>
+                <option value="g">Gramos (g)</option>
+                <option value="ml">Mililitros (ml)</option>
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Stock Mínimo</label>
+              <input type="number" className={styles.input} value={newInsumo.stockMinimo} onChange={e => setNewInsumo({...newInsumo, stockMinimo: parseFloat(e.target.value) || 0})} />
+            </div>
+            <div className={styles.modalActions}>
+              <button type="button" className={styles.cancelBtn} onClick={() => setShowInsumoModal(false)}>Cancelar</button>
+              <button type="button" className={styles.saveBtn} onClick={handleCreateInsumo}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <>
+      {phase === 1 ? (
+        <div className={styles.container}>
         <div className={styles.header}>
           <h1>Checklist de Compras</h1>
           <div className={styles.noPrint} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
@@ -479,7 +617,7 @@ export default function NewPurchasePage() {
                       </div>
 
                       {/* Motivos para NO_CONSEGUIDO */}
-                      {item.estadoOperativo === 'NO_CONSEGUIDO' && (
+                      {(item.estadoOperativo === 'NO_CONSEGUIDO' || item.estadoOperativo === 'PENDIENTE_OTRO_PROVEEDOR') && (
                         <div className={styles.motivosBar}>
                           <label className={styles.label} style={{ color: '#991b1b' }}>Motivo por el cual no se consiguió:</label>
                           <select 
@@ -505,11 +643,98 @@ export default function NewPurchasePage() {
                               style={{ borderColor: '#fca5a5' }}
                             />
                           )}
+                          <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                            <button 
+                              type="button" 
+                              className={styles.cancelBtn} 
+                              onClick={() => {
+                                if (!item.motivoNoConseguido) {
+                                  showNotification('Seleccione un motivo primero.', 'error');
+                                  return;
+                                }
+                                updateChecklistItem(item._id, 'estadoOperativo', 'PENDIENTE_OTRO_PROVEEDOR');
+                                setPendingItems(prev => [...prev, { ...item, fechaRegistro: new Date().toLocaleTimeString() }]);
+                                const newSelection = checklistItems.filter(i => i._id !== item._id);
+                                setChecklistItems(newSelection);
+                                sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
+                                showNotification(`"${item.insumoData?.nombre || item.nombre}" movido a pendientes: ${item.motivoNoConseguido}`, 'info');
+                              }}
+                            >
+                              Registrar motivo y mantener en lista
+                            </button>
+                            <button 
+                              type="button" 
+                              className={styles.cancelBtn} 
+                              style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                              onClick={() => {
+                                updateChecklistItem(item._id, 'estadoOperativo', 'DESCARTADO');
+                                const newSelection = checklistItems.filter(i => i._id !== item._id);
+                                setChecklistItems(newSelection);
+                                sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
+                                showNotification('Insumo descartado de la orden.', 'warning');
+                              }}
+                            >
+                              Registrar motivo y descartar
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Edición Comercial (Flexibilidad) */}
+                      {item.editCommercial && (
+                        <div className={styles.qualitySection} style={{ borderTopColor: '#3b82f6' }}>
+                          <div style={{ gridColumn: '1 / -1', fontWeight: 600, color: '#1e40af' }}>Nuevas condiciones comerciales:</div>
+                          <div>
+                            <label className={styles.label}>Proveedor</label>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <select className={styles.select} style={{ flex: 1 }} value={item.idProveedorAlternativo || ''} onChange={e => {
+                                updateChecklistItem(item._id, 'idProveedorAlternativo', e.target.value);
+                              }}>
+                                <option value="">-- Mismo Proveedor --</option>
+                                {proveedoresDB.map(p => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+                              </select>
+                              <button type="button" className={styles.saveBtn} style={{ marginTop: 0, width: 'auto' }} onClick={() => {
+                                setTargetRowId(item._id);
+                                setNewProv({ nombre: '', nitCedula: '', telefono: '', personaContacto: '', email: '', direccion: '', observaciones: '', activo: true });
+                                setShowProvModal(true);
+                              }}>
+                                + Nuevo Proveedor
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <label className={styles.label}>Marca</label>
+                            <input type="text" className={styles.input} list="marcas-list" value={item.marcaAlternativa || item.insumoData?.marca || item.marca || ''} onChange={e => updateChecklistItem(item._id, 'marcaAlternativa', e.target.value)} />
+                          </div>
+                          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '0.5rem' }}>
+                            <div style={{ flex: 1 }}>
+                              <label className={styles.label}>Empaque Comercial</label>
+                              <input type="text" className={styles.input} value={item.empaqueAlternativo || item.priceData?.presentacionCompra || 'Bulto'} onChange={e => updateChecklistItem(item._id, 'empaqueAlternativo', e.target.value)} />
+                            </div>
+                            <div style={{ width: '100px' }}>
+                              <label className={styles.label}>Cont. Neto</label>
+                              <input type="number" step="any" className={styles.input} value={item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1} onChange={e => updateChecklistItem(item._id, 'contenidoBaseEditado', parseFloat(e.target.value) || 1)} />
+                            </div>
+                            <div style={{ width: '100px' }}>
+                              <label className={styles.label}>Unidad</label>
+                              <select className={styles.select} value={item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida} onChange={e => updateChecklistItem(item._id, 'unidadBaseEditada', e.target.value)}>
+                                <option value="kg">kg</option>
+                                <option value="g">g</option>
+                                <option value="L">L</option>
+                                <option value="ml">ml</option>
+                                <option value="Unidades">Unidades</option>
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       )}
 
                       {/* Zona Control: Botones de estado */}
                       <div className={styles.checklistFooter}>
+                        <button type="button" className={styles.toggleBtn} onClick={() => updateChecklistItem(item._id, 'editCommercial', !item.editCommercial)} style={{ marginRight: 'auto' }}>
+                          ¿Comprado con otros datos? (Cambiar proveedor / marca / empaque)
+                        </button>
+
                         <button 
                           className={`${styles.btnNoConseguido} ${item.estadoOperativo === 'NO_CONSEGUIDO' ? styles.btnNoConseguidoActive : ''}`}
                           onClick={() => updateChecklistItem(item._id, 'estadoOperativo', 'NO_CONSEGUIDO')}
@@ -518,7 +743,49 @@ export default function NewPurchasePage() {
                         </button>
                         <button 
                           className={`${styles.btnConseguido} ${item.estadoOperativo === 'CONSEGUIDO' ? styles.btnConseguidoActive : ''}`}
-                          onClick={() => updateChecklistItem(item._id, 'estadoOperativo', 'CONSEGUIDO')}
+                          onClick={async () => {
+                            updateChecklistItem(item._id, 'estadoOperativo', 'CONSEGUIDO');
+                            const simItem = simulationResult.itemsLiquidados.find(si => si.idPrecioProveedor === (item.idPrecioProveedor || item.priceData?.id));
+                            if (!simItem) return;
+                            
+                            const payload = {
+                              idProveedor: item.idProveedorAlternativo || item.proveedorData?.id,
+                              esNuevoProveedor: false,
+                              condicion: 'CONTADO',
+                              total: simItem.subtotal,
+                              fechaCompra: new Date().toISOString(),
+                              detalles: [{
+                                idInsumo: item.idInsumo,
+                                esNuevoInsumo: false,
+                                cantidad: item.cantidadSolicitada,
+                                precioUnitario: item.precioCompraActual,
+                                subtotal: simItem.subtotal,
+                                presentacion: `${item.empaqueAlternativo || item.priceData?.presentacionCompra || 'Empaque'} ${item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1}${item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida}`,
+                                empaques: item.cantidadSolicitada,
+                                contenidoBase: item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1,
+                                unidadEmpaque: item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida,
+                                cantidadBaseTotal: simItem.ingresoNetoBodega,
+                                costoBase: simItem.costoBaseUnitario,
+                                marca: item.marcaAlternativa || item.insumoData?.marca || item.marca || ''
+                              }]
+                            };
+
+                            try {
+                              const res = await apiClient.post('/purchases', payload);
+                              if (res) {
+                                // Add to comprasAsentadas
+                                setComprasAsentadas(prev => [...prev, { ...item, ...payload.detalles[0], idCompra: res.id, provNombre: proveedoresDB.find(p => p.id === payload.idProveedor)?.nombre || item.proveedorData?.nombre }]);
+                                // Remove from checklistItems
+                                const remainingItems = checklistItems.filter(i => i._id !== item._id);
+                                setChecklistItems(remainingItems);
+                                sessionStorage.setItem('selectedForPurchase', JSON.stringify(remainingItems));
+                                showNotification('Compra registrada y asentada.', 'success');
+                              }
+                            } catch (e) {
+                              showNotification('Error asentando compra.', 'error');
+                              console.error(e);
+                            }
+                          }}
                         >
                           <CheckIcon size={18} /> Conseguido
                         </button>
@@ -530,11 +797,109 @@ export default function NewPurchasePage() {
             ))
           )}
         </div>
-      </div>
-    );
-  }
 
-  return (
+        {/* Insumos Pendientes / No Conseguidos */}
+        {pendingItems.length > 0 && (
+          <div className={`${styles.card} ${styles.pendingSection}`}>
+            <div className={styles.cardTitle} style={{ color: '#854d0e', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <ClockIcon size={20} />
+              Insumos Pendientes de Compra (No Conseguidos)
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table className={styles.tablePending} style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #fde047', textAlign: 'left', background: '#fef9c3' }}>
+                    <th style={{ padding: '0.75rem' }}>Insumo</th>
+                    <th style={{ padding: '0.75rem' }}>Proveedor / Presentación</th>
+                    <th style={{ padding: '0.75rem' }}>Motivo Registrado</th>
+                    <th style={{ padding: '0.75rem' }}>Estado</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'center' }}>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingItems.map((pi, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #fef08a' }}>
+                      <td style={{ padding: '0.75rem' }}><b>{pi.insumoData?.nombre || pi.nombre}</b><br/><span style={{ fontSize: '0.75rem', color: '#713f12' }}>{pi.insumoData?.categoria || pi.categoria}</span></td>
+                      <td style={{ padding: '0.75rem' }}>{pi.proveedorData?.nombre || pi.proveedorNombre || 'N/A'}<br/><span style={{ fontSize: '0.75rem', color: '#713f12' }}>{pi.priceData?.presentacionCompra || 'N/A'}</span></td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span style={{ fontWeight: 600, color: '#991b1b' }}>{pi.motivoNoConseguido}</span>
+                        {pi.detalleMotivoNoConseguido && <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#7f1d1d' }}>{pi.detalleMotivoNoConseguido}</div>}
+                      </td>
+                      <td style={{ padding: '0.75rem' }}>
+                        <span className={styles.badgePending}>Pendiente</span>
+                      </td>
+                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                        <button 
+                          type="button" 
+                          className={styles.btnReintentar}
+                          onClick={() => {
+                            setChecklistItems(prev => [...prev, { ...pi, estadoOperativo: 'NO_CONSEGUIDO' }]);
+                            setPendingItems(prev => prev.filter((_, i) => i !== idx));
+                            showNotification(`"${pi.insumoData?.nombre || pi.nombre}" devuelto al checklist activo.`, 'info');
+                          }}
+                        >
+                          <RotateCcwIcon size={16} /> Reintentar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Resumen de Compras Asentadas */}
+        {comprasAsentadas.length > 0 && (
+          <div className={styles.card} style={{ marginTop: '2rem', borderTop: '4px solid #10b981' }}>
+            <div className={styles.cardTitle} style={{ color: '#065f46' }}>Resumen de Compras Asentadas en Sesión</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                <thead>
+                  <tr style={{ background: '#f3f4f6', borderBottom: '1px solid #d1d5db', textAlign: 'left' }}>
+                    <th style={{ padding: '0.75rem' }}>Insumo</th>
+                    <th style={{ padding: '0.75rem' }}>Proveedor</th>
+                    <th style={{ padding: '0.75rem' }}>Marca</th>
+                    <th style={{ padding: '0.75rem' }}>Cant. Empaques</th>
+                    <th style={{ padding: '0.75rem' }}>Neto a Bodega</th>
+                    <th style={{ padding: '0.75rem' }}>Costo Base</th>
+                    <th style={{ padding: '0.75rem' }}>Subtotal Pagado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comprasAsentadas.map((c, i) => (
+                    <tr key={i} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: '0.75rem' }}>{c.insumoData?.nombre || c.nombre}</td>
+                      <td style={{ padding: '0.75rem' }}>{c.provNombre || 'N/A'}</td>
+                      <td style={{ padding: '0.75rem' }}>{c.marca}</td>
+                      <td style={{ padding: '0.75rem' }}>{c.empaques}</td>
+                      <td style={{ padding: '0.75rem' }}>{c.cantidadBaseTotal.toFixed(2)} {c.unidadEmpaque}</td>
+                      <td style={{ padding: '0.75rem' }}>${c.costoBase.toFixed(2)}</td>
+                      <td style={{ padding: '0.75rem' }}>${c.subtotal.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+              <button 
+                type="button" 
+                className={styles.submitBtn} 
+                style={{ width: 'auto', background: '#3b82f6' }}
+                onClick={() => {
+                  setComprasAsentadas([]);
+                  if (checklistItems.length === 0) {
+                     router.push('/operations/purchases');
+                  }
+                }}
+              >
+                Limpiar Resumen / Finalizar Jornada
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      ) : (
     <div className={styles.container}>
       <datalist id="marcas-list">
         {todasLasMarcas.map(m => (
@@ -556,7 +921,7 @@ export default function NewPurchasePage() {
               <label className={styles.label}>Proveedor *</label>
               <input 
                 type="text" 
-                className={styles.input} 
+                className={`${styles.input} ${toast.show && toast.type === 'success' ? styles.successBorder : ''}`} 
                 value={provSearch}
                 onChange={(e) => {
                   setProvSearch(e.target.value);
@@ -571,7 +936,7 @@ export default function NewPurchasePage() {
               {showProvDropdown && (
                 <div className={styles.dropdown}>
                   <div className={styles.dropdownAction} onClick={() => {
-                     setNewProv({ nombre: provSearch, nitCedula: '', telefono: '', personaContacto: '' });
+                     setNewProv({ nombre: provSearch, nitCedula: '', telefono: '', personaContacto: '', email: '', direccion: '', observaciones: '', activo: true });
                      setShowProvModal(true);
                   }}>
                     + Registrar Nuevo Proveedor
@@ -747,78 +1112,22 @@ export default function NewPurchasePage() {
           Confirmar Compra
         </button>
       </form>
-
-      {/* Modal Proveedor */}
-      {showProvModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalTitle}>Nuevo Proveedor</div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Nombre / Razón Social</label>
-              <input type="text" className={styles.input} value={newProv.nombre} onChange={e => setNewProv({...newProv, nombre: e.target.value})} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>NIT / Cédula</label>
-              <input type="text" className={styles.input} value={newProv.nitCedula} onChange={e => setNewProv({...newProv, nitCedula: e.target.value})} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Teléfono</label>
-              <input type="text" className={styles.input} value={newProv.telefono} onChange={e => setNewProv({...newProv, telefono: e.target.value})} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Persona de Contacto</label>
-              <input type="text" className={styles.input} value={newProv.personaContacto} onChange={e => setNewProv({...newProv, personaContacto: e.target.value})} />
-            </div>
-            <div className={styles.modalActions}>
-              <button type="button" className={styles.cancelBtn} onClick={() => setShowProvModal(false)}>Cancelar</button>
-              <button type="button" className={styles.saveBtn} onClick={handleCreateProv}>Guardar</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Insumo */}
-      {showInsumoModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalTitle}>Nuevo Insumo</div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Nombre</label>
-              <input type="text" className={styles.input} value={newInsumo.nombre} onChange={e => setNewInsumo({...newInsumo, nombre: e.target.value})} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Marca</label>
-              <input type="text" className={styles.input} value={newInsumo.marca} onChange={e => setNewInsumo({...newInsumo, marca: e.target.value})} />
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Categoría</label>
-              <select className={styles.select} value={newInsumo.categoria} onChange={e => setNewInsumo({...newInsumo, categoria: e.target.value})}>
-                <option value="MATERIA_PRIMA">Materia Prima</option>
-                <option value="EMPAQUE">Empaque</option>
-                <option value="LIMPIEZA">Limpieza</option>
-              </select>
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Unidad Base</label>
-              <select className={styles.select} value={newInsumo.unidadBase} onChange={e => setNewInsumo({...newInsumo, unidadBase: e.target.value})}>
-                <option value="kg">Kilogramos (kg)</option>
-                <option value="L">Litros (L)</option>
-                <option value="Unidades">Unidad (Unidades)</option>
-                <option value="g">Gramos (g)</option>
-                <option value="ml">Mililitros (ml)</option>
-              </select>
-            </div>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Stock Mínimo</label>
-              <input type="number" className={styles.input} value={newInsumo.stockMinimo} onChange={e => setNewInsumo({...newInsumo, stockMinimo: parseFloat(e.target.value) || 0})} />
-            </div>
-            <div className={styles.modalActions}>
-              <button type="button" className={styles.cancelBtn} onClick={() => setShowInsumoModal(false)}>Cancelar</button>
-              <button type="button" className={styles.saveBtn} onClick={handleCreateInsumo}>Guardar</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
+    )}
+    {renderModals()}
+    {toast.show && (
+      <div className={styles.toastContainer}>
+        <div className={`${styles.toast} ${toast.type === 'success' ? styles.toastSuccess : styles.toastError}`}>
+          <div className={styles.toastIcon}>
+            <CheckIcon size={20} />
+          </div>
+          <span className={styles.toastMessage}>{toast.message}</span>
+          <button type="button" className={styles.toastCloseBtn} onClick={() => setToast(prev => ({ ...prev, show: false }))}>
+            <XIcon size={16} />
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

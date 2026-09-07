@@ -30,3 +30,11 @@ export const StoreIcon = ({ size = 24, className = '', strokeWidth = 2, ...props
 export const AlertCircleIcon = ({ size = 24, className = '', strokeWidth = 2, ...props }) => (
   <svg width={size} height={size} className={className} strokeWidth={strokeWidth} fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
 );
+
+export const ClockIcon = ({ size = 24, className = '', strokeWidth = 2, ...props }) => (
+  <svg width={size} height={size} className={className} strokeWidth={strokeWidth} fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+);
+
+export const RotateCcwIcon = ({ size = 24, className = '', strokeWidth = 2, ...props }) => (
+  <svg width={size} height={size} className={className} strokeWidth={strokeWidth} fill="none" stroke="currentColor" viewBox="0 0 24 24" {...props}><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+);

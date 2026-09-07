@@ -174,10 +174,10 @@ export class PurchasesRepository {
     let subtotalGlobal = 0;
 
     for (const item of data.items) {
-      let factorReal = 1;
-      let unidadBase = 'Unidades';
+      let factorReal = item.factorReal ? parseFloat(item.factorReal) : 1;
+      let unidadBase = item.unidadBase || 'Unidades';
 
-      if (item.idPrecioProveedor) {
+      if (item.idPrecioProveedor && !item.factorReal) {
         const precioProv = await this.prisma.precioProveedor.findUnique({
           where: { id: item.idPrecioProveedor },
           include: { insumo: true }

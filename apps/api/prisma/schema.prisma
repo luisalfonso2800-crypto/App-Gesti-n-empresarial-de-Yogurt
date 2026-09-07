@@ -44,8 +44,8 @@ model Insumo {
 
 model Proveedor {
   id             String            @id @default(uuid()) @map("ID_Proveedor")
-  nombre         String            @map("Nombre_Proveedor")
-  nitCedula      String            @map("NIT_Cedula")
+  nombre         String            @unique @map("Nombre_Proveedor")
+  nitCedula      String            @unique @map("NIT_Cedula")
   nombreContacto String?           @map("Nombre_Contacto")
   telefono       String?           @map("Telefono")
   email          String?           @map("Email")
