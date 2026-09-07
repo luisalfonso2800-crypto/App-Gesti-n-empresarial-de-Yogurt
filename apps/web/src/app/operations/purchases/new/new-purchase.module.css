@@ -344,3 +344,157 @@
   display: none;
 }
 
+
+.checklistCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.checklistCardConseguido {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.checklistCardNoConseguido {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.checklistHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.insumoName {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.badgeStock {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.checklistBody {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.summaryBlock {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  flex: 1;
+  min-width: 280px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.summaryItem {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+}
+
+.summaryLabel {
+  color: #64748b;
+}
+
+.summaryValue {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.checklistFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  align-items: center;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.btnConseguido {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnConseguidoActive {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.btnNoConseguido {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnNoConseguidoActive {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.disabledArea {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.motivosBar {
+  background: #fff0f0;
+  border: 1px solid #fecaca;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

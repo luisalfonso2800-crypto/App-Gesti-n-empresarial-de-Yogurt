@@ -168,4 +168,45 @@ export class PurchasesRepository {
       return compra;
     });
   }
+
+  async simulate(data) {
+    const itemsLiquidados = [];
+    let subtotalGlobal = 0;
+
+    for (const item of data.items) {
+      let factorReal = 1;
+      let unidadBase = 'Unidades';
+
+      if (item.idPrecioProveedor) {
+        const precioProv = await this.prisma.precioProveedor.findUnique({
+          where: { id: item.idPrecioProveedor },
+          include: { insumo: true }
+        });
+        
+        if (precioProv) {
+          factorReal = parseFloat(precioProv.cantidadEquivalenteBase || 1);
+          unidadBase = precioProv.insumo?.unidadBase || unidadBase;
+        }
+      }
+
+      const ingresoNetoBodega = item.cantidadEmpaques * factorReal;
+      const subtotal = item.cantidadEmpaques * item.precioEmpaque;
+      const costoBaseUnitario = item.precioEmpaque / factorReal;
+
+      subtotalGlobal += subtotal;
+
+      itemsLiquidados.push({
+        idPrecioProveedor: item.idPrecioProveedor,
+        subtotal,
+        ingresoNetoBodega,
+        costoBaseUnitario,
+        unidadBase
+      });
+    }
+
+    return {
+      subtotalGlobal,
+      itemsLiquidados
+    };
+  }
 }

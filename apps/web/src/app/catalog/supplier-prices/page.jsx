@@ -76,14 +76,16 @@ export default function Page() {
       
       const newItem = {
         id: item.id,
+        idPrecioProveedor: item.id,
         idInsumo: item.idInsumo,
         idProveedor: item.idProveedor,
         insumoNombre: item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo,
         proveedorNombre: item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor,
-        marca: item.insumo?.Marca || item.insumo?.marca || '',
+        marca: item.insumo?.Marca || item.insumo?.marca || 'Sin marca',
         categoria: item.insumo?.Categoria || item.insumo?.categoria || 'Materia Prima',
         presentacionCompra: item.presentacionCompra || 'Paquete',
-        contenidoBase: item.cantidadPresentacion || 1,
+        contenidoBase: item.cantidadEquivalenteBase || item.cantidadPresentacion || 1,
+        unidadBase: item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidades',
         unidadMedida: item.unidadPresentacion || item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad',
         stockMinimo: item.insumo?.Stock_Minimo || item.insumo?.stockMinimo || 0,
         precioCompra: item.precioCompra,

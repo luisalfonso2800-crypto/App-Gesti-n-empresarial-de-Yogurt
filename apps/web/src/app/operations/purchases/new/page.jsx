@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './new-purchase.module.css';
-import { TrashIcon, CheckIcon } from '../../../../components/ui/icons';
+import { TrashIcon, CheckIcon, XIcon } from '../../../../components/ui/icons';
 import { apiClient } from '../../../../lib/api-client';
 
 export default function NewPurchasePage() {
@@ -47,6 +47,8 @@ export default function NewPurchasePage() {
   const [targetRowId, setTargetRowId] = useState(null);
   const [newInsumo, setNewInsumo] = useState({ nombre: '', categoria: 'MATERIA_PRIMA', unidadBase: 'KG', stockMinimo: 0, marca: '' });
 
+  const [simulationResult, setSimulationResult] = useState({ subtotalGlobal: 0, itemsLiquidados: [] });
+
   // Dropdowns state
   const [provSearch, setProvSearch] = useState('');
   const [showProvDropdown, setShowProvDropdown] = useState(false);
@@ -86,13 +88,14 @@ export default function NewPurchasePage() {
                 return {
                   ...item,
                   _id: idx,
-                  conseguido: false,
                   insumoData: insumoInfo || item.insumo || {},
                   proveedorData: provInfo || item.proveedor || {},
                   priceData: priceInfo || {},
                   cantidadSolicitada: item.cantidad || 1,
                   precioCompraActual: priceInfo?.precioCompra || item.precioCompra || item.precio || 0,
-                  estadoOperativo: 'Conseguido'
+                  estadoOperativo: 'CONSEGUIDO',
+                  motivoNoConseguido: '',
+                  detalleMotivoNoConseguido: ''
                 };
               });
               setChecklistItems(items);
@@ -109,6 +112,30 @@ export default function NewPurchasePage() {
     fetchInitialData();
   }, []);
 
+  useEffect(() => {
+    const simulate = async () => {
+      const itemsPayload = checklistItems.map(item => ({
+        idPrecioProveedor: item.idPrecioProveedor || item.priceData?.id,
+        cantidadEmpaques: item.cantidadSolicitada || 1,
+        precioEmpaque: item.precioCompraActual || 0
+      }));
+
+      if (itemsPayload.length > 0) {
+        try {
+          const res = await apiClient.post('/purchases/simulate', { items: itemsPayload });
+          setSimulationResult(res);
+        } catch (e) {
+          console.error('Error simulating:', e);
+        }
+      } else {
+        setSimulationResult({ subtotalGlobal: 0, itemsLiquidados: [] });
+      }
+    };
+    
+    if (phase === 1 && checklistItems.length > 0) {
+      simulate();
+    }
+  }, [checklistItems, phase]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -141,7 +168,7 @@ export default function NewPurchasePage() {
   };
 
   const proceedToForm = () => {
-    const conseguidos = checklistItems.filter(i => i.conseguido && i.estadoOperativo === 'Conseguido');
+    const conseguidos = checklistItems.filter(i => i.estadoOperativo === 'CONSEGUIDO');
     if (conseguidos.length > 0) {
       // Map to form details
       const newDetalles = conseguidos.map((c, i) => ({
@@ -382,63 +409,119 @@ export default function NewPurchasePage() {
                     const costoBase = item.precioCompraActual / contNeto;
                     
                     return (
-                    <div key={item._id} style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', border: '1px solid #e5e7eb', padding: '1rem', borderRadius: '8px' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={item.conseguido}
-                          onChange={() => toggleChecklistItem(item._id)}
-                          style={{ width: '18px', height: '18px' }}
-                        />
-                        Conseguido
-                      </label>
-                      
-                      <div style={{ flex: '1', minWidth: '200px' }}>
-                        <div style={{ fontWeight: 'bold' }}>{item.insumoData?.nombre || item.nombre}</div>
-                        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Categoría: {item.insumoData?.categoria || 'N/A'} | Marca: {item.insumoData?.marca || '-'}</div>
-                        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                          Presentación: {item.priceData?.presentacionCompra || 'N/A'} | {contNeto} {item.insumoData?.unidadBase}
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: '#9ca3af' }}>Stock Mín: {item.insumoData?.stockMinimo || 0}</div>
+                    <div key={item._id} className={`${styles.checklistCard} ${item.estadoOperativo === 'CONSEGUIDO' ? styles.checklistCardConseguido : styles.checklistCardNoConseguido}`}>
+                      {/* Zona Encabezado */}
+                      <div className={styles.checklistHeader}>
+                        <span className={styles.insumoName}>{item.insumoData?.nombre || item.nombre}</span>
+                        <span className={styles.badge}>Categoría: {item.insumoData?.categoria || item.categoria || 'N/A'}</span>
+                        <span className={styles.badge}>Marca: {item.insumoData?.marca || item.marca || 'Sin marca'}</span>
+                        <span className={`${styles.badge} ${styles.badgeStock}`}>
+                          Stock Mín: {item.insumoData?.stockMinimo || item.stockMinimo || 0} {item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida}
+                        </span>
+                        <span style={{ fontSize: '0.85rem', color: '#6b7280', marginLeft: 'auto' }}>
+                          Presentación: {item.priceData?.presentacionCompra || item.presentacionCompra || 'N/A'} ({item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1} {item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida})
+                        </span>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div>
+                      {/* Zona Central: Controles y Resumen */}
+                      <div className={`${styles.checklistBody} ${item.estadoOperativo !== 'CONSEGUIDO' ? styles.disabledArea : ''}`}>
+                        <div className={styles.inputGroup}>
                           <label className={styles.label}>Cant. Solicitada</label>
                           <input 
                             type="number" 
                             className={styles.input} 
-                            style={{ width: '80px' }}
+                            style={{ width: '120px' }}
+                            min="1"
+                            step="any"
                             value={item.cantidadSolicitada} 
-                            onChange={(e) => updateChecklistItem(item._id, 'cantidadSolicitada', parseFloat(e.target.value) || 0)} 
+                            onChange={(e) => updateChecklistItem(item._id, 'cantidadSolicitada', parseFloat(e.target.value))} 
+                            onBlur={(e) => {
+                               let val = parseFloat(e.target.value);
+                               if (isNaN(val) || val < 1) updateChecklistItem(item._id, 'cantidadSolicitada', 1);
+                            }}
                           />
                         </div>
-                        <div>
-                          <label className={styles.label}>Precio ($)</label>
+                        <div className={styles.inputGroup}>
+                          <label className={styles.label}>Precio Empaque ($)</label>
                           <input 
                             type="number" 
                             className={styles.input} 
-                            style={{ width: '100px' }}
+                            style={{ width: '140px' }}
+                            min="0"
+                            step="any"
                             value={item.precioCompraActual} 
                             onChange={(e) => updateChecklistItem(item._id, 'precioCompraActual', parseFloat(e.target.value) || 0)} 
                           />
                         </div>
-                        <div style={{ fontSize: '0.85rem', textAlign: 'right' }}>
-                          <div style={{ color: '#6b7280' }}>Costo Base</div>
-                          <div style={{ fontWeight: 'bold' }}>${costoBase.toFixed(2)} / {item.insumoData?.unidadBase}</div>
+
+                        {/* Bloque Resumen */}
+                        <div className={styles.summaryBlock}>
+                          {(() => {
+                            const simItem = simulationResult.itemsLiquidados.find(si => si.idPrecioProveedor === (item.idPrecioProveedor || item.priceData?.id));
+                            return (
+                              <>
+                                <div className={styles.summaryItem}>
+                                  <span className={styles.summaryLabel}>Subtotal:</span>
+                                  <span className={styles.summaryValue}>${simItem ? simItem.subtotal.toFixed(2) : '0.00'}</span>
+                                </div>
+                                <div className={styles.summaryItem}>
+                                  <span className={styles.summaryLabel}>Total neto a bodega:</span>
+                                  <span className={styles.summaryValue}>{simItem ? simItem.ingresoNetoBodega.toFixed(2) : '0.00'} {simItem ? simItem.unidadBase : ''}</span>
+                                </div>
+                                <div className={styles.summaryItem}>
+                                  <span className={styles.summaryLabel}>Costo unitario real:</span>
+                                  <span className={styles.summaryValue}>${simItem ? simItem.costoBaseUnitario.toFixed(2) : '0.00'} / {simItem ? simItem.unidadBase : ''}</span>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
-                        <div>
-                          <label className={styles.label}>Estado</label>
+                      </div>
+
+                      {/* Motivos para NO_CONSEGUIDO */}
+                      {item.estadoOperativo === 'NO_CONSEGUIDO' && (
+                        <div className={styles.motivosBar}>
+                          <label className={styles.label} style={{ color: '#991b1b' }}>Motivo por el cual no se consiguió:</label>
                           <select 
-                            className={styles.select} 
-                            value={item.estadoOperativo}
-                            onChange={(e) => updateChecklistItem(item._id, 'estadoOperativo', e.target.value)}
+                            className={styles.select}
+                            value={item.motivoNoConseguido || ''}
+                            onChange={(e) => updateChecklistItem(item._id, 'motivoNoConseguido', e.target.value)}
+                            style={{ borderColor: '#fca5a5' }}
                           >
-                            <option value="Conseguido">Conseguido</option>
-                            <option value="Agotado en Tienda">Agotado en Tienda</option>
-                            <option value="Proveedor ya no suministra">Proveedor ya no suministra</option>
+                            <option value="">-- Seleccione un motivo --</option>
+                            <option value="Agotado en punto de venta">Agotado en punto de venta</option>
+                            <option value="Proveedor ya no distribuye este insumo">Proveedor ya no distribuye este insumo</option>
+                            <option value="Precio fuera de presupuesto">Precio fuera de presupuesto</option>
+                            <option value="Presentación o calidad no aceptable">Presentación o calidad no aceptable</option>
+                            <option value="Otro motivo (especificar)">Otro motivo (especificar)</option>
                           </select>
+                          {item.motivoNoConseguido === 'Otro motivo (especificar)' && (
+                            <input 
+                              type="text" 
+                              className={styles.input} 
+                              placeholder="Especifique el motivo..."
+                              value={item.detalleMotivoNoConseguido || ''}
+                              onChange={(e) => updateChecklistItem(item._id, 'detalleMotivoNoConseguido', e.target.value)}
+                              style={{ borderColor: '#fca5a5' }}
+                            />
+                          )}
                         </div>
+                      )}
+
+                      {/* Zona Control: Botones de estado */}
+                      <div className={styles.checklistFooter}>
+                        <button 
+                          className={`${styles.btnNoConseguido} ${item.estadoOperativo === 'NO_CONSEGUIDO' ? styles.btnNoConseguidoActive : ''}`}
+                          onClick={() => updateChecklistItem(item._id, 'estadoOperativo', 'NO_CONSEGUIDO')}
+                        >
+                          <XIcon size={18} /> No Conseguido
+                        </button>
+                        <button 
+                          className={`${styles.btnConseguido} ${item.estadoOperativo === 'CONSEGUIDO' ? styles.btnConseguidoActive : ''}`}
+                          onClick={() => updateChecklistItem(item._id, 'estadoOperativo', 'CONSEGUIDO')}
+                        >
+                          <CheckIcon size={18} /> Conseguido
+                        </button>
                       </div>
                     </div>
                   )})}

@@ -22,4 +22,8 @@ export class PurchasesService {
     // Executing transaction via repository
     return this.repository.createWithTransaction(createDto);
   }
+
+  async simulate(simulateDto) {
+    return this.repository.simulate(simulateDto);
+  }
 }

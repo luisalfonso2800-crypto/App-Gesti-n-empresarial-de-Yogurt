@@ -8,6 +8,12 @@ export class PurchasesController {
     this.service = service;
   }
 
+  @Post('simulate')
+  @Bind(Body())
+  simulate(simulateDto) {
+    return this.service.simulate(simulateDto);
+  }
+
   @Post()
   @Bind(Body())
   create(createDto) {
