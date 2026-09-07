@@ -40,7 +40,7 @@ export default function PurchasesPage() {
           <h1 className={styles.title}>Compras</h1>
           <p className={styles.subtitle}>Registro y control de órdenes de adquisición de insumos a proveedores externos.</p>
         </div>
-        <Button onClick={() => router.push('/operations/purchases/new')}>Nueva Compra</Button>
+        <Button onClick={() => router.push('/operations/purchases/new?manual=true')}>Nueva Compra</Button>
       </div>
       <ContextBanner title="Concepto Técnico" description="Aquí se documenta la llegada de nuevos insumos a la planta. Registra qué se recibió, cuánto costó y confirma que la cantidad física coincida con la comprada." />
 

@@ -9,8 +9,9 @@ export default function NewPurchasePage() {
   const router = useRouter();
   
   // Phase handling
-  const [phase, setPhase] = useState(2); // 1 = Checklist, 2 = Form
+  const [phase, setPhase] = useState(1); // 1 = Checklist, 2 = Form
   const [checklistItems, setChecklistItems] = useState([]);
+  const [isInitializing, setIsInitializing] = useState(true);
   
   // Data from backend
   const [proveedoresDB, setProveedoresDB] = useState([]);
@@ -90,10 +91,13 @@ export default function NewPurchasePage() {
         setInsumosDB(insumos);
         setSupplierPrices(precios);
 
+        const queryParams = new URLSearchParams(window.location.search);
+        const isManual = queryParams.get('manual') === 'true';
+
         // Check session storage for checklist
         try {
           const stored = sessionStorage.getItem('selectedForPurchase');
-          if (stored) {
+          if (stored && !isManual) {
             const parsed = JSON.parse(stored);
             if (parsed && parsed.length > 0) {
               const items = parsed.map((item, idx) => {
@@ -116,13 +120,21 @@ export default function NewPurchasePage() {
               });
               setChecklistItems(items);
               setPhase(1);
+            } else {
+              setPhase(2);
             }
+          } else {
+            setPhase(2);
           }
         } catch (e) {
           console.error(e);
+          setPhase(2);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
+        setPhase(2);
+      } finally {
+        setIsInitializing(false);
       }
     };
     fetchInitialData();
@@ -478,6 +490,14 @@ export default function NewPurchasePage() {
     </>
   );
 
+  if (isInitializing) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f9fafb' }}>
+        <div style={{ color: '#6b7280', fontSize: '1.125rem' }}>Cargando módulo de compras...</div>
+      </div>
+    );
+  }
+
   return (
     <>
       {phase === 1 ? (
@@ -562,7 +582,7 @@ export default function NewPurchasePage() {
                       </div>
 
                       {/* Zona Central: Controles y Resumen */}
-                      <div className={`${styles.checklistBody} ${item.estadoOperativo !== 'CONSEGUIDO' ? styles.disabledArea : ''}`}>
+                      <div className={`${styles.checklistBody} ${(item.estadoOperativo === 'NO_CONSEGUIDO' || item.estadoOperativo === 'DESCARTADO') ? styles.disabledArea : ''}`}>
                         <div className={styles.inputGroup}>
                           <label className={styles.label}>Cant. Solicitada</label>
                           <input 
@@ -595,20 +615,27 @@ export default function NewPurchasePage() {
                         {/* Bloque Resumen */}
                         <div className={styles.summaryBlock}>
                           {(() => {
-                            const simItem = simulationResult.itemsLiquidados.find(si => si.idPrecioProveedor === (item.idPrecioProveedor || item.priceData?.id));
+                            const cantidad = item.cantidadSolicitada || 1;
+                            const precio = item.precioCompraActual || 0;
+                            const subtotal = cantidad * precio;
+                            const contenidoNeto = item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1;
+                            const ingresoNetoBodega = cantidad * contenidoNeto;
+                            const costoBaseUnitario = ingresoNetoBodega > 0 ? subtotal / ingresoNetoBodega : 0;
+                            const unidadBase = item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida || '';
+
                             return (
                               <>
                                 <div className={styles.summaryItem}>
                                   <span className={styles.summaryLabel}>Subtotal:</span>
-                                  <span className={styles.summaryValue}>${simItem ? simItem.subtotal.toFixed(2) : '0.00'}</span>
+                                  <span className={styles.summaryValue}>${subtotal.toFixed(2)}</span>
                                 </div>
                                 <div className={styles.summaryItem}>
                                   <span className={styles.summaryLabel}>Total neto a bodega:</span>
-                                  <span className={styles.summaryValue}>{simItem ? simItem.ingresoNetoBodega.toFixed(2) : '0.00'} {simItem ? simItem.unidadBase : ''}</span>
+                                  <span className={styles.summaryValue}>{ingresoNetoBodega.toFixed(2)} {unidadBase}</span>
                                 </div>
                                 <div className={styles.summaryItem}>
                                   <span className={styles.summaryLabel}>Costo unitario real:</span>
-                                  <span className={styles.summaryValue}>${simItem ? simItem.costoBaseUnitario.toFixed(2) : '0.00'} / {simItem ? simItem.unidadBase : ''}</span>
+                                  <span className={styles.summaryValue}>${costoBaseUnitario.toFixed(2)} / {unidadBase}</span>
                                 </div>
                               </>
                             );
@@ -657,6 +684,7 @@ export default function NewPurchasePage() {
                                 const newSelection = checklistItems.filter(i => i._id !== item._id);
                                 setChecklistItems(newSelection);
                                 sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
+                                window.dispatchEvent(new Event('cartUpdated'));
                                 showNotification(`"${item.insumoData?.nombre || item.nombre}" movido a pendientes: ${item.motivoNoConseguido}`, 'info');
                               }}
                             >
@@ -671,6 +699,7 @@ export default function NewPurchasePage() {
                                 const newSelection = checklistItems.filter(i => i._id !== item._id);
                                 setChecklistItems(newSelection);
                                 sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
+                                window.dispatchEvent(new Event('cartUpdated'));
                                 showNotification('Insumo descartado de la orden.', 'warning');
                               }}
                             >
@@ -779,6 +808,7 @@ export default function NewPurchasePage() {
                                 const remainingItems = checklistItems.filter(i => i._id !== item._id);
                                 setChecklistItems(remainingItems);
                                 sessionStorage.setItem('selectedForPurchase', JSON.stringify(remainingItems));
+                                window.dispatchEvent(new Event('cartUpdated'));
                                 showNotification('Compra registrada y asentada.', 'success');
                               }
                             } catch (e) {
@@ -833,9 +863,14 @@ export default function NewPurchasePage() {
                           type="button" 
                           className={styles.btnReintentar}
                           onClick={() => {
-                            setChecklistItems(prev => [...prev, { ...pi, estadoOperativo: 'NO_CONSEGUIDO' }]);
+                            const reactivatedItem = { ...pi };
+                            delete reactivatedItem.estadoOperativo;
+                            delete reactivatedItem.motivoNoConseguido;
+                            delete reactivatedItem.detalleMotivoNoConseguido;
+                            delete reactivatedItem.fechaRegistro;
+                            setChecklistItems(prev => [...prev, reactivatedItem]);
                             setPendingItems(prev => prev.filter((_, i) => i !== idx));
-                            showNotification(`"${pi.insumoData?.nombre || pi.nombre}" devuelto al checklist activo.`, 'info');
+                            showNotification('Insumo devuelto al checklist para reintento.', 'info');
                           }}
                         >
                           <RotateCcwIcon size={16} /> Reintentar
@@ -889,7 +924,10 @@ export default function NewPurchasePage() {
                 onClick={() => {
                   setComprasAsentadas([]);
                   if (checklistItems.length === 0) {
-                     router.push('/operations/purchases');
+                     sessionStorage.setItem('selectedForPurchase', JSON.stringify([]));
+                     window.dispatchEvent(new Event('cartUpdated'));
+                     showNotification('Sesión de compras completada. Redirigiendo...', 'success');
+                     setTimeout(() => router.push('/operations/purchases'), 1500);
                   }
                 }}
               >
