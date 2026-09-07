@@ -338,3 +338,28 @@ model Gasto {
 
   @@map("Gastos")
 }
+
+model OrdenCompra {
+  id        String            @id @default(uuid()) @map("ID_Orden")
+  codigo    String            @unique @map("Codigo_Orden")
+  nombre    String            @map("Nombre_Orden")
+  estado    String            @default("PENDIENTE") @map("Estado")
+  createdAt DateTime          @default(now()) @map("Fecha_Creacion")
+  items     OrdenCompraItem[]
+
+  @@map("Ordenes_Compra")
+}
+
+model OrdenCompraItem {
+  id              String      @id @default(uuid()) @map("ID_Item_Orden")
+  idOrden         String      @map("ID_Orden")
+  orden           OrdenCompra @relation(fields: [idOrden], references: [id])
+  idInsumo        String?     @map("ID_Insumo")
+  idProveedor     String?     @map("ID_Proveedor")
+  idPresentacion  String?     @map("ID_Presentacion")
+  cantidad        Decimal     @map("Cantidad")
+  precioEstimado  Decimal?    @map("Precio_Estimado") @db.Decimal(12, 2)
+  estadoItem      String      @default("PENDIENTE") @map("Estado_Item")
+
+  @@map("Orden_Compra_Items")
+}

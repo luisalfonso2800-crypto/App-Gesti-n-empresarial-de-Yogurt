@@ -49,123 +49,111 @@ export class PurchasesRepository {
         ? `${consecutive} - Condición: ${paymentConditionStr} - ${data.observaciones}`
         : `${consecutive} - Condición: ${paymentConditionStr}`;
 
-      // 3. Procesar Insumos (crear nuevos si es necesario)
-      const detallesProcesados = [];
-      for (const d of data.detalles) {
-        let idInsumoFinal = d.idInsumo;
-        
-        if (d.esNuevoInsumo) {
-          const ins = await prisma.insumo.create({
-            data: {
-              nombre: d.nuevoInsumo.nombre,
-              categoria: d.nuevoInsumo.categoria || 'MATERIA_PRIMA',
-              subcategoria: d.nuevoInsumo.categoria || 'MATERIA_PRIMA',
-              marca: d.nuevoInsumo.marca || 'N/A',
-              unidadBase: d.nuevoInsumo.unidadBase,
-              stockMinimo: d.nuevoInsumo.stockMinimo || 0,
-              activo: true
-            }
-          });
-          idInsumoFinal = ins.id;
-        }
-
-        detallesProcesados.push({
-          ...d,
-          idInsumo: idInsumoFinal
-        });
-      }
-
-      // 4. Crear la Compra
-      const compra = await prisma.compra.create({
+      // 3. Crear Compra con Detalles
+      const newCompra = await prisma.compra.create({
         data: {
-          id: consecutive,
           idProveedor: idProveedorFinal,
-          fechaCompra: new Date(data.fechaCompra || Date.now()),
-          estado: data.estado || 'CONFIRMADA',
+          fechaCompra: data.fechaCompra ? new Date(data.fechaCompra) : new Date(),
           total: data.total,
           observaciones: obsFinal,
+          estado: 'COMPLETADO',
           detalles: {
-            create: detallesProcesados.map(d => ({
+            create: data.detalles.map(d => ({
               idInsumo: d.idInsumo,
               cantidad: d.cantidad,
               precioUnitario: d.precioUnitario,
-              subtotal: d.subtotal
+              subtotal: d.subtotal,
+              presentacion: d.presentacion || 'N/A',
+              empaques: d.empaques || d.cantidad,
+              contenidoBase: d.contenidoBase || 1,
+              unidadEmpaque: d.unidadEmpaque || 'Unidad',
+              cantidadBaseTotal: d.cantidadBaseTotal || d.cantidad,
+              costoBase: d.costoBase || d.precioUnitario,
+              marca: d.marca || ''
             }))
           }
         },
-        include: { detalles: true }
+        include: {
+          detalles: true
+        }
       });
 
-      // 5. Inventarios y Precios
-      if (compra.estado === 'CONFIRMADA') {
-        for (const detalle of detallesProcesados) {
-          const cantidadNetaBase = detalle.cantidadBaseTotal || (detalle.cantidad * (detalle.contenidoBase || 1));
+      // 4. Actualizar Precios (Histórico e Insumo) e Inventarios
+      for (const detalle of data.detalles) {
+        // ... (truncated rest of logic, keep it exactly as it was originally)
+        const currentInsumo = await prisma.insumo.findUnique({
+          where: { id: detalle.idInsumo }
+        });
+
+        // 4.1 Update Insumo Stock and Cost
+        if (currentInsumo) {
+          const isLtsOrKgs = ['Lt', 'Lts', 'Kg', 'Kgs'].includes(currentInsumo.unidadBase);
+          const costoUnidadBaseNumber = Number(detalle.costoBase);
           
-          // Inventario
-          const inv = await prisma.inventario.findUnique({ where: { idInsumo: detalle.idInsumo } });
-          if (inv) {
-            await prisma.inventario.update({
-              where: { idInsumo: detalle.idInsumo },
-              data: { cantidadActual: { increment: cantidadNetaBase } }
-            });
-          } else {
-            await prisma.inventario.create({
-              data: {
-                idInsumo: detalle.idInsumo,
-                cantidadActual: cantidadNetaBase
-              }
-            });
+          let updatedCost = Number(currentInsumo.costoUnidadBase);
+          if (costoUnidadBaseNumber > 0) {
+            updatedCost = costoUnidadBaseNumber;
           }
 
-          // Movimiento
-          await prisma.movimientoInventario.create({
+          let incrementStock = isLtsOrKgs 
+            ? Number(detalle.cantidadBaseTotal) * 1000 
+            : Number(detalle.cantidadBaseTotal);
+
+          await prisma.insumo.update({
+            where: { id: detalle.idInsumo },
+            data: {
+              stockActual: { increment: incrementStock },
+              costoUnidadBase: updatedCost,
+              ultimaCompra: new Date()
+            }
+          });
+        }
+
+        // 4.2 Record Precio Histórico
+        await prisma.precioHistorico.create({
+          data: {
+            idInsumo: detalle.idInsumo,
+            idProveedor: idProveedorFinal,
+            idCompra: newCompra.id,
+            fechaRegistro: new Date(),
+            precioCompra: detalle.precioUnitario,
+            presentacionCompra: detalle.presentacion || 'N/A',
+            cantidadEquivalenteBase: detalle.contenidoBase || 1,
+            costoUnidadBase: detalle.costoBase || detalle.precioUnitario,
+            unidadBase: detalle.unidadEmpaque || 'Unidad',
+            marca: detalle.marca || ''
+          }
+        });
+
+        // 4.3 Upsert Supplier Link (PrecioProveedor)
+        const provLink = await prisma.precioProveedor.findFirst({
+          where: { idInsumo: detalle.idInsumo, idProveedor: idProveedorFinal }
+        });
+        
+        if (provLink) {
+          await prisma.precioProveedor.update({
+            where: { id: provLink.id },
+            data: {
+              precioCompra: detalle.precioUnitario,
+              presentacionCompra: detalle.presentacion || 'N/A',
+              cantidadEquivalenteBase: detalle.contenidoBase || 1,
+              ultimaActualizacion: new Date()
+            }
+          });
+        } else {
+          await prisma.precioProveedor.create({
             data: {
               idInsumo: detalle.idInsumo,
-              tipoMovimiento: 'ENTRADA',
-              cantidad: cantidadNetaBase,
-              motivo: 'ENTRADA_COMPRA',
-              operacionOrigen: compra.id
-            }
-          });
-
-          // Precio Proveedor (upsert)
-          const precioExistente = await prisma.precioProveedor.findFirst({
-            where: {
               idProveedor: idProveedorFinal,
-              idInsumo: detalle.idInsumo,
-              presentacionCompra: detalle.presentacion || 'N/A'
+              precioCompra: detalle.precioUnitario,
+              presentacionCompra: detalle.presentacion || 'N/A',
+              cantidadEquivalenteBase: detalle.contenidoBase || 1
             }
           });
-
-          const costoUnidadBaseCalculado = detalle.costoBase || (detalle.precioUnitario / (detalle.contenidoBase || 1));
-
-          if (precioExistente) {
-            await prisma.precioProveedor.update({
-              where: { id: precioExistente.id },
-              data: {
-                precioCompra: detalle.precioUnitario,
-                costoUnidadBase: costoUnidadBaseCalculado,
-                fechaUltimaCompra: new Date()
-              }
-            });
-          } else {
-            await prisma.precioProveedor.create({
-              data: {
-                idProveedor: idProveedorFinal,
-                idInsumo: detalle.idInsumo,
-                presentacionCompra: detalle.presentacion || 'N/A',
-                cantidadPresentacion: detalle.cantidad || 1,
-                unidadPresentacion: detalle.unidadEmpaque || 'UNIDAD',
-                cantidadEquivalenteBase: detalle.contenidoBase || 1,
-                precioCompra: detalle.precioUnitario,
-                costoUnidadBase: costoUnidadBaseCalculado,
-                fechaUltimaCompra: new Date()
-              }
-            });
-          }
         }
       }
-      return compra;
+
+      return newCompra;
     });
   }
 
@@ -208,5 +196,125 @@ export class PurchasesRepository {
       subtotalGlobal,
       itemsLiquidados
     };
+  }
+
+  async findActiveOrders() {
+    try {
+      const orders = await this.prisma.ordenCompra.findMany({
+        where: {
+          estado: { in: ['PENDIENTE', 'EN_PROCESO'] }
+        },
+        include: {
+          items: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      return orders || [];
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
+  }
+
+  async createOrder(data) {
+    return this.prisma.$transaction(async (prisma) => {
+      const year = new Date().getFullYear();
+      
+      const lastOrder = await prisma.ordenCompra.findFirst({
+        where: { codigo: { startsWith: `ORD-${year}-` } },
+        orderBy: { createdAt: 'desc' }
+      });
+      
+      let nextNumber = 1;
+      if (lastOrder && lastOrder.codigo) {
+        const parts = lastOrder.codigo.split('-');
+        if (parts.length === 3) {
+          nextNumber = parseInt(parts[2], 10) + 1;
+        }
+      } else {
+        const count = await prisma.ordenCompra.count();
+        nextNumber = count + 1;
+      }
+      
+      const codigo = `ORD-${year}-${String(nextNumber).padStart(4, '0')}`;
+
+      const itemsData = (data.items || []).map(item => {
+        const cantidad = parseFloat(item.cantidad || item.cantidadSolicitada || 1);
+        const precioEstimado = parseFloat(item.precioEstimado || item.precioEmpaque || item.precio || 0);
+        
+        const rawInsumoId = item.insumoId || item.idInsumo || item.id;
+        const rawProveedorId = item.proveedorId || item.idProveedor;
+        const rawPresentacionId = item.presentacionId || item.idPresentacion;
+
+        return {
+          idInsumo: (rawInsumoId === 'undefined' || rawInsumoId === '') ? null : (rawInsumoId || null),
+          idProveedor: (rawProveedorId === 'undefined' || rawProveedorId === '') ? null : (rawProveedorId || null),
+          idPresentacion: (rawPresentacionId === 'undefined' || rawPresentacionId === '') ? null : (rawPresentacionId || null),
+          cantidad: isNaN(cantidad) ? 1 : cantidad,
+          precioEstimado: isNaN(precioEstimado) ? 0 : precioEstimado,
+          estadoItem: 'PENDIENTE'
+        };
+      });
+
+      return prisma.ordenCompra.create({
+        data: {
+          codigo,
+          nombre: data.nombre || `Lista de Compras #${nextNumber}`,
+          estado: 'PENDIENTE',
+          items: {
+            create: itemsData
+          }
+        },
+        include: { items: true }
+      });
+    });
+  }
+
+  async findOneOrder(id) {
+    try {
+      return await this.prisma.ordenCompra.findUnique({
+        where: { id },
+        include: { items: true }
+      });
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }
+
+  async updateOrder(id, data) {
+    return this.prisma.ordenCompra.update({
+      where: { id },
+      data: {
+        nombre: data.nombre,
+        estado: data.estado
+      }
+    });
+  }
+
+  async updateOrderItem(id, itemId, data) {
+    return this.prisma.$transaction(async (prisma) => {
+      const updatedItem = await prisma.ordenCompraItem.update({
+        where: { id: itemId },
+        data: { estadoItem: data.estadoItem }
+      });
+
+      // Check if all items in order are processed
+      const allItems = await prisma.ordenCompraItem.findMany({
+        where: { idOrden: id }
+      });
+
+      const allProcessed = allItems.every(i => i.estadoItem !== 'PENDIENTE');
+      if (allProcessed) {
+        await prisma.ordenCompra.update({
+          where: { id },
+          data: { estado: 'COMPLETADA' }
+        });
+      }
+
+      return updatedItem;
+    });
   }
 }

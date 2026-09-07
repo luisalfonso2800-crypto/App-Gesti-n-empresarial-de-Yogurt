@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import styles from './shell.module.css';
 import { ShoppingCartIcon, TrashIcon } from '../ui/icons';
 import { Button } from '../ui/Button';
+import { apiClient } from '../../lib/api-client';
 
 export function Header() {
   const router = useRouter();
@@ -44,9 +45,31 @@ export function Header() {
     setIsCartOpen(false);
   };
 
-  const proceedToPurchase = () => {
-    setIsCartOpen(false);
-    router.push('/operations/purchases/new');
+  const proceedToPurchase = async () => {
+    try {
+      const payload = {
+        nombre: `Lista de Compra - ${new Date().toLocaleDateString('es-CO')}`,
+        items: cartItems.map(item => ({
+          insumoId: item.insumoId || item.idInsumo || item.id,
+          proveedorId: item.proveedorId || item.idProveedor,
+          presentacionId: item.presentacionId || item.idPresentacion || null,
+          cantidad: Number(item.cantidad || 1),
+          precioEstimado: Number(item.precioEmpaque || item.precio || item.precioEstimado || 0)
+        }))
+      };
+
+      const order = await apiClient.post('/purchases/orders', payload);
+      
+      clearCart();
+      router.push(`/operations/purchases/new?orderId=${order.id}`);
+    } catch (e) {
+      console.error('Failed to create order. Message:', e.message, 'Details:', e);
+      window.dispatchEvent(new CustomEvent('showNotification', { 
+        detail: { message: e.message || 'Error al crear la orden.', type: 'error' } 
+      }));
+      setIsCartOpen(false);
+      router.push('/operations/purchases/new');
+    }
   };
 
   const cartCount = cartItems.length;

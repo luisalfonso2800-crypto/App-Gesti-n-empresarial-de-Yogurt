@@ -26,4 +26,26 @@ export class PurchasesService {
   async simulate(simulateDto) {
     return this.repository.simulate(simulateDto);
   }
+
+  async findActiveOrders() {
+    return this.repository.findActiveOrders();
+  }
+
+  async createOrder(createDto) {
+    return this.repository.createOrder(createDto);
+  }
+
+  async findOneOrder(id) {
+    const order = await this.repository.findOneOrder(id);
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  async updateOrder(id, updateDto) {
+    return this.repository.updateOrder(id, updateDto);
+  }
+
+  async updateOrderItem(id, itemId, updateDto) {
+    return this.repository.updateOrderItem(id, itemId, updateDto);
+  }
 }

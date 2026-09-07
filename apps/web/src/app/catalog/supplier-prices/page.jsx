@@ -99,8 +99,30 @@ export default function Page() {
     saveToSession([]);
   };
 
-  const proceedToPurchase = () => {
-    router.push('/operations/purchases/new');
+  const proceedToPurchase = async () => {
+    try {
+      const payload = {
+        nombre: `Lista de Compra - ${new Date().toLocaleDateString('es-CO')}`,
+        items: selectedForPurchase.map(item => ({
+          insumoId: item.insumoId || item.idInsumo || item.id,
+          proveedorId: item.proveedorId || item.idProveedor,
+          presentacionId: item.presentacionId || item.idPresentacion || null,
+          cantidad: Number(item.cantidad || 1),
+          precioEstimado: Number(item.precioEmpaque || item.precio || item.precioCompra || item.precioEstimado || 0)
+        }))
+      };
+
+      const order = await apiClient.post('/purchases/orders', payload);
+      
+      clearPurchaseList();
+      router.push(`/operations/purchases/new?orderId=${order.id}`);
+    } catch (e) {
+      console.error('Failed to create order. Message:', e.message, 'Details:', e);
+      window.dispatchEvent(new CustomEvent('showNotification', { 
+        detail: { message: e.message || 'Error al crear la orden.', type: 'error' } 
+      }));
+      router.push('/operations/purchases/new');
+    }
   };
 
 

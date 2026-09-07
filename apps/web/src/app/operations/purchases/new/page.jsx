@@ -76,66 +76,120 @@ export default function NewPurchasePage() {
 
   useEffect(() => {
     const fetchInitialData = async () => {
+      let proveedores = [];
+      let insumos = [];
+      let precios = [];
+
       try {
         const [provRes, insRes, pricesRes] = await Promise.all([
-          apiClient.get('/suppliers'),
-          apiClient.get('/supplies'),
-          apiClient.get('/supplier-prices')
+          apiClient.get('/suppliers').catch(() => []),
+          apiClient.get('/supplies').catch(() => []),
+          apiClient.get('/supplier-prices').catch(() => [])
         ]);
         
-        const proveedores = provRes || [];
-        const insumos = insRes || [];
-        const precios = pricesRes || [];
+        proveedores = provRes || [];
+        insumos = insRes || [];
+        precios = pricesRes || [];
         
         setProveedoresDB(proveedores);
         setInsumosDB(insumos);
         setSupplierPrices(precios);
+      } catch (err) {
+        console.error('Error cargando catálogos:', err);
+      }
 
-        const queryParams = new URLSearchParams(window.location.search);
-        const isManual = queryParams.get('manual') === 'true';
+      const queryParams = new URLSearchParams(window.location.search);
+      const isManual = queryParams.get('manual') === 'true';
+      const orderId = queryParams.get('orderId');
 
-        // Check session storage for checklist
+      let activeOrders = [];
+      try {
+        activeOrders = await apiClient.get('/purchases/orders/active');
+      } catch (e) {
+        console.error('Failed to fetch active orders', e);
+      }
+
+      if (orderId) {
         try {
-          const stored = sessionStorage.getItem('selectedForPurchase');
-          if (stored && !isManual) {
-            const parsed = JSON.parse(stored);
-            if (parsed && parsed.length > 0) {
-              const items = parsed.map((item, idx) => {
-                const insumoInfo = insumos.find(i => i.id === item.idInsumo);
-                const provInfo = proveedores.find(p => p.id === item.idProveedor);
-                const priceInfo = precios.find(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+          const orderDetail = await apiClient.get(`/purchases/orders/${orderId}`);
+          if (orderDetail && orderDetail.items && orderDetail.items.length > 0) {
+            const items = orderDetail.items.map((item, idx) => {
+              const insumoInfo = insumos.find(i => i.id === item.idInsumo);
+              const provInfo = proveedores.find(p => p.id === item.idProveedor);
+              const priceInfo = precios.find(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+              
+              // Duplicate check
+              const duplicateInOtherOrder = (activeOrders || []).find(ao => 
+                ao.id !== orderId && 
+                ao.items && ao.items.some(aoi => aoi.idInsumo === item.idInsumo && aoi.estadoItem === 'PENDIENTE')
+              );
 
-                return {
-                  ...item,
-                  _id: idx,
-                  insumoData: insumoInfo || item.insumo || {},
-                  proveedorData: provInfo || item.proveedor || {},
-                  priceData: priceInfo || {},
-                  cantidadSolicitada: item.cantidad || 1,
-                  precioCompraActual: priceInfo?.precioCompra || item.precioCompra || item.precio || 0,
-                  estadoOperativo: 'CONSEGUIDO',
-                  motivoNoConseguido: '',
-                  detalleMotivoNoConseguido: ''
-                };
-              });
-              setChecklistItems(items);
-              setPhase(1);
-            } else {
-              setPhase(2);
-            }
+              return {
+                ...item,
+                _id: idx,
+                orderItemId: item.id,
+                currentOrderId: orderId,
+                insumoData: insumoInfo || {},
+                proveedorData: provInfo || {},
+                priceData: priceInfo || {},
+                cantidadSolicitada: item.cantidad || 1,
+                precioCompraActual: item.precioEstimado || priceInfo?.precioCompra || 0,
+                estadoOperativo: item.estadoItem === 'PENDIENTE' ? 'CONSEGUIDO' : item.estadoItem,
+                motivoNoConseguido: '',
+                detalleMotivoNoConseguido: '',
+                duplicateWarning: duplicateInOtherOrder ? `[Aviso: Este insumo también se encuentra asignado en ${duplicateInOtherOrder.codigo} - ${duplicateInOtherOrder.nombre}]` : null
+              };
+            });
+            
+            setChecklistItems(items.filter(i => i.estadoOperativo !== 'COMPRADO' && i.estadoOperativo !== 'DESCARTADO'));
+            setPhase(1);
           } else {
             setPhase(2);
           }
         } catch (e) {
-          console.error(e);
+          console.warn('Orden no encontrada o error de red en orden:', e);
+          showNotification('No se encontró la orden especificada, inicializando vista limpia.', 'warning');
           setPhase(2);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setPhase(2);
-      } finally {
-        setIsInitializing(false);
-      }
+      } else {
+          // Check session storage for checklist
+          try {
+            const stored = sessionStorage.getItem('selectedForPurchase');
+            if (stored && !isManual) {
+              const parsed = JSON.parse(stored);
+              if (parsed && parsed.length > 0) {
+                const items = parsed.map((item, idx) => {
+                  const insumoInfo = insumos.find(i => i.id === item.idInsumo);
+                  const provInfo = proveedores.find(p => p.id === item.idProveedor);
+                  const priceInfo = precios.find(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+  
+                  return {
+                    ...item,
+                    _id: idx,
+                    insumoData: insumoInfo || item.insumo || {},
+                    proveedorData: provInfo || item.proveedor || {},
+                    priceData: priceInfo || {},
+                    cantidadSolicitada: item.cantidad || 1,
+                    precioCompraActual: priceInfo?.precioCompra || item.precioCompra || item.precio || 0,
+                    estadoOperativo: 'CONSEGUIDO',
+                    motivoNoConseguido: '',
+                    detalleMotivoNoConseguido: ''
+                  };
+                });
+                setChecklistItems(items);
+                setPhase(1);
+              } else {
+                setPhase(2);
+              }
+            } else {
+              setPhase(2);
+            }
+          } catch (e) {
+            console.error(e);
+            setPhase(2);
+          }
+        }
+      setIsInitializing(false);
     };
     fetchInitialData();
   }, []);
@@ -581,6 +635,13 @@ export default function NewPurchasePage() {
                         </span>
                       </div>
 
+                      {item.duplicateWarning && (
+                        <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', padding: '0.75rem', borderRadius: '6px', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                          <AlertCircleIcon size={18} />
+                          <b>Atención:</b> {item.duplicateWarning}
+                        </div>
+                      )}
+
                       {/* Zona Central: Controles y Resumen */}
                       <div className={`${styles.checklistBody} ${(item.estadoOperativo === 'NO_CONSEGUIDO' || item.estadoOperativo === 'DESCARTADO') ? styles.disabledArea : ''}`}>
                         <div className={styles.inputGroup}>
@@ -694,12 +755,19 @@ export default function NewPurchasePage() {
                               type="button" 
                               className={styles.cancelBtn} 
                               style={{ color: '#ef4444', borderColor: '#ef4444' }}
-                              onClick={() => {
+                              onClick={async () => {
                                 updateChecklistItem(item._id, 'estadoOperativo', 'DESCARTADO');
                                 const newSelection = checklistItems.filter(i => i._id !== item._id);
                                 setChecklistItems(newSelection);
                                 sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
                                 window.dispatchEvent(new Event('cartUpdated'));
+
+                                if (item.currentOrderId && item.orderItemId) {
+                                  try {
+                                    await apiClient.patch(`/purchases/orders/${item.currentOrderId}/items/${item.orderItemId}`, { estadoItem: 'DESCARTADO' });
+                                  } catch(e) { console.error('Failed to update item state', e); }
+                                }
+                                
                                 showNotification('Insumo descartado de la orden.', 'warning');
                               }}
                             >
@@ -809,6 +877,13 @@ export default function NewPurchasePage() {
                                 setChecklistItems(remainingItems);
                                 sessionStorage.setItem('selectedForPurchase', JSON.stringify(remainingItems));
                                 window.dispatchEvent(new Event('cartUpdated'));
+
+                                if (item.currentOrderId && item.orderItemId) {
+                                  try {
+                                    await apiClient.patch(`/purchases/orders/${item.currentOrderId}/items/${item.orderItemId}`, { estadoItem: 'COMPRADO' });
+                                  } catch (err) { console.error('Error actualizando item de orden:', err); }
+                                }
+
                                 showNotification('Compra registrada y asentada.', 'success');
                               }
                             } catch (e) {
