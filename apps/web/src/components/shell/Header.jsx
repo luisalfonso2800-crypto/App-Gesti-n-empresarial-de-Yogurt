@@ -1,49 +1,27 @@
+/**
+ * @file Header.jsx
+ * @module components/shell
+ * @description Barra de navegación superior (Header).
+ * @responsibility Renderizar enlaces y el carrito de compras global usando useCart.
+ * @usedBy apps/web/src/components/shell/Shell.jsx
+ * @dependencies next/link, @/context/CartContext, @/context/NotificationContext
+ */
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './shell.module.css';
-import { ShoppingCartIcon, TrashIcon } from '../ui/icons';
-import { Button } from '../ui/Button';
-import { apiClient } from '../../lib/api-client';
+import { ShoppingCartIcon, TrashIcon } from '@/components/ui/icons';
+import { Button } from '@/components/ui/Button';
+import { apiClient } from '@/lib/api-client';
+import { useCart } from '@/context/CartContext';
+import { useNotification } from '@/context/NotificationContext';
 
 export function Header() {
   const router = useRouter();
-  const [cartItems, setCartItems] = useState([]);
+  const { cartItems, removeFromCart, clearCart, cartCount } = useCart();
+  const { showNotification } = useNotification();
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const loadCart = () => {
-    try {
-      const stored = sessionStorage.getItem('selectedForPurchase');
-      if (stored) {
-        setCartItems(JSON.parse(stored));
-      } else {
-        setCartItems([]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    loadCart();
-    window.addEventListener('cartUpdated', loadCart);
-    return () => window.removeEventListener('cartUpdated', loadCart);
-  }, []);
-
-  const removeFromCart = (id) => {
-    const newCart = cartItems.filter(item => item.id !== id);
-    setCartItems(newCart);
-    sessionStorage.setItem('selectedForPurchase', JSON.stringify(newCart));
-    window.dispatchEvent(new Event('cartUpdated'));
-  };
-
-  const clearCart = () => {
-    setCartItems([]);
-    sessionStorage.setItem('selectedForPurchase', JSON.stringify([]));
-    window.dispatchEvent(new Event('cartUpdated'));
-    setIsCartOpen(false);
-  };
 
   const proceedToPurchase = async () => {
     try {
@@ -62,17 +40,14 @@ export function Header() {
       
       clearCart();
       router.push(`/operations/purchases/new?orderId=${order.id}`);
+      setIsCartOpen(false);
     } catch (e) {
       console.error('Failed to create order. Message:', e.message, 'Details:', e);
-      window.dispatchEvent(new CustomEvent('showNotification', { 
-        detail: { message: e.message || 'Error al crear la orden.', type: 'error' } 
-      }));
+      showNotification(e.message || 'Error al crear la orden.', 'error');
       setIsCartOpen(false);
       router.push('/operations/purchases/new');
     }
   };
-
-  const cartCount = cartItems.length;
 
   return (
     <header className={styles.header}>

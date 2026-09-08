@@ -1,55 +1,34 @@
 /**
  * @file useCartManager.js
  * @module catalog/supplier-prices/hooks
- * @description Maneja el estado del carrito de compras para insumos seleccionados, persistiendo en sessionStorage.
- * @responsibility Sincronización del carrito, creación de órdenes y delegación a API.
+ * @description Hook puente para conectar la tabla de lista de precios con el carrito global.
+ * @responsibility Añadir o eliminar items de compras desde la vista de lista de precios.
  * @usedBy apps/web/src/app/catalog/supplier-prices/page.jsx
- * @dependencies @/lib/api-client, next/navigation
+ * @dependencies @/context/CartContext
  */
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCart } from '@/context/CartContext';
 import { apiClient } from '@/lib/api-client';
+import { useRouter } from 'next/navigation';
 
 export function useCartManager() {
+  const { cartItems, addToCart, removeFromCart, clearCart } = useCart();
   const router = useRouter();
-  const [selectedForPurchase, setSelectedForPurchase] = useState([]);
 
-  useEffect(() => {
-    try {
-      const stored = sessionStorage.getItem('selectedForPurchase');
-      if (stored) {
-        setSelectedForPurchase(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
-  const saveToSession = (newSelection) => {
-    setSelectedForPurchase(newSelection);
-    try {
-      sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
-      window.dispatchEvent(new Event('cartUpdated'));
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  // Alias compatible con el diseño previo en la vista de supplier-prices
+  const selectedForPurchase = cartItems;
 
   const togglePurchaseItem = (item) => {
-    const isAdded = selectedForPurchase.some(p => p.id === item.id);
-    if (isAdded) {
-      saveToSession(selectedForPurchase.filter(p => p.id !== item.id));
+    const existing = cartItems.find(i => i.id === item.id);
+    if (existing) {
+      removeFromCart(item.id);
     } else {
-      const alreadyHasInsumoProveedor = selectedForPurchase.some(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
-      if (alreadyHasInsumoProveedor) return;
-      
       const newItem = {
-        id: item.id,
-        idPrecioProveedor: item.id,
+        ...item,
+        nombreInsumo: item.insumo?.nombre || 'Insumo',
+        nombreProveedor: item.proveedor?.nombre || 'Proveedor',
         idInsumo: item.idInsumo,
         idProveedor: item.idProveedor,
-        insumoNombre: item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo,
-        proveedorNombre: item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor,
+        idPresentacion: item.idPresentacion,
         marca: item.insumo?.Marca || item.insumo?.marca || 'Sin marca',
         categoria: item.insumo?.Categoria || item.insumo?.categoria || 'Materia Prima',
         presentacionCompra: item.presentacionCompra || 'Paquete',
@@ -60,19 +39,19 @@ export function useCartManager() {
         precioCompra: item.precioCompra,
         costoUnidadBase: item.costoUnidadBase
       };
-      saveToSession([...selectedForPurchase, newItem]);
+      addToCart(newItem);
     }
   };
 
   const clearPurchaseList = () => {
-    saveToSession([]);
+    clearCart();
   };
 
   const proceedToPurchase = async () => {
     try {
       const payload = {
         nombre: `Lista de Compra - ${new Date().toLocaleDateString('es-CO')}`,
-        items: selectedForPurchase.map(item => ({
+        items: cartItems.map(item => ({
           insumoId: item.insumoId || item.idInsumo || item.id,
           proveedorId: item.proveedorId || item.idProveedor,
           presentacionId: item.presentacionId || item.idPresentacion || null,
@@ -83,7 +62,7 @@ export function useCartManager() {
 
       const order = await apiClient.post('/purchases/orders', payload);
       
-      clearPurchaseList();
+      clearCart();
       router.push(`/operations/purchases/new?orderId=${order.id}`);
     } catch (e) {
       console.error('Failed to create order. Message:', e.message, 'Details:', e);

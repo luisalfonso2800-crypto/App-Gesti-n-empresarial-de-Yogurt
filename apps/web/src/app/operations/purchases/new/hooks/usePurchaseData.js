@@ -1,15 +1,17 @@
 /**
- * @file purchases/new/hooks/usePurchaseData.js
- * @module hooks/usePurchaseData
- * @description Hook encargado de inicializar catálogos y resolver validaciones asíncronas de base de datos.
- * @responsibility Consolidar la capa de datos de la vista de nueva compra (Fase 1).
+ * @file usePurchaseData.js
+ * @module operations/purchases/new/hooks
+ * @description Hook encargado de inicializar catálogos y procesar la orden o carrito global.
+ * @responsibility Consolidar la capa de datos de la vista de nueva compra, usando el Contexto.
  * @usedBy apps/web/src/app/operations/purchases/new/page.jsx
- * @dependencies apiClient, useState, useEffect
+ * @dependencies @/lib/api-client, @/context/CartContext
  */
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { useCart } from '@/context/CartContext';
 
 export function usePurchaseData(showNotification) {
+  const { cartItems } = useCart();
   const [isInitializing, setIsInitializing] = useState(true);
   const [phase, setPhase] = useState(1);
   const [proveedoresDB, setProveedoresDB] = useState([]);
@@ -94,34 +96,29 @@ export function usePurchaseData(showNotification) {
           setPhase(2);
         }
       } else {
+          // Usa el carrito del contexto global si no hay manual ni orderId
           try {
-            const stored = sessionStorage.getItem('selectedForPurchase');
-            if (stored && !isManual) {
-              const parsed = JSON.parse(stored);
-              if (parsed && parsed.length > 0) {
-                const items = parsed.map((item, idx) => {
-                  const insumoInfo = insumos.find(i => i.id === item.idInsumo);
-                  const provInfo = proveedores.find(p => p.id === item.idProveedor);
-                  const priceInfo = precios.find(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
-  
-                  return {
-                    ...item,
-                    _id: idx,
-                    insumoData: insumoInfo || item.insumo || {},
-                    proveedorData: provInfo || item.proveedor || {},
-                    priceData: priceInfo || {},
-                    cantidadSolicitada: item.cantidad || 1,
-                    precioCompraActual: priceInfo?.precioCompra || item.precioCompra || item.precio || 0,
-                    estadoOperativo: 'CONSEGUIDO',
-                    motivoNoConseguido: '',
-                    detalleMotivoNoConseguido: ''
-                  };
-                });
-                setInitialChecklistItems(items);
-                setPhase(1);
-              } else {
-                setPhase(2);
-              }
+            if (cartItems && cartItems.length > 0 && !isManual) {
+              const items = cartItems.map((item, idx) => {
+                const insumoInfo = insumos.find(i => i.id === item.idInsumo);
+                const provInfo = proveedores.find(p => p.id === item.idProveedor);
+                const priceInfo = precios.find(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+
+                return {
+                  ...item,
+                  _id: idx,
+                  insumoData: insumoInfo || item.insumo || {},
+                  proveedorData: provInfo || item.proveedor || {},
+                  priceData: priceInfo || {},
+                  cantidadSolicitada: item.cantidad || 1,
+                  precioCompraActual: priceInfo?.precioCompra || item.precioCompra || item.precio || 0,
+                  estadoOperativo: 'CONSEGUIDO',
+                  motivoNoConseguido: '',
+                  detalleMotivoNoConseguido: ''
+                };
+              });
+              setInitialChecklistItems(items);
+              setPhase(1);
             } else {
               setPhase(2);
             }
@@ -132,7 +129,11 @@ export function usePurchaseData(showNotification) {
       }
       setIsInitializing(false);
     };
+    
+    // We only want this to run once or when cart items change significantly at startup
+    // Disabling strict exhaustive-deps here as it's an initialization process
     fetchInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showNotification]);
 
   return { isInitializing, phase, setPhase, proveedoresDB, insumosDB, supplierPrices, initialChecklistItems, setProveedoresDB, setInsumosDB };
