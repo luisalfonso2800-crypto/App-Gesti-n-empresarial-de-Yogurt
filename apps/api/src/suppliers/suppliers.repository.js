@@ -24,6 +24,17 @@ export class SuppliersRepository {
     });
   }
 
+  async findByNombreOrNit(nombre, nitCedula) {
+    return this.prisma.proveedor.findFirst({
+      where: {
+        OR: [
+          { nombre },
+          { nitCedula }
+        ]
+      }
+    });
+  }
+
   async create(data) {
     return this.prisma.proveedor.create({
       data,

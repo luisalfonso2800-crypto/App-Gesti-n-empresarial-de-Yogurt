@@ -1,5 +1,14 @@
-
-import { Shell } from "../components/shell/Shell";
+/**
+ * @file layout.jsx
+ * @module app/layout
+ * @description Raíz de la aplicación Next.js, ahora integra proveedores globales de Contexto.
+ * @responsibility Envolver la app con CartProvider y NotificationProvider para acceso global.
+ * @usedBy Next.js App Router
+ * @dependencies @/context/CartContext, @/context/NotificationContext, @/components/shell/Shell
+ */
+import { Shell } from "@/components/shell/Shell";
+import { CartProvider } from "@/context/CartContext";
+import { NotificationProvider } from "@/context/NotificationContext";
 import "./globals.css";
 
 export const metadata = {
@@ -11,7 +20,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <Shell>{children}</Shell>
+        <NotificationProvider>
+          <CartProvider>
+            <Shell>{children}</Shell>
+          </CartProvider>
+        </NotificationProvider>
       </body>
     </html>
   );

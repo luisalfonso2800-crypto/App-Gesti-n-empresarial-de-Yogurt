@@ -9,18 +9,32 @@ export class SupplierPricesRepository {
   }
 
   async findAll() {
-    return this.prisma.precioProveedor.findMany();
+    try {
+      return await this.prisma.precioProveedor.findMany({
+        include: { insumo: true, proveedor: true },
+      });
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
   }
 
   async findActive() {
-    return this.prisma.precioProveedor.findMany({
-      where: { activo: true },
-    });
+    try {
+      return await this.prisma.precioProveedor.findMany({
+        where: { activo: true },
+        include: { insumo: true, proveedor: true },
+      });
+    } catch (e) {
+      console.error(e);
+      return [];
+    }
   }
 
   async findById(id) {
     return this.prisma.precioProveedor.findUnique({
       where: { id },
+      include: { insumo: true, proveedor: true },
     });
   }
 

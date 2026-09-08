@@ -6,6 +6,8 @@ import { Table, THead, TBody, TR, TH, TD } from '../../../components/ui/Table';
 import { Badge } from '../../../components/ui/Badge';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
 import styles from './lots.module.css';
+import { ContextBanner } from '../../../components/ui/ContextBanner';
+
 
 export default function LotsPage() {
   const [lots, setLots] = useState([]);
@@ -32,8 +34,13 @@ export default function LotsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <h1 className={styles.title}>Lotes</h1>
+        <div className={styles.headerTitle}>
+          <h1 className={styles.title}>Lotes</h1>
+          <p className={styles.subtitle}>Trazabilidad de producción con fechas de fabricación, vencimiento y control de calidad.</p>
+        </div>
       </div>
+      <ContextBanner title="Concepto Técnico" description="Permite hacer seguimiento de calidad. Asigna un código único a cada producción para controlar fechas de vencimiento y rastrear exactamente cuándo se fabricó." />
+
 
       {loading ? (
         <LoadingState />

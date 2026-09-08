@@ -44,8 +44,8 @@ model Insumo {
 
 model Proveedor {
   id             String            @id @default(uuid()) @map("ID_Proveedor")
-  nombre         String            @map("Nombre_Proveedor")
-  nitCedula      String            @map("NIT_Cedula")
+  nombre         String            @unique @map("Nombre_Proveedor")
+  nitCedula      String            @unique @map("NIT_Cedula")
   nombreContacto String?           @map("Nombre_Contacto")
   telefono       String?           @map("Telefono")
   email          String?           @map("Email")
@@ -174,24 +174,46 @@ model Receta {
   unidadRendimiento String          @map("Unidad_Rendimiento")
   activo            Boolean         @default(true) @map("Activo")
   observaciones     String?         @map("Observaciones")
-  detalles          DetalleReceta[]
+  etapas            EtapaReceta[]
 
   @@map("Recetas")
 }
 
-model DetalleReceta {
-  id                String  @id @default(uuid()) @map("ID_Detalle_Receta")
-  idReceta          String  @map("ID_Receta")
-  receta            Receta  @relation(fields: [idReceta], references: [id])
-  idInsumo          String  @map("ID_Insumo")
-  insumo            Insumo  @relation(fields: [idInsumo], references: [id])
-  cantidadRequerida Decimal @map("Cantidad_Requerida")
-  unidad            String  @map("Unidad")
-  mermaPorcentaje   Decimal @map("Merma_Porcentaje")
-  activo            Boolean @default(true) @map("Activo")
-  observaciones     String? @map("Observaciones")
+model EtapaReceta {
+  id                String          @id @default(uuid()) @map("ID_Etapa_Receta")
+  idReceta          String          @map("ID_Receta")
+  receta            Receta          @relation(fields: [idReceta], references: [id])
+  nombre            String          @map("Nombre_Etapa") 
+  orden             Int             @map("Orden")
+  tiempoMinimoMin   Int?            @map("Tiempo_Minimo_Min")
+  tiempoEstandarMin Int?            @map("Tiempo_Estandar_Min")
+  tiempoMaximoMin   Int?            @map("Tiempo_Maximo_Min")
+  tempMinimaGrados  Decimal?        @map("Temp_Minima_Grados")
+  tempMaximaGrados  Decimal?        @map("Temp_Maxima_Grados")
+  instrucciones     String?         @map("Instrucciones")
+  detalles          DetalleReceta[]
+  activo            Boolean         @default(true) @map("Activo")
 
-  @@unique([idReceta, idInsumo])
+  @@map("Etapas_Receta")
+}
+
+model DetalleReceta {
+  id                String       @id @default(uuid()) @map("ID_Detalle_Receta")
+  idEtapaReceta     String       @map("ID_Etapa_Receta")
+  etapa             EtapaReceta  @relation(fields: [idEtapaReceta], references: [id])
+  idInsumo          String       @map("ID_Insumo")
+  insumo            Insumo       @relation(fields: [idInsumo], references: [id])
+  cantidadRequerida Decimal      @map("Cantidad_Requerida")
+  unidad            String       @map("Unidad")
+  mermaPorcentaje   Decimal      @map("Merma_Porcentaje")
+  esOpcional        Boolean      @default(false) @map("Es_Opcional")
+  grupoVariante     String?      @map("Grupo_Variante")
+  tipoInsumo        String       @default("BASE") @map("Tipo_Insumo")
+  activo            Boolean      @default(true) @map("Activo")
+  observaciones     String?      @map("Observaciones")
+
+  @@index([idEtapaReceta])
+  @@index([idInsumo])
   @@map("Detalle_Recetas")
 }
 
@@ -315,4 +337,29 @@ model Gasto {
   observaciones String?  @map("Observaciones")
 
   @@map("Gastos")
+}
+
+model OrdenCompra {
+  id        String            @id @default(uuid()) @map("ID_Orden")
+  codigo    String            @unique @map("Codigo_Orden")
+  nombre    String            @map("Nombre_Orden")
+  estado    String            @default("PENDIENTE") @map("Estado")
+  createdAt DateTime          @default(now()) @map("Fecha_Creacion")
+  items     OrdenCompraItem[]
+
+  @@map("Ordenes_Compra")
+}
+
+model OrdenCompraItem {
+  id              String      @id @default(uuid()) @map("ID_Item_Orden")
+  idOrden         String      @map("ID_Orden")
+  orden           OrdenCompra @relation(fields: [idOrden], references: [id])
+  idInsumo        String?     @map("ID_Insumo")
+  idProveedor     String?     @map("ID_Proveedor")
+  idPresentacion  String?     @map("ID_Presentacion")
+  cantidad        Decimal     @map("Cantidad")
+  precioEstimado  Decimal?    @map("Precio_Estimado") @db.Decimal(12, 2)
+  estadoItem      String      @default("PENDIENTE") @map("Estado_Item")
+
+  @@map("Orden_Compra_Items")
 }

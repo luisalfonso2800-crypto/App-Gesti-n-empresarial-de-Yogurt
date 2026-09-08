@@ -8,6 +8,10 @@ export class ProductionService {
     this.repository = repository;
   }
 
+  async getRecipeBom(idReceta, cantidad, variantes) {
+    return this.repository.getRecipeBom(idReceta, cantidad, variantes);
+  }
+
   async findAll() {
     return this.repository.findAll();
   }
@@ -20,5 +24,9 @@ export class ProductionService {
 
   async create(createDto) {
     return this.repository.createWithTransaction(createDto);
+  }
+
+  async complete(id, data) {
+    return this.repository.completeProduction(id, data);
   }
 }

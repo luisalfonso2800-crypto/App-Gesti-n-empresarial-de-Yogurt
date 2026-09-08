@@ -1,7 +1,7 @@
 import { Controller, Dependencies, Get, Post, Body, Patch, Param, Delete, Bind } from '@nestjs/common';
 import { SupplierPricesService } from './supplier-prices.service';
 
-@Controller('supplier/prices')
+@Controller('supplier-prices')
 @Dependencies(SupplierPricesService)
 export class SupplierPricesController {
   constructor(service) {
