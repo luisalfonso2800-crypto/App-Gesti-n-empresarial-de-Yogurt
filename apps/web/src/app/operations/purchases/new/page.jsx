@@ -5,7 +5,7 @@
  * @responsibility Renderizar el Layout, cargar hooks iniciales y delegar a los componentes de fase.
  */
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import styles from './new-purchase.module.css';
 import { usePurchaseData } from './hooks/usePurchaseData';
@@ -22,13 +22,13 @@ export default function NewPurchasePage() {
   // Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const toastTimeoutRef = useRef(null);
-  const showNotification = (message, type = 'success') => {
+  const showNotification = useCallback((message, type = 'success') => {
     setToast({ show: true, message, type });
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3500);
-  };
+  }, []);
 
-  const { isInitializing, phase, setPhase, proveedoresDB, insumosDB, supplierPrices, initialChecklistItems, setProveedoresDB, setInsumosDB } = usePurchaseData(showNotification);
+  const { isInitializing, phase, setPhase, proveedoresDB, insumosDB, supplierPrices, initialChecklistItems, setProveedoresDB, setInsumosDB, activeOrder, refreshOrder } = usePurchaseData(showNotification);
   const checklistMgr = useChecklistManager(initialChecklistItems, phase);
   const modals = usePurchaseModals();
 
@@ -67,6 +67,7 @@ export default function NewPurchasePage() {
             checklistMgr={checklistMgr} 
             setPhase={setPhase} 
             proveedoresDB={proveedoresDB}
+            activeOrder={activeOrder}
          />
       ) : (
          <FormPhase 
@@ -78,6 +79,8 @@ export default function NewPurchasePage() {
             setPhase={setPhase}
             router={router}
             modals={modals}
+            activeOrder={activeOrder}
+            refreshOrder={refreshOrder}
          />
       )}
 

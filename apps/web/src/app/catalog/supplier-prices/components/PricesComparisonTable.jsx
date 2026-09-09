@@ -60,8 +60,15 @@ export function PricesComparisonTable({
           ) : (
             filteredItems.map((item) => {
               const isBestPrice = item.activo && item.costoUnidadBase === bestPricesMap.get(item.idInsumo);
-              const isAdded = selectedForPurchase.some(p => p.id === item.id);
-              const alreadyHasSameProviderAndInsumo = !isAdded && selectedForPurchase.some(p => p.idInsumo === item.idInsumo && p.idProveedor === item.idProveedor);
+              const isAdded = selectedForPurchase.some(p => 
+                (p.insumoId === item.idInsumo || p.idInsumo === item.idInsumo) &&
+                (p.proveedorId === item.idProveedor || p.idProveedor === item.idProveedor) &&
+                (p.presentacionId === item.idPresentacion || p.idPresentacion === item.idPresentacion || (!p.presentacionId && !item.idPresentacion))
+              );
+              const alreadyHasSameProviderAndInsumo = !isAdded && selectedForPurchase.some(p => 
+                (p.insumoId === item.idInsumo || p.idInsumo === item.idInsumo) && 
+                (p.proveedorId === item.idProveedor || p.idProveedor === item.idProveedor)
+              );
               
               return (
                 <TR key={item.id}>

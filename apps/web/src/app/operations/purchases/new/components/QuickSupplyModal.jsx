@@ -27,7 +27,8 @@ export function QuickSupplyModal({
 
   const handleCreateInsumo = async () => {
     try {
-      const i = await apiClient.post('/supplies', newInsumo);
+      const payload = { ...newInsumo, subcategoria: newInsumo.subcategoria || 'N/A' };
+      const i = await apiClient.post('/supplies', payload);
       if (i) {
         setInsumosDB(prev => [...prev, i]);
         
@@ -52,8 +53,9 @@ export function QuickSupplyModal({
         showNotification("Error al registrar insumo en el sistema.", 'error');
       }
     } catch (err) {
-      console.error(err);
-      showNotification("Error de red al registrar insumo.", 'error');
+      const serverError = err?.response?.data?.message || err?.response?.data?.error || err?.message;
+      console.error('Detalle error insumo:', err?.response?.data);
+      showNotification(`Error de red al registrar insumo: ${JSON.stringify(serverError)}`, 'error');
     }
   };
 

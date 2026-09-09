@@ -166,6 +166,27 @@
 * El backend DEBE validar que las entidades relacionadas existan y sean compatibles antes de persistir la operación.
 * Nunca se debe solucionar un problema de relación mostrando el UUID directamente al usuario.
 
+### 13.1. UX DE ENTRADAS, MÁSCARAS DE MONEDA Y VALIDACIÓN DE TIPOS DE DATOS
+
+1. **UX de Entradas Numéricas (Prohibición de Forzar Cero y Valores Negativos):**
+   * **Gestión de cadenas vacías en el estado:** Prohibido fijar `value={0}` o forzar `|| 0` en el `onChange`. Al borrar un campo numérico (precio, cantidad, stock, flete), el estado debe permitir la cadena vacía `""`.
+   * **Uso obligatorio de Placeholders:** Utilizar siempre `placeholder="0"` o `placeholder="0.00"`. Nunca precargar un `0` visible que obligue al usuario a borrarlo manualmente al escribir nuevos dígitos (evitando cadenas inválidas como `"05000"`).
+   * **Restricción estricta de negativos:** Todo input numérico debe incluir `min="0"`. En el manejador `onChange`, bloquear explícitamente el signo menos (`-`). Ningún costo, precio, cantidad o stock mínimo puede persistirse con valores menores que cero.
+   * **Parseo diferido:** La conversión numérica (`parseFloat(val) || 0` o `Number(val)`) se ejecutará únicamente al calcular totales en pantalla o al preparar el payload para el backend (`onSubmit`).
+
+2. **Formateo y Máscaras de Moneda (COP / Pesos en Tiempo Real):**
+   * **Visualización en vivo:** Todo campo de costo, precio de compra, venta o flete debe mostrar visualmente el prefijo fijo de divisa `$ ` y aplicar separadores de miles con punto (`.`) en tiempo real mientras el usuario tipea (ej. `$ 10.000`, `$ 1.000.000`).
+   * **Prohibición de decimales redundantes:** No renderizar decimales fijos finales (`.00` o `,00`) a menos que el negocio lo requiera explícitamente. Las monedas sin fraccionario operativo deben redondearse a enteros enteros en pantalla (`Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 })`).
+   * **Estado limpio en memoria:** La máscara visual no debe contaminar el valor real. En el payload hacia el backend o en el cálculo matemático, el dato siempre debe limpiarse a número puro (`raw.replace(/\D/g, '')` o parseo a entero/decimal numérico sin símbolos ni puntos).
+
+3. **Validación Preventiva por Tipo de Campo:**
+   * **Campos estrictamente numéricos (Teléfonos, NIT, Documentos, Códigos):** Prohibir la entrada de letras y caracteres especiales en el evento `onKeyDown` / `onChange`. Si el usuario pega o escribe texto alfabético, debe filtrarse instantáneamente (`replace(/\D/g, '')`).
+   * **Nombres de personas y razones sociales mixtas:**
+     * **Nombres / Apellidos de contacto:** Solo permitir letras, espacios, acentos y caracteres idiomáticos (`a-zA-ZáéíóúÁÉÍÓÚñÑ `). Bloquear números y símbolos de puntuación ajenos.
+     * **Nombres de negocio, proveedores o productos:** Permitir cadenas alfanuméricas con espacios y caracteres especiales de empresa (ej. `2 Esquinas`, `Lácteos 3 Hermanos & Cía`). No restringir números en nombres de locales comerciales.
+   * **Correos electrónicos:** Forzar `type="email"`, sanitizar espacios accidentales en blanco (`trim()`) y validar en tiempo real el formato estándar (`usuario@dominio.ext`) antes de habilitar el botón de guardado.
+   * **Sanitización global:** Todo texto debe aplicar `.trim()` antes de enviarse al backend para evitar espacios residuales que distorsionen búsquedas e índices en PostgreSQL.
+
 ### 14. ANÁLISIS DE IMPACTO OBLIGATORIO
 
 * Antes de modificar una entidad, tabla, endpoint o estructura utilizada por otros módulos, la IA DEBE identificar sus dependencias.
@@ -347,6 +368,7 @@
 * La IA NO debe modificar código únicamente porque considere que podría escribirse de una manera "mejor".
 * No realizar refactorizaciones oportunistas durante una implementación funcional.
 * Si una mejora es necesaria para evitar que la implementación actual quede técnicamente defectuosa, debe realizarse únicamente en el alcance mínimo necesario.
+
 
 ### 30. CRITERIO DE FINALIZACIÓN
 

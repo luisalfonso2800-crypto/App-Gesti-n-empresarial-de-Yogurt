@@ -137,15 +137,36 @@ export function useCartManager() {
   }, [lists, executeMoveItem, showNotification]);
 
   /**
+   * Helper reactivo para encontrar si un ítem (PrecioProveedor) ya existe en la lista activa.
+   */
+  const findExistingCartItem = useCallback((targetItem) => {
+    return cartItems.find(i => 
+      (i.insumoId === targetItem.idInsumo || i.idInsumo === targetItem.idInsumo) &&
+      (i.proveedorId === targetItem.idProveedor || i.idProveedor === targetItem.idProveedor) &&
+      (i.presentacionId === targetItem.idPresentacion || i.idPresentacion === targetItem.idPresentacion || (!i.presentacionId && !targetItem.idPresentacion))
+    );
+  }, [cartItems]);
+
+  /**
    * Añade un ítem a la lista indicada (o activa) y muestra el toast con el botón "Cambiar de lista".
    * Si el ítem ya estaba en el carrito, lo elimina (toggle).
    * @param {Object} item         - Ítem crudo del precio proveedor
    * @param {string} targetListId - ID de la lista destino (default: activeListId)
    */
   const handleToggleWithList = useCallback(async (item, targetListId) => {
-    const existing = cartItems.find(i => i.id === item.id);
+    const existing = findExistingCartItem(item);
+    
     if (existing) {
-      removeFromCart(item.id, targetListId);
+      try {
+        // Remover del backend
+        await apiClient.delete(`/purchases/orders/${targetListId}/items/${existing.id}`);
+        removeFromCart(existing.id, targetListId);
+        refreshCart();
+        showNotification('Ítem removido de la lista de compra', 'info');
+      } catch (error) {
+        console.error('Error al remover el ítem:', error);
+        showNotification('Error al remover el ítem de la lista', 'error');
+      }
       return;
     }
 
@@ -206,7 +227,7 @@ export function useCartManager() {
       console.error('Error persisting item to order:', error);
       showNotification('Error al guardar el ítem en la lista de compra', 'error');
     }
-  }, [cartItems, lists, addToCart, removeFromCart, buildCartItem, showNotification, pauseNotification, resumeNotification, handleChangeList, isMoving, refreshCart]);
+  }, [findExistingCartItem, lists, addToCart, removeFromCart, buildCartItem, showNotification, pauseNotification, resumeNotification, handleChangeList, isMoving, refreshCart]);
 
 
   /**
@@ -215,9 +236,9 @@ export function useCartManager() {
    * @param {Object} item - Ítem crudo del precio proveedor
    */
   const togglePurchaseItem = useCallback((item) => {
-    const existing = cartItems.find(i => i.id === item.id);
+    const existing = findExistingCartItem(item);
     if (existing) {
-      removeFromCart(item.id);
+      handleToggleWithList(item, activeListId);
       return;
     }
     const listsKeys = Object.keys(lists);
@@ -228,7 +249,7 @@ export function useCartManager() {
     } else {
       handleToggleWithList(item, activeListId);
     }
-  }, [cartItems, lists, activeListId, removeFromCart, buildCartItem, handleToggleWithList]);
+  }, [findExistingCartItem, lists, activeListId, buildCartItem, handleToggleWithList]);
 
   const clearPurchaseList = useCallback(() => clearCart(), [clearCart]);
 
