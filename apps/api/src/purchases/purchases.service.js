@@ -21,6 +21,7 @@ export class PurchasesService {
   async create(createDto) {
     // Executing transaction via repository
     return this.repository.createWithTransaction(createDto);
+
   }
 
   async simulate(simulateDto) {
@@ -29,6 +30,19 @@ export class PurchasesService {
 
   async findActiveOrders() {
     return this.repository.findActiveOrders();
+  }
+
+  async addItemToOrder(orderId, itemData) {
+    return this.repository.addItemToOrder(orderId, itemData);
+  }
+
+  async moveItem(moveDto) {
+    return this.repository.moveItem(moveDto);
+  }
+
+  
+  async mergeOrders(mergeDto) {
+    return this.repository.mergeOrders(mergeDto);
   }
 
   async createOrder(createDto) {
@@ -47,5 +61,9 @@ export class PurchasesService {
 
   async updateOrderItem(id, itemId, updateDto) {
     return this.repository.updateOrderItem(id, itemId, updateDto);
+  }
+
+  async deleteOrder(id) {
+    return this.repository.deleteOrder(id);
   }
 }

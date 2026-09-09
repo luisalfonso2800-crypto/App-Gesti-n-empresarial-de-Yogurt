@@ -3,24 +3,86 @@
  * @module context/NotificationContext
  * @description Contexto global para sistema de notificaciones/toasts de la UI.
  * @responsibility Proveer la API estandarizada de notificaciones a través de la aplicación.
+ *   Soporta pausa y reanudación del timer de auto-cierre para que el usuario pueda
+ *   interactuar con botones dentro del toast sin que desaparezca.
  * @usedBy apps/web/src/app/layout.jsx
  * @dependencies react
  */
 'use client';
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 
 const NotificationContext = createContext();
+
+// Duración estándar del toast en milisegundos
+const TOAST_DURATION = 4000;
 
 export function NotificationProvider({ children }) {
   const [notification, setNotification] = useState(null);
 
-  const showNotification = useCallback((message, type = 'info') => {
-    setNotification({ message, type });
-    setTimeout(() => {
+  // Ref al timer activo para poder cancelarlo y reanudar desde fuera
+  const timerRef = useRef(null);
+
+  // Tiempo restante cuando el usuario pausó el timer al hacer hover
+  const remainingRef = useRef(TOAST_DURATION);
+
+  // Timestamp del último arranque del timer (para calcular tiempo restante)
+  const startedAtRef = useRef(null);
+
+  /**
+   * Inicia el timer de auto-cierre con el tiempo indicado.
+   * @param {number} delay - Milisegundos antes de ocultar el toast
+   */
+  const startTimer = useCallback((delay) => {
+    clearTimeout(timerRef.current);
+    startedAtRef.current = Date.now();
+    timerRef.current = setTimeout(() => {
       setNotification(null);
-    }, 4000);
+      remainingRef.current = TOAST_DURATION;
+    }, delay);
   }, []);
 
+  /**
+   * Muestra una notificación toast.
+   * Cancela cualquier notificación previa y reinicia el timer completo.
+   * @param {string|ReactNode} message - Contenido del toast (puede ser JSX)
+   * @param {'info'|'success'|'error'|'warning'} type - Tipo visual del toast
+   */
+  const showNotification = useCallback((message, type = 'info') => {
+    clearTimeout(timerRef.current);
+    remainingRef.current = TOAST_DURATION;
+    setNotification({ message, type });
+    startTimer(TOAST_DURATION);
+  }, [startTimer]);
+
+  /**
+   * Pausa el auto-cierre cuando el cursor entra al toast.
+   * Calcula el tiempo restante para poder reanudarlo exactamente donde quedó.
+   */
+  const pauseNotification = useCallback(() => {
+    if (timerRef.current && startedAtRef.current) {
+      const elapsed = Date.now() - startedAtRef.current;
+      remainingRef.current = Math.max(0, remainingRef.current - elapsed);
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  /**
+   * Reanuda el auto-cierre cuando el cursor sale del toast.
+   * Usa el tiempo restante calculado en pauseNotification.
+   */
+  const resumeNotification = useCallback(() => {
+    if (notification && remainingRef.current > 0) {
+      startTimer(remainingRef.current);
+    }
+  }, [notification, startTimer]);
+
+  // Limpiar timer al desmontar
+  useEffect(() => {
+    return () => clearTimeout(timerRef.current);
+  }, []);
+
+  // Escuchar eventos globales de notificación (emitidos con window.dispatchEvent)
   useEffect(() => {
     const handleEvent = (e) => {
       if (e.detail) showNotification(e.detail.message, e.detail.type);
@@ -29,17 +91,32 @@ export function NotificationProvider({ children }) {
     return () => window.removeEventListener('showNotification', handleEvent);
   }, [showNotification]);
 
+  // Mapa de colores por tipo
+  const bgColor = {
+    error: '#f44336',
+    warning: '#ff9800',
+    success: '#4caf50',
+    info: '#2196f3',
+  }[notification?.type] || '#2196f3';
+
   return (
-    <NotificationContext.Provider value={{ showNotification }}>
+    <NotificationContext.Provider value={{ showNotification, pauseNotification, resumeNotification }}>
       {children}
       {notification && (
-        <div style={{
-          position: 'fixed', bottom: '20px', right: '20px', 
-          padding: '1rem', borderRadius: '4px', zIndex: 9999,
-          backgroundColor: notification.type === 'error' ? '#f44336' : notification.type === 'warning' ? '#ff9800' : notification.type === 'success' ? '#4caf50' : '#2196f3',
-          color: 'white',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-        }}>
+        <div
+          onMouseEnter={pauseNotification}
+          onMouseLeave={resumeNotification}
+          style={{
+            position: 'fixed', bottom: '20px', right: '20px',
+            padding: '1rem', borderRadius: '6px', zIndex: 9999,
+            backgroundColor: bgColor,
+            color: 'white',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            minWidth: '280px',
+            cursor: 'default',
+            userSelect: 'none',
+          }}
+        >
           {notification.message}
         </div>
       )}

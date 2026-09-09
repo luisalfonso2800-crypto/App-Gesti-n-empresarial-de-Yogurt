@@ -33,7 +33,8 @@ export default function SupplierPricesPage() {
 
   const {
     selectedForPurchase, togglePurchaseItem,
-    clearPurchaseList, proceedToPurchase
+    clearPurchaseList, proceedToPurchase,
+    MoveListModal,
   } = useCartManager();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -91,6 +92,9 @@ export default function SupplierPricesPage() {
         isOpen={isModalOpen} onClose={handleCloseModal}
         editingItem={editingItem} onSubmit={handleSubmitForm}
       />
+
+      {/* Modal selector de lista destino cuando hay 3+ listas activas */}
+      {MoveListModal}
     </div>
   );
 }

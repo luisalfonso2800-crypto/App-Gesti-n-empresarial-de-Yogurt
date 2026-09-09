@@ -1,16 +1,60 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../new-purchase.module.css';
 import { AlertCircleIcon, XIcon, CheckIcon } from '@/components/ui/icons';
+import { ArrowRightLeft } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
-
+import { useCart } from '@/context/CartContext';
+import { useNotification } from '@/context/NotificationContext';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
 export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPendingItems, setComprasAsentadas }) {
   const { updateChecklistItem, checklistItems, setChecklistItems, simulationResult } = checklistMgr;
+  const { lists, refreshCart } = useCart();
+  const { showNotification } = useNotification();
+  const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
+  const [selectedTargetList, setSelectedTargetList] = useState('');
+  const [isMoving, setIsMoving] = useState(false);
+
+  const availableLists = Object.values(lists).filter(l => l.id !== item.currentOrderId && !l.id.startsWith('local-'));
+
+  const handleMoveList = async () => {
+    if (!selectedTargetList) {
+      showNotification('Seleccione una lista destino', 'error');
+      return;
+    }
+    try {
+      setIsMoving(true);
+      await apiClient.post('/purchases/items/move', {
+        itemId: item.orderItemId,
+        fromOrderId: item.currentOrderId,
+        toOrderId: selectedTargetList
+      });
+      showNotification(`Ítem transferido exitosamente a ${lists[selectedTargetList]?.name || 'la orden'}`, 'success');
+      refreshCart();
+      const newSelection = checklistItems.filter(i => i._id !== item._id);
+      setChecklistItems(newSelection);
+      sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
+      window.dispatchEvent(new Event('cartUpdated'));
+      setIsMoveModalOpen(false);
+    } catch (e) {
+      showNotification(e.message || 'Error al mover ítem', 'error');
+    } finally {
+      setIsMoving(false);
+    }
+  };
 
   return (
     <div className={`${styles.checklistCard} ${item.estadoOperativo === 'CONSEGUIDO' ? styles.checklistCardConseguido : styles.checklistCardNoConseguido}`}>
       {/* Zona Encabezado */}
       <div className={styles.checklistHeader}>
-        <span className={styles.insumoName}>{item.insumoData?.nombre || item.nombre}</span>
+        <div className={styles.headerLeft}>
+          <span className={styles.insumoName}>{item.insumoData?.nombre || item.nombre}</span>
+          {item.duplicateWarning && (
+            <span style={{ color: '#ef4444', fontSize: '0.75rem', fontWeight: 'bold', marginLeft: '0.5rem' }}>
+              {item.duplicateWarning}
+            </span>
+          )}
+        </div>
         <span className={styles.badge}>Categoría: {item.insumoData?.categoria || item.categoria || 'N/A'}</span>
         <span className={styles.badge}>Marca: {item.insumoData?.marca || item.marca || 'Sin marca'}</span>
         <span className={`${styles.badge} ${styles.badgeStock}`}>
@@ -214,6 +258,15 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
           <XIcon size={18} /> No Conseguido
         </button>
         <button 
+          className={styles.btnNoConseguido}
+          onClick={() => setIsMoveModalOpen(true)}
+          title="Mover a otra lista"
+          disabled={!item.orderItemId || !item.currentOrderId}
+          style={{ opacity: (!item.orderItemId || !item.currentOrderId) ? 0.5 : 1 }}
+        >
+          <ArrowRightLeft size={18} /> Mover Lista
+        </button>
+        <button 
           className={`${styles.btnConseguido} ${item.estadoOperativo === 'CONSEGUIDO' ? styles.btnConseguidoActive : ''}`}
           onClick={async () => {
             updateChecklistItem(item._id, 'estadoOperativo', 'CONSEGUIDO');
@@ -267,6 +320,37 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
           <CheckIcon size={18} /> Conseguido
         </button>
       </div>
+
+      <Modal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Mover a otra Lista">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+          <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>Selecciona la lista de compra a la que deseas transferir este insumo:</p>
+          
+          {availableLists.length === 0 ? (
+            <div style={{ padding: '1rem', background: '#f3f4f6', borderRadius: '4px', textAlign: 'center' }}>
+              <p style={{ margin: 0, color: '#374151', fontSize: '0.875rem' }}>No hay otras listas activas disponibles.</p>
+              <p style={{ margin: '0.5rem 0 0 0', color: '#6b7280', fontSize: '0.75rem' }}>Crea una nueva lista desde el carrito primero.</p>
+            </div>
+          ) : (
+            <select 
+              value={selectedTargetList} 
+              onChange={e => setSelectedTargetList(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
+            >
+              <option value="">-- Seleccione una lista --</option>
+              {availableLists.map(l => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+          )}
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+            <Button variant="secondary" onClick={() => setIsMoveModalOpen(false)}>Cancelar</Button>
+            <Button variant="primary" onClick={handleMoveList} disabled={isMoving || !selectedTargetList || availableLists.length === 0}>
+              {isMoving ? 'Transfiriendo...' : 'Confirmar transferencia'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

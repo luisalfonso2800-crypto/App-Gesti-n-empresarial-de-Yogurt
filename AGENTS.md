@@ -19,6 +19,7 @@
 * Prohibido ejecutar `prisma migrate` o alterar la base de datos real sin control.
 * **Sincronización y Aviso Obligatorio de Tablas:** Cada vez que agregues o modifiques un modelo o tabla en `apps/api/prisma/schema.prisma`, DEBES notificar explícitamente al usuario al finalizar la tarea con las instrucciones exactas para ejecutar `pnpm --filter api exec prisma db push` y `pnpm --filter api exec prisma generate` para evitar desincronizaciones de base de datos.
 * **Modo Rápido Obligatorio:** Prohibido ejecutar `pnpm build` o purgar la caché (`.next`) para comprobaciones rápidas. Toda validación estática ligera debe realizarse mediante `node --check` sobre los archivos modificados.
+* **Prohibición de Scripts Basura en la Raíz:** Queda terminantemente prohibido dejar scripts temporales de escritura o automatización sueltos en el repositorio (ej. `write_step1.js`, `temp_patch.js`). Si se utiliza un script auxiliar, este debe eliminarse automáticamente antes de concluir la tarea.
 
 ### 2. ARQUITECTURA Y EJECUCIÓN (BACKEND)
 
@@ -34,6 +35,11 @@
 * Prohibido introducir entidades o funcionalidades ajenas al objetivo de la fase.
 * Las tareas deben ejecutarse como bloques completos sin detenerse por confirmaciones intermedias, salvo bloqueos reales de diseño o seguridad.
 
+### 2.1. PREVENCIÓN DE CONFLICTOS DE ENRUTAMIENTO EN EXPRESS
+
+* **Jerarquía Estricta de Rutas:** Toda ruta fija, de acción masiva o sub-recurso (ej. `/orders/merge`, `/active`, `/items/move`) DEBE declararse en el router de Express OBLIGATORIAMENTE **antes** de cualquier ruta parametrizada dinámica (ej. `/:id` o `/orders/:id`).
+* Nunca expongas parámetros comodín por encima de rutas específicas para evitar que Express capture palabras reservadas como si fueran IDs/UUIDs.
+
 ### 3. REGLA DE DETENCIÓN
 
 * Solo detente ante errores irresolubles o bloqueos reales de diseño. Si hay un error de sintaxis en Prisma o JavaScript introducido por ti, corrígelo de inmediato.
@@ -42,6 +48,7 @@
 
 * Busca y reutiliza primero los iconos de `lucide-react` o los exportados en `@/components/ui/icons`.
 * Si no existe un icono representativo en `lucide-react`, créalo como componente SVG accesible y agrégalo directamente a `@/components/ui/icons` para centralizarlo.
+* **Verificación Previa de Exports:** Queda prohibido importar componentes o iconos a ciegas desde `@/components/ui/icons` sin antes verificar que el archivo realmente contenga la sentencia `export` para ese símbolo. Si no está exportado allí, impórtalo directamente desde `lucide-react`.
 * NUNCA incrustes SVGs en línea dentro de las páginas o subcomponentes.
 
 ### 5. SISTEMA DE RUTAS, PATH ALIASES Y MIGRACIÓN OPORTUNISTA ACOTADA
@@ -63,6 +70,7 @@
 ### 7. COMENTARIOS EXHAUSTIVOS Y TRAZABILIDAD EMPRESARIAL (JSDOC)
 
 * Todo archivo `.js` o `.jsx` creado o refactorizado debe iniciar obligatoriamente con el bloque JSDoc en la cabecera:
+
 ```javascript
 /**
  * @file [NombreDelArchivo.jsx]
@@ -74,7 +82,6 @@
  */
 
 ```
-
 
 * **Comentarios Internos Línea a Línea:** Comenta minuciosamente cada función, hook, cálculo matemático, condición de guarda, efecto (`useEffect`) y handler de eventos, explicando el porqué técnico y el impacto de negocio para que cualquier desarrollador o IA comprenda el flujo de inmediato sin ambigüedades.
 
@@ -88,6 +95,18 @@
 
 * Toda llamada a la API debe realizarse mediante la instancia centralizada del cliente (`@/lib/api-client` o `@/lib/api`).
 * Resuelve siempre contra las rutas canónicas versionadas del backend (`/api/v1/...`).
+
+### 9.1. VERIFICACIÓN ESTRATÉGICA BACKEND-FIRST (DATOS REALES Y CONTROL DE CUOTA)
+
+* **Prohibido asumir que el backend soporta una acción solo porque el frontend la requiere.**
+* Toda acción de frontend que implique mutación de datos (crear, editar, eliminar, transferir, fusionar) DEBE verificar primero la existencia y el contrato real del endpoint en `apps/api/src/routes/` y sus controladores.
+* **Protocolo de Verificación sin Exceso de Cuota:**
+1. No leas todo el backend ni hagas búsquedas globales ciegas. Inspecciona directamente el archivo de rutas del submódulo correspondiente (ej. `apps/api/src/routes/purchase.routes.js` o `purchases/`).
+2. Si el endpoint no existe o le faltan campos, **debes crearlo o completarlo en el backend antes de conectar el frontend**.
+3. No implementes "soluciones temporales" simuladas con datos en memoria del cliente cuando la acción deba persistir en base de datos.
+4. La implementación en el backend debe ser acotada y respetar la estructura Controller $\rightarrow$ Service $\rightarrow$ Repository, validando con Prisma.
+
+
 
 ---
 
@@ -125,17 +144,18 @@
 ### 12. INTEGRIDAD Y DUPLICACIÓN DE DATOS
 
 * Ningún seed, script de prueba o proceso de inicialización puede insertar datos duplicados accidentalmente.
-* Antes de modificar un seed, la IA DEBE determinar si su ejecución es:
-1. Idempotente.
-2. Acumulativa intencionalmente.
-3. Destructiva.
-
-
+* Antes de modificar un seed, la IA DEBE determinar si su ejecución es: idempotente, acumulativa intencionalmente o destructiva.
 * Los seeds de prueba DEBEN ser idempotentes o limpiar explícitamente los datos que ellos mismos generan.
 * NUNCA debe eliminar datos existentes de una base de datos sin identificar previamente el alcance y finalidad de dicha eliminación.
 * Cuando exista riesgo de duplicación, la IA DEBE verificar la existencia previa mediante identificadores o claves únicas antes de insertar.
 * Las relaciones entre entidades deben utilizar siempre los identificadores reales provenientes de la base de datos.
 * NUNCA se deben inventar IDs, UUIDs o relaciones únicamente para hacer funcionar la interfaz.
+
+### 12.1. MAPEO Y NOMBRES EXACTOS DE CAMPOS EN PRISMA
+
+* **Cero Asunciones en Nombres de Columnas:** Al realizar consultas, agregaciones o inserciones en Prisma (`create`, `update`, `deleteMany`), la IA DEBE consultar el nombre exacto de las propiedades en `schema.prisma`.
+* Queda terminantemente prohibido adivinar campos (ej. usar `cantidadSolicitada` en lugar de `cantidad`, o `ordenId` en lugar de `purchaseId`). La discrepancia de un solo nombre provoca un `PrismaClientValidationError` y error 500 en cadena.
+* En operaciones destructivas (`delete`, `deleteMany`), purga siempre los hijos/ítems dependientes antes de destruir el registro padre para no violar restricciones de clave foránea (`Foreign Key Constraint`).
 
 ### 13. RELACIONES ENTRE ENTIDADES (UI HUMANA)
 
@@ -149,16 +169,7 @@
 ### 14. ANÁLISIS DE IMPACTO OBLIGATORIO
 
 * Antes de modificar una entidad, tabla, endpoint o estructura utilizada por otros módulos, la IA DEBE identificar sus dependencias.
-* Como mínimo debe revisar:
-* Base de datos.
-* Backend.
-* Frontend.
-* Cliente API.
-* Seeds.
-* Módulos consumidores.
-* Relaciones con inventario, producción, compras, ventas y costos cuando correspondan.
-
-
+* Como mínimo debe revisar: Base de datos, Backend, Frontend, Cliente API, Seeds, Módulos consumidores y relaciones transversales.
 * Ningún cambio estructural debe implementarse de forma aislada si afecta un flujo existente.
 * Si un cambio rompe una dependencia existente, la IA DEBE corregir la dependencia dentro de la misma fase cuando esté dentro de su alcance.
 * No se permite dejar deliberadamente una estructura nueva incompatible con el módulo que actualmente la consume.
@@ -195,60 +206,66 @@
 
 * Los formularios deben priorizar selección de entidades existentes sobre entrada manual de IDs.
 * Las acciones principales deben ser visualmente claras.
-* Las acciones destructivas deben requerir confirmación cuando exista riesgo de pérdida de información.
 * Los mensajes de error deben ser comprensibles para el usuario y no limitarse al mensaje técnico del backend.
-* No se deben mostrar datos técnicos innecesarios al usuario final.
 * Las interfaces deben mantener coherencia visual, espacial y de interacción con el resto del sistema.
+
+### 16.1. ERRADICACIÓN DE DIÁLOGOS NATIVOS Y FEEDBACK VISUAL OBLIGATORIO
+
+* **PROHIBICIÓN ABSOLUTA:** Queda terminantemente prohibido el uso de diálogos nativos del navegador (`window.alert()`, `window.confirm()`, `window.prompt()`). Ninguna interacción debe utilizar estas ventanas emergentes por ser bloqueantes, obsoletas y degradar la experiencia de usuario.
+* **Confirmación Previa:** Toda acción destructiva, irreversible o crítica (ej. eliminar lista, borrar ítem, fusionar órdenes, anular registros) DEBE desplegar un componente Modal estilizado (`<Modal/>`) con botones claros de "Cancelar" y "Confirmar acción".
+* **Confirmación Posterior (Feedback Visual):** Toda acción ejecutada por el usuario (exitosa o fallida) DEBE mostrar confirmación visual explícita en pantalla:
+* **Éxito:** Toast/Notificación visual estilizada en verde con el detalle de lo ocurrido (ej. `"Insumo transferido exitosamente a ORD-2026-0002"`).
+* **Error:** Toast/Notificación estilizada en rojo o badge descriptivo indicando el motivo comprensible para humanos (ej. `"No fue posible fusionar las listas. Intente nuevamente"`).
+* **Estado Activo:** Badges, chips o resaltes visuales que confirmen el estado actual del sistema (ej. `Lista Activa: [Nombre]`).
+
+
+
+### 16.2. INTEGRIDAD FUNCIONAL EXTREMO A EXTREMO PARA ELEMENTOS INTERACTIVOS (BOTONES Y ACCIONES)
+
+* **Prohibición de Botones Huérfanos o Cosméticos:** Queda terminantemente prohibido crear, renderizar o modificar botones, enlaces o disparadores de acción que no tengan una implementación funcional completa y verificada.
+* **Prohibición de Stubs y Alertas Temporales:** Ningún botón puede limitarse a emitir `alert()`, `console.log()` o dejar un manejador de eventos vacío (`onClick={() => {}}`). Si el botón está visible en la interfaz, su flujo de interacción debe estar completamente operativo.
+* **Circuito Completo Frontend ↔ Backend:**
+1. Si el botón ejecuta una acción que muta o consulta datos (guardar, editar, eliminar, mover, fusionar, cambiar estado), **debe existir y estar conectado el endpoint real en `apps/api/**`.
+2. Si el backend carece del controlador, ruta o método en Prisma para respaldar la acción del botón, **debes crearlo en el backend antes de dar por completada la tarea**.
+3. El frontend debe manejar los tres momentos del ciclo de vida del botón:
+* **Estado previo/espera:** Deshabilitado (`disabled`) o con indicador de carga durante la ejecución asíncrona para evitar envíos múltiples.
+* **Respuesta exitosa:** Actualización reactiva del estado visual/DOM y notificación toast de confirmación en verde.
+* **Manejo de error:** Bloque `try / catch` que capture fallos de red o validaciones de la API, manteniendo la aplicación estable y mostrando el feedback correspondiente en rojo.
+
+
+
+
+* **Regla de Alcance:** Si una tarea no incluye el tiempo o la autorización para implementar la lógica backend y frontend de una acción puntual, **el botón no debe crearse ni agregarse a la UI**.
+
+### 16.3. REACTIVIDAD TRANSVERSAL Y SINCRONIZACIÓN EN TIEMPO REAL
+
+* **Sincronización Contextual:** Cuando una acción ejecutada en un componente global (como el `Header` o el `CartContext`) altere o elimine un recurso compartido, el módulo o vista activa (ej. `PurchasesPage`) DEBE enterarse y reflejar el cambio de inmediato en el DOM sin obligar al usuario a recargar la página (`F5`).
+* Para lograrlo, los contextos deben exponer disparadores de versión o timestamps reactivos (`lastUpdated`), y las vistas consumidoras deben suscribir sus efectos a dicho disparador.
+
+### 16.4. RESILIENCIA Y MANEJO DEFENSIVO EN MONTAJES (PROHIBIDO "FAILED TO FETCH" CRÍTICO)
+
+* **Protección de Efectos Iniciales (`useEffect`):** Ninguna llamada asíncrona o simulación que se ejecute durante el ciclo de vida de montaje de un componente puede dejarse sin un bloque `try / catch` defensivo.
+* Si una petición inicial o de simulación falla o devuelve error de red, la interfaz NO debe estrellarse en pantalla roja (React Error Boundary); debe capturar el error, inicializar estados seguros (`items: []`, `loading: false`) y mostrar un estado de error comprensible al usuario.
 
 ### 17. FORMULARIOS COMPLEJOS Y ENTIDADES RELACIONADAS
 
 * Cuando una entidad tenga relaciones 1:N, N:N o estructuras jerárquicas, el formulario NO debe limitarse a la cabecera.
 * La interfaz debe permitir administrar las entidades relacionadas dentro del flujo natural de creación/edición.
-* Las listas dinámicas deben permitir como mínimo:
-* Agregar.
-* Editar.
-* Eliminar.
-* Cambiar cantidades.
-* Seleccionar entidades existentes.
-* Validar datos antes de guardar.
-
-
+* Las listas dinámicas deben permitir como mínimo: agregar, editar, eliminar, cambiar cantidades, seleccionar entidades existentes y validar datos antes de guardar.
 * Las estructuras complejas deben organizarse visualmente por secciones o etapas para evitar formularios planos y ambiguos.
-* La IA debe distinguir entre:
-* Datos maestros.
-* Materiales.
-* Procesos.
-* Parámetros.
-* Resultados.
-* Costos.
-
-
-* No debe introducir toda esta información en una única estructura plana cuando el dominio requiera separación conceptual.
 
 ### 18. CÁLCULOS, INVENTARIO Y COSTOS
 
 * Todo cálculo relacionado con cantidades, inventario, producción, costos, mermas o rendimientos debe tener una única fuente de cálculo.
 * El mismo cálculo NO debe duplicarse independientemente en múltiples pantallas.
 * Las cantidades deben respetar la unidad base definida para el insumo.
-* Las conversiones de unidades deben ser explícitas y verificables.
-* Los cálculos de producción deben distinguir entre:
-* Cantidad planificada.
-* Cantidad requerida.
-* Cantidad disponible.
-* Cantidad faltante.
-* Cantidad a comprar.
-* Merma prevista.
-* Cantidad realmente consumida.
-
-
-* Cuando corresponda, el sistema debe poder determinar el costo estimado antes de ejecutar una producción.
 * Los valores calculados por frontend deben coincidir con las reglas de negocio del backend.
 
 ### 19. PROHIBICIÓN DE HARDCODEAR DATOS DE NEGOCIO
 
 * Nombres de productos, insumos, proveedores, IDs, precios, cantidades, categorías o relaciones reales NO deben quedar hardcodeados en el frontend.
 * Los datos de negocio deben provenir de la API o de la configuración correspondiente.
-* Los valores utilizados únicamente para demostraciones deben estar claramente identificados como datos de prueba.
+* **Prohibición de Placeholders Estáticos en Componentes:** En componentes de lista (como el Carrito), queda prohibido renderizar textos literales quemados como `"Insumo"` o `"Proveedor"`. Se debe mapear de forma segura contra los objetos recibidos (ej. `item.insumo?.nombre || 'Sin nombre'`).
 * No se debe modificar código para que una pantalla "se vea bien" utilizando datos falsos cuando la API real debería proporcionar dichos datos.
 
 ---
@@ -266,54 +283,23 @@
 
 * No se permiten soluciones cosméticas que oculten el error sin solucionar su causa.
 * No se debe modificar código funcional únicamente para eliminar un mensaje de error sin comprender su origen.
-* Si existen varias causas posibles, deben comprobarse antes de aplicar cambios estructurales.
 
 ### 21. CONFIGURACIÓN Y DEPENDENCIAS
 
 * No eliminar reglas, plugins, validaciones o dependencias únicamente para conseguir que un comando termine exitosamente.
-* Toda modificación de configuración debe conservar la finalidad original del sistema siempre que sea técnicamente compatible.
-* Si una configuración resulta incompatible, la IA DEBE buscar primero una solución compatible antes de eliminar funcionalidad de validación.
 * Toda dependencia nueva debe justificarse técnicamente.
 * No se deben introducir librerías para resolver problemas que puedan resolverse utilizando componentes o utilidades ya existentes en el proyecto.
 
 ### 22. TRAZABILIDAD DE CAMBIOS Y REPORTE DE CIERRE
 
-* Toda modificación estructural debe indicar:
-* Qué se modificó.
-* Por qué se modificó.
-* Qué problema resuelve.
-* Qué módulos afecta.
-* Qué validaciones fueron ejecutadas.
-* Qué queda pendiente.
-
-
-* El reporte final DEBE distinguir claramente entre:
-* `VERIFICADO`
-* `NO VERIFICADO`
-* `BLOQUEADO`
-* `PENDIENTE`
-
-
+* Toda modificación estructural debe indicar qué se modificó, por qué, qué problema resuelve, qué módulos afecta y qué validaciones se ejecutaron.
+* El reporte final DEBE distinguir claramente entre: `VERIFICADO`, `NO VERIFICADO`, `BLOQUEADO` y `PENDIENTE`.
 * Está prohibido reportar como completada una validación que no fue ejecutada realmente.
 
 ### 23. DATOS DE PRUEBA Y SEEDS
 
-* Los datos de prueba deben representar escenarios reales del negocio.
-* Deben permitir comprobar relaciones entre módulos.
-* El seed debe incluir datos suficientes para probar:
-* Catálogos.
-* Compras.
-* Inventario.
-* Producción.
-* Lotes.
-* Ventas.
-* Pagos.
-* Costos cuando corresponda.
-
-
-* Los seeds deben poder ejecutarse repetidamente sin generar duplicaciones accidentales.
-* Los datos de prueba nunca deben confundirse con datos reales.
-* Cuando una nueva funcionalidad requiera datos relacionados, el seed debe actualizarse para permitir probar el flujo completo.
+* Los datos de prueba deben representar escenarios reales del negocio y permitir comprobar relaciones entre módulos.
+* Los seeds deben ser idempotentes para poder ejecutarse repetidamente sin generar duplicaciones accidentales.
 
 ---
 
@@ -322,33 +308,18 @@
 ### 24. CONTROL DE ALCANCE — V1 vs V2/V3
 
 * La V1 debe resolver correctamente las necesidades actuales del negocio.
-* No introducir arquitectura, autenticación avanzada, auditoría empresarial, machine learning, multitenancy, versionado complejo u otras capacidades reservadas para V2/V3 salvo que sean necesarias para que V1 funcione.
-* Si durante una fase aparece una necesidad futura, debe documentarse como pendiente y NO implementarse automáticamente.
-* La IA debe diferenciar entre:
-* Necesario para V1.
-* Mejora conveniente para V1.
-* Funcionalidad futura V2/V3.
-
-
-* No convertir una necesidad futura en una dependencia actual sin justificación.
+* No introducir capacidades reservadas para V2/V3 salvo que sean necesarias para que V1 funcione.
 
 ### 25. PRESERVACIÓN DEL CONTEXTO Y DEL TRABAJO EXISTENTE
 
-* Antes de modificar un archivo existente, la IA DEBE comprender su responsabilidad actual y revisar las partes relevantes del código.
+* Antes de modificar un archivo existente, la IA DEBE comprender su responsabilidad actual.
 * No reemplazar archivos completos cuando una modificación localizada sea suficiente.
-* No eliminar funcionalidades existentes para implementar una nueva.
-* No asumir que un archivo está incompleto únicamente porque no contiene la funcionalidad de la fase actual.
 * Las modificaciones deben ser incrementales y compatibles con el trabajo realizado en fases anteriores.
-* Cuando una fase reutilice código creado anteriormente, debe conservarse el patrón existente salvo que exista una razón técnica documentada para cambiarlo.
 
 ### 26. CONTROL ESTRICTO DE ALCANCE Y CONSUMO DE CONTEXTO
 
 * La IA DEBE trabajar únicamente sobre el objetivo explícito de la tarea actual.
-* Antes de actuar, debe identificar el conjunto mínimo de archivos necesarios para completar correctamente la tarea.
 * NO debe realizar auditorías generales, revisiones profundas, refactorizaciones globales, limpiezas masivas ni mejoras no solicitadas.
-* NO debe explorar todo el proyecto si la tarea puede resolverse revisando únicamente un módulo y sus dependencias directas.
-* NO debe leer documentación completa, módulos completos o archivos no relacionados únicamente "para tener más contexto".
-* El contexto debe ampliarse únicamente cuando exista una dependencia real que pueda afectar la implementación.
 * Prioridad de lectura:
 1. Prompt de la fase actual.
 2. Archivos directamente afectados.
@@ -356,53 +327,25 @@
 4. Archivos adicionales únicamente si una prueba o error demuestra que son necesarios.
 
 
-* Una vez obtenido el contexto suficiente, DEBE comenzar la implementación. No continuar investigando indefinidamente.
-* NO realizar trabajo preventivo o especulativo que no sea necesario para completar la tarea.
-* NO corregir problemas encontrados incidentalmente si no afectan la tarea actual, salvo que puedan provocar que el trabajo realizado quede roto.
-* Si encuentra un problema fuera de alcance que NO afecta la tarea, debe registrarlo como "OBSERVACIÓN" y continuar.
-* Si encuentra un problema fuera de alcance que SÍ impide completar correctamente la tarea o deja el sistema roto, puede corregir únicamente lo necesario para restaurar la integridad.
-* NO crear archivos, componentes, endpoints, modelos, dependencias o abstracciones "por si en el futuro hacen falta".
-* NO implementar funcionalidades pertenecientes a V2/V3 durante una tarea V1.
-* NO modificar código funcional simplemente para aplicar una preferencia personal de arquitectura.
-* Cada cambio debe responder directamente a una necesidad identificable de la tarea.
-* Si una solución requiere cambios adicionales, estos deben estar justificados por una dependencia real.
+* Una vez obtenido el contexto suficiente, DEBE comenzar la implementación sin continuar investigando indefinidamente.
 
 ### 27. CONTEXTO MÍNIMO SUFICIENTE — NO TRABAJAR A CIEGAS
 
 * La reducción de consumo de contexto NUNCA debe comprometer la integridad del sistema.
-* Antes de modificar código, la IA DEBE conocer al menos:
-* Qué hace actualmente el archivo.
-* Quién lo consume.
-* Qué API utiliza, cuando corresponda.
-* Qué datos recibe y produce.
-* Qué dependencia directa puede verse afectada.
-
-
-* Si una modificación puede afectar otro módulo, debe revisar ese módulo antes de modificar.
-* Si una modificación de base de datos afecta relaciones existentes, debe revisar los consumidores de dichas relaciones.
-* Si una modificación de API cambia un contrato existente, debe revisar frontend y consumidores afectados.
-* Si una modificación de frontend cambia el contrato esperado por la API, debe verificar el contrato correspondiente.
+* Antes de modificar código, la IA DEBE conocer qué hace el archivo, quién lo consume, qué API utiliza y qué datos maneja.
 * El objetivo es utilizar el MENOR CONTEXTO NECESARIO, no el MENOR CONTEXTO POSIBLE.
 
 ### 28. EJECUCIÓN DIRECTA Y VALIDACIÓN PROPORCIONAL
 
 * La IA debe aplicar primero la solución mínima necesaria.
-* Después debe ejecutar únicamente las validaciones proporcionales al cambio realizado.
-* Para cambios simples de JavaScript: utilizar `node --check` sobre los archivos modificados.
-* Para cambios de estilos o componentes sin impacto estructural: realizar validación estática puntual.
-* Para cambios de API, Prisma, relaciones, persistencia o lógica transversal: ejecutar las validaciones necesarias para confirmar que el contrato continúa funcionando.
+* Validaciones proporcionadas: `node --check` para JS/JSX; comprobación de endpoints y contratos en caso de mutaciones de persistencia.
 * NO ejecutar auditorías completas del proyecto para cambios locales.
-* NO ejecutar múltiples comandos equivalentes que proporcionen la misma información.
-* NO repetir una comprobación que ya produjo un resultado concluyente, salvo que posteriormente se haya modificado el código relacionado.
 * Si la validación demuestra que el cambio funciona, detener la investigación y entregar el reporte.
 
 ### 29. REGLA DE "NO MEJORAR POR MEJORAR"
 
 * La IA NO debe modificar código únicamente porque considere que podría escribirse de una manera "mejor".
 * No realizar refactorizaciones oportunistas durante una implementación funcional.
-* No cambiar nombres, estructuras, componentes, estilos, patrones o arquitectura existentes sin necesidad funcional o técnica.
-* No sustituir una implementación funcional por otra equivalente únicamente por preferencia.
-* Las mejoras detectadas pero no necesarias deben quedar fuera de la tarea.
 * Si una mejora es necesaria para evitar que la implementación actual quede técnicamente defectuosa, debe realizarse únicamente en el alcance mínimo necesario.
 
 ### 30. CRITERIO DE FINALIZACIÓN
@@ -415,4 +358,4 @@ Una tarea se considera terminada cuando:
 4. Se ejecutaron las validaciones proporcionales correspondientes.
 5. Los cambios fueron documentados en el reporte de cierre.
 
-Una vez cumplidos estos cinco puntos, la IA DEBE detenerse. Está PROHIBIDO continuar explorando, refactorizando o "mejorando" el proyecto después de alcanzar el criterio de finalización.
+Una vez cumplidos estos cinco puntos, la IA DEBE detenerse inmediatamente. Queda PROHIBIDO continuar explorando o refactorizando tras alcanzar el criterio de finalización.

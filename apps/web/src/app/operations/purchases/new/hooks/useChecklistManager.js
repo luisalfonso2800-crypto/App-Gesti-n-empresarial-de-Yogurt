@@ -21,28 +21,32 @@ export function useChecklistManager(initialItems, phase) {
 
   useEffect(() => {
     const simulate = async () => {
-      const itemsPayload = checklistItems.filter(i => i.estadoOperativo !== 'DESCARTADO').map(item => ({
-        idPrecioProveedor: item.idPrecioProveedor || item.priceData?.id,
-        cantidadEmpaques: item.cantidadSolicitada || 1,
-        precioEmpaque: item.precioCompraActual || 0,
-        factorReal: item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1,
-        unidadBase: item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida
-      }));
+      try {
+        const itemsPayload = checklistItems.filter(i => i.estadoOperativo !== 'DESCARTADO').map(item => ({
+          idPrecioProveedor: item.idPrecioProveedor || item.priceData?.id,
+          cantidadEmpaques: item.cantidadSolicitada || 1,
+          precioEmpaque: item.precioCompraActual || 0,
+          factorReal: item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1,
+          unidadBase: item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida
+        }));
 
-      if (itemsPayload.length > 0) {
-        try {
+        if (itemsPayload.length > 0) {
           const res = await apiClient.post('/purchases/simulate', { items: itemsPayload });
-          setSimulationResult(res);
-        } catch (e) {
-          console.error('Error simulating:', e);
+          setSimulationResult(res || { subtotalGlobal: 0, itemsLiquidados: [] });
+        } else {
+          setSimulationResult({ subtotalGlobal: 0, itemsLiquidados: [] });
         }
-      } else {
-        setSimulationResult({ subtotalGlobal: 0, itemsLiquidados: [] });
+      } catch (e) {
+        console.error('Error simulating (Handled gracefully):', e);
+        // Fallback safely so the UI doesn't break
+        setSimulationResult({ subtotalGlobal: 0, itemsLiquidados: [], error: e.message || 'Error de simulación' });
       }
     };
     
     if (phase === 1 && checklistItems.length > 0) {
       simulate();
+    } else if (checklistItems.length === 0) {
+      setSimulationResult({ subtotalGlobal: 0, itemsLiquidados: [] });
     }
   }, [checklistItems, phase]);
 
