@@ -117,6 +117,55 @@ export class ProductionRepository {
     });
   }
 
+  async startProduction(id) {
+    return this.prisma.$transaction(async (prisma) => {
+      const produccion = await prisma.produccion.findUnique({
+        where: { id },
+        include: { detalles: true }
+      });
+      if (!produccion) throw new Error("Producción no encontrada");
+      if (produccion.estado !== 'PLANIFICADA') throw new Error("Solo órdenes planificadas pueden iniciarse");
+
+      for (const det of produccion.detalles) {
+        const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
+        const stock = inv ? Number(inv.cantidadActual) : 0;
+        if (stock < Number(det.cantidadTeorica)) {
+          throw new Error(`Stock insuficiente para el insumo ${det.idInsumo}`);
+        }
+      }
+
+      return prisma.produccion.update({
+        where: { id },
+        data: { estado: 'EN_PROCESO' },
+        include: { detalles: true }
+      });
+    });
+  }
+
+  async createPurchaseOrderFromShortage(data) {
+    const { itemsFaltantes } = data; // Array of { idInsumo, faltante }
+    if (!itemsFaltantes || itemsFaltantes.length === 0) throw new Error("No hay items faltantes especificados");
+
+    return this.prisma.$transaction(async (prisma) => {
+      const oc = await prisma.ordenCompra.create({
+        data: {
+          codigo: `ORD-FALTANTE-${Date.now()}`,
+          nombre: `Abastecimiento Automático por Faltante de Producción`,
+          estado: 'PENDIENTE',
+          items: {
+            create: itemsFaltantes.map(f => ({
+              idInsumo: f.idInsumo,
+              cantidad: f.faltante,
+              estadoItem: 'PENDIENTE'
+            }))
+          }
+        },
+        include: { items: true }
+      });
+      return oc;
+    });
+  }
+
   async completeProduction(id, data) {
     return this.prisma.$transaction(async (prisma) => {
       const produccion = await prisma.produccion.findUnique({
@@ -127,15 +176,21 @@ export class ProductionRepository {
       if (!produccion) throw new Error("Producción no encontrada");
       if (produccion.estado === 'COMPLETADA') throw new Error("Producción ya completada");
 
-      // Update production details
+      let costoTotalLote = 0;
+
+      // Update production details and discount raw materials
       for (const updateDet of data.detalles) {
         const det = produccion.detalles.find(d => d.id === updateDet.id);
         if (det) {
           const qtyReal = Number(updateDet.cantidadRealUtilizada);
           const diferencia = qtyReal - Number(det.cantidadTeorica);
-          // Recalculate cost
-          const unitCost = Number(det.costoTeorico) / Number(det.cantidadTeorica);
-          const costReal = qtyReal * (isNaN(unitCost) ? 0 : unitCost);
+          
+          const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
+          const stockAnterior = inv ? Number(inv.cantidadActual) : 0;
+          const costoUnitarioInsumo = inv ? Number(inv.costoPromedio || 0) : (Number(det.costoTeorico) / Number(det.cantidadTeorica) || 0);
+          
+          const costReal = qtyReal * costoUnitarioInsumo;
+          costoTotalLote += costReal;
           
           await prisma.detalleProduccion.update({
             where: { id: det.id },
@@ -146,34 +201,31 @@ export class ProductionRepository {
             }
           });
 
-          // Discount inventory
-          const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
-          if (!inv || Number(inv.cantidadActual) < qtyReal) {
-             // In real scenario we might allow negative stock or throw, but rules say discount from reported.
-             // We'll just decrement, Prisma supports it (might go negative).
-          }
+          const stockNuevo = stockAnterior - qtyReal;
 
-          // Create inventory movement
           await prisma.movimientoInventario.create({
             data: {
               idInsumo: det.idInsumo,
-              tipoMovimiento: 'SALIDA',
+              tipoMovimiento: 'SALIDA_PRODUCCION',
               cantidad: qtyReal,
-              motivo: 'PRODUCCION',
+              stockAnterior: stockAnterior,
+              stockNuevo: stockNuevo,
+              costoUnitario: costoUnitarioInsumo,
+              motivo: 'Consumo por orden de producción',
               operacionOrigen: produccion.id
             }
           });
           
-          // Upsert inventory
           await prisma.inventario.upsert({
             where: { idInsumo: det.idInsumo },
-            update: { cantidadActual: { decrement: qtyReal } },
-            create: { idInsumo: det.idInsumo, cantidadActual: -qtyReal }
+            update: { cantidadActual: stockNuevo },
+            create: { idInsumo: det.idInsumo, cantidadActual: stockNuevo }
           });
         }
       }
 
-      const qtyProducida = data.cantidadProducidaReal || produccion.cantidadPlanificada;
+      const qtyProducida = Number(data.cantidadProducidaReal) || Number(produccion.cantidadPlanificada);
+      const costoUnitarioFabricacion = qtyProducida > 0 ? costoTotalLote / qtyProducida : 0;
 
       // Update main production status
       await prisma.produccion.update({
@@ -185,7 +237,7 @@ export class ProductionRepository {
         }
       });
 
-      // Generate Lot
+      // Generate Lot for Finished Product
       const lote = await prisma.lote.create({
         data: {
           tipoLote: 'PRODUCTO_TERMINADO',
@@ -196,13 +248,47 @@ export class ProductionRepository {
           cantidadInicial: qtyProducida,
           cantidadDisponible: qtyProducida,
           unidad: 'UNIDAD',
-          estado: 'DISPONIBLE'
+          estado: 'DISPONIBLE',
+          costoUnitario: costoUnitarioFabricacion
         }
       });
 
       await prisma.produccion.update({
         where: { id },
         data: { idLote: lote.id }
+      });
+
+      // Upsert Finished Product Inventory
+      const invProd = await prisma.inventarioProducto.findUnique({ where: { idProducto: produccion.idProducto } });
+      const stockAnteriorProd = invProd ? Number(invProd.cantidadActual) : 0;
+      const stockNuevoProd = stockAnteriorProd + qtyProducida;
+      
+      // Calculate new weighted average cost
+      let nuevoCostoPromedio = costoUnitarioFabricacion;
+      if (invProd && stockAnteriorProd > 0) {
+        const valorAnterior = stockAnteriorProd * Number(invProd.costoPromedio || 0);
+        const valorNuevo = qtyProducida * costoUnitarioFabricacion;
+        nuevoCostoPromedio = (valorAnterior + valorNuevo) / stockNuevoProd;
+      }
+
+      await prisma.inventarioProducto.upsert({
+        where: { idProducto: produccion.idProducto },
+        update: { cantidadActual: stockNuevoProd, costoPromedio: nuevoCostoPromedio },
+        create: { idProducto: produccion.idProducto, cantidadActual: stockNuevoProd, costoPromedio: nuevoCostoPromedio }
+      });
+
+      // Insert Movement for Finished Product
+      await prisma.movimientoInventario.create({
+        data: {
+          idProducto: produccion.idProducto,
+          tipoMovimiento: 'ENTRADA_PRODUCCION',
+          cantidad: qtyProducida,
+          stockAnterior: stockAnteriorProd,
+          stockNuevo: stockNuevoProd,
+          costoUnitario: costoUnitarioFabricacion,
+          motivo: 'Ingreso a cava de producto terminado',
+          operacionOrigen: produccion.id
+        }
       });
 
       return prisma.produccion.findUnique({

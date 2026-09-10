@@ -1,4 +1,4 @@
-import { Controller, Dependencies, Get, Param, Bind } from '@nestjs/common';
+import { Controller, Dependencies, Get, Post, Param, Bind, Body } from '@nestjs/common';
 import { LotsService } from './lots.service';
 
 @Controller('lots')
@@ -17,5 +17,11 @@ export class LotsController {
   @Bind(Param('id'))
   findOne(id) {
     return this.service.findOne(id);
+  }
+
+  @Post(':id/discard')
+  @Bind(Param('id'), Body())
+  discardLot(id, body) {
+    return this.service.discardLot(id, body);
   }
 }

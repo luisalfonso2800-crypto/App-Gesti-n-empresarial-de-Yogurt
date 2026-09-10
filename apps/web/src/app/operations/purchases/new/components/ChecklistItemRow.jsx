@@ -276,6 +276,7 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
             const payload = {
               idProveedor: item.idProveedorAlternativo || item.proveedorData?.id,
               esNuevoProveedor: false,
+              idOrden: item.currentOrderId,
               condicion: 'CONTADO',
               total: simItem.subtotal,
               fechaCompra: new Date().toISOString(),

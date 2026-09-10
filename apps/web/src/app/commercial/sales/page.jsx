@@ -25,7 +25,10 @@ export default function SalesPage() {
       <SaleModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
         formData={form.formData} handleChange={form.handleChange}
+        handleDetailsChange={form.handleDetailsChange}
         handleSubmit={form.handleSubmit}
+        products={form.products}
+        clients={form.clients}
       />
     </div>
   );

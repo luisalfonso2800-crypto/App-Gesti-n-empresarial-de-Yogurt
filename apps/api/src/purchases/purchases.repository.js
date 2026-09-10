@@ -9,9 +9,23 @@ export class PurchasesRepository {
   }
 
   async findAll() {
-    return this.prisma.compra.findMany({
-      include: { detalles: true }
-    });
+    try {
+      return await this.prisma.compra.findMany({
+        include: { 
+          detalles: {
+            include: { insumo: true }
+          },
+          proveedor: true,
+          orden: {
+            include: { items: true }
+          }
+        },
+        orderBy: { fechaCompra: 'desc' }
+      });
+    } catch (e) {
+      console.error('[findAll Purchases Error]:', e);
+      throw e;
+    }
   }
 
   async findById(id) {
@@ -54,6 +68,7 @@ export class PurchasesRepository {
         const newCompra = await prisma.compra.create({
           data: {
             idProveedor: idProveedorFinal,
+            idOrden: data.idOrden || null,
             fechaCompra: data.fechaCompra ? new Date(data.fechaCompra) : new Date(),
             total: Number(data.total) || 0,
             observaciones: obsFinal,

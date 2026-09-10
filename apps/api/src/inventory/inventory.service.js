@@ -9,7 +9,38 @@ export class InventoryService {
   }
 
   async findAll() {
-    return this.repository.findAll();
+    const data = await this.repository.findAll();
+    
+    const enriched = data.map(item => {
+      let costoUnitario = Number(item.costoPromedio) || 0;
+      if (!costoUnitario && item.insumo?.precios?.length > 0) {
+        const sortedPrices = [...item.insumo.precios].sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
+        costoUnitario = Number(sortedPrices[0].costoUnidadBase) || 0;
+      }
+
+      const stockActual = Number(item.cantidadActual) || 0;
+      const stockMinimo = Number(item.insumo?.stockMinimo) || 0;
+      const valorTotal = stockActual * costoUnitario;
+      
+      let estado = 'OPTIMO';
+      if (stockActual <= 0) estado = 'CRITICO';
+      else if (stockActual <= stockMinimo) estado = 'BAJO';
+
+      return { ...item, stockActual, stockMinimo, costoUnitario, valorTotal, estado };
+    });
+
+    const metadata = {
+      valorTotalBodega: enriched.reduce((acc, curr) => acc + curr.valorTotal, 0),
+      totalCriticos: enriched.filter(i => i.estado === 'CRITICO').length,
+      totalBajoMinimo: enriched.filter(i => i.estado === 'BAJO').length,
+      totalReferencias: enriched.length
+    };
+
+    return { data: enriched, metadata };
+  }
+
+  async findFinishedProducts() {
+    return this.repository.findFinishedProducts();
   }
 
   async findByInsumo(idInsumo) {
@@ -20,5 +51,12 @@ export class InventoryService {
 
   async findMovements(idInsumo) {
     return this.repository.findMovements(idInsumo);
+  }
+
+  async adjustInventory(body) {
+    if (!body.motivo && ['AJUSTE_NEGATIVO', 'MERMA_DESPERDICIO'].includes(body.tipo)) {
+      throw new Error('Motivo es obligatorio para salidas y mermas');
+    }
+    return this.repository.adjustInventory(body);
   }
 }

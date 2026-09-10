@@ -97,6 +97,8 @@ model Producto {
   producciones   Produccion[]
   lotes          Lote[]
   detalleVentas  DetalleVenta[]
+  inventario     InventarioProducto?
+  movimientos    MovimientoInventario[]
 
   @@unique([nombre, idPresentacion])
   @@map("Productos")
@@ -123,6 +125,8 @@ model Compra {
   id            String          @id @default(uuid()) @map("ID_Compra")
   idProveedor   String          @map("ID_Proveedor")
   proveedor     Proveedor       @relation(fields: [idProveedor], references: [id])
+  idOrden       String?         @map("ID_Orden")
+  orden         OrdenCompra?    @relation(fields: [idOrden], references: [id])
   fechaCompra   DateTime        @map("Fecha_Compra")
   estado        String          @map("Estado")
   total         Decimal         @map("Total") @db.Decimal(12, 2)
@@ -150,17 +154,35 @@ model Inventario {
   idInsumo           String   @unique @map("ID_Insumo")
   insumo             Insumo   @relation(fields: [idInsumo], references: [id])
   cantidadActual     Decimal  @map("Cantidad_Actual")
+  costoPromedio      Decimal? @map("Costo_Promedio") @db.Decimal(12, 2)
   fechaActualizacion DateTime @updatedAt @map("Fecha_Actualizacion")
 
   @@map("Inventario")
 }
 
+model InventarioProducto {
+  id                 String   @id @default(uuid()) @map("ID_Inventario_Producto")
+  idProducto         String   @unique @map("ID_Producto")
+  producto           Producto @relation(fields: [idProducto], references: [id])
+  cantidadActual     Decimal  @default(0) @map("Cantidad_Actual")
+  costoPromedio      Decimal? @map("Costo_Promedio") @db.Decimal(12, 2)
+  fechaActualizacion DateTime @updatedAt @map("Fecha_Actualizacion")
+
+  @@map("Inventario_Productos")
+}
+
 model MovimientoInventario {
-  id              String   @id @default(uuid()) @map("ID_Movimiento")
-  idInsumo        String   @map("ID_Insumo")
-  insumo          Insumo   @relation(fields: [idInsumo], references: [id])
-  tipoMovimiento  String   @map("Tipo_Movimiento")
-  cantidad        Decimal  @map("Cantidad")
+  id              String    @id @default(uuid()) @map("ID_Movimiento")
+  idInsumo        String?   @map("ID_Insumo")
+  insumo          Insumo?   @relation(fields: [idInsumo], references: [id])
+  idProducto      String?   @map("ID_Producto")
+  producto        Producto? @relation(fields: [idProducto], references: [id])
+  idLote          String?   @map("ID_Lote")
+  tipoMovimiento  String    @map("Tipo_Movimiento")
+  cantidad        Decimal   @map("Cantidad")
+  stockAnterior   Decimal?  @map("Stock_Anterior")
+  stockNuevo      Decimal?  @map("Stock_Nuevo")
+  costoUnitario   Decimal? @map("Costo_Unitario") @db.Decimal(12, 2)
   fechaMovimiento DateTime @default(now()) @map("Fecha_Movimiento")
   motivo          String   @map("Motivo")
   operacionOrigen String?  @map("Operacion_Origen")
@@ -270,6 +292,7 @@ model Lote {
   cantidadDisponible Decimal        @map("Cantidad_Disponible")
   unidad             String         @map("Unidad")
   estado             String         @map("Estado")
+  costoUnitario      Decimal?       @map("Costo_Unitario") @db.Decimal(12, 2)
   observaciones      String?        @map("Observaciones")
   detalleVentas      DetalleVenta[]
 
@@ -349,6 +372,7 @@ model OrdenCompra {
   estado    String            @default("PENDIENTE") @map("Estado")
   createdAt DateTime          @default(now()) @map("Fecha_Creacion")
   items     OrdenCompraItem[]
+  compras   Compra[]
 
   @@map("Ordenes_Compra")
 }

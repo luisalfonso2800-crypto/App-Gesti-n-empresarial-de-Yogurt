@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { ArrowRightLeft } from 'lucide-react';
 
 export function useCartManager() {
-  const { lists, activeListId, cartItems, addToCart, removeFromCart, clearCart, refreshCart } = useCart();
+  const { lists, activeListId, cartItems, addToCart, removeFromCart, clearCart, refreshCart, createList } = useCart();
   const { showNotification, pauseNotification, resumeNotification } = useNotification();
 
   // Ítem que acaba de ser añadido y podría necesitar transferencia
@@ -70,7 +70,7 @@ export function useCartManager() {
    * IMPORTANTE: el CartContext almacena ítems localmente sin persistir el itemId de la
    * orden en backend. Para mover necesitamos refrescar y encontrar el item real.
    * Por eso hacemos: addToCart local → refreshCart → buscamos en el backend el itemId real.
-  /**
+   /**
    * Ejecuta la transferencia de un ítem entre dos órdenes vía el endpoint real.
    *
    * @param {Object} cartItem  - Ítem normalizado que DEBE contener el 'itemId' real de base de datos
@@ -153,7 +153,7 @@ export function useCartManager() {
    * @param {Object} item         - Ítem crudo del precio proveedor
    * @param {string} targetListId - ID de la lista destino (default: activeListId)
    */
-  const handleToggleWithList = useCallback(async (item, targetListId) => {
+  const handleToggleWithList = useCallback(async (item, targetListId, customLists = null) => {
     const existing = findExistingCartItem(item);
     
     if (existing) {
@@ -175,7 +175,11 @@ export function useCartManager() {
     // Primero, añadimos visualmente rápido al contexto local
     addToCart(newItem, targetListId);
     
-    const listName = lists[targetListId]?.customName || lists[targetListId]?.name || 'Lista Activa';
+    const contextLists = customLists || lists;
+    const listName = contextLists[targetListId]?.customName || contextLists[targetListId]?.name || 'Lista Activa';
+
+    const activeBackendLists = Object.values(contextLists).filter(l => !l.id.startsWith('local-'));
+    const hasMultipleLists = activeBackendLists.length > 1;
 
     // Construimos el toast inicial en estado "Guardando..." para bloquear transferencias prematuras
     const buildToast = (isReady, savedItem = null) => (
@@ -185,20 +189,22 @@ export function useCartManager() {
         onMouseLeave={resumeNotification}
       >
         <span>Añadido a {listName}</span>
-        <button
-          disabled={!isReady || isMoving}
-          onClick={() => isReady && savedItem && handleChangeList(savedItem, targetListId)}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.25rem',
-            background: 'rgba(255,255,255,0.2)', border: '1px solid white',
-            borderRadius: '4px', padding: '0.25rem 0.5rem',
-            color: 'white', cursor: (!isReady || isMoving) ? 'not-allowed' : 'pointer',
-            opacity: (!isReady || isMoving) ? 0.6 : 1,
-          }}
-        >
-          <ArrowRightLeft size={14} />
-          {!isReady ? 'Guardando...' : isMoving ? 'Transfiriendo...' : 'Cambiar de lista'}
-        </button>
+        {hasMultipleLists && (
+          <button
+            disabled={!isReady || isMoving}
+            onClick={() => isReady && savedItem && handleChangeList(savedItem, targetListId)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.25rem',
+              background: 'rgba(255,255,255,0.2)', border: '1px solid white',
+              borderRadius: '4px', padding: '0.25rem 0.5rem',
+              color: 'white', cursor: (!isReady || isMoving) ? 'not-allowed' : 'pointer',
+              opacity: (!isReady || isMoving) ? 0.6 : 1,
+            }}
+          >
+            <ArrowRightLeft size={14} />
+            {!isReady ? 'Guardando...' : isMoving ? 'Transfiriendo...' : 'Cambiar de lista'}
+          </button>
+        )}
       </div>
     );
 
@@ -235,7 +241,7 @@ export function useCartManager() {
    * En el flujo normal, delega a handleToggleWithList con la lista activa.
    * @param {Object} item - Ítem crudo del precio proveedor
    */
-  const togglePurchaseItem = useCallback((item) => {
+  const togglePurchaseItem = useCallback(async (item) => {
     const existing = findExistingCartItem(item);
     if (existing) {
       handleToggleWithList(item, activeListId);
@@ -246,10 +252,24 @@ export function useCartManager() {
       // Sin lista activa y múltiples disponibles → mostrar selector de lista
       setPendingItem({ item: buildCartItem(item), fromListId: null });
       setIsSelectorOpen(true);
+    } else if (listsKeys.length === 0 || !activeListId) {
+      try {
+        const newListId = await createList('');
+        if (newListId) {
+          // Construct an updated lists object to pass into handleToggleWithList
+          // so it knows there's a list name and can evaluate hasMultipleLists correctly
+          const updatedLists = { ...lists, [newListId]: { id: newListId, name: 'Nueva Lista', customName: '' } };
+          handleToggleWithList(item, newListId, updatedLists);
+        } else {
+          showNotification('Error al crear la lista automáticamente', 'error');
+        }
+      } catch (err) {
+        showNotification('Error al crear la lista automáticamente', 'error');
+      }
     } else {
       handleToggleWithList(item, activeListId);
     }
-  }, [findExistingCartItem, lists, activeListId, buildCartItem, handleToggleWithList]);
+  }, [findExistingCartItem, lists, activeListId, buildCartItem, handleToggleWithList, createList, showNotification]);
 
   const clearPurchaseList = useCallback(() => clearCart(), [clearCart]);
 

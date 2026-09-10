@@ -6,7 +6,7 @@
  * @usedBy apps/web/src/app/commercial/sales/page.jsx
  * @dependencies @/lib/api-client
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
 
 export function useSaleForm({ onSuccess }) {
@@ -17,6 +17,16 @@ export function useSaleForm({ onSuccess }) {
     valorPagado: 0, saldoPendiente: 0, estado: 'COMPLETADO',
     observaciones: '', detalles: []
   });
+
+  const [products, setProducts] = useState([]);
+  const [clients, setClients] = useState([]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      apiClient.get('/inventory/finished-products').then(res => setProducts(res.data || [])).catch(console.error);
+      apiClient.get('/clients').then(setClients).catch(() => setClients([]));
+    }
+  }, [isModalOpen]);
 
   const handleOpenModal = () => {
     setFormData({
@@ -34,16 +44,34 @@ export function useSaleForm({ onSuccess }) {
     const { name, value, type } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
+      [name]: type === 'number' ? (parseFloat(value) || 0) : value
     }));
+  };
+
+  const handleDetailsChange = (newDetails) => {
+    setFormData(prev => {
+      const subtotal = newDetails.reduce((sum, d) => sum + (Number(d.cantidad) * Number(d.precioUnitario)), 0);
+      return {
+        ...prev,
+        detalles: newDetails,
+        totalVenta: subtotal,
+        valorPagado: prev.tipoPago === 'CONTADO' ? subtotal : prev.valorPagado,
+        saldoPendiente: prev.tipoPago === 'CONTADO' ? 0 : subtotal - prev.valorPagado
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.idCliente) return alert("Seleccione un cliente");
+    if (formData.detalles.length === 0) return alert("Agregue al menos un producto a la orden");
+    
     try {
       await apiClient.post('/sales', {
         ...formData,
-        fechaVenta: new Date(formData.fechaVenta).toISOString()
+        fechaVenta: new Date(formData.fechaVenta).toISOString(),
+        valorPagado: formData.tipoPago === 'CONTADO' ? formData.totalVenta : formData.valorPagado,
+        saldoPendiente: formData.tipoPago === 'CONTADO' ? 0 : formData.totalVenta - formData.valorPagado
       });
       handleCloseModal();
       if (onSuccess) onSuccess();
@@ -53,7 +81,8 @@ export function useSaleForm({ onSuccess }) {
   };
 
   return {
-    isModalOpen, formData, handleOpenModal, handleCloseModal,
-    handleChange, handleSubmit
+    isModalOpen, formData, products, clients,
+    handleOpenModal, handleCloseModal,
+    handleChange, handleDetailsChange, handleSubmit
   };
 }

@@ -232,6 +232,7 @@ export function FormPhase({
           
           return apiClient.post('/purchases', {
             idProveedor: provId,
+            idOrden: activeOrder?.id || null,
             fechaCompra: new Date().toISOString(),
             total: subtotalProv + fleteProporcional,
             observaciones: 'Compra Directa',

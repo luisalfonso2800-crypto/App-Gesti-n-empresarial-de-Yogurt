@@ -31,13 +31,15 @@ export default function PurchasesPage() {
   const [error, setError] = useState(null);
 
   const [activeOrders, setActiveOrders] = useState([]);
-  const [expandedRows, setExpandedRows] = useState({});
+  const [expandedId, setExpandedId] = useState(null);
 
   const [isMergingMode, setIsMergingMode] = useState(false);
   const [selectedForMerge, setSelectedForMerge] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(null);
   const [editNameModalOpen, setEditNameModalOpen] = useState(null);
   const [editNameValue, setEditNameValue] = useState('');
+
+  const [groupedPurchases, setGroupedPurchases] = useState([]);
 
   const fetchPurchases = async () => {
     setLoading(true);
@@ -69,8 +71,51 @@ export default function PurchasesPage() {
     fetchActiveOrders();
   }, [lastUpdated]);
 
+  useEffect(() => {
+    const grouped = [];
+    const orderMap = new Map();
+
+    purchases.forEach(compra => {
+      if (compra.idOrden) {
+        if (!orderMap.has(compra.idOrden)) {
+          orderMap.set(compra.idOrden, {
+            id: compra.idOrden,
+            isGrouped: true,
+            orden: compra.orden,
+            fechaCompra: compra.fechaCompra,
+            total: 0,
+            compras: [],
+            detalles: []
+          });
+        }
+        const group = orderMap.get(compra.idOrden);
+        group.total += Number(compra.total);
+        group.compras.push(compra);
+        const mappedDetalles = (compra.detalles || []).map(d => ({ ...d, proveedor: compra.proveedor }));
+        group.detalles.push(...mappedDetalles);
+        if (new Date(compra.fechaCompra) > new Date(group.fechaCompra)) {
+          group.fechaCompra = compra.fechaCompra;
+        }
+      } else {
+        grouped.push({
+          id: compra.id,
+          isGrouped: false,
+          fechaCompra: compra.fechaCompra,
+          total: Number(compra.total),
+          detalles: (compra.detalles || []).map(d => ({ ...d, proveedor: compra.proveedor })),
+          compra: compra
+        });
+      }
+    });
+
+    grouped.push(...Array.from(orderMap.values()));
+    grouped.sort((a, b) => new Date(b.fechaCompra) - new Date(a.fechaCompra));
+
+    setGroupedPurchases(grouped);
+  }, [purchases]);
+
   const toggleRow = (id) => {
-    setExpandedRows(prev => ({ ...prev, [id]: !prev[id] }));
+    setExpandedId(prev => (prev === id ? null : id));
   };
 
   const handleToggleMergeSelection = (id) => {
@@ -220,49 +265,96 @@ export default function PurchasesPage() {
             </TR>
           </THead>
           <TBody>
-            {purchases.map((item) => (
-              <React.Fragment key={item.id}>
-                <TR style={{ cursor: 'pointer', background: expandedRows[item.id] ? '#f9fafb' : 'white' }} onClick={() => toggleRow(item.id)}>
+            {groupedPurchases.map((group) => {
+              const orden = group.orden;
+              const title = group.isGrouped && orden ? `${orden.codigo} - ${orden.nombre}` : `Compra Directa - ${new Date(group.fechaCompra).toLocaleDateString()}`;
+              
+              let conseguidosCount = group.detalles.length;
+              let faltantesCount = 0;
+              let isCompleted = true;
+
+              if (group.isGrouped && orden) {
+                // Determine completion state correctly
+                const totalItems = orden.items ? orden.items.length : 0;
+                
+                // Un ítem "conseguido" es uno cuyo estado sea 'COMPRADO', o si ya está en la cuenta de detalles.
+                // Usualmente, contamos los ítems creados en los detalles:
+                faltantesCount = Math.max(0, totalItems - conseguidosCount);
+                if (faltantesCount > 0) {
+                  isCompleted = false;
+                }
+              }
+
+              return (
+              <React.Fragment key={group.id}>
+                <TR style={{ cursor: 'pointer', background: expandedId === group.id ? '#f9fafb' : 'white' }} onClick={() => toggleRow(group.id)}>
                   <TD>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      {expandedRows[item.id] ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
-                      <strong>Lista de Compra - General - {new Date(item.fechaCompra).toLocaleDateString()}</strong>
+                      {expandedId === group.id ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                      <strong>{title}</strong>
                     </div>
                   </TD>
-                  <TD>{new Date(item.fechaCompra).toLocaleDateString()}</TD>
-                  <TD>{item.detalles?.length || 1} ítems</TD>
-                  <TD>${Number(item.total).toFixed(2)}</TD>
+                  <TD>{new Date(group.fechaCompra).toLocaleDateString()}</TD>
                   <TD>
-                    <Badge status={item.estado === 'COMPLETADO' ? 'active' : 'inactive'}>
-                      Finalizada
+                    <span style={{ color: '#059669', fontWeight: 600 }}>{conseguidosCount} conseguidos</span>
+                    {faltantesCount > 0 && (
+                      <span style={{ color: '#e11d48', fontWeight: 600, marginLeft: '0.5rem' }}>
+                        / {faltantesCount} faltantes
+                      </span>
+                    )}
+                  </TD>
+                  <TD>${Number(group.total).toLocaleString('es-CO')}</TD>
+                  <TD>
+                    <Badge status={isCompleted ? 'active' : 'warning'}>
+                      {isCompleted ? 'Completada' : 'En Ruta / Parcial'}
                     </Badge>
                   </TD>
                 </TR>
-                {expandedRows[item.id] && (
+                {expandedId === group.id && (
                   <TR>
                     <TD colSpan="5" style={{ padding: '0', background: '#f8fafc' }}>
                       <div style={{ padding: '1rem 2rem' }}>
+                        {!isCompleted && (
+                          <div style={{ background: '#fffbeb', padding: '0.75rem', borderRadius: '4px', border: '1px solid #fde68a', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ color: '#b45309', fontSize: '0.875rem' }}>
+                              ⚠️ Esta lista de compra aún tiene insumos pendientes por conseguir o comprar. Puedes continuar el checklist para completarlos o descartarlos.
+                            </span>
+                            <Button variant="secondary" onClick={() => router.push(`/operations/purchases/new?orderId=${group.id}`)}>
+                              Completar Lista
+                            </Button>
+                          </div>
+                        )}
                         <h4 style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Detalle de la Compra</h4>
                         <table style={{ width: '100%', fontSize: '0.875rem', borderCollapse: 'collapse' }}>
                           <thead>
                             <tr style={{ borderBottom: '1px solid #e2e8f0', color: '#64748b', textAlign: 'left' }}>
-                              <th style={{ padding: '0.5rem' }}>Insumo ID</th>
-                              <th style={{ padding: '0.5rem' }}>Presentación</th>
-                              <th style={{ padding: '0.5rem' }}>Cant.</th>
+                              <th style={{ padding: '0.5rem' }}>Insumo</th>
+                              <th style={{ padding: '0.5rem' }}>Presentación / Marca</th>
+                              <th style={{ padding: '0.5rem' }}>Proveedor</th>
+                              <th style={{ padding: '0.5rem' }}>Cant. Neta</th>
                               <th style={{ padding: '0.5rem' }}>Costo Unit.</th>
                               <th style={{ padding: '0.5rem' }}>Subtotal</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {item.detalles?.map(d => (
-                              <tr key={d.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                <td style={{ padding: '0.5rem' }}>{d.idInsumo}</td>
-                                <td style={{ padding: '0.5rem' }}>{d.presentacion || 'Empaque'}</td>
-                                <td style={{ padding: '0.5rem' }}>{d.cantidad}</td>
-                                <td style={{ padding: '0.5rem' }}>${d.precioUnitario}</td>
-                                <td style={{ padding: '0.5rem' }}>${d.subtotal}</td>
+                            {group.detalles && group.detalles.length > 0 ? (
+                              group.detalles.map((d, idx) => (
+                                <tr key={d.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '0.5rem' }}>{d.insumo?.nombre || d.idInsumo}</td>
+                                  <td style={{ padding: '0.5rem' }}>{d.presentacion || d.insumo?.marca || 'Empaque'}</td>
+                                  <td style={{ padding: '0.5rem' }}>{d.proveedor?.nombre || d.idProveedor}</td>
+                                  <td style={{ padding: '0.5rem' }}>{Number(d.cantidad)}</td>
+                                  <td style={{ padding: '0.5rem' }}>${Number(d.precioUnitario).toLocaleString('es-CO')}</td>
+                                  <td style={{ padding: '0.5rem' }}>${Number(d.subtotal).toLocaleString('es-CO')}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="6" style={{ padding: '1rem', textAlign: 'center', color: '#94a3b8' }}>
+                                  No hay detalles disponibles para esta compra.
+                                </td>
                               </tr>
-                            ))}
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -270,7 +362,8 @@ export default function PurchasesPage() {
                   </TR>
                 )}
               </React.Fragment>
-            ))}
+              );
+            })}
           </TBody>
         </Table>
       )}

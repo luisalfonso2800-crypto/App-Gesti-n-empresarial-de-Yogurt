@@ -17,4 +17,8 @@ export class LotsService {
     if (!item) throw new NotFoundException('Lot not found');
     return item;
   }
+
+  async discardLot(id, data) {
+    return this.repository.discardLot(id, data);
+  }
 }

@@ -29,4 +29,12 @@ export class ProductionService {
   async complete(id, data) {
     return this.repository.completeProduction(id, data);
   }
+
+  async start(id) {
+    return this.repository.startProduction(id);
+  }
+
+  async createPurchaseOrderFromShortage(data) {
+    return this.repository.createPurchaseOrderFromShortage(data);
+  }
 }

@@ -13,14 +13,14 @@ export function TBody({ children }) {
   return <tbody>{children}</tbody>;
 }
 
-export function TR({ children }) {
-  return <tr className={styles.tr}>{children}</tr>;
+export function TR({ children, ...props }) {
+  return <tr className={styles.tr} {...props}>{children}</tr>;
 }
 
-export function TH({ children }) {
-  return <th className={styles.th}>{children}</th>;
+export function TH({ children, ...props }) {
+  return <th className={styles.th} {...props}>{children}</th>;
 }
 
-export function TD({ children }) {
-  return <td className={styles.td}>{children}</td>;
+export function TD({ children, ...props }) {
+  return <td className={styles.td} {...props}>{children}</td>;
 }

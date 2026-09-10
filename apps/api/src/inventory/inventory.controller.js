@@ -1,4 +1,4 @@
-import { Controller, Dependencies, Get, Param, Bind } from '@nestjs/common';
+import { Controller, Dependencies, Get, Post, Body, Param, Bind } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 
 @Controller('inventory')
@@ -13,6 +13,11 @@ export class InventoryController {
     return this.service.findAll();
   }
 
+  @Get('finished-products')
+  findFinishedProducts() {
+    return this.service.findFinishedProducts();
+  }
+
   @Get(':idInsumo')
   @Bind(Param('idInsumo'))
   findByInsumo(idInsumo) {
@@ -23,5 +28,11 @@ export class InventoryController {
   @Bind(Param('idInsumo'))
   findMovements(idInsumo) {
     return this.service.findMovements(idInsumo);
+  }
+
+  @Post('adjustments')
+  @Bind(Body())
+  adjustInventory(body) {
+    return this.service.adjustInventory(body);
   }
 }

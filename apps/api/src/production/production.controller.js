@@ -26,6 +26,18 @@ export class ProductionController {
     return this.service.complete(id, updateDto);
   }
 
+  @Post(':id/start')
+  @Bind(Param('id'))
+  start(id) {
+    return this.service.start(id);
+  }
+
+  @Post('create-purchase-order-from-shortage')
+  @Bind(Body())
+  createPurchaseOrderFromShortage(body) {
+    return this.service.createPurchaseOrderFromShortage(body);
+  }
+
   @Get()
   findAll() {
     return this.service.findAll();
