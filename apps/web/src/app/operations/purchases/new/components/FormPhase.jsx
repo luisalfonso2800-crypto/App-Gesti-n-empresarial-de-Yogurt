@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from '../new-purchase.module.css';
 import { TrashIcon } from '@/components/ui/icons';
 import { apiClient } from '@/lib/api-client';
@@ -19,8 +20,12 @@ export function FormPhase({
   setPhase,
   showNotification,
   activeOrder,
-  refreshOrder
+  refreshOrder,
+  router
 }) {
+  const searchParams = useSearchParams();
+  const isDirectPurchase = searchParams.get('mode') === 'direct' || (!activeOrder && searchParams.get('manual') === 'true');
+
   // Catálogo local de proveedores e insumos (se expande si se crean nuevos al vuelo)
   const [proveedoresDB, setProveedoresDB] = useState(proveedoresDBProp || []);
   const [insumosDB, setInsumosDB] = useState(insumosDBProp || []);
@@ -179,7 +184,7 @@ export function FormPhase({
     }
   };
 
-  // ---- Confirmar e Incorporar a la Orden ----
+  // ---- Confirmar e Incorporar a la Orden / Guardar Compra Directa ----
   const handleConfirmar = async () => {
     // Validación estricta: solo filas con insumo, cantidad > 0 y precioUnitario > 0
     const filasIncompletas = detalles.filter(d => !d.insumo?.id || parseFloat(d.empaques) <= 0 || parseFloat(d.precioUnitario) <= 0 || isNaN(parseFloat(d.empaques)) || isNaN(parseFloat(d.precioUnitario)));
@@ -194,39 +199,90 @@ export function FormPhase({
       return;
     }
 
-    if (!activeOrder?.id) {
+    if (!isDirectPurchase && !activeOrder?.id) {
       showNotification('No hay una orden activa. Regrese al checklist y seleccione una lista.', 'error');
       return;
     }
 
+    if (isDirectPurchase) {
+      const rowsWithoutProv = detalles.filter(d => !d.proveedor?.id);
+      if (rowsWithoutProv.length > 0) {
+        showNotification('Para una compra directa, todas las filas deben tener un proveedor seleccionado.', 'error');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
-      // Incorpora cada fila como ítem a la orden activa existente usando el endpoint de adición
-      // Contrato: POST /purchases/orders/:id/items → { idInsumo, idProveedor, idPresentacion, cantidad, precioEstimado }
-      const promesas = detalles.map(d =>
-        apiClient.post(`/purchases/orders/${activeOrder.id}/items`, {
-          idInsumo: d.insumo.id,
-          idProveedor: d.proveedor?.id || null,
-          idPresentacion: null,             // No aplica en compras adicionales en ruta
-          cantidad: parseFloat(d.empaques),
-          precioEstimado: parseFloat(d.precioUnitario)
-        })
-      );
+      if (isDirectPurchase) {
+        // Agrupar detalles por proveedor para crear compras reales (POST /purchases)
+        const grouped = detalles.reduce((acc, row) => {
+          const provId = row.proveedor.id;
+          if (!acc[provId]) acc[provId] = [];
+          acc[provId].push(row);
+          return acc;
+        }, {});
 
-      await Promise.all(promesas);
+        const promesas = Object.keys(grouped).map(provId => {
+          const rows = grouped[provId];
+          const subtotalProv = rows.reduce((sum, d) => sum + (parseFloat(d.empaques) * parseFloat(d.precioUnitario)), 0);
+          // Si hay varios proveedores, dividimos el flete (o se lo asignamos todo al primero, lo más justo es dividirlo proporcionalmente o simplemente sumarlo al primero). Aquí lo sumamos dividido para simplicidad, pero lo correcto según el backend es enviarlo global. Como el backend no divide fletes, pasamos el flete solo al primero o fraccionado.
+          // Para simplificar, enviaremos el flete global en la primera compra de la lista.
+          const fleteProporcional = (parseFloat(flete) || 0) / Object.keys(grouped).length;
+          
+          return apiClient.post('/purchases', {
+            idProveedor: provId,
+            fechaCompra: new Date().toISOString(),
+            total: subtotalProv + fleteProporcional,
+            observaciones: 'Compra Directa',
+            condicion: 'CONTADO',
+            detalles: rows.map(d => ({
+              idInsumo: d.insumo.id,
+              cantidad: parseFloat(d.empaques), // empaques es la cantidad que compró
+              precioUnitario: parseFloat(d.precioUnitario),
+              subtotal: parseFloat(d.empaques) * parseFloat(d.precioUnitario),
+              presentacion: d.empaque || 'N/A',
+              empaques: parseFloat(d.empaques),
+              contenidoBase: parseFloat(d.contenidoNeto) || 1,
+              unidadEmpaque: d.unidadMedida || 'Unidad',
+              cantidadBaseTotal: parseFloat(d.empaques) * (parseFloat(d.contenidoNeto) || 1),
+              costoBase: parseFloat(d.precioUnitario) / (parseFloat(d.contenidoNeto) || 1),
+              marca: d.marca || ''
+            }))
+          });
+        });
 
-      showNotification('Ítems incorporados a la orden exitosamente.', 'success');
-      
-      // Llama a la recarga explícita del orquestador si se pasa por props
-      if (typeof refreshOrder === 'function') {
-        await refreshOrder();
+        await Promise.all(promesas);
+        showNotification('Compra registrada exitosamente.', 'success');
+        router.push('/operations/purchases');
       } else {
-        setPhase(1);
+        // Incorpora cada fila como ítem a la orden activa existente usando el endpoint de adición
+        // Contrato: POST /purchases/orders/:id/items → { idInsumo, idProveedor, idPresentacion, cantidad, precioEstimado }
+        const promesas = detalles.map(d =>
+          apiClient.post(`/purchases/orders/${activeOrder.id}/items`, {
+            idInsumo: d.insumo.id,
+            idProveedor: d.proveedor?.id || null,
+            idPresentacion: null,             // No aplica en compras adicionales en ruta
+            cantidad: parseFloat(d.empaques),
+            precioEstimado: parseFloat(d.precioUnitario)
+          })
+        );
+
+        await Promise.all(promesas);
+
+        showNotification('Ítems incorporados a la orden exitosamente.', 'success');
+        
+        // Llama a la recarga explícita del orquestador si se pasa por props
+        if (typeof refreshOrder === 'function') {
+          await refreshOrder();
+        } else {
+          setPhase(1);
+        }
       }
     } catch (err) {
-      console.error('Error en handleConfirmar:', err);
+      console.error('Error detallado del backend:', err, err?.response?.data);
       const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error al confirmar compras.';
-      showNotification(`Error: ${msg}`, 'error');
+      showNotification(`Error: ${JSON.stringify(msg)}`, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -325,11 +381,11 @@ export function FormPhase({
         padding: '0.75rem 1.5rem', display: 'flex', flexWrap: 'wrap',
         alignItems: 'center', gap: '0.75rem', boxShadow: '0 2px 8px rgba(0,0,0,0.07)'
       }}>
-        <button type="button" onClick={() => setPhase(1)} className={styles.cancelBtn} style={{ margin: 0 }}>
-          ← Volver a Checklist
+        <button type="button" onClick={() => isDirectPurchase ? router.push('/operations/purchases') : setPhase(1)} className={styles.cancelBtn} style={{ margin: 0 }}>
+          {isDirectPurchase ? '← Volver a Compras' : '← Volver a Checklist'}
         </button>
         <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, flex: 1 }}>
-          Registro de Compras Adicionales (En Ruta) — {generatedId}
+          {isDirectPurchase ? 'Nueva Compra Directa' : `Registro de Compras Adicionales (En Ruta) — ${generatedId}`}
         </h2>
         <div style={{ fontWeight: 700, color: '#166534', fontSize: '1.1rem', whiteSpace: 'nowrap' }}>
           Total: ${totalConFlete.toFixed(2)}
@@ -344,7 +400,7 @@ export function FormPhase({
           disabled={isSubmitting || detalles.length === 0}
           style={{ margin: 0, whiteSpace: 'nowrap' }}
         >
-          {isSubmitting ? 'Confirmando...' : 'Confirmar e Incorporar a la Orden'}
+          {isSubmitting ? (isDirectPurchase ? 'Guardando...' : 'Confirmando...') : (isDirectPurchase ? 'Guardar y Registrar Compra' : 'Confirmar e Incorporar a la Orden')}
         </button>
       </div>
 

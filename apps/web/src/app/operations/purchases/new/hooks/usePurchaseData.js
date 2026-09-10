@@ -45,7 +45,7 @@ export function usePurchaseData(showNotification) {
     }
 
     const queryParams = new URLSearchParams(window.location.search);
-    const isManual = queryParams.get('manual') === 'true';
+    const isManual = queryParams.get('manual') === 'true' || queryParams.get('mode') === 'direct';
     const orderId = queryParams.get('orderId');
 
     let activeOrders = [];

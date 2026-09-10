@@ -130,7 +130,7 @@ export default function PurchasesPage() {
             <ListPlus size={16} style={{ marginRight: '0.5rem' }}/>
             Crear / Gestionar Lista
           </Button>
-          <Button onClick={() => router.push('/operations/purchases/new?manual=true')}>
+          <Button onClick={() => router.push('/operations/purchases/new?mode=direct')}>
             <ShoppingCart size={16} style={{ marginRight: '0.5rem' }}/>
             Nueva Compra Directa
           </Button>

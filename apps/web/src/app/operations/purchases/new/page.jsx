@@ -6,7 +6,7 @@
  */
 'use client';
 import { useState, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './new-purchase.module.css';
 import { usePurchaseData } from './hooks/usePurchaseData';
 import { useChecklistManager } from './hooks/useChecklistManager';
@@ -18,6 +18,8 @@ import { FormPhase } from './components/FormPhase';
 
 export default function NewPurchasePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isDirectMode = searchParams.get('mode') === 'direct';
   
   // Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
@@ -62,7 +64,7 @@ export default function NewPurchasePage() {
         showNotification={showNotification}
       />
 
-      {phase === 1 ? (
+      {(!isDirectMode && phase === 1) ? (
          <ChecklistPhase 
             checklistMgr={checklistMgr} 
             setPhase={setPhase} 

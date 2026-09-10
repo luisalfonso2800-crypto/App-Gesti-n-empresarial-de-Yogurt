@@ -2,7 +2,10 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
+  '@prisma/engines': true
   core-js: false
+  prisma: true
+  sharp: true
   unrs-resolver: false
 minimumReleaseAgeExclude:
   - joi@18.2.6
