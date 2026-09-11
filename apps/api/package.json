@@ -12,7 +12,9 @@
     "test:cov": "jest --coverage",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "db:clean:test": "node prisma/clean-test-data.js",
-    "db:seed:test": "node prisma/seed-test-data.js"
+    "db:seed:test": "node prisma/seed-test-data.js",
+    "build": "prisma generate",
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.11",

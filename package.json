@@ -6,6 +6,9 @@
     "start:api": "pnpm --filter api start",
     "start:api:dev": "pnpm --filter api start:dev",
     "test": "pnpm --filter api test",
-    "test:e2e": "pnpm --filter api test:e2e"
+    "test:e2e": "pnpm --filter api test:e2e",
+    "build:api": "pnpm --filter api build",
+    "build:web": "pnpm --filter web build --no-lint",
+    "build": "pnpm --filter api build && pnpm --filter web build --no-lint"
   }
 }
