@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
 import { formatScada } from '@/lib/formatters';
@@ -18,12 +18,16 @@ import { Activity, ShieldAlert, Database, Clock, Settings, PackageX, MoreVertica
 import styles from './Dashboard.module.css';
 
 export default function DashboardPage() {
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const [showAlarmsOverlay, setShowAlarmsOverlay] = useState(false);
+  // Estado de alarmas reales desde /dashboard/alarms
+  const [alarmsData, setAlarmsData] = useState({ summary: { total: 0, critical: 0, warning: 0 }, alarms: [] });
+  const [alarmsLoading, setAlarmsLoading] = useState(false);
   const [telemetry, setTelemetry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState('');
-  
   // Múltiplexor de Canales
   const [activeChannel, setActiveChannel] = useState('ALL'); // ALL, FINANCE, PLANT, SUPPLY
   const [isAutoScan, setIsAutoScan] = useState(true);
@@ -35,6 +39,95 @@ export default function DashboardPage() {
   const [simModalOpen, setSimModalOpen] = useState(false);
   const [simProduct, setSimProduct] = useState('');
   const [simLiters, setSimLiters] = useState('');
+
+  
+  useEffect(() => {
+    const channel = searchParams?.get('channel');
+    if (channel === 'ALARMS') {
+      setShowAlarmsOverlay(true);
+      setIsAutoScan(false);
+    }
+  }, [searchParams]);
+
+  const handleCloseAlarms = () => {
+    setShowAlarmsOverlay(false);
+    router.replace('/dashboard');
+  };
+
+  // Carga las alarmas reales desde el backend al abrir el overlay
+  const fetchAlarms = async () => {
+    try {
+      setAlarmsLoading(true);
+      const data = await apiClient.get('/dashboard/alarms');
+      setAlarmsData(data);
+    } catch (e) {
+      console.warn('[SCADA] No se pudo cargar la matriz de alarmas:', e.message);
+    } finally {
+      setAlarmsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showAlarmsOverlay) {
+      fetchAlarms();
+    }
+  }, [showAlarmsOverlay]);
+
+  // Estado de IDs reconocidas — persiste en sessionStorage para sobrevivir recargas
+  const [acknowledgedIds, setAcknowledgedIds] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('manna_ack_alarms');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
+  // Marca una alarma como reconocida y actualiza el badge activo
+  const handleAcknowledge = (alarmId, e) => {
+    e.stopPropagation();
+    setAcknowledgedIds((prev) => {
+      if (prev.includes(alarmId)) return prev;
+      const next = [...prev, alarmId];
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('manna_ack_alarms', JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  // Cierra el overlay y redirige al módulo ERP responsable según el tipo de alarma
+  const handleResolveAlarm = (alarm) => {
+    setShowAlarmsOverlay(false);
+    router.replace('/dashboard'); // Limpia ?channel=ALARMS de la URL
+
+    if (alarm.channel?.includes('SUMINISTROS') || alarm.entityType === 'Insumo') {
+      // Deep-link: redirige a precios de proveedor con filtro precargado del insumo afectado
+      // El nombre del insumo viene de metadata.insumo (payload real del backend)
+      const insumoName =
+        alarm.metadata?.insumo ||
+        alarm.title?.split(':')[1]?.trim() ||
+        alarm.detail?.split(':')[0]?.trim() ||
+        '';
+      const query = new URLSearchParams();
+      if (insumoName) query.set('search', insumoName);
+      if (alarm.entityId) query.set('insumoId', alarm.entityId);
+      router.push(`/catalog/supplier-prices?${query.toString()}`);
+
+    } else if (alarm.channel?.includes('FEFO') || alarm.channel?.includes('CAVA') || alarm.entityType === 'Lote') {
+      router.push('/operations/lots');
+    } else if (alarm.channel?.includes('TESORERÍA') || alarm.entityType === 'Venta') {
+      router.push('/commercial/payments');
+    } else if (alarm.channel?.includes('PLANTA') || alarm.entityType === 'DetalleProduccion') {
+      router.push('/operations/production');
+    } else {
+      router.push('/dashboard');
+    }
+  };
+
+  // Conteo de alarmas activas NO reconocidas — alimenta el badge del header del modal
+  const pendingAlarmsCount = (alarmsData?.alarms || []).filter(
+    (a) => !acknowledgedIds.includes(a.id)
+  ).length;
 
   useEffect(() => {
     let mounted = true;
@@ -629,6 +722,100 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {showAlarmsOverlay && (
+        <div className={styles.alarmBackdrop} onClick={handleCloseAlarms}>
+          <div className={styles.alarmModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.alarmHeader}>
+              <div className={styles.alarmHeaderTitle}>
+                <span className={styles.alarmHeaderBadge}>SISTEMA SCADA</span>
+                {/* pendingAlarmsCount: descuenta las ya reconocidas del total */}
+                <h3>Matriz de Alarmas Críticas ({pendingAlarmsCount} pendientes)</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                  {alarmsData.summary.critical > 0 && <span style={{ fontSize: '0.65rem', background: '#EF4444', color: '#fff', borderRadius: '999px', padding: '0.1rem 0.4rem', fontWeight: 800 }}>🔴 {alarmsData.summary.critical} Críticas</span>}
+                  {alarmsData.summary.warning > 0 && <span style={{ fontSize: '0.65rem', background: '#F59E0B', color: '#fff', borderRadius: '999px', padding: '0.1rem 0.4rem', fontWeight: 800 }}>⚠️ {alarmsData.summary.warning} Advertencias</span>}
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={handleCloseAlarms} 
+                className={styles.closeAlarmBtn}
+              >
+                ✕ Cerrar
+              </button>
+            </div>
+      
+            <div className={styles.alarmBody}>
+              {alarmsLoading && (
+                <div style={{ padding: '1.5rem', textAlign: 'center', color: '#78716C', fontSize: '0.85rem' }}>
+                  Cargando alarmas desde el sistema...
+                </div>
+              )}
+              {!alarmsLoading && alarmsData.alarms.length === 0 && (
+                <div style={{ padding: '1.5rem', textAlign: 'center', color: '#4ADE80', fontWeight: 700, fontSize: '0.85rem' }}>
+                  ✅ Sin alarmas activas. Todos los sistemas operativos.
+                </div>
+              )}
+              {!alarmsLoading && alarmsData.alarms.map((alarm) => {
+                const isCritical = alarm.level === 'CRITICAL';
+                const isAck = acknowledgedIds.includes(alarm.id);
+                const triggeredTime = new Date(alarm.triggeredAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                return (
+                  <div
+                    key={alarm.id}
+                    className={`${styles.alarmItem} ${isCritical ? styles.alarmCritical : styles.alarmWarning} ${isAck ? styles.alarmAcknowledged : ''}`}
+                  >
+                    <div className={styles.alarmStatusDot} />
+
+                    <div className={styles.alarmDetails}>
+                      <div className={styles.alarmMeta}>
+                        <span className={styles.alarmLevel}>
+                          {isCritical ? 'CRÍTICA' : 'ADVERTENCIA'}
+                        </span>
+                        <span className={styles.alarmChannel}>{alarm.channel}</span>
+                        <span className={styles.alarmTime}>{triggeredTime}</span>
+                      </div>
+                      {/* Título corto de la alarma + descripción detallada */}
+                      <strong className={styles.alarmMsg}>{alarm.title}</strong>
+                      <p className={styles.alarmDesc}>{alarm.detail}</p>
+                      <p className={styles.alarmAction}><strong>Acción:</strong> {alarm.action}</p>
+                    </div>
+
+                    {/* Botonera Táctica: Gestionar primero, Reconocer segundo */}
+                    <div className={styles.alarmActionsCluster}>
+                      <button
+                        type="button"
+                        onClick={() => handleResolveAlarm(alarm)}
+                        className={styles.resolveButton}
+                        title="Ir al módulo operativo correspondiente"
+                      >
+                        Gestionar ↗
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleAcknowledge(alarm.id, e)}
+                        disabled={isAck}
+                        className={`${styles.ackButton} ${isAck ? styles.ackButtonDone : ''}`}
+                      >
+                        {isAck ? '✓ Atendida' : 'Reconocer'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+      
+            <div className={styles.alarmFooter}>
+              <span>Protocolo de contingencia MANNÁ v1.0</span>
+              <button type="button" onClick={handleCloseAlarms} className={styles.dismissAllBtn}>
+                Volver a Monitoreo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* CINTA TÁCTICA DE ACCESOS RÁPIDOS */}
       <section className={styles.quickAccessGrid} aria-label="Accesos Rápidos Operativos">

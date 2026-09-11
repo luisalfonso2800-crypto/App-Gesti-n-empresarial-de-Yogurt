@@ -9,6 +9,11 @@ export class DashboardController {
   }
 
 
+  @Get('alarms')
+  getAlarms() {
+    return this.service.getAlarms();
+  }
+
   @Get('full-telemetry')
   getFullTelemetry() {
     return this.service.getFullTelemetry();

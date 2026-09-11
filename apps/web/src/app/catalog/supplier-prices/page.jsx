@@ -3,12 +3,14 @@
  * @module catalog/supplier-prices
  * @description Orquestador principal de la vista de precios de proveedores.
  * @responsibility Integrar hooks de estado, datos y renderizar componentes. (Debe ser menor a 120 líneas).
+ *   También captura deep-links desde el SCADA (?search=Insumo&insumoId=uuid) para precargar el filtro.
  * @usedBy Next.js App Router
  * @dependencies useSupplierPricesData, useCartManager, UI components
  */
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { ContextBanner } from '@/components/ui/ContextBanner';
 import styles from './supplier-prices.module.css';
@@ -22,6 +24,9 @@ import { SupplierPriceModal } from './components/SupplierPriceModal';
 import { SummaryCard } from './components/SummaryCard';
 
 export default function SupplierPricesPage() {
+  // Captura parámetros de deep-link del SCADA (ej. ?search=Leche+cruda&insumoId=uuid)
+  const searchParams = useSearchParams();
+
   const {
     items, loading, error, filteredItems,
     handleToggleActive, handleSubmitForm,
@@ -42,6 +47,14 @@ export default function SupplierPricesPage() {
   
   const [allInsumos, setAllInsumos] = useState([]);
   const [allProveedores, setAllProveedores] = useState([]);
+
+  // Al montar: si la URL trae ?search= (deep-link del SCADA), precarga el filtro de búsqueda
+  useEffect(() => {
+    const searchFromUrl = searchParams?.get('search');
+    if (searchFromUrl) {
+      setFilterSearch(searchFromUrl);
+    }
+  }, [searchParams]);
   
   // Load global catalogs for the form
   React.useEffect(() => {

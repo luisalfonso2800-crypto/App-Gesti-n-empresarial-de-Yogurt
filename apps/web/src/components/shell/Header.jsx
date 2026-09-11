@@ -105,11 +105,17 @@ export function Header() {
 
   return (
     <header className={styles.header}>
-      <div className={styles.headerLinks}>
-        <Link href="/" className={styles.headerLink}>Dashboard</Link>
-        <Link href="/catalog/products" className={styles.headerLink}>Catálogos</Link>
-        <Link href="/operations/purchases" className={styles.headerLink}>Operaciones</Link>
-        <Link href="/commercial/sales" className={styles.headerLink}>Comercial</Link>
+      <div className={styles.scadaInstrumentation}>
+        <div className={styles.scadaStatus}>
+          <span className={styles.scadaStatusLed}></span>
+          SISTEMA EN LÍNEA
+        </div>
+        <div className={styles.scadaClock}>
+          {new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+        </div>
+        <div className={styles.scadaOperator}>
+          OPERADOR-01
+        </div>
       </div>
       <div className={styles.headerRight}>
         {activeList && (

@@ -296,6 +296,250 @@ export class DashboardService {
     };
   }
 
+  /**
+   * getAlarms() — Genera la matriz de alarmas reales consultando la BD.
+   * Implementa las 5 categorías auditadas en AUDITORIA_DATOS_Y_TELEMETRIA_SCADA.md
+   * NO usa datos mockeados ni hardcodeados.
+   */
+  async getAlarms() {
+    const now = new Date();
+    const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const in15Days = new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000);
+    const alarms = [];
+
+    // ─── ALM-C02: Lotes VENCIDOS con stock disponible (CRÍTICO) ───────────────
+    const expiredLots = await this.prisma.lote.findMany({
+      where: {
+        fechaVencimiento: { lt: now },
+        cantidadDisponible: { gt: 0 },
+      },
+      include: { producto: true, insumo: true },
+      orderBy: { fechaVencimiento: 'asc' },
+    });
+
+    for (const lote of expiredLots) {
+      const nombre = lote.producto?.nombre || lote.insumo?.nombre || 'Ítem desconocido';
+      const diasVencido = Math.ceil((now.getTime() - lote.fechaVencimiento.getTime()) / (1000 * 60 * 60 * 24));
+      alarms.push({
+        id: `ALM-C02-${lote.id}`,
+        level: 'CRITICAL',
+        channel: 'CANAL 02 · CAVA / FEFO',
+        code: 'LOT_EXPIRED',
+        title: 'Lote vencido con stock disponible',
+        detail: `${nombre} expiró hace ${diasVencido} día(s). Stock restante: ${Number(lote.cantidadDisponible)} ${lote.unidad}.`,
+        action: 'Retirar lote de cava de inmediato. No despachar ni usar en producción.',
+        entityType: 'Lote',
+        entityId: lote.id,
+        triggeredAt: now.toISOString(),
+        metadata: {
+          producto: nombre,
+          fechaVencimiento: lote.fechaVencimiento.toISOString(),
+          cantidadDisponible: Number(lote.cantidadDisponible),
+          unidad: lote.unidad,
+          diasVencido,
+        },
+      });
+    }
+
+    // ─── ALM-W03: Lotes próximos a vencer <= 7 días (ADVERTENCIA CRÍTICA) ─────
+    const criticalExpiryLots = await this.prisma.lote.findMany({
+      where: {
+        fechaVencimiento: { gte: now, lte: in7Days },
+        cantidadDisponible: { gt: 0 },
+      },
+      include: { producto: true, insumo: true },
+      orderBy: { fechaVencimiento: 'asc' },
+    });
+
+    for (const lote of criticalExpiryLots) {
+      const nombre = lote.producto?.nombre || lote.insumo?.nombre || 'Ítem desconocido';
+      const diasRestantes = Math.ceil((lote.fechaVencimiento.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      alarms.push({
+        id: `ALM-W03A-${lote.id}`,
+        level: 'WARNING',
+        channel: 'CANAL 02 · CAVA / FEFO',
+        code: 'LOT_EXPIRING_CRITICAL',
+        title: 'Lote próximo a vencer — urgente (≤ 7 días)',
+        detail: `${nombre} vence en ${diasRestantes} día(s). Stock: ${Number(lote.cantidadDisponible)} ${lote.unidad}.`,
+        action: 'Priorizar en la próxima orden de producción o despacho inmediato.',
+        entityType: 'Lote',
+        entityId: lote.id,
+        triggeredAt: now.toISOString(),
+        metadata: {
+          producto: nombre,
+          fechaVencimiento: lote.fechaVencimiento.toISOString(),
+          cantidadDisponible: Number(lote.cantidadDisponible),
+          unidad: lote.unidad,
+          diasRestantes,
+        },
+      });
+    }
+
+    // ─── ALM-W03: Lotes próximos a vencer 8-15 días (ADVERTENCIA PREVENTIVA) ──
+    const preventionExpiryLots = await this.prisma.lote.findMany({
+      where: {
+        fechaVencimiento: { gt: in7Days, lte: in15Days },
+        cantidadDisponible: { gt: 0 },
+      },
+      include: { producto: true, insumo: true },
+      orderBy: { fechaVencimiento: 'asc' },
+    });
+
+    for (const lote of preventionExpiryLots) {
+      const nombre = lote.producto?.nombre || lote.insumo?.nombre || 'Ítem desconocido';
+      const diasRestantes = Math.ceil((lote.fechaVencimiento.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      alarms.push({
+        id: `ALM-W03B-${lote.id}`,
+        level: 'WARNING',
+        channel: 'CANAL 02 · CAVA / FEFO',
+        code: 'LOT_EXPIRING_SOON',
+        title: 'Lote próximo a vencer — prevención (8-15 días)',
+        detail: `${nombre} vence en ${diasRestantes} días. Stock: ${Number(lote.cantidadDisponible)} ${lote.unidad}.`,
+        action: 'Planificar rotación FEFO. Incluir en próxima orden de producción.',
+        entityType: 'Lote',
+        entityId: lote.id,
+        triggeredAt: now.toISOString(),
+        metadata: {
+          producto: nombre,
+          fechaVencimiento: lote.fechaVencimiento.toISOString(),
+          cantidadDisponible: Number(lote.cantidadDisponible),
+          unidad: lote.unidad,
+          diasRestantes,
+        },
+      });
+    }
+
+    // ─── ALM-W01: Insumos bajo Stock Mínimo (ADVERTENCIA) ────────────────────
+    const inventarioInsumos = await this.prisma.inventario.findMany({
+      include: {
+        insumo: {
+          include: {
+            precios: {
+              where: { activo: true },
+              include: { proveedor: true },
+              orderBy: { fechaUltimaCompra: 'desc' },
+              take: 1,
+            },
+          },
+        },
+      },
+    });
+
+    for (const inv of inventarioInsumos) {
+      const actual = Number(inv.cantidadActual || 0);
+      const minimo = Number(inv.insumo?.stockMinimo || 0);
+      if (actual <= minimo) {
+        const proveedor = inv.insumo.precios?.[0]?.proveedor?.nombre || 'Sin proveedor registrado';
+        alarms.push({
+          id: `ALM-W01-${inv.insumo.id}`,
+          level: actual === 0 ? 'CRITICAL' : 'WARNING',
+          channel: 'CANAL 03 · SUMINISTROS',
+          code: actual === 0 ? 'STOCK_ZERO' : 'LOW_STOCK',
+          title: actual === 0 ? 'Stock de insumo en CERO' : 'Insumo bajo stock mínimo',
+          detail: `${inv.insumo.nombre}: ${actual} ${inv.insumo.unidadBase} actuales / Mínimo ${minimo} ${inv.insumo.unidadBase}.`,
+          action: `Generar orden de compra. Proveedor sugerido: ${proveedor}.`,
+          entityType: 'Insumo',
+          entityId: inv.insumo.id,
+          triggeredAt: now.toISOString(),
+          metadata: {
+            insumo: inv.insumo.nombre,
+            cantidadActual: actual,
+            stockMinimo: minimo,
+            unidad: inv.insumo.unidadBase,
+            proveedorSugerido: proveedor,
+          },
+        });
+      }
+    }
+
+    // ─── ALM-W04: Cuentas por Cobrar Vencidas (ADVERTENCIA) ──────────────────
+    const overdueVentas = await this.prisma.venta.findMany({
+      where: {
+        fechaLimitePago: { lt: now },
+        saldoPendiente: { gt: 0 },
+      },
+      include: { cliente: true },
+      orderBy: { saldoPendiente: 'desc' },
+    });
+
+    for (const venta of overdueVentas) {
+      const diasVencida = Math.ceil((now.getTime() - venta.fechaLimitePago.getTime()) / (1000 * 60 * 60 * 24));
+      alarms.push({
+        id: `ALM-W04-${venta.id}`,
+        level: diasVencida > 30 ? 'CRITICAL' : 'WARNING',
+        channel: 'CANAL 04 · TESORERÍA',
+        code: 'OVERDUE_RECEIVABLE',
+        title: `Cuenta por cobrar vencida${diasVencida > 30 ? ' — mora crítica' : ''}`,
+        detail: `Cliente: ${venta.cliente.nombre}. Saldo pendiente: $${Number(venta.saldoPendiente).toLocaleString('es-CO')} — Vencida hace ${diasVencida} día(s).`,
+        action: diasVencida > 30
+          ? 'Contactar cliente urgentemente. Evaluar suspensión de crédito.'
+          : `Gestionar cobro. Plazo de crédito: ${venta.cliente.diasCredito} días.`,
+        entityType: 'Venta',
+        entityId: venta.id,
+        triggeredAt: now.toISOString(),
+        metadata: {
+          cliente: venta.cliente.nombre,
+          telefono: venta.cliente.telefono,
+          saldoPendiente: Number(venta.saldoPendiente),
+          diasVencida,
+          fechaLimitePago: venta.fechaLimitePago.toISOString(),
+        },
+      });
+    }
+
+    // ─── ALM-W05: Desvío de Costo Real > 20% sobre Costo Teórico ─────────────
+    const detallesConDesviacion = await this.prisma.detalleProduccion.findMany({
+      where: {
+        costoTeorico: { not: null, gt: 0 },
+        costoReal: { not: null },
+      },
+      include: {
+        produccion: { include: { producto: true } },
+        insumo: true,
+      },
+    });
+
+    for (const detalle of detallesConDesviacion) {
+      const teorico = Number(detalle.costoTeorico || 0);
+      const real = Number(detalle.costoReal || 0);
+      if (teorico > 0 && real > teorico * 1.20) {
+        const desvioPct = Math.round(((real - teorico) / teorico) * 100);
+        alarms.push({
+          id: `ALM-W05-${detalle.id}`,
+          level: desvioPct > 40 ? 'CRITICAL' : 'WARNING',
+          channel: 'CANAL 01 · PLANTA',
+          code: 'COST_DEVIATION',
+          title: `Desvío de costo de producción — ${desvioPct}%`,
+          detail: `Insumo: ${detalle.insumo.nombre} en Producción de ${detalle.produccion.producto?.nombre || 'desconocido'}. Costo teórico: $${teorico.toFixed(0)} / Real: $${real.toFixed(0)}.`,
+          action: 'Revisar causas de merma excesiva o error en pesaje. Ajustar receta si es sistemático.',
+          entityType: 'DetalleProduccion',
+          entityId: detalle.id,
+          triggeredAt: now.toISOString(),
+          metadata: {
+            insumo: detalle.insumo.nombre,
+            costoTeorico: teorico,
+            costoReal: real,
+            desvioPorcentaje: desvioPct,
+            produccion: detalle.produccion.producto?.nombre,
+          },
+        });
+      }
+    }
+
+    // ─── Ordenar: CRITICAL primero, luego WARNING, luego OPERATIONAL ──────────
+    const levelOrder = { CRITICAL: 0, WARNING: 1, OPERATIONAL: 2 };
+    alarms.sort((a, b) => (levelOrder[a.level] ?? 9) - (levelOrder[b.level] ?? 9));
+
+    const summary = {
+      critical: alarms.filter(a => a.level === 'CRITICAL').length,
+      warning: alarms.filter(a => a.level === 'WARNING').length,
+      operational: alarms.filter(a => a.level === 'OPERATIONAL').length,
+      total: alarms.length,
+    };
+
+    return { generatedAt: now.toISOString(), summary, alarms };
+  }
+
   async getRotation() {
     const productos = await this.prisma.producto.findMany({
       where: { activo: true },
