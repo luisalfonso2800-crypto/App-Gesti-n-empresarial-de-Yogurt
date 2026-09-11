@@ -16,7 +16,9 @@ import { QuickSupplyModal } from './components/QuickSupplyModal';
 import { ChecklistPhase } from './components/ChecklistPhase';
 import { FormPhase } from './components/FormPhase';
 
-export default function NewPurchasePage() {
+import { Suspense } from "react";
+
+function NewPurchasePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDirectMode = searchParams.get('mode') === 'direct';
@@ -92,5 +94,13 @@ export default function NewPurchasePage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function NewPurchasePage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <NewPurchasePageContent />
+    </Suspense>
   );
 }

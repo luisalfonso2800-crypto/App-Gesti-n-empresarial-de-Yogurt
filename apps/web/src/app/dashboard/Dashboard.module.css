@@ -609,3 +609,292 @@
 
 .alarmFooter { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background-color: #F2EDE4; border-top: 1px solid #E6DFD5; font-size: 0.72rem; color: #78716C; }
 .dismissAllBtn { background-color: #182622; color: #F7F4EE; border: none; border-radius: 6px; padding: 0.4rem 0.85rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+
+/* Quadrant Badge for Product Telemetry */
+.quadrantBadge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid currentColor;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+}
+/* =========================================
+   CH-04 DECISIÓN (OPTIMIZACIÓN)
+   ========================================= */
+.decisionCenterContainer {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 0.85rem;
+  height: calc(100vh - 175px);
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.decisionColumn, .decisionColumnRight {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.decisionColHeader {
+  padding: 0.75rem 1rem;
+  background-color: #FAF8F5;
+  border-bottom: 1px solid #E5DFD5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.decisionBadgeOk {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #065F46;
+  background-color: #D1FAE5;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.decisionBadgeWarn {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #92400E;
+  background-color: #FEF3C7;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.decisionColHeader h3 {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #182622;
+  font-weight: 700;
+}
+
+.decisionStatPill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.68rem;
+  color: #78716C;
+}
+
+.decisionStatPill strong {
+  font-size: 0.95rem;
+  color: #10B981;
+}
+
+.decisionListScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.recommendCard {
+  background-color: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-left: 4px solid #10B981;
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+}
+
+.recommendTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.recommendProduct {
+  font-size: 0.85rem;
+  color: #182622;
+  display: block;
+}
+
+.recommendBatch {
+  font-size: 0.72rem;
+  color: #78716C;
+}
+
+.recommendScoreBadge {
+  background-color: #182622;
+  color: #F7F4EE;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  text-align: right;
+  font-size: 0.62rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.recommendScoreBadge strong {
+  font-size: 0.82rem;
+  color: #CAD5B5;
+}
+
+.recommendMetrics {
+  display: flex;
+  gap: 0.85rem;
+  margin: 0.4rem 0;
+  font-size: 0.7rem;
+  color: #57534E;
+}
+
+.recommendReasons {
+  list-style: none;
+  padding: 0;
+  margin: 0.35rem 0 0;
+  font-size: 0.68rem;
+  color: #4B5563;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.discardCard {
+  background-color: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-left: 4px solid #F59E0B;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+}
+
+.discardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.discardProduct {
+  font-size: 0.8rem;
+  color: #182622;
+}
+
+.badgeDiscardBlue {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 0.62rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.badgeDiscardRed {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  font-size: 0.62rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.discardReason {
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+  color: #78716C;
+}
+/* Badge de Riesgo Económico en Alarmas */
+.economicRiskBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  margin-top: 0.35rem;
+  width: fit-content;
+}
+
+/* Barra de Forecast en Telemetría de Productos */
+.productForecastBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.68rem;
+  color: #57534E;
+  margin-top: 0.5rem;
+}
+
+.productForecastBar strong {
+  color: #182622;
+}
+
+.trendBadge[data-trend="ALZA"] {
+  color: #059669;
+  font-weight: 700;
+}
+
+.trendBadge[data-trend="BAJA"] {
+  color: #D97706;
+  font-weight: 700;
+}
+
+.trendBadge[data-trend="ESTABLE"] {
+  color: #6B7280;
+}
+/* Botonera de Acción en CH-04 */
+.recommendActionRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #EFEAE1;
+}
+
+.approveDecisionBtn {
+  background-color: #182622;
+  color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  border-radius: 4px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s ease-in-out;
+}
+
+.approveDecisionBtn:hover {
+  background-color: #243832;
+  color: #FFFFFF;
+}
+
+.decisionBadgeLogged {
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+}
+
+/* Barra Inferior de Auditoría y Adherencia */
+.decisionAuditFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #FAF8F5;
+  border-top: 1px solid #E5DFD5;
+  font-size: 0.68rem;
+  color: #78716C;
+}
+
+.decisionAuditFooter strong {
+  color: #182622;
+}

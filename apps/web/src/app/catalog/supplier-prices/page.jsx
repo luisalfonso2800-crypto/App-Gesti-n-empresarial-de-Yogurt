@@ -23,7 +23,9 @@ import { CartSidebar } from './components/CartSidebar';
 import { SupplierPriceModal } from './components/SupplierPriceModal';
 import { SummaryCard } from './components/SummaryCard';
 
-export default function SupplierPricesPage() {
+import { Suspense } from 'react';
+
+function SupplierPricesContent() {
   // Captura parámetros de deep-link del SCADA (ej. ?search=Leche+cruda&insumoId=uuid)
   const searchParams = useSearchParams();
 
@@ -126,5 +128,14 @@ export default function SupplierPricesPage() {
       {/* Modal selector de lista destino cuando hay 3+ listas activas */}
       {MoveListModal}
     </div>
+  );
+}
+
+
+export default function SupplierPricesPage() {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <SupplierPricesContent />
+    </Suspense>
   );
 }

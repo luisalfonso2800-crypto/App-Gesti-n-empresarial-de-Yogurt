@@ -17,7 +17,9 @@ import { resolveProductImage } from '@/lib/presetImages';
 import { Activity, ShieldAlert, Database, Clock, Settings, PackageX, MoreVertical, ShoppingCart, Tag, Package, CreditCard, TrendingUp } from 'lucide-react';
 import styles from './Dashboard.module.css';
 
-export default function DashboardPage() {
+import { Suspense } from 'react';
+
+function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showAlarmsOverlay, setShowAlarmsOverlay] = useState(false);
@@ -911,5 +913,14 @@ export default function DashboardPage() {
 
       {renderSimulatorModal()}
     </div>
+  );
+}
+
+
+export default function Dashboard() {
+  return (
+    <Suspense fallback={<div>Cargando SCADA...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }
