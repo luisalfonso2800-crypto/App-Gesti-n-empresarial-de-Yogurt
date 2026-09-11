@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
@@ -175,18 +175,43 @@ function DashboardContent() {
     return () => clearInterval(interval);
   }, []);
 
-  const [activeProductIndex, setActiveProductIndex] = useState(0);
-  const productsLen = telemetry?.plant?.productsTelemetry?.length || 0;
+  const [currentProductIdx, setCurrentProductIdx] = useState(0);
+  const [isProductAutoPlay, setIsProductAutoPlay] = useState(true);
+
+  const productList = useMemo(() => {
+    if (telemetry?.plant?.productsTelemetry && telemetry.plant.productsTelemetry.length > 0) {
+      return telemetry.plant.productsTelemetry;
+    }
+    return [];
+  }, [telemetry]);
+
+  const totalProducts = productList.length;
+  const currentProduct = productList[currentProductIdx] || null;
 
   useEffect(() => {
-    if (!productsLen) return;
-    const prodInterval = setInterval(() => {
-      if (autoScanRef.current) {
-        setActiveProductIndex(prev => (prev + 1) % productsLen);
-      }
-    }, 8000);
-    return () => clearInterval(prodInterval);
-  }, [productsLen, isAutoScan]);
+    if (!isProductAutoPlay || totalProducts <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentProductIdx((prev) => (prev + 1) % totalProducts);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [isProductAutoPlay, totalProducts]);
+
+  const handlePrevProduct = (e) => {
+    e.stopPropagation();
+    setIsProductAutoPlay(false);
+    setCurrentProductIdx((prev) => (prev === 0 ? totalProducts - 1 : prev - 1));
+  };
+
+  const handleNextProduct = (e) => {
+    e.stopPropagation();
+    setIsProductAutoPlay(false);
+    setCurrentProductIdx((prev) => (prev + 1) % totalProducts);
+  };
+
+  const handleToggleAutoPlay = (e) => {
+    e.stopPropagation();
+    setIsProductAutoPlay((prev) => !prev);
+  };
 
   const handleInteraction = () => {
     if (isAutoScan) setIsAutoScan(false);
@@ -465,43 +490,136 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* CUADRANTE 2: Telemetría Producto con Avatar Expandido */}
-      <div className={styles.tacticalCard}>
-        <div className={styles.cardHeader}>TELEMETRÍA PRODUCTOS</div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-          {(() => {
-            const prod = plant.productsTelemetry[activeProductIndex];
-            if (!prod) return null;
-            return (
-              <div key={prod.idProducto} className={styles.monitorGrid} onClick={() => openProductDrillDown(prod)} style={{ flex: 1, margin: 0, padding: '0.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', gridColumn: '1 / -1', marginBottom: '0.25rem' }}>
-                  <ProductAvatar 
-                    src={resolveProductImage(prod)} 
-                    alt={prod.nombre} 
-                    name={prod.nombre}
-                    fluid={true}
-                    style={{ maxWidth: '70px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}
-                  />
-                  <div className={styles.productNameInfo}>
-                    <span className={styles.prodName} style={{ fontSize: '1.15rem', lineHeight: '1.2' }}>{prod.nombre}</span>
-                    <span className={styles.prodCat}>{prod.categoria}</span>
+      {/* TARJETA: TELEMETRÍA DE PRODUCTOS CON NAVEGACIÓN MANUAL */}
+      <div className={styles.productTelemetryCard}>
+        <div className={styles.productTelemetryHeader}>
+          <div className={styles.telemetryTitleGroup}>
+            <span className={styles.telemetrySectionTag}>TELEMETRÍA PRODUCTOS</span>
+            {currentProduct?.classification && (
+              <span 
+                className={styles.boxMatrixBadge}
+                data-type={currentProduct.classification.type}
+              >
+                {currentProduct.classification.label}
+              </span>
+            )}
+          </div>
+
+          {/* Controles tácticos de navegación paso a paso */}
+          <div className={styles.productNavControls}>
+            <button 
+              type="button" 
+              className={styles.productNavBtn} 
+              onClick={handlePrevProduct}
+              title="Producto anterior"
+            >
+              ◀
+            </button>
+            <span className={styles.productNavCounter}>
+              {totalProducts > 0 ? `${currentProductIdx + 1} / ${totalProducts}` : '0 / 0'}
+            </span>
+            <button 
+              type="button" 
+              className={styles.productNavBtn} 
+              onClick={handleNextProduct}
+              title="Producto siguiente"
+            >
+              ▶
+            </button>
+            <button 
+              type="button" 
+              className={`${styles.productNavBtn} ${isProductAutoPlay ? styles.productNavBtnActive : ''}`} 
+              onClick={handleToggleAutoPlay}
+              title={isProductAutoPlay ? "Pausar rotación automática" : "Reanudar rotación automática"}
+            >
+              {isProductAutoPlay ? '⏸' : '▶'}
+            </button>
+          </div>
+        </div>
+
+        {currentProduct ? (
+          <div className={styles.productTelemetryBody} onClick={() => openProductDrillDown(currentProduct)} style={{cursor:'pointer'}}>
+            <div className={styles.productMainRow}>
+              {/* Foto o Icono Táctico */}
+              <div className={styles.productImageWrapper}>
+                <ProductAvatar 
+                  src={resolveProductImage(currentProduct)} 
+                  alt={currentProduct.nombre} 
+                  name={currentProduct.nombre}
+                  fluid={true}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </div>
+
+              {/* Nombres y categoría */}
+              <div className={styles.productInfoCol}>
+                <h3 className={styles.productNameTitle}>{currentProduct.nombre}</h3>
+                <span className={styles.productCategoryTag}>
+                  {currentProduct.categoria?.nombre || currentProduct.categoria || 'LÁCTEOS'}
+                </span>
+                <div className={styles.productMetricNumbers}>
+                  <div className={styles.metricItem}>
+                    <span className={styles.metricLabel}>STOCK CAVA</span>
+                    <strong className={styles.metricValue}>{Number(currentProduct.stockCava || currentProduct.stockActual || 0)} unds</strong>
+                  </div>
+                  <div className={styles.metricItem}>
+                    <span className={styles.metricLabel}>COSTO BASE</span>
+                    <strong className={styles.metricValue}>${Number(currentProduct.costoUnitario || currentProduct.costo || 0).toLocaleString()}</strong>
+                  </div>
+                  <div className={styles.metricItem}>
+                    <span className={styles.metricLabel}>PRECIO VENTA</span>
+                    <strong className={styles.metricValue}>${Number(currentProduct.precioVenta || 0).toLocaleString()}</strong>
                   </div>
                 </div>
-                <div className={styles.meterItem}>
-                  <span className={styles.meterLabel}>Stock</span>
-                  <span className={styles.meterValue} style={{ color: '#1C3F35', fontSize: '1.25rem' }}>{prod.stockCava}</span>
-                </div>
-                <div className={styles.meterItem}>
-                  <span className={styles.meterLabel}>Costo</span>
-                  <span className={styles.meterValue} style={{ color: '#D97706', fontSize: '1.25rem' }}>{formatScada(prod.costoUnitario)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                   <AnalogGauge value={prod.margenPorcentaje} label="MARGEN %" />
+              </div>
+
+              {/* Tacómetro Radial de Margen */}
+              <div className={styles.productRadialWrapper}>
+                <div className={styles.radialGaugeContainer}>
+                  <svg viewBox="0 0 100 55" className={styles.gaugeSvg}>
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke="#E5DFD5"
+                      strokeWidth="8"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 10 50 A 40 40 0 0 1 90 50"
+                      fill="none"
+                      stroke={Number(currentProduct.margenPorcentaje || currentProduct.margen || 0) >= 30 ? '#10B981' : Number(currentProduct.margenPorcentaje || currentProduct.margen || 0) >= 15 ? '#F59E0B' : '#EF4444'}
+                      strokeWidth="8"
+                      strokeDasharray="125.6"
+                      strokeDashoffset={125.6 - (125.6 * Math.min(100, Math.max(0, Number(currentProduct.margenPorcentaje || currentProduct.margen || 0)))) / 100}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className={styles.gaugeText}>
+                    <strong>{Math.round(currentProduct.margenPorcentaje || currentProduct.margen || 0)}%</strong>
+                    <span>MARGEN</span>
+                  </div>
                 </div>
               </div>
-            );
-          })()}
-        </div>
+            </div>
+
+            {/* Barra de Forecast Semanal */}
+            <div className={styles.productForecastBar}>
+              <span>Ventas: <strong>{currentProduct.forecast?.velocidadDiaria || 0.4} und/día</strong></span>
+              <span>Demanda 7d: <strong>{currentProduct.forecast?.demandaProyectada7d || 3} unds</strong></span>
+              <span>Cobertura: <strong>{currentProduct.forecast?.diasCobertura || 99} días</strong></span>
+              <span 
+                className={styles.trendBadge} 
+                data-trend={currentProduct.forecast?.tendencia || 'ESTABLE'}
+              >
+                {currentProduct.forecast?.tendencia === 'ALZA' ? '▲ Alta Rotación' : currentProduct.forecast?.tendencia === 'BAJA' ? '▼ Demanda Lenta' : '● Demanda Estable'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.productEmptyState}>
+            <span>No hay productos activos para telemetría</span>
+          </div>
+        )}
       </div>
 
       {/* CUADRANTE 3: Silos e Insumos */}

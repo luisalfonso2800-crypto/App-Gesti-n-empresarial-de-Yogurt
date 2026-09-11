@@ -389,6 +389,24 @@
   cursor: pointer;
   font-weight: bold;
 }
+.purchaseBtn {
+  background: #1C3F35;
+  color: #FFF;
+  border: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  transition: background-color 0.15s ease;
+}
+.purchaseBtn:hover {
+  background: #2D4A42;
+}
 .successBtn {
   background: #1C3F35;
   color: #FFF;
@@ -897,4 +915,509 @@
 
 .decisionAuditFooter strong {
   color: #182622;
+}
+
+/* Contenedor equilibrado de Silos y Reorden */
+.reorderTableContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.reorderTableHeader {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.6fr 1fr;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #78716C;
+  border-bottom: 1px solid #EFEAE1;
+  letter-spacing: 0.03em;
+}
+
+.reorderTableBody {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+}
+
+.reorderTableRow {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.6fr 1fr;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background-color: #FAF8F5;
+  border: 1px solid #EFEAE1;
+  transition: background-color 0.15s ease;
+}
+
+.reorderTableRow:hover {
+  background-color: #F3EFE6;
+}
+
+.reorderColInsumo {
+  display: flex;
+  flex-direction: column;
+}
+
+.reorderColInsumo strong {
+  font-size: 0.78rem;
+  color: #182622;
+}
+
+.reorderUnit {
+  font-size: 0.62rem;
+  color: #8C827A;
+}
+
+.reorderColStock {
+  display: flex;
+  justify-content: center;
+}
+
+.stockPillCritical {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.stockPillWarning {
+  background-color: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.reorderColSupplier {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.72rem;
+}
+
+.supplierName {
+  color: #182622;
+  font-weight: 600;
+}
+
+.supplierPrice {
+  color: #78716C;
+  font-size: 0.65rem;
+}
+
+.reorderColAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.buyActionButton {
+  background-color: #182622;
+  color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  border-radius: 4px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.buyActionButton:hover {
+  background-color: #243832;
+  border-color: #C58A3E;
+  color: #FFFFFF;
+}
+
+/* Ajuste proporcional del contenedor de Silos para evitar vacíos */
+.silosGraphicWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0.5rem;
+}
+
+
+/* ========================================================
+   TELEMETRÍA DE PRODUCTOS: CARRUSEL Y NAVEGACIÓN MANUAL
+   ======================================================== */
+.productTelemetryCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  overflow: hidden;
+}
+
+.productTelemetryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #EFEAE1;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.5rem;
+}
+
+.telemetryTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.telemetrySectionTag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #182622;
+  letter-spacing: 0.04em;
+}
+
+.boxMatrixBadge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.boxMatrixBadge[data-type="ESTRELLA"] { background-color: #D1FAE5; color: #065F46; }
+.boxMatrixBadge[data-type="VOLUMEN"] { background-color: #EFF6FF; color: #1D4ED8; }
+.boxMatrixBadge[data-type="NICHO"] { background-color: #FEF3C7; color: #92400E; }
+.boxMatrixBadge[data-type="BAJO"] { background-color: #FEE2E2; color: #991B1B; }
+
+.productNavControls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #FAF8F5;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #E5DFD5;
+}
+
+.productNavBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.68rem;
+  color: #57534E;
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  transition: all 0.12s ease;
+}
+.productNavBtn:hover {
+  background-color: #E5DFD5;
+  color: #182622;
+}
+.productNavBtnActive {
+  color: #10B981;
+  font-weight: 800;
+}
+
+.productNavCounter {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #182622;
+  min-width: 38px;
+  text-align: center;
+}
+
+.productTelemetryBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.productMainRow {
+  display: grid;
+  grid-template-columns: 80px 1.4fr 110px;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.productImageWrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+  background-color: #FAF8F5;
+  border: 1px solid #EFEAE1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.productImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.productImageFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.productInfoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.productNameTitle {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #182622;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.productCategoryTag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #78716C;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.productMetricNumbers {
+  display: flex;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.metricLabel {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #8C827A;
+}
+
+.metricValue {
+  font-size: 0.78rem;
+  color: #182622;
+}
+
+/* Tacómetro Radial */
+.productRadialWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.radialGaugeContainer {
+  position: relative;
+  width: 95px;
+  height: 55px;
+}
+
+.gaugeSvg {
+  width: 100%;
+  height: 100%;
+}
+
+.gaugeText {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.gaugeText strong {
+  font-size: 0.88rem;
+  color: #182622;
+}
+
+.gaugeText span {
+  font-size: 0.55rem;
+  color: #78716C;
+  font-weight: 700;
+}
+
+/* Barra de Forecast Semanal */
+.productForecastBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.68rem;
+  color: #57534E;
+  margin-top: 0.45rem;
+}
+
+.productForecastBar strong {
+  color: #182622;
+}
+
+.trendBadge[data-trend="ALZA"] { color: #059669; font-weight: 700; }
+.trendBadge[data-trend="BAJA"] { color: #D97706; font-weight: 700; }
+.trendBadge[data-trend="ESTABLE"] { color: #6B7280; }
+
+.productEmptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  font-size: 0.75rem;
+  color: #8C827A;
+}
+
+/* ========================================================
+   TABLA DE INSUMOS CRÍTICOS (4 COLUMNAS OPERATIVAS)
+   ======================================================== */
+.reorderTableCard {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.reorderTableHeader {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.6fr 1fr;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #78716C;
+  border-bottom: 1px solid #EFEAE1;
+  letter-spacing: 0.03em;
+}
+
+.reorderTableBody {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+}
+
+.reorderTableRow {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1.6fr 1fr;
+  align-items: center;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  background-color: #FAF8F5;
+  border: 1px solid #EFEAE1;
+  transition: background-color 0.15s ease;
+}
+
+.reorderTableRow:hover {
+  background-color: #F3EFE6;
+}
+
+.reorderColInsumo {
+  display: flex;
+  flex-direction: column;
+}
+
+.reorderColInsumo strong {
+  font-size: 0.78rem;
+  color: #182622;
+}
+
+.reorderUnit {
+  font-size: 0.62rem;
+  color: #8C827A;
+}
+
+.reorderColStock {
+  display: flex;
+  justify-content: center;
+}
+
+.stockPillCritical {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.stockPillWarning {
+  background-color: #FFFBEB;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.reorderColSupplier {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.72rem;
+}
+
+.supplierName {
+  color: #182622;
+  font-weight: 600;
+}
+
+.supplierPrice {
+  color: #78716C;
+  font-size: 0.65rem;
+}
+
+.reorderColAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.buyActionButton {
+  background-color: #182622;
+  color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  border-radius: 4px;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease-in-out;
+  white-space: nowrap;
+}
+
+.buyActionButton:hover {
+  background-color: #243832;
+  border-color: #C58A3E;
+  color: #FFFFFF;
 }
