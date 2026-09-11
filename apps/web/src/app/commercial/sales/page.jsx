@@ -29,6 +29,8 @@ export default function SalesPage() {
         handleSubmit={form.handleSubmit}
         products={form.products}
         clients={form.clients}
+        isSubmitting={form.isSubmitting}
+        errorMsg={form.errorMsg}
       />
     </div>
   );

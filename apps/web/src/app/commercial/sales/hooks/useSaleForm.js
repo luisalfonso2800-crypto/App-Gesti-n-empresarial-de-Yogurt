@@ -61,11 +61,22 @@ export function useSaleForm({ onSuccess }) {
     });
   };
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.idCliente) return alert("Seleccione un cliente");
-    if (formData.detalles.length === 0) return alert("Agregue al menos un producto a la orden");
+    if (!formData.idCliente) {
+      setErrorMsg("Seleccione un cliente");
+      return;
+    }
+    if (formData.detalles.length === 0) {
+      setErrorMsg("Agregue al menos un producto a la orden");
+      return;
+    }
     
+    setIsSubmitting(true);
+    setErrorMsg('');
     try {
       await apiClient.post('/sales', {
         ...formData,
@@ -76,12 +87,14 @@ export function useSaleForm({ onSuccess }) {
       handleCloseModal();
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      setErrorMsg(err.message || 'Error al procesar la venta');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
-    isModalOpen, formData, products, clients,
+    isModalOpen, formData, products, clients, isSubmitting, errorMsg,
     handleOpenModal, handleCloseModal,
     handleChange, handleDetailsChange, handleSubmit
   };

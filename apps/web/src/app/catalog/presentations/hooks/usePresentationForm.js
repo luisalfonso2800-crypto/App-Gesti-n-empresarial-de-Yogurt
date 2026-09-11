@@ -13,22 +13,33 @@ export function usePresentationForm({ onSuccess }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const [formData, setFormData] = useState({
-    nombre: '', cantidadOz: 0, cantidadMl: 0,
+    nombre: '', cantidadOz: '', cantidadMl: '',
     tipoEnvase: '', activo: true, observaciones: ''
   });
 
   const handleOpenModal = (item) => {
     if (item) {
       setEditingItem(item);
-      setFormData(item);
+      setFormData({
+        ...item,
+        cantidadOz: item.cantidadOz ?? '',
+        cantidadMl: item.cantidadMl ?? '',
+        nombre: item.nombre ?? '',
+        tipoEnvase: item.tipoEnvase ?? '',
+        observaciones: item.observaciones ?? ''
+      });
     } else {
       setEditingItem(null);
       setFormData({
-        nombre: '', cantidadOz: 0, cantidadMl: 0,
+        nombre: '', cantidadOz: '', cantidadMl: '',
         tipoEnvase: '', activo: true, observaciones: ''
       });
     }
+    setErrorMsg('');
     setIsModalOpen(true);
   };
 
@@ -41,27 +52,32 @@ export function usePresentationForm({ onSuccess }) {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) : value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, customData) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg('');
     try {
+      const payload = customData || formData;
       if (editingItem) {
-        await apiClient.patch(`/presentations/${editingItem.id}`, formData);
+        await apiClient.patch(`/presentations/${editingItem.id}`, payload);
       } else {
-        await apiClient.post('/presentations', formData);
+        await apiClient.post('/presentations', payload);
       }
       handleCloseModal();
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      setErrorMsg(err.message || 'Error al guardar');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
-    isModalOpen, editingItem, formData, handleOpenModal, handleCloseModal,
-    handleChange, handleSubmit
+    isModalOpen, editingItem, formData, setFormData, handleOpenModal, handleCloseModal,
+    handleChange, handleSubmit, isSubmitting, errorMsg
   };
 }

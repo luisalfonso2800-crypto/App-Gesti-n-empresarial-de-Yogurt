@@ -12,22 +12,41 @@ import { apiClient } from '@/lib/api-client';
 export function useProductForm({ onSuccess }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [presentations, setPresentations] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const [formData, setFormData] = useState({
     nombre: '', idPresentacion: '', categoria: '', descripcion: '',
-    canalVenta: '', precioVenta: 0, margenObjetivo: 0, observaciones: '', activo: true
+    canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true
   });
 
+  const loadPresentations = async () => {
+    try {
+      const data = await apiClient.get('/presentations');
+      setPresentations(data || []);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleOpenModal = (item) => {
+    loadPresentations();
     if (item) {
       setEditingItem(item);
-      setFormData(item);
+      setFormData({
+        ...item,
+        precioVenta: item.precioVenta || '',
+        margenObjetivo: item.margenObjetivo || ''
+      });
     } else {
       setEditingItem(null);
       setFormData({
         nombre: '', idPresentacion: '', categoria: '', descripcion: '',
-        canalVenta: '', precioVenta: 0, margenObjetivo: 0, observaciones: '', activo: true
+        canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true
       });
     }
+    setErrorMsg('');
     setIsModalOpen(true);
   };
 
@@ -40,27 +59,32 @@ export function useProductForm({ onSuccess }) {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) : value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, customData) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg('');
     try {
+      const payload = customData || formData;
       if (editingItem) {
-        await apiClient.patch(`/products/${editingItem.id}`, formData);
+        await apiClient.patch(`/products/${editingItem.id}`, payload);
       } else {
-        await apiClient.post('/products', formData);
+        await apiClient.post('/products', payload);
       }
       handleCloseModal();
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      setErrorMsg(err.message || 'Error al guardar');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
-    isModalOpen, editingItem, formData, handleOpenModal, handleCloseModal,
+    isModalOpen, editingItem, formData, presentations, isSubmitting, errorMsg, handleOpenModal, handleCloseModal,
     handleChange, handleSubmit
   };
 }

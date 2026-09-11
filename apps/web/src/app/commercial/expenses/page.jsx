@@ -4,22 +4,28 @@ import React, { useEffect, useState } from 'react';
 import { apiClient } from '../../../lib/api-client';
 import { Button } from '../../../components/ui/Button';
 import { Table, THead, TBody, TR, TH, TD } from '../../../components/ui/Table';
-import { Modal } from '../../../components/ui/Modal';
-import { Input } from '../../../components/ui/Input';
+import SmartModal, { SubmitButton } from '../../../components/ui/SmartModal';
+import SmartSelect from '../../../components/ui/inputs/SmartSelect';
+import CurrencySmartInput from '../../../components/ui/inputs/CurrencySmartInput';
 import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
+import { formatCurrency, cleanCurrency } from '../../../lib/formatters';
 import styles from './expenses.module.css';
+import modalStyles from '../../../components/ui/SmartModal.module.css';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [submitError, setSubmitError] = useState(null);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [formData, setFormData] = useState({
     fecha: new Date().toISOString().substring(0, 10),
     categoria: '',
     descripcion: '',
-    valor: 0,
+    valor: '',
     tipoGasto: 'OPERATIVO',
     periodo: '',
     observaciones: ''
@@ -47,11 +53,12 @@ export default function ExpensesPage() {
       fecha: new Date().toISOString().substring(0, 10),
       categoria: '',
       descripcion: '',
-      valor: 0,
+      valor: '',
       tipoGasto: 'OPERATIVO',
       periodo: '',
       observaciones: ''
     });
+    setSubmitError(null);
     setIsModalOpen(true);
   };
 
@@ -60,24 +67,38 @@ export default function ExpensesPage() {
   };
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
+      [name]: value
     }));
   };
 
+  const isDirty = !!formData.categoria || !!formData.descripcion || !!formData.valor;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const cleanValue = cleanCurrency(formData.valor);
+    if (!cleanValue || cleanValue <= 0) {
+      setSubmitError('El valor del gasto debe ser mayor a cero');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setSubmitError(null);
+    
     try {
       await apiClient.post('/expenses', {
         ...formData,
+        valor: cleanValue,
         fecha: new Date(formData.fecha).toISOString()
       });
       handleCloseModal();
       fetchExpenses();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      setSubmitError(err.message || 'Error al guardar el gasto');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -112,9 +133,9 @@ export default function ExpensesPage() {
             {expenses.map((item) => (
               <TR key={item.id}>
                 <TD>{new Date(item.fecha).toLocaleDateString()}</TD>
-                <TD>{item.categoria}</TD>
+                <TD>{item.categoria.replace('_', ' ')}</TD>
                 <TD>{item.descripcion}</TD>
-                <TD>${Number(item.valor).toFixed(2)}</TD>
+                <TD>{formatCurrency(item.valor)}</TD>
                 <TD>{item.tipoGasto}</TD>
               </TR>
             ))}
@@ -122,69 +143,133 @@ export default function ExpensesPage() {
         </Table>
       )}
 
-      <Modal 
+      <SmartModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
         title="Nuevo Gasto"
+        isDirty={isDirty}
+        isSubmitting={isSubmitting}
       >
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <Input 
-            label="Fecha" 
-            name="fecha" 
-            type="date"
-            value={formData.fecha} 
-            onChange={handleChange} 
-            required 
+        {submitError && (
+          <div className={modalStyles.errorBanner}>
+            {submitError}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className={modalStyles.twoColumns}>
+            <div className={modalStyles.inputGroup}>
+              <label className={modalStyles.label}>Fecha <span style={{color: '#e11d48'}}>*</span></label>
+              <input 
+                name="fecha" 
+                type="date"
+                value={formData.fecha} 
+                onChange={handleChange} 
+                className={modalStyles.input} 
+                required 
+              />
+            </div>
+            
+            <div className={modalStyles.inputGroup}>
+              <label className={modalStyles.label}>Periodo <span style={{color: '#e11d48'}}>*</span></label>
+              <input 
+                name="periodo" 
+                value={formData.periodo} 
+                onChange={handleChange} 
+                placeholder="Ej: Enero 2026"
+                className={modalStyles.input} 
+                required 
+              />
+            </div>
+          </div>
+
+          <div className={modalStyles.twoColumns}>
+            <SmartSelect
+              label="Categoría"
+              name="categoria"
+              value={formData.categoria}
+              onChange={handleChange}
+              options={[
+                { id: 'SERVICIOS_PUBLICOS', label: 'Servicios Públicos' },
+                { id: 'NOMINA', label: 'Nómina' },
+                { id: 'MANTENIMIENTO', label: 'Mantenimiento' },
+                { id: 'ALQUILER', label: 'Alquiler' },
+                { id: 'TRANSPORTE', label: 'Transporte / Fletes' },
+                { id: 'OTROS', label: 'Otros Gastos' },
+              ]}
+              required
+              placeholder="Seleccione categoría"
+            />
+            
+            <SmartSelect
+              label="Tipo de Gasto"
+              name="tipoGasto"
+              value={formData.tipoGasto}
+              onChange={handleChange}
+              options={[
+                { id: 'OPERATIVO', label: 'Operativo' },
+                { id: 'ADMINISTRATIVO', label: 'Administrativo' },
+                { id: 'VENTAS', label: 'Ventas y Marketing' },
+                { id: 'FINANCIERO', label: 'Financiero' },
+              ]}
+              required
+            />
+          </div>
+
+          <div className={modalStyles.inputGroup}>
+            <label className={modalStyles.label}>Descripción <span style={{color: '#e11d48'}}>*</span></label>
+            <input 
+              name="descripcion" 
+              value={formData.descripcion} 
+              onChange={handleChange} 
+              placeholder="Descripción del gasto"
+              className={modalStyles.input} 
+              required 
+            />
+          </div>
+
+          <CurrencySmartInput
+            label="Valor"
+            name="valor"
+            value={formData.valor}
+            onChange={handleChange}
+            placeholder="Ej: 150.000"
+            required
           />
-          <Input 
-            label="Categoría" 
-            name="categoria" 
-            value={formData.categoria} 
-            onChange={handleChange} 
-            required 
-          />
-          <Input 
-            label="Descripción" 
-            name="descripcion" 
-            value={formData.descripcion} 
-            onChange={handleChange} 
-            required 
-          />
-          <Input 
-            label="Valor" 
-            name="valor" 
-            type="number"
-            step="0.01"
-            value={formData.valor} 
-            onChange={handleChange} 
-            required 
-          />
-          <Input 
-            label="Tipo de Gasto" 
-            name="tipoGasto" 
-            value={formData.tipoGasto} 
-            onChange={handleChange} 
-            required 
-          />
-          <Input 
-            label="Periodo" 
-            name="periodo" 
-            value={formData.periodo} 
-            onChange={handleChange} 
-            required 
-          />
-          <Input 
-            label="Observaciones" 
-            name="observaciones" 
-            value={formData.observaciones} 
-            onChange={handleChange} 
-          />
-          <div className={styles.formActions}>
-            <Button type="button" variant="secondary" onClick={handleCloseModal}>Cancelar</Button>
-            <Button type="submit">Guardar</Button>
+
+          <div className={modalStyles.inputGroup}>
+            <label className={modalStyles.label}>Observaciones</label>
+            <textarea 
+              name="observaciones" 
+              value={formData.observaciones} 
+              onChange={handleChange} 
+              className={modalStyles.input} 
+              style={{ minHeight: '80px', resize: 'vertical' }}
+            />
+          </div>
+
+          {formData.categoria && formData.descripcion && formData.valor && formData.tipoGasto && (
+            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+              <strong>Resumen:</strong> Se registrará un gasto de <strong>{formData.categoria.replace('_', ' ')}</strong> por un valor de <strong>{formatCurrency(formData.valor)}</strong>, clasificado como gasto <strong>{formData.tipoGasto.toLowerCase()}</strong> para el periodo de {formData.periodo || 'no especificado'}.
+            </div>
+          )}
+
+          <div className={modalStyles.actions}>
+            <button 
+              type="button" 
+              onClick={handleCloseModal}
+              className={modalStyles.btnCancel}
+            >
+              Cancelar
+            </button>
+            <SubmitButton 
+              isSubmitting={isSubmitting} 
+              text="Guardar Gasto"
+              disabled={!formData.categoria || !formData.valor || !formData.descripcion}
+            />
           </div>
         </form>
-      </Modal>
+      </SmartModal>
     </div>
   );
 }

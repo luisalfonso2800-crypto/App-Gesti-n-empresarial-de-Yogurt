@@ -13,6 +13,7 @@ model Presentacion {
   cantidadMl       Decimal           @map("Cantidad_ml")
   tipoEnvase       String            @map("Tipo_Envase")
   tapilla          String?           @map("Tapilla")
+  imagenUrl        String?           @map("Imagen_Url")
   activo           Boolean           @default(true) @map("Activo")
   observaciones    String?           @map("Observaciones")
   productos        Producto[]
@@ -91,6 +92,7 @@ model Producto {
   canalVenta     String         @map("Canal_Venta")
   precioVenta    Decimal        @map("Precio_Venta") @db.Decimal(12, 2)
   margenObjetivo Decimal        @map("Margen_Objetivo") @db.Decimal(5, 2)
+  imagenUrl      String?        @map("Imagen_Url")
   activo         Boolean        @default(true) @map("Activo")
   observaciones  String?        @map("Observaciones")
   recetas        Receta[]

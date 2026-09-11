@@ -1,89 +1,270 @@
 /**
  * @file SupplierPriceModal.jsx
  * @module catalog/supplier-prices/components
- * @description Modal y formulario para la creación/edición de precios de proveedor.
- * @responsibility Manejar la entrada de datos del usuario, validación y envío de petición.
+ * @description Modal y formulario para la creación/edición de precios de proveedor (CSS Modules + Summary).
+ * @responsibility Manejar la entrada de datos, cálculo inverso automático, y envío.
  * @usedBy apps/web/src/app/catalog/supplier-prices/page.jsx
- * @dependencies @/components/ui/Modal, @/components/ui/Input, @/components/ui/Button, styles local
+ * @dependencies SmartModal, SmartSelect, CurrencySmartInput, StrictNumberInput
  */
 import React, { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import styles from '../supplier-prices.module.css';
+import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
+import SmartSelect from '@/components/ui/inputs/SmartSelect';
+import CurrencySmartInput from '@/components/ui/inputs/CurrencySmartInput';
+import { formatCurrency, cleanCurrency } from '@/lib/formatters';
+import styles from '@/components/ui/SmartModal.module.css';
 
-export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit }) {
+export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, allInsumos = [], allProveedores = [] }) {
   const [formData, setFormData] = useState({
     idInsumo: '',
     idProveedor: '',
     presentacionCompra: '',
-    cantidadPresentacion: 0,
+    cantidadPresentacion: '',
     unidadPresentacion: '',
-    cantidadEquivalenteBase: 0,
-    precioCompra: 0,
-    costoUnidadBase: 0,
+    cantidadEquivalenteBase: '',
+    precioCompra: '',
+    costoUnidadBase: '',
     observaciones: '',
     activo: true
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (editingItem) {
-      setFormData(editingItem);
+      setFormData({
+        ...editingItem,
+        precioCompra: editingItem.precioCompra || '',
+        cantidadPresentacion: editingItem.cantidadPresentacion || '',
+        cantidadEquivalenteBase: editingItem.cantidadEquivalenteBase || ''
+      });
     } else {
       setFormData({
         idInsumo: '',
         idProveedor: '',
         presentacionCompra: '',
-        cantidadPresentacion: 0,
+        cantidadPresentacion: '',
         unidadPresentacion: '',
-        cantidadEquivalenteBase: 0,
-        precioCompra: 0,
-        costoUnidadBase: 0,
+        cantidadEquivalenteBase: '',
+        precioCompra: '',
+        costoUnidadBase: '',
         observaciones: '',
         activo: true
       });
     }
+    setErrorMsg('');
   }, [editingItem, isOpen]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) : value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
+  // Cálculo inverso automático del costo base
+  useEffect(() => {
+    const pc = cleanCurrency(formData.precioCompra);
+    const cb = Number(formData.cantidadEquivalenteBase);
+    
+    if (pc > 0 && cb > 0) {
+      const costo = pc / cb;
+      setFormData(prev => ({ ...prev, costoUnidadBase: costo }));
+    } else {
+      setFormData(prev => ({ ...prev, costoUnidadBase: '' }));
+    }
+  }, [formData.precioCompra, formData.cantidadEquivalenteBase]);
+
+  const isDirty = !!formData.idInsumo || !!formData.idProveedor || !!formData.precioCompra;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await onSubmit(formData, editingItem);
-    onClose();
+    setIsSubmitting(true);
+    setErrorMsg('');
+    
+    try {
+      const pc = cleanCurrency(formData.precioCompra);
+      const payload = {
+        ...formData,
+        cantidadPresentacion: Number(formData.cantidadPresentacion),
+        cantidadEquivalenteBase: Number(formData.cantidadEquivalenteBase),
+        precioCompra: pc,
+        costoUnidadBase: Number(formData.costoUnidadBase)
+      };
+      
+      await onSubmit(payload, editingItem);
+      onClose();
+    } catch (err) {
+      setErrorMsg(err.message || 'Error al guardar');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getInsumoName = () => {
+    const i = allInsumos.find(x => String(x.id) === String(formData.idInsumo));
+    return i ? i.nombre : 'desconocido';
+  };
+  
+  const getProveedorName = () => {
+    const p = allProveedores.find(x => String(x.id) === String(formData.idProveedor));
+    return p ? p.nombre : 'desconocido';
   };
 
   return (
-    <Modal 
+    <SmartModal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title={editingItem ? 'Editar' : 'Nuevo'}
+      title={editingItem ? 'Editar Precio de Proveedor' : 'Nuevo Precio de Proveedor'}
+      isDirty={isDirty}
+      isSubmitting={isSubmitting}
     >
-      <form onSubmit={handleSubmit} className={styles.form}>
-        <Input label="ID Insumo" name="idInsumo" value={formData.idInsumo || ''} onChange={handleChange} required />
-        <Input label="ID Proveedor" name="idProveedor" value={formData.idProveedor || ''} onChange={handleChange} required />
-        <Input label="Presentación Compra" name="presentacionCompra" value={formData.presentacionCompra || ''} onChange={handleChange} required />
-        <Input label="Cantidad Presentación" name="cantidadPresentacion" type="number" step="0.01" value={formData.cantidadPresentacion || 0} onChange={handleChange} required />
-        <Input label="Unidad Presentación" name="unidadPresentacion" value={formData.unidadPresentacion || ''} onChange={handleChange} required />
-        <Input label="Cantidad Equivalente Base" name="cantidadEquivalenteBase" type="number" step="0.01" value={formData.cantidadEquivalenteBase || 0} onChange={handleChange} required />
-        <Input label="Precio Compra" name="precioCompra" type="number" step="0.01" value={formData.precioCompra || 0} onChange={handleChange} required />
-        <Input label="Costo Unidad Base" name="costoUnidadBase" type="number" step="0.01" value={formData.costoUnidadBase || 0} onChange={handleChange} required />
-        <Input label="Observaciones" name="observaciones" value={formData.observaciones || ''} onChange={handleChange} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-          <input type="checkbox" name="activo" checked={formData.activo} onChange={handleChange} />
-          Activo
+      {errorMsg && (
+        <div className={styles.errorBanner}>
+          {errorMsg}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className={styles.twoColumns}>
+          <SmartSelect
+            label="Insumo"
+            name="idInsumo"
+            value={formData.idInsumo ?? ''}
+            onChange={handleChange}
+            options={allInsumos.map(i => ({ id: i.id, label: i.nombre, subtext: i.categoria }))}
+            required
+            placeholder="Seleccione insumo"
+          />
+          
+          <SmartSelect
+            label="Proveedor"
+            name="idProveedor"
+            value={formData.idProveedor ?? ''}
+            onChange={handleChange}
+            options={allProveedores.map(p => ({ id: p.id, label: p.nombre, subtext: p.nitCedula || p.contacto }))}
+            required
+            placeholder="Seleccione proveedor"
+          />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Presentación Compra <span style={{color: '#e11d48'}}>*</span></label>
+            <input 
+              name="presentacionCompra" 
+              value={formData.presentacionCompra ?? ''} 
+              onChange={handleChange} 
+              placeholder="Ej: Bulto 25kg"
+              className={styles.input} 
+              required 
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Cant. Presentación <span style={{color: '#e11d48'}}>*</span></label>
+            <input 
+              name="cantidadPresentacion" 
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={formData.cantidadPresentacion ?? ''} 
+              onChange={handleChange} 
+              className={styles.input} 
+              required 
+            />
+          </div>
+
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Unidad <span style={{color: '#e11d48'}}>*</span></label>
+            <input 
+              name="unidadPresentacion" 
+              value={formData.unidadPresentacion ?? ''} 
+              onChange={handleChange} 
+              placeholder="Ej: kg, litro"
+              className={styles.input} 
+              required 
+            />
+          </div>
+        </div>
+
+        <div className={styles.twoColumns}>
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Equivalente Unidad Base <span style={{color: '#e11d48'}}>*</span></label>
+            <input 
+              name="cantidadEquivalenteBase" 
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={formData.cantidadEquivalenteBase ?? ''} 
+              onChange={handleChange} 
+              placeholder="Ej: 25000 (para gramos)"
+              className={styles.input} 
+              required 
+            />
+          </div>
+
+          <CurrencySmartInput
+            label="Precio de Compra"
+            name="precioCompra"
+            value={formData.precioCompra ?? ''}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div style={{ backgroundColor: '#fafaf9', border: '1px solid #e7e5e4', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: '#57534e', fontWeight: 500 }}>Costo Calculado (Unidad Base):</span>
+            <span style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1c1917' }}>
+              {formData.costoUnidadBase ? formatCurrency(formData.costoUnidadBase) : '$0'}
+            </span>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: '#78716c', marginTop: '0.25rem' }}>Cálculo automático: Precio Compra ÷ Equivalente Base</p>
+        </div>
+
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Observaciones</label>
+          <input 
+            name="observaciones" 
+            value={formData.observaciones ?? ''} 
+            onChange={handleChange} 
+            className={styles.input} 
+          />
+        </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+          <input 
+            type="checkbox" 
+            name="activo" 
+            checked={formData.activo} 
+            onChange={handleChange}
+          />
+          <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Mantener precio activo</span>
         </label>
-        <div className={styles.formActions}>
-          <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button type="submit">Guardar</Button>
+
+        {formData.idInsumo && formData.idProveedor && formData.precioCompra && formData.costoUnidadBase && (
+          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el precio de compra del insumo <strong>{getInsumoName()}</strong> con el proveedor <strong>{getProveedorName()}</strong>. El sistema procesará el costo de <strong>{formatCurrency(formData.precioCompra)}</strong> para obtener un valor unitario base de <strong>{formatCurrency(formData.costoUnidadBase)}</strong>.
+          </div>
+        )}
+
+        <div className={styles.actions}>
+          <button 
+            type="button" 
+            onClick={onClose}
+            className={styles.btnCancel}
+          >
+            Cancelar
+          </button>
+          <SubmitButton 
+            isSubmitting={isSubmitting} 
+            text="Guardar Precio"
+            disabled={!formData.idInsumo || !formData.idProveedor || !formData.costoUnidadBase}
+          />
         </div>
       </form>
-    </Modal>
+    </SmartModal>
   );
 }

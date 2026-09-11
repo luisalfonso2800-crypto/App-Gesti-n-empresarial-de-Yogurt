@@ -11,6 +11,8 @@ import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { resolveProductImage } from '@/lib/presetImages';
+import ProductAvatar from '@/components/ui/ProductAvatar';
 import styles from '../products.module.css';
 
 export function ProductsTable({ items, loading, error, onEdit, onToggleActive }) {
@@ -22,6 +24,7 @@ export function ProductsTable({ items, loading, error, onEdit, onToggleActive })
     <Table>
       <THead>
         <TR>
+          <TH>Imagen</TH>
           <TH>Nombre</TH>
           <TH>Categoría</TH>
           <TH>Precio Venta</TH>
@@ -31,7 +34,15 @@ export function ProductsTable({ items, loading, error, onEdit, onToggleActive })
       </THead>
       <TBody>
         {items.map((item) => (
-          <TR key={item.id}>
+          <TR key={item.id} style={{ minHeight: '85px', height: '85px' }}>
+            <TD style={{ width: '20%', verticalAlign: 'middle', textAlign: 'center' }}>
+              <ProductAvatar 
+                src={resolveProductImage(item)} 
+                alt={item.nombre} 
+                name={item.nombre}
+                fluid={true} 
+              />
+            </TD>
             <TD>{item.nombre}</TD>
             <TD>{item.categoria}</TD>
             <TD>{item.precioVenta}</TD>

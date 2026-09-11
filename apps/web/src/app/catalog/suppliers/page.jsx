@@ -29,6 +29,7 @@ export default function SuppliersPage() {
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
         editingItem={form.editingItem} formData={form.formData}
         handleChange={form.handleChange} handleSubmit={form.handleSubmit}
+        isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
       />
     </div>
   );

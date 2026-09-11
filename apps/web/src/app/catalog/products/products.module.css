@@ -6,3 +6,43 @@
 
 .headerTitle { display: flex; flex-direction: column; }
 .subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid #E8E2D7;
+  margin-top: 1rem;
+}
+.paginationInfo {
+  font-size: 0.875rem;
+  color: #44403C;
+}
+.paginationControls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.pageBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #182622;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pageBtn:hover:not(:disabled) {
+  background: #F4F1EA;
+}
+.pageBtnActive {
+  background: #CAD5B5;
+  color: #182622;
+  font-weight: 500;
+}
+.pageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

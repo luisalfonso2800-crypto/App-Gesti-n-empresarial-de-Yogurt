@@ -12,6 +12,8 @@ import { apiClient } from '@/lib/api-client';
 export function useSupplierForm({ onSuccess }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState(null);
   
   const [formData, setFormData] = useState({
     nombre: '', nitCedula: '', nombreContacto: '',
@@ -20,6 +22,7 @@ export function useSupplierForm({ onSuccess }) {
   });
 
   const handleOpenModal = (item) => {
+    setErrorMsg(null);
     if (item) {
       setEditingItem(item);
       setFormData(item);
@@ -41,14 +44,20 @@ export function useSupplierForm({ onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    // Evitar parseFloat en inputs no type="number"
+    let parsedValue = value;
+    if (type === 'checkbox') parsedValue = checked;
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) : value
+      [name]: parsedValue
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg(null);
     try {
       if (editingItem) {
         await apiClient.patch(`/suppliers/${editingItem.id}`, formData);
@@ -58,12 +67,14 @@ export function useSupplierForm({ onSuccess }) {
       handleCloseModal();
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      setErrorMsg(err.message || 'Error al guardar el proveedor');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
     isModalOpen, editingItem, formData, handleOpenModal, handleCloseModal,
-    handleChange, handleSubmit
+    handleChange, handleSubmit, isSubmitting, errorMsg
   };
 }

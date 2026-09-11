@@ -39,6 +39,22 @@ export default function SupplierPricesPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  
+  const [allInsumos, setAllInsumos] = useState([]);
+  const [allProveedores, setAllProveedores] = useState([]);
+  
+  // Load global catalogs for the form
+  React.useEffect(() => {
+    import('@/lib/api-client').then(({ apiClient }) => {
+      Promise.all([
+        apiClient.get('/supplies'),
+        apiClient.get('/suppliers')
+      ]).then(([insumosData, proveedoresData]) => {
+        setAllInsumos(insumosData);
+        setAllProveedores(proveedoresData);
+      }).catch(err => console.error("Error loading catalogs:", err));
+    });
+  }, []);
 
   const handleOpenModal = (item = null) => {
     setEditingItem(item);
@@ -91,6 +107,7 @@ export default function SupplierPricesPage() {
       <SupplierPriceModal 
         isOpen={isModalOpen} onClose={handleCloseModal}
         editingItem={editingItem} onSubmit={handleSubmitForm}
+        allInsumos={allInsumos} allProveedores={allProveedores}
       />
 
       {/* Modal selector de lista destino cuando hay 3+ listas activas */}

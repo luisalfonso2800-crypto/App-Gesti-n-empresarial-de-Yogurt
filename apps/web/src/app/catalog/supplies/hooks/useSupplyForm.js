@@ -12,22 +12,29 @@ import { apiClient } from '@/lib/api-client';
 export function useSupplyForm({ onSuccess }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const [formData, setFormData] = useState({
     nombre: '', categoria: '', subcategoria: '', marca: '',
-    unidadBase: '', stockMinimo: 0, observaciones: '', activo: true
+    unidadBase: '', stockMinimo: '', observaciones: '', activo: true
   });
 
   const handleOpenModal = (item) => {
     if (item) {
       setEditingItem(item);
-      setFormData(item);
+      setFormData({
+        ...item,
+        stockMinimo: item.stockMinimo || ''
+      });
     } else {
       setEditingItem(null);
       setFormData({
         nombre: '', categoria: '', subcategoria: '', marca: '',
-        unidadBase: '', stockMinimo: 0, observaciones: '', activo: true
+        unidadBase: '', stockMinimo: '', observaciones: '', activo: true
       });
     }
+    setErrorMsg('');
     setIsModalOpen(true);
   };
 
@@ -40,27 +47,32 @@ export function useSupplyForm({ onSuccess }) {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) : value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, customData) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMsg('');
     try {
+      const payload = customData || formData;
       if (editingItem) {
-        await apiClient.patch(`/supplies/${editingItem.id}`, formData);
+        await apiClient.patch(`/supplies/${editingItem.id}`, payload);
       } else {
-        await apiClient.post('/supplies', formData);
+        await apiClient.post('/supplies', payload);
       }
       handleCloseModal();
       if (onSuccess) onSuccess();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      setErrorMsg(err.message || 'Error al guardar');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return {
     isModalOpen, editingItem, formData, handleOpenModal, handleCloseModal,
-    handleChange, handleSubmit
+    handleChange, handleSubmit, isSubmitting, errorMsg
   };
 }
