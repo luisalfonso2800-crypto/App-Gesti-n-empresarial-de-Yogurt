@@ -84,15 +84,27 @@ export function SaleModal({
   const utilidadTotal = formData.detalles.reduce((sum, d) => sum + ((d.precioUnitario - d.costoUnitario) * d.cantidad), 0);
   const isDirty = formData.detalles.length > 0 || !!formData.idCliente;
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    if (stockError || formData.detalles.length === 0) return;
-    handleSubmit(e);
-  };
-  
   const getClientName = () => {
     const c = clients.find(x => String(x.id) === String(formData.idCliente));
     return c ? c.nombre : 'Cliente no seleccionado';
+  };
+
+  const missingFields = [];
+  if (!formData.idCliente) missingFields.push('Cliente');
+  if (!formData.fechaVenta) missingFields.push('Fecha de venta');
+  if (formData.detalles.length === 0) missingFields.push('Al menos 1 producto en la orden');
+  if (stockError) missingFields.push('Resolver stock insuficiente');
+  if (formData.tipoPago === 'CREDITO' && !formData.fechaLimitePago) missingFields.push('Fecha límite de pago');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    if (isSubmitDisabled) return;
+    handleSubmit(e);
   };
 
   return (
@@ -104,8 +116,20 @@ export function SaleModal({
       isSubmitting={isSubmitting}
     >
       {errorMsg && (
-        <div className={styles.errorBanner}>
-          {errorMsg}
+        <div style={{
+          marginBottom: '1rem',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #F87171',
+          color: '#B91C1C',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '6px',
+          fontSize: '0.8rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>⚠️</span>
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -326,9 +350,20 @@ export function SaleModal({
           </div>
         )}
 
+        <div className={styles.inputGroup}>
+          <label className={styles.label}>Observaciones</label>
+          <input 
+            name="observaciones" 
+            value={formData.observaciones ?? ''} 
+            onChange={(e) => handleChange({ target: { name: 'observaciones', value: e.target.value.toUpperCase() } })} 
+            className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
+          />
+        </div>
+
         {formData.idCliente && formData.detalles.length > 0 && (
-          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-            <strong>Resumen:</strong> Se registrará una venta de <strong>{formData.detalles.length} tipo(s) de producto(s)</strong> al cliente <strong>{getClientName()}</strong> mediante el canal <strong>{formData.canalVenta.toLowerCase()}</strong>. La modalidad de pago será de <strong>{formData.tipoPago.toLowerCase()}</strong> por un total de <strong>{formatCurrency(formData.totalVenta)}</strong>.
+          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+            <strong>Resumen:</strong> Se registrará una venta de <strong>{formData.detalles.length} tipo(s) de producto(s)</strong> al cliente <strong>{getClientName()}</strong> mediante el canal <strong>{formData.canalVenta ? formData.canalVenta.toLowerCase() : 'directo'}</strong>. Modalidad de pago: <strong>{formData.tipoPago ? formData.tipoPago.toLowerCase() : 'contado'}</strong> por un total de <strong>{formatCurrency(formData.totalVenta)}</strong>.
           </div>
         )}
 
@@ -343,7 +378,9 @@ export function SaleModal({
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Despachar y Facturar"
-            disabled={formData.detalles.length === 0 || stockError || !formData.idCliente || !formData.fechaVenta || (formData.tipoPago === 'CREDITO' && !formData.fechaLimitePago) || isSubmitting}
+            disabled={isSubmitDisabled}
+            title={submitTitle}
+            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
         </div>
       </form>

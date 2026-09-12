@@ -68,30 +68,63 @@ export default function ClientsPage() {
     setIsModalOpen(false);
   };
 
+  const formatPhone = (value) => {
+    if (!value) return '';
+    const digits = value.toString().replace(/\D/g, '').slice(0, 10);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let parsedValue = value;
+    if (['nombre', 'contacto', 'direccion', 'observaciones'].includes(name)) {
+      parsedValue = value.toUpperCase();
+    }
+    if (name === 'telefono') {
+      parsedValue = formatPhone(value);
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: parsedValue
     }));
   };
 
   const isDirty = !!formData.nombre || !!formData.contacto;
 
+  const missingFields = [];
+  if (!formData.nombre?.trim()) missingFields.push('Nombre / Razón Social');
+  if (!formData.tipoCliente) missingFields.push('Tipo de cliente');
+  if (!formData.canal) missingFields.push('Canal');
+  if (formData.diasCredito === '' || formData.diasCredito === null || formData.diasCredito === undefined) missingFields.push('Días de crédito');
+  if (formData.telefono && formData.telefono.replace(/\D/g, '').length < 10) missingFields.push('Teléfono debe tener 10 dígitos');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     setIsSubmitting(true);
     setSubmitError(null);
     
     try {
       await apiClient.post('/clients', {
         ...formData,
+        nombre: (formData.nombre || '').trim().toUpperCase(),
+        contacto: (formData.contacto || '').trim().toUpperCase() || null,
+        direccion: (formData.direccion || '').trim().toUpperCase() || null,
+        observaciones: (formData.observaciones || '').trim().toUpperCase() || null,
+        telefono: formData.telefono ? formData.telefono.replace(/\D/g, '').trim() : null,
         diasCredito: Number(formData.diasCredito) || 0
       });
       handleCloseModal();
       fetchClients();
     } catch (err) {
-      setSubmitError(err.message || 'Error al guardar el cliente');
+      setSubmitError(err.response?.data?.message || err.message || 'Error al guardar el cliente');
     } finally {
       setIsSubmitting(false);
     }
@@ -150,8 +183,20 @@ export default function ClientsPage() {
         isSubmitting={isSubmitting}
       >
         {submitError && (
-          <div className={modalStyles.errorBanner}>
-            {submitError}
+          <div style={{
+            marginBottom: '1rem',
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #F87171',
+            color: '#B91C1C',
+            padding: '0.6rem 0.85rem',
+            borderRadius: '6px',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>⚠️</span>
+            <span>{submitError}</span>
           </div>
         )}
 
@@ -162,8 +207,9 @@ export default function ClientsPage() {
               name="nombre" 
               value={formData.nombre} 
               onChange={handleChange} 
-              placeholder="Ej: Minimercado La Esquina"
+              placeholder="Ej: MINIMERCADO LA ESQUINA"
               className={modalStyles.input} 
+              style={{ textTransform: 'uppercase' }}
               required 
             />
           </div>
@@ -204,16 +250,26 @@ export default function ClientsPage() {
                 value={formData.contacto} 
                 onChange={handleChange} 
                 className={modalStyles.input} 
+                style={{ textTransform: 'uppercase' }}
               />
             </div>
             
-            <StrictNumberInput
-              label="Teléfono / Celular"
-              name="telefono"
-              value={formData.telefono}
-              onChange={handleChange}
-              placeholder="Solo números"
-            />
+            <div className={modalStyles.inputGroup}>
+              <label className={modalStyles.label}>Teléfono / Celular</label>
+              <input 
+                name="telefono" 
+                value={formData.telefono} 
+                onChange={handleChange} 
+                placeholder="Ej: 300 123 4567"
+                className={modalStyles.input}
+                style={formData.telefono && formData.telefono.replace(/\D/g, '').length < 10 ? { border: '1px solid #EF4444' } : {}}
+              />
+              {formData.telefono && formData.telefono.replace(/\D/g, '').length < 10 && (
+                <span style={{ color: '#DC2626', fontSize: '0.72rem', display: 'block', marginTop: '3px' }}>
+                  El celular debe tener 10 dígitos
+                </span>
+              )}
+            </div>
           </div>
 
           <div className={modalStyles.inputGroup}>
@@ -223,6 +279,7 @@ export default function ClientsPage() {
               value={formData.direccion} 
               onChange={handleChange} 
               className={modalStyles.input} 
+              style={{ textTransform: 'uppercase' }}
             />
           </div>
 
@@ -244,13 +301,13 @@ export default function ClientsPage() {
               value={formData.observaciones} 
               onChange={handleChange} 
               className={modalStyles.input} 
-              style={{ minHeight: '80px', resize: 'vertical' }}
+              style={{ minHeight: '80px', resize: 'vertical', textTransform: 'uppercase' }}
             />
           </div>
 
           {formData.nombre && formData.tipoCliente && formData.canal && (
-            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-              <strong>Resumen:</strong> Se registrará el cliente <strong>{formData.nombre}</strong> clasificado como <strong>{formData.tipoCliente.toLowerCase()}</strong> para el canal <strong>{formData.canal.toLowerCase()}</strong>. {formData.diasCredito > 0 ? `Se le otorgarán ${formData.diasCredito} días de crédito.` : 'Las ventas serán de contado (0 días de crédito).'}
+            <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+              <strong>Resumen:</strong> Se registrará el cliente <strong>{formData.nombre}</strong> clasificado como <strong>{formData.tipoCliente.toLowerCase()}</strong> para el canal <strong>{formData.canal.toLowerCase()}</strong>. {Number(formData.diasCredito) > 0 ? `Se le otorgarán ${formData.diasCredito} días de crédito.` : 'Las ventas serán de contado (0 días de crédito).'}
             </div>
           )}
 
@@ -265,7 +322,9 @@ export default function ClientsPage() {
             <SubmitButton 
               isSubmitting={isSubmitting} 
               text="Guardar Cliente"
-              disabled={!formData.nombre}
+              disabled={isSubmitDisabled}
+              title={submitTitle}
+              style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             />
           </div>
         </form>

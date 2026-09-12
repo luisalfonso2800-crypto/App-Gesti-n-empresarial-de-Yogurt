@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
-import { Modal } from '@/components/ui/Modal';
+import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import styles from './purchases.module.css';
 import { ContextBanner } from '@/components/ui/ContextBanner';
 import { ListPlus, ShoppingCart, Pencil, Trash2, GitMerge, ChevronDown, ChevronUp, Eye } from 'lucide-react';
@@ -36,8 +36,12 @@ export default function PurchasesPage() {
   const [isMergingMode, setIsMergingMode] = useState(false);
   const [selectedForMerge, setSelectedForMerge] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [isSubmittingDelete, setIsSubmittingDelete] = useState(false);
   const [editNameModalOpen, setEditNameModalOpen] = useState(null);
   const [editNameValue, setEditNameValue] = useState('');
+  const [editNameError, setEditNameError] = useState(null);
+  const [isSubmittingEditName, setIsSubmittingEditName] = useState(false);
 
   const [groupedPurchases, setGroupedPurchases] = useState([]);
 
@@ -137,21 +141,30 @@ export default function PurchasesPage() {
   };
   
   const handleEditNameSubmit = async () => {
-    if (!editNameModalOpen || !editNameValue.trim()) return;
+    if (!editNameModalOpen || !editNameValue.trim() || isSubmittingEditName) return;
+    setIsSubmittingEditName(true);
+    setEditNameError(null);
     try {
-      const nombreFinal = `Lista de Compra - ${editNameValue.trim()} - ${new Date().toLocaleDateString()}`;
+      const nombreFinal = `Lista de Compra - ${editNameValue.trim().toUpperCase()} - ${new Date().toLocaleDateString()}`;
       await apiClient.patch(`/purchases/orders/${editNameModalOpen}`, { nombre: nombreFinal });
       showNotification('Nombre actualizado', 'success');
       setEditNameModalOpen(null);
+      setEditNameValue('');
       refreshCart();
       fetchActiveOrders();
     } catch (e) {
-      showNotification(e.message || 'Error al actualizar nombre', 'error');
+      const msg = e.response?.data?.message || e.message || 'Error al actualizar nombre';
+      setEditNameError(msg);
+      showNotification(msg, 'error');
+    } finally {
+      setIsSubmittingEditName(false);
     }
   };
 
   const executeDelete = async () => {
-    if (!deleteModalOpen) return;
+    if (!deleteModalOpen || isSubmittingDelete) return;
+    setIsSubmittingDelete(true);
+    setDeleteError(null);
     try {
       await apiClient.delete(`/purchases/orders/${deleteModalOpen}`);
       showNotification('Lista eliminada', 'success');
@@ -159,7 +172,11 @@ export default function PurchasesPage() {
       setDeleteModalOpen(null);
       refreshCart();
     } catch (e) {
-      showNotification('Error al eliminar lista', 'error');
+      const msg = e.response?.data?.message || e.message || 'Error al eliminar lista';
+      setDeleteError(msg);
+      showNotification(msg, 'error');
+    } finally {
+      setIsSubmittingDelete(false);
     }
   };
 
@@ -384,30 +401,123 @@ export default function PurchasesPage() {
         </Table>
       )}
       
-      <Modal isOpen={!!editNameModalOpen} onClose={() => setEditNameModalOpen(null)} title="Editar Nombre de Lista">
+      <SmartModal 
+        isOpen={!!editNameModalOpen} 
+        onClose={() => { setEditNameModalOpen(null); setEditNameError(null); }} 
+        title="EDITAR NOMBRE DE LISTA"
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-          <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Nuevo nombre personalizado:</label>
+          {editNameError && (
+            <div style={{
+              background: '#FEF2F2',
+              border: '1px solid #F87171',
+              color: '#B91C1C',
+              padding: '0.6rem 0.8rem',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: 500
+            }}>
+              ⚠️ {editNameError}
+            </div>
+          )}
+
+          <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>NUEVO NOMBRE PERSONALIZADO:</label>
           <input 
             type="text" 
             value={editNameValue} 
-            onChange={(e) => setEditNameValue(e.target.value)}
-            placeholder="Ej. Proveedores Locales"
-            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #d1d5db', width: '100%' }}
+            onChange={(e) => {
+              setEditNameValue(e.target.value.toUpperCase());
+              setEditNameError(null);
+            }}
+            placeholder="EJ. PROVEEDORES LOCALES"
+            style={{ 
+              padding: '0.5rem', 
+              borderRadius: '4px', 
+              border: '1px solid #d1d5db', 
+              width: '100%',
+              textTransform: 'uppercase'
+            }}
           />
+
+          {/* Resumen Poka-Yoke */}
+          {editNameValue.trim() && (
+            <div style={{
+              background: '#F0FDF4',
+              border: '1px solid #BBF7D0',
+              color: '#166534',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '6px',
+              fontSize: '0.76rem',
+              lineHeight: 1.4
+            }}>
+              <strong>Acción a realizar:</strong> Se renombrará la orden a:{' '}
+              <code>LISTA DE COMPRA - {editNameValue.trim().toUpperCase()} - {new Date().toLocaleDateString()}</code>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem', justifyContent: 'flex-end' }}>
-            <Button variant="secondary" onClick={() => setEditNameModalOpen(null)}>Cancelar</Button>
-            <Button variant="primary" onClick={handleEditNameSubmit}>Guardar</Button>
+            <Button variant="secondary" onClick={() => { setEditNameModalOpen(null); setEditNameError(null); }}>Cancelar</Button>
+            <SubmitButton
+              onClick={handleEditNameSubmit}
+              loading={isSubmittingEditName}
+              disabled={!editNameValue.trim() || isSubmittingEditName}
+              missingFields={!editNameValue.trim() ? ['Nuevo nombre personalizado'] : []}
+            >
+              Guardar Nombre
+            </SubmitButton>
           </div>
         </div>
-      </Modal>
+      </SmartModal>
 
-      <Modal isOpen={!!deleteModalOpen} onClose={() => setDeleteModalOpen(null)} title="Eliminar Lista en Ruta">
-        <p>¿Estás seguro que deseas eliminar la lista seleccionada? Esta acción borrará la orden activa y no se puede deshacer.</p>
-        <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-          <Button variant="secondary" onClick={() => setDeleteModalOpen(null)}>Cancelar</Button>
-          <Button variant="danger" onClick={executeDelete}>Eliminar Lista</Button>
+      <SmartModal 
+        isOpen={!!deleteModalOpen} 
+        onClose={() => { setDeleteModalOpen(null); setDeleteError(null); }} 
+        title="ELIMINAR LISTA EN RUTA"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+          {deleteError && (
+            <div style={{
+              background: '#FEF2F2',
+              border: '1px solid #F87171',
+              color: '#B91C1C',
+              padding: '0.6rem 0.8rem',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: 500
+            }}>
+              ⚠️ {deleteError}
+            </div>
+          )}
+
+          <p style={{ margin: 0, fontSize: '0.875rem', color: '#475569' }}>
+            ¿Estás seguro que deseas eliminar la lista seleccionada? Esta acción borrará la orden activa y no se puede deshacer.
+          </p>
+
+          <div style={{
+            background: '#FEF2F2',
+            border: '1px solid #FECACA',
+            color: '#991B1B',
+            padding: '0.5rem 0.75rem',
+            borderRadius: '6px',
+            fontSize: '0.76rem',
+            lineHeight: 1.4
+          }}>
+            <strong>Advertencia Poka-Yoke:</strong> Se eliminará permanentemente la orden de compra en ruta. Los ítems asociados no consolidados se descartarán.
+          </div>
+
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+            <Button variant="secondary" onClick={() => { setDeleteModalOpen(null); setDeleteError(null); }}>Cancelar</Button>
+            <SubmitButton 
+              variant="danger" 
+              onClick={executeDelete}
+              loading={isSubmittingDelete}
+              disabled={isSubmittingDelete}
+            >
+              Eliminar Lista
+            </SubmitButton>
+          </div>
         </div>
-      </Modal>
+      </SmartModal>
     </div>
   );
 }

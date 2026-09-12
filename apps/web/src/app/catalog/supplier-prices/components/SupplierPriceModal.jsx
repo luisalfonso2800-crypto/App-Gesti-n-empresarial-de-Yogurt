@@ -2,14 +2,13 @@
  * @file SupplierPriceModal.jsx
  * @module catalog/supplier-prices/components
  * @description Modal y formulario para la creación/edición de precios de proveedor (CSS Modules + Summary).
- * @responsibility Manejar la entrada de datos, cálculo inverso automático, y envío.
+ * @responsibility Manejar la entrada de datos, cálculo inverso automático, y envío con validación Poka-Yoke.
  * @usedBy apps/web/src/app/catalog/supplier-prices/page.jsx
  * @dependencies SmartModal, SmartSelect, CurrencySmartInput, StrictNumberInput
  */
 import React, { useState, useEffect } from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
-import CurrencySmartInput from '@/components/ui/inputs/CurrencySmartInput';
 import { formatCurrency, cleanCurrency } from '@/lib/formatters';
 import styles from '@/components/ui/SmartModal.module.css';
 import { montoATextoPesos } from '@/utils/numberToWords';
@@ -58,9 +57,14 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let parsedValue = value;
+    if (type === 'checkbox') parsedValue = checked;
+    if (['presentacionCompra', 'unidadPresentacion', 'observaciones'].includes(name)) {
+      parsedValue = value.toUpperCase();
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: parsedValue
     }));
   };
 
@@ -81,6 +85,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     setIsSubmitting(true);
     setErrorMsg('');
     
@@ -88,6 +93,9 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
       const pc = cleanCurrency(formData.precioCompra);
       const payload = {
         ...formData,
+        presentacionCompra: (formData.presentacionCompra || '').trim().toUpperCase(),
+        unidadPresentacion: (formData.unidadPresentacion || '').trim().toUpperCase(),
+        observaciones: (formData.observaciones || '').trim().toUpperCase(),
         cantidadPresentacion: Number(formData.cantidadPresentacion),
         cantidadEquivalenteBase: Number(formData.cantidadEquivalenteBase),
         precioCompra: pc,
@@ -97,7 +105,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
       await onSubmit(payload, editingItem);
       onClose();
     } catch (err) {
-      setErrorMsg(err.message || 'Error al guardar');
+      setErrorMsg(err.response?.data?.message || err.message || 'Error al guardar');
     } finally {
       setIsSubmitting(false);
     }
@@ -113,6 +121,21 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
     return p ? p.nombre : 'desconocido';
   };
 
+  const missingFields = [];
+  if (!formData.idInsumo) missingFields.push('Insumo');
+  if (!formData.idProveedor) missingFields.push('Proveedor');
+  if (!formData.presentacionCompra?.trim()) missingFields.push('Presentación de compra');
+  if (!formData.cantidadPresentacion || Number(formData.cantidadPresentacion) <= 0) missingFields.push('Cantidad presentación');
+  if (!formData.unidadPresentacion?.trim()) missingFields.push('Unidad');
+  if (!formData.cantidadEquivalenteBase || Number(formData.cantidadEquivalenteBase) <= 0) missingFields.push('Equivalente unidad base');
+  if (!formData.precioCompra) missingFields.push('Precio de compra');
+  if (!formData.costoUnidadBase) missingFields.push('Costo base');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
   return (
     <SmartModal 
       isOpen={isOpen} 
@@ -122,8 +145,20 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
       isSubmitting={isSubmitting}
     >
       {errorMsg && (
-        <div className={styles.errorBanner}>
-          {errorMsg}
+        <div style={{
+          marginBottom: '1rem',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #F87171',
+          color: '#B91C1C',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '6px',
+          fontSize: '0.8rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>⚠️</span>
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -159,6 +194,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
               onChange={handleChange} 
               placeholder="Ej: BOLSA x 900 ml, BULTO x 25 kg"
               className={styles.input} 
+              style={{ textTransform: 'uppercase' }}
               required 
             />
           </div>
@@ -167,8 +203,9 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
             <label className={styles.label}>Cant. Presentación <span style={{color: '#e11d48'}}>*</span></label>
             <input 
               name="cantidadPresentacion" 
-              type="text"
-              inputMode="decimal"
+              type="text" 
+              inputMode="decimal" 
+              placeholder="0"
               value={formData.cantidadPresentacion ?? ''} 
               onChange={(e) => {
                 let val = e.target.value.replace(/[^0-9.]/g, '');
@@ -186,8 +223,9 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
               name="unidadPresentacion" 
               value={formData.unidadPresentacion ?? ''} 
               onChange={handleChange} 
-              placeholder="Ej: kg, litro"
+              placeholder="Ej: KG, LITRO"
               className={styles.input} 
+              style={{ textTransform: 'uppercase' }}
               required 
             />
           </div>
@@ -198,12 +236,11 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
             <label className={styles.label}>Equivalente Unidad Base <span style={{color: '#e11d48'}}>*</span></label>
             <input 
               name="cantidadEquivalenteBase" 
-              type="text"
-              inputMode="decimal"
+              type="text" 
+              inputMode="numeric" 
               value={formData.cantidadEquivalenteBase ?? ''} 
               onChange={(e) => {
-                let val = e.target.value.replace(/[^0-9.]/g, '');
-                if ((val.match(/\./g) || []).length > 1) val = val.replace(/\.+$/, '');
+                const val = e.target.value.replace(/\D/g, '');
                 handleChange({ target: { name: 'cantidadEquivalenteBase', value: val } });
               }}
               placeholder="Ej: 25000 (para gramos)"
@@ -243,7 +280,12 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#57534e', fontWeight: 500 }}>Costo Calculado (Unidad Base):</span>
             <span style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1c1917' }}>
-              {formData.costoUnidadBase ? formatCurrency(formData.costoUnidadBase) : '$0'}
+              {formData.costoUnidadBase ? (
+                `$ ${Number(formData.costoUnidadBase).toLocaleString('es-CO', {
+                  minimumFractionDigits: Number(formData.costoUnidadBase) % 1 !== 0 ? 2 : 0,
+                  maximumFractionDigits: 2
+                })}`
+              ) : '$ 0'}
             </span>
           </div>
           <p style={{ fontSize: '0.75rem', color: '#78716c', marginTop: '0.25rem' }}>Cálculo automático: Precio Compra ÷ Equivalente Base</p>
@@ -256,6 +298,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
             value={formData.observaciones ?? ''} 
             onChange={handleChange} 
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
           />
         </div>
 
@@ -269,9 +312,9 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
           <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Mantener precio activo</span>
         </label>
 
-        {formData.idInsumo && formData.idProveedor && formData.precioCompra && formData.costoUnidadBase && (
-          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el precio de compra del insumo <strong>{getInsumoName()}</strong> con el proveedor <strong>{getProveedorName()}</strong>. El sistema procesará el costo de <strong>{formatCurrency(formData.precioCompra)}</strong> para obtener un valor unitario base de <strong>{formatCurrency(formData.costoUnidadBase)}</strong>.
+        {formData.idInsumo && formData.idProveedor && (
+          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el precio de compra del insumo <strong>{getInsumoName()}</strong> con el proveedor <strong>{getProveedorName()}</strong>. El sistema procesará el costo de <strong>${Number(cleanCurrency(formData.precioCompra) || 0).toLocaleString('es-CO')}</strong> para obtener un valor unitario base de <strong>${Number(formData.costoUnidadBase || 0).toLocaleString('es-CO', { minimumFractionDigits: Number(formData.costoUnidadBase) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })}</strong>.
           </div>
         )}
 
@@ -286,7 +329,9 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Precio"
-            disabled={!formData.idInsumo || !formData.idProveedor || !formData.costoUnidadBase || isSubmitting}
+            disabled={isSubmitDisabled}
+            title={submitTitle}
+            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
         </div>
       </form>

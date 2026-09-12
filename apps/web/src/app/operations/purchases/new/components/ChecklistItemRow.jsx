@@ -5,7 +5,7 @@ import { ArrowRightLeft } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useCart } from '@/context/CartContext';
 import { useNotification } from '@/context/NotificationContext';
-import { Modal } from '@/components/ui/Modal';
+import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import { Button } from '@/components/ui/Button';
 export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPendingItems, setComprasAsentadas }) {
   const { updateChecklistItem, checklistItems, setChecklistItems, simulationResult } = checklistMgr;
@@ -13,17 +13,19 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
   const { showNotification } = useNotification();
   const [isMoveModalOpen, setIsMoveModalOpen] = useState(false);
   const [selectedTargetList, setSelectedTargetList] = useState('');
+  const [moveError, setMoveError] = useState(null);
   const [isMoving, setIsMoving] = useState(false);
 
   const availableLists = Object.values(lists).filter(l => l.id !== item.currentOrderId && !l.id.startsWith('local-'));
 
   const handleMoveList = async () => {
-    if (!selectedTargetList) {
-      showNotification('Seleccione una lista destino', 'error');
+    if (!selectedTargetList || isMoving) {
+      if (!selectedTargetList) setMoveError('Seleccione una lista destino');
       return;
     }
     try {
       setIsMoving(true);
+      setMoveError(null);
       await apiClient.post('/purchases/items/move', {
         itemId: item.orderItemId,
         fromOrderId: item.currentOrderId,
@@ -36,8 +38,11 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
       sessionStorage.setItem('selectedForPurchase', JSON.stringify(newSelection));
       window.dispatchEvent(new Event('cartUpdated'));
       setIsMoveModalOpen(false);
+      setSelectedTargetList('');
     } catch (e) {
-      showNotification(e.message || 'Error al mover ítem', 'error');
+      const msg = e.response?.data?.message || e.message || 'Error al mover ítem';
+      setMoveError(msg);
+      showNotification(msg, 'error');
     } finally {
       setIsMoving(false);
     }
@@ -273,6 +278,14 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
             const simItem = simulationResult?.itemsLiquidados?.find(si => si.idPrecioProveedor === (item.idPrecioProveedor || item.priceData?.id));
             if (!simItem) return;
             
+            let empaqueNom = item.empaqueAlternativo || item.priceData?.presentacionCompra || item.insumoData?.empaque || 'UNIDAD';
+            if (String(empaqueNom).includes(' x ') || String(empaqueNom).includes(' X ')) {
+              empaqueNom = String(empaqueNom).split(/\s+[xX]\s+/)[0];
+            }
+            const contVal = Number(item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1);
+            const uMed = item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida || 'und';
+            const presComercial = `${String(empaqueNom).trim().toUpperCase()} x ${contVal.toLocaleString('es-CO')} ${uMed}`;
+
             const payload = {
               idProveedor: item.idProveedorAlternativo || item.proveedorData?.id,
               esNuevoProveedor: false,
@@ -286,10 +299,11 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
                 cantidad: item.cantidadSolicitada,
                 precioUnitario: item.precioCompraActual,
                 subtotal: simItem.subtotal,
-                presentacion: `${item.empaqueAlternativo || item.priceData?.presentacionCompra || 'Empaque'} ${item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1}${item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida}`,
+                empaque: String(empaqueNom).trim().toUpperCase(),
+                presentacion: presComercial,
                 empaques: item.cantidadSolicitada,
-                contenidoBase: item.contenidoBaseEditado || item.contenidoBase || item.priceData?.cantidadEquivalenteBase || 1,
-                unidadEmpaque: item.unidadBaseEditada || item.insumoData?.unidadBase || item.unidadBase || item.unidadMedida,
+                contenidoBase: contVal,
+                unidadEmpaque: uMed,
                 cantidadBaseTotal: simItem.ingresoNetoBodega,
                 costoBase: simItem.costoBaseUnitario,
                 marca: item.marcaAlternativa || item.insumoData?.marca || item.marca || ''
@@ -322,9 +336,29 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
         </button>
       </div>
 
-      <Modal isOpen={isMoveModalOpen} onClose={() => setIsMoveModalOpen(false)} title="Mover a otra Lista">
+      <SmartModal 
+        isOpen={isMoveModalOpen} 
+        onClose={() => { setIsMoveModalOpen(false); setMoveError(null); }} 
+        title="MOVER A OTRA LISTA"
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-          <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>Selecciona la lista de compra a la que deseas transferir este insumo:</p>
+          {moveError && (
+            <div style={{
+              background: '#FEF2F2',
+              border: '1px solid #F87171',
+              color: '#B91C1C',
+              padding: '0.6rem 0.8rem',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: 500
+            }}>
+              ⚠️ {moveError}
+            </div>
+          )}
+
+          <p style={{ fontSize: '0.875rem', color: '#4b5563', margin: 0 }}>
+            Selecciona la lista de compra a la que deseas transferir este insumo (<strong>{item.insumoData?.nombre || item.nombre}</strong>):
+          </p>
           
           {availableLists.length === 0 ? (
             <div style={{ padding: '1rem', background: '#f3f4f6', borderRadius: '4px', textAlign: 'center' }}>
@@ -334,24 +368,47 @@ export function ChecklistItemRow({ item, checklistMgr, proveedoresDB, setPending
           ) : (
             <select 
               value={selectedTargetList} 
-              onChange={e => setSelectedTargetList(e.target.value)}
+              onChange={e => {
+                setSelectedTargetList(e.target.value);
+                setMoveError(null);
+              }}
               style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #d1d5db' }}
             >
-              <option value="">-- Seleccione una lista --</option>
+              <option value="">-- SELECCIONE UNA LISTA DESTINO --</option>
               {availableLists.map(l => (
                 <option key={l.id} value={l.id}>{l.name}</option>
               ))}
             </select>
           )}
 
+          {/* Resumen Poka-Yoke */}
+          {selectedTargetList && (
+            <div style={{
+              background: '#F0FDF4',
+              border: '1px solid #BBF7D0',
+              color: '#166534',
+              padding: '0.5rem 0.75rem',
+              borderRadius: '6px',
+              fontSize: '0.76rem',
+              lineHeight: 1.4
+            }}>
+              <strong>Acción a realizar:</strong> Se transferirá el insumo <code>{item.insumoData?.nombre || item.nombre}</code> a la lista <code>{lists[selectedTargetList]?.name}</code>.
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
-            <Button variant="secondary" onClick={() => setIsMoveModalOpen(false)}>Cancelar</Button>
-            <Button variant="primary" onClick={handleMoveList} disabled={isMoving || !selectedTargetList || availableLists.length === 0}>
-              {isMoving ? 'Transfiriendo...' : 'Confirmar transferencia'}
-            </Button>
+            <Button variant="secondary" onClick={() => { setIsMoveModalOpen(false); setMoveError(null); }}>Cancelar</Button>
+            <SubmitButton
+              onClick={handleMoveList}
+              loading={isMoving}
+              disabled={isMoving || !selectedTargetList || availableLists.length === 0}
+              missingFields={!selectedTargetList ? ['Lista destino'] : []}
+            >
+              Confirmar Transferencia
+            </SubmitButton>
           </div>
         </div>
-      </Modal>
+      </SmartModal>
     </div>
   );
 }

@@ -79,7 +79,7 @@ export function PricesComparisonTable({
                   <TD>${Number(item.precioCompra).toLocaleString('es-CO')}</TD>
                   <TD>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <span>${Number(item.costoUnidadBase).toLocaleString('es-CO')} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</span>
+                      <span>${Number(item.costoUnidadBase || 0).toLocaleString('es-CO', { minimumFractionDigits: Number(item.costoUnidadBase || 0) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</span>
                       {isBestPrice && (
                         <span className={styles.bestPriceBadge}>Recomendado</span>
                       )}

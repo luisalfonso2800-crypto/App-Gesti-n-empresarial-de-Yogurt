@@ -77,8 +77,12 @@ export default function PaymentsPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let parsedValue = value;
+    if (['referencia', 'observaciones'].includes(name)) {
+      parsedValue = value.toUpperCase();
+    }
     setFormData(prev => {
-      const updated = { ...prev, [name]: value };
+      const updated = { ...prev, [name]: parsedValue };
       if (name === 'idCliente') {
         updated.idVenta = ''; // reset venta upon client change
       }
@@ -98,9 +102,27 @@ export default function PaymentsPage() {
   const isPaymentValid = paymentValue > 0 && paymentValue <= maxPaymentAllowed;
   const showExceedError = paymentValue > maxPaymentAllowed;
 
+  const selectedClient = clients.find(c => c.id === formData.idCliente);
+  const clientName = selectedClient ? selectedClient.nombre : '';
+  const projectedBalance = selectedSale ? Math.max(0, Number(selectedSale.saldoPendiente) - paymentValue) : 0;
+
+  const missingFields = [];
+  if (!formData.fechaPago) missingFields.push('Fecha de pago');
+  if (!formData.idCliente) missingFields.push('Cliente');
+  if (formData.idCliente && pendingSales.length === 0) missingFields.push('Cliente al día (sin saldo pendiente)');
+  if (!formData.idVenta) missingFields.push('Venta pendiente a abonar');
+  if (!formData.valorPagado || paymentValue <= 0) missingFields.push('Valor del pago');
+  if (showExceedError) missingFields.push('El valor excede el saldo');
+  if (!formData.metodoPago) missingFields.push('Método de pago');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isPaymentValid || !formData.idCliente || !formData.idVenta) return;
+    if (isSubmitDisabled) return;
     
     setIsSubmitting(true);
     setSubmitError(null);
@@ -108,6 +130,8 @@ export default function PaymentsPage() {
     try {
       const payload = {
         ...formData,
+        referencia: (formData.referencia || '').trim().toUpperCase() || null,
+        observaciones: (formData.observaciones || '').trim().toUpperCase() || null,
         valorPagado: paymentValue,
         fechaPago: new Date(formData.fechaPago).toISOString()
       };
@@ -116,7 +140,7 @@ export default function PaymentsPage() {
       setIsModalOpen(false);
       fetchData(); // Recargar datos reactivamente
     } catch (err) {
-      setSubmitError(err.message || 'Error al guardar el pago');
+      setSubmitError(err.response?.data?.message || err.message || 'Error al guardar el pago');
     } finally {
       setIsSubmitting(false);
     }
@@ -173,8 +197,20 @@ export default function PaymentsPage() {
         isSubmitting={isSubmitting}
       >
         {submitError && (
-          <div className={modalStyles.errorBanner}>
-            {submitError}
+          <div style={{
+            marginBottom: '1rem',
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #F87171',
+            color: '#B91C1C',
+            padding: '0.6rem 0.85rem',
+            borderRadius: '6px',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>⚠️</span>
+            <span>{submitError}</span>
           </div>
         )}
 
@@ -275,6 +311,7 @@ export default function PaymentsPage() {
               value={formData.referencia ?? ''} 
               onChange={handleChange} 
               className={modalStyles.input} 
+              style={{ textTransform: 'uppercase' }}
             />
           </div>
 
@@ -285,9 +322,15 @@ export default function PaymentsPage() {
               value={formData.observaciones ?? ''} 
               onChange={handleChange} 
               className={modalStyles.input} 
-              style={{ minHeight: '80px', resize: 'vertical' }}
+              style={{ minHeight: '80px', resize: 'vertical', textTransform: 'uppercase' }}
             />
           </div>
+
+          {formData.idCliente && formData.idVenta && paymentValue > 0 && !showExceedError && (
+            <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+              <strong>Resumen:</strong> Se registrará un abono de <strong>{formatCurrency(paymentValue)}</strong> del cliente <strong>{clientName}</strong> imputado a la venta seleccionada. El nuevo saldo proyectado será de <strong>{formatCurrency(projectedBalance)}</strong> ({formData.metodoPago ? formData.metodoPago.toLowerCase() : 'método sin definir'}).
+            </div>
+          )}
 
           <div className={modalStyles.actions}>
             <button 
@@ -300,7 +343,9 @@ export default function PaymentsPage() {
             <SubmitButton 
               isSubmitting={isSubmitting} 
               text="Guardar Pago"
-              disabled={!isPaymentValid || (formData.idCliente && pendingSales.length === 0) || isSubmitting}
+              disabled={isSubmitDisabled}
+              title={submitTitle}
+              style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             />
           </div>
         </form>

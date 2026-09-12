@@ -14,31 +14,17 @@ import { apiClient } from '@/lib/api-client';
 
 export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initialData = {} }) {
   const [formData, setFormData] = useState({
-    nombre: '', nitCedula: '', nombreContacto: '',
-    telefono: '', email: '', direccion: '',
-    observaciones: '', activo: true
+    razonSocial: '',
+    nit: '',
+    nombreContacto: '',
+    telefono: '',
+    email: '',
+    direccion: '',
+    observaciones: '',
+    activo: true
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    if (isOpen) {
-      if (editingItem) {
-        setFormData({
-          ...editingItem,
-          nitCedula: formatNitCedula(editingItem.nitCedula || '')
-        });
-      } else {
-        setFormData({
-          nombre: initialData.nombre || '', 
-          nitCedula: '', nombreContacto: '',
-          telefono: '', email: '', direccion: '',
-          observaciones: '', activo: true
-        });
-      }
-      setErrorMessage('');
-    }
-  }, [isOpen, editingItem, initialData.nombre]);
 
   const formatNitCedula = (value) => {
     if (!value) return '';
@@ -51,14 +37,58 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
     return main;
   };
 
+  const formatPhone = (value) => {
+    if (!value) return '';
+    const digits = value.toString().replace(/\D/g, '').slice(0, 10);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      if (editingItem) {
+        setFormData({
+          razonSocial: editingItem.razonSocial || editingItem.nombre || '',
+          nit: formatNitCedula(editingItem.nit || editingItem.nitCedula || ''),
+          nombreContacto: editingItem.nombreContacto || '',
+          telefono: formatPhone(editingItem.telefono || ''),
+          email: editingItem.email || '',
+          direccion: editingItem.direccion || '',
+          observaciones: editingItem.observaciones || '',
+          activo: editingItem.activo ?? true
+        });
+      } else {
+        setFormData({
+          razonSocial: initialData.razonSocial || initialData.nombre || '', 
+          nit: formatNitCedula(initialData.nit || initialData.nitCedula || ''),
+          nombreContacto: '',
+          telefono: formatPhone(initialData.telefono || ''),
+          email: '',
+          direccion: '',
+          observaciones: '',
+          activo: true
+        });
+      }
+      setErrorMessage('');
+    }
+  }, [isOpen, editingItem, initialData]);
+
   const handleChange = (e) => {
     setErrorMessage('');
     const { name, value, type, checked } = e.target;
     let parsedValue = value;
-    if (type === 'checkbox') parsedValue = checked;
-    if (name === 'nombre') parsedValue = value.toUpperCase();
-    if (name === 'nitCedula') parsedValue = formatNitCedula(value);
-    if (name === 'telefono') parsedValue = value.replace(/[^0-9 ]/g, ''); 
+    if (type === 'checkbox') {
+      parsedValue = checked;
+    } else if (['razonSocial', 'nombreContacto', 'direccion', 'observaciones'].includes(name)) {
+      parsedValue = value.toUpperCase();
+    } else if (name === 'email') {
+      parsedValue = value.toLowerCase().trim();
+    } else if (name === 'nit') {
+      parsedValue = formatNitCedula(value);
+    } else if (name === 'telefono') {
+      parsedValue = formatPhone(value); 
+    }
 
     setFormData(prev => ({
       ...prev,
@@ -68,14 +98,19 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     setIsSubmitting(true);
     setErrorMessage('');
     try {
       const payload = {
-         ...formData,
-         nitCedula: formData.nitCedula.replace(/\./g, ''),
-         nombreContacto: formData.nombreContacto || null,
-         email: formData.email || null
+        nombre: formData.razonSocial.trim(),
+        nitCedula: formData.nit.replace(/\./g, '').trim(),
+        nombreContacto: formData.nombreContacto?.trim() || null,
+        telefono: formData.telefono.replace(/\D/g, '').trim(),
+        email: formData.email?.trim() || null,
+        direccion: formData.direccion.trim(),
+        observaciones: formData.observaciones?.trim() || '',
+        activo: formData.activo
       };
       let result;
       if (editingItem) {
@@ -98,7 +133,30 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
     }
   };
 
-  const isDirty = !!formData.nombre || !!formData.nitCedula;
+  const isDirty = !!formData.razonSocial || !!formData.nit;
+
+  const rawNit = (formData.nit || '').trim();
+  const isNitError = !rawNit || /[^0-9.\- ]/.test(rawNit) || rawNit.replace(/\D/g, '').length === 0;
+
+  const telefonoDigits = (formData.telefono || '').replace(/\D/g, '');
+  const isTelefonoError = telefonoDigits.length < 10;
+
+  const emailVal = (formData.email || '').trim();
+  const isEmailError = Boolean(emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal));
+
+  const errorList = [];
+  if (!formData.razonSocial?.trim()) errorList.push('Razón Social (*) requerida');
+  if (isNitError) errorList.push('NIT o Cédula requerido');
+  if (isTelefonoError) errorList.push('El celular debe tener 10 dígitos');
+  if (!formData.direccion?.trim()) errorList.push('Dirección (*) requerida');
+  if (isEmailError) errorList.push('Ingrese un correo electrónico válido');
+
+  const hasErrors = errorList.length > 0;
+  const isSubmitDisabled = hasErrors || isSubmitting;
+
+  const submitTitle = hasErrors
+    ? `Campos faltantes o inválidos: ${errorList.join(', ')}`
+    : '';
 
   return (
     <SmartModal 
@@ -112,11 +170,12 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
         <div className={styles.inputGroup}>
           <label className={styles.label}>Razón Social / Nombre <span style={{color: '#e11d48'}}>*</span></label>
           <input 
-            name="nombre" 
-            value={formData.nombre ?? ''} 
+            name="razonSocial" 
+            value={formData.razonSocial ?? ''} 
             onChange={handleChange} 
             placeholder="Ej: LÁCTEOS XYZ S.A.S"
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
             required 
           />
         </div>
@@ -125,13 +184,19 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
           <div className={styles.inputGroup}>
             <label className={styles.label}>NIT / Cédula <span style={{color: '#e11d48'}}>*</span></label>
             <input 
-              name="nitCedula"
-              value={formData.nitCedula ?? ''}
+              name="nit"
+              value={formData.nit ?? ''}
               onChange={handleChange}
               placeholder="Ej: 900.123.456-7"
               className={styles.input}
+              style={isNitError ? { border: '1px solid #EF4444' } : {}}
               required
             />
+            {isNitError && (
+              <span style={{ color: '#DC2626', fontSize: '0.72rem', display: 'block', marginTop: '3px' }}>
+                NIT o Cédula requerido
+              </span>
+            )}
           </div>
 
           <div className={styles.inputGroup}>
@@ -141,6 +206,7 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
               value={formData.nombreContacto ?? ''} 
               onChange={handleChange} 
               className={styles.input} 
+              style={{ textTransform: 'uppercase' }}
             />
           </div>
         </div>
@@ -154,8 +220,14 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
               onChange={handleChange}
               placeholder="Ej: 300 123 4567"
               className={styles.input}
+              style={isTelefonoError ? { border: '1px solid #EF4444' } : {}}
               required
             />
+            {isTelefonoError && (
+              <span style={{ color: '#DC2626', fontSize: '0.72rem', display: 'block', marginTop: '3px' }}>
+                El celular debe tener 10 dígitos
+              </span>
+            )}
           </div>
 
           <div className={styles.inputGroup}>
@@ -166,7 +238,13 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
               value={formData.email ?? ''} 
               onChange={handleChange} 
               className={styles.input} 
+              style={isEmailError ? { border: '1px solid #EF4444' } : {}}
             />
+            {isEmailError && (
+              <span style={{ color: '#DC2626', fontSize: '0.72rem', display: 'block', marginTop: '3px' }}>
+                Ingrese un correo electrónico válido (ej. contacto@empresa.com)
+              </span>
+            )}
           </div>
         </div>
 
@@ -177,6 +255,7 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
             value={formData.direccion ?? ''} 
             onChange={handleChange} 
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
             required 
           />
         </div>
@@ -188,7 +267,7 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
             value={formData.observaciones ?? ''} 
             onChange={handleChange} 
             className={styles.input} 
-            style={{ minHeight: '80px', resize: 'vertical' }}
+            style={{ minHeight: '80px', resize: 'vertical', textTransform: 'uppercase' }}
           />
         </div>
 
@@ -202,10 +281,8 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
           <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Proveedor Activo</span>
         </label>
 
-        {formData.nombre && formData.nitCedula && (
-          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'registrará'} el proveedor <strong>{formData.nombre}</strong> identificado con NIT/C.C. <strong>{formData.nitCedula}</strong>.
-          </div>
+        {formData.razonSocial && (
+          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}><strong>Resumen:</strong> Se registrará el proveedor <strong>{formData.razonSocial}</strong>{formData.nit ? <> identificado con NIT/C.C. <strong>{formData.nit}</strong></> : null}.</div>
         )}
 
         {errorMessage && (
@@ -237,7 +314,9 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Proveedor"
-            disabled={!formData.nombre || !formData.nitCedula || !formData.telefono || !formData.direccion || isSubmitting}
+            disabled={isSubmitDisabled}
+            title={submitTitle}
+            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
         </div>
       </form>

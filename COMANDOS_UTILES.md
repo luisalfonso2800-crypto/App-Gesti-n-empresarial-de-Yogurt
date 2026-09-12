@@ -15,6 +15,7 @@ pnpm run start:api:dev
 
 **Terminal 2 (Frontend Web - Puerto 3001):**
 ```bash
+pnpm --filter web dev
 pnpm --filter web run dev --turbo
 ```
 

@@ -105,6 +105,31 @@ export function FormPhase({
     setDetalles(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d));
   };
 
+  /**
+   * Limpia el insumo seleccionado y resetea todos los campos dependientes de la fila
+   * @param {string|number} rowId - Identificador de la fila
+   */
+  const clearInsumo = (rowId) => {
+    if (activeDropdown.rowId === rowId && activeDropdown.type === 'insumo') {
+      setDropdownSearch('');
+    }
+    setDetalles(prev => prev.map(d => {
+      if (d.id !== rowId) return d;
+      return {
+        ...d,
+        insumo: null,
+        insumoSearch: '',
+        empaque: 'UNIDAD',
+        empaqueTipo: 'UNIDAD',
+        contenidoNeto: '1',
+        unidadMedida: 'kg',
+        marca: '',
+        empaques: '',
+        precioUnitario: ''
+      };
+    }));
+  };
+
   // Apertura de dropdown con búsqueda
   const openDropdown = (rowId, type, currentSearch) => {
     setActiveDropdown({ rowId, type });
@@ -214,20 +239,31 @@ export function FormPhase({
           fleteGlobal: parseInt(rawF, 10) || 0,
           observaciones: 'Compra Directa',
           condicion: 'CONTADO',
-          detalles: detalles.map(d => ({
-            idInsumo: d.insumo.id,
-            idProveedor: d.proveedor?.id || null,
-            cantidad: parseInt(d.empaques, 10),
-            precioUnitario: parseInt(d.precioUnitario, 10),
-            subtotal: parseInt(d.empaques, 10) * parseInt(d.precioUnitario, 10),
-            presentacion: d.empaque || 'N/A',
-            empaques: parseInt(d.empaques, 10),
-            contenidoBase: parseFloat(d.contenidoNeto) || 1,
-            unidadEmpaque: d.unidadMedida || 'Unidad',
-            cantidadBaseTotal: parseInt(d.empaques, 10) * (parseFloat(d.contenidoNeto) || 1),
-            costoBase: parseInt(d.precioUnitario, 10) / (parseFloat(d.contenidoNeto) || 1),
-            marca: d.marca || ''
-          }))
+          detalles: detalles.map(d => {
+            let empaqueNom = d.empaque || 'UNIDAD';
+            if (String(empaqueNom).includes(' x ') || String(empaqueNom).includes(' X ')) {
+              empaqueNom = String(empaqueNom).split(/\s+[xX]\s+/)[0];
+            }
+            const contNeto = parseFloat(d.contenidoNeto) || 1;
+            const uMed = d.unidadMedida || 'Unidad';
+            const presComercial = `${String(empaqueNom).trim().toUpperCase()} x ${contNeto.toLocaleString('es-CO')} ${uMed}`;
+
+            return {
+              idInsumo: d.insumo.id,
+              idProveedor: d.proveedor?.id || null,
+              cantidad: parseInt(d.empaques, 10),
+              precioUnitario: parseInt(d.precioUnitario, 10),
+              subtotal: parseInt(d.empaques, 10) * parseInt(d.precioUnitario, 10),
+              empaque: String(empaqueNom).trim().toUpperCase(),
+              presentacion: presComercial,
+              empaques: parseInt(d.empaques, 10),
+              contenidoBase: contNeto,
+              unidadEmpaque: uMed,
+              cantidadBaseTotal: parseInt(d.empaques, 10) * contNeto,
+              costoBase: parseInt(d.precioUnitario, 10) / contNeto,
+              marca: d.marca || ''
+            };
+          })
         });
 
         showNotification('Compra registrada exitosamente.', 'success');
@@ -573,19 +609,49 @@ export function FormPhase({
                     value={isInsumoDropOpen ? dropdownSearch : (row.insumo?.nombre || row.insumoSearch || '')}
                     onFocus={() => openDropdown(row.id, 'insumo', row.insumo?.nombre || row.insumoSearch || '')}
                     onChange={e => {
-                      setDropdownSearch(e.target.value);
-                      if (row.insumo) updateDetalle(row.id, 'insumo', null);
-                      updateDetalle(row.id, 'insumoSearch', e.target.value);
+                      const val = e.target.value;
+                      setDropdownSearch(val);
+                      if (val === '') {
+                        clearInsumo(row.id);
+                      } else {
+                        if (row.insumo) updateDetalle(row.id, 'insumo', null);
+                        updateDetalle(row.id, 'insumoSearch', val);
+                      }
                     }}
                     style={{
                       width: '100%',
-                      padding: '0.45rem 0.6rem',
+                      padding: '0.45rem 2rem 0.45rem 0.6rem',
                       borderRadius: '6px',
                       border: '1px solid #D6D3D1',
                       fontSize: '0.82rem',
                       color: '#182622'
                     }}
                   />
+                  {(row.insumo || row.insumoSearch) && (
+                    <button
+                      type="button"
+                      onClick={() => clearInsumo(row.id)}
+                      style={{
+                        position: 'absolute',
+                        right: '8px',
+                        top: '50%',
+                        transform: 'translateY(-20%)',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af',
+                        fontSize: '1rem',
+                        padding: '0.2rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        lineHeight: 1
+                      }}
+                      title="Limpiar insumo"
+                    >
+                      ✕
+                    </button>
+                  )}
                   {isInsumoDropOpen && (
                     <div className={styles.dropdown}>
                       <div className={styles.dropdownAction} onClick={() => {

@@ -140,12 +140,22 @@ export class PurchasesRepository {
             });
 
             const pCompra = Number(detalle.precioUnitario) || 0;
-            const cUnidad = Number(detalle.costoBase) || pCompra;
-            
-            const empaqueFormateado = (detalle.presentacion && detalle.presentacion !== 'N/A') ? detalle.presentacion.toUpperCase() : 'UNIDAD';
-            const contenido = Number(detalle.contenidoBase) || 1;
-            const unidad = detalle.unidadEmpaque || 'und';
+            const contenido = Number(detalle.contenidoUnitario || detalle.contenidoBase || detalle.cantidadEquivalenteBase || 1);
+            const unidad = detalle.unidadMedida || detalle.unidadEmpaque || detalle.unidadBase || currentInsumo?.unidadBase || 'und';
+
+            // Extraer nombre comercial del empaque evitando concatenaciones erradas
+            let rawEmpaque = detalle.empaque || detalle.presentacion || currentInsumo?.empaque || 'UNIDAD';
+            if (rawEmpaque === 'N/A' || /^\d+(\.\d+)?\s*(ml|g|kg|l|lt|lts|und|oz)?$/i.test(String(rawEmpaque).trim())) {
+              rawEmpaque = currentInsumo?.empaque || 'UNIDAD';
+            }
+            if (String(rawEmpaque).includes(' x ') || String(rawEmpaque).includes(' X ')) {
+              rawEmpaque = String(rawEmpaque).split(/\s+[xX]\s+/)[0];
+            }
+            const empaqueFormateado = (String(rawEmpaque) || 'UNIDAD').trim().toUpperCase();
             const presentacionComercial = `${empaqueFormateado} x ${contenido.toLocaleString('es-CO')} ${unidad}`;
+
+            // Costo real unitario por gramo / mililitro / unidad base
+            const cUnidad = contenido > 0 ? Number((pCompra / contenido).toFixed(4)) : pCompra;
 
             if (provLink) {
               await prisma.precioProveedor.update({
@@ -156,7 +166,7 @@ export class PurchasesRepository {
                   cantidadEquivalenteBase: contenido,
                   fechaUltimaCompra: new Date(),
                   costoUnidadBase: cUnidad,
-                  cantidadPresentacion: Number(detalle.empaques) || Number(detalle.cantidad) || 0,
+                  cantidadPresentacion: 1,
                   unidadPresentacion: unidad
                 }
               });
@@ -169,7 +179,7 @@ export class PurchasesRepository {
                   presentacionCompra: presentacionComercial,
                   cantidadEquivalenteBase: contenido,
                   costoUnidadBase: cUnidad,
-                  cantidadPresentacion: Number(detalle.empaques) || Number(detalle.cantidad) || 0,
+                  cantidadPresentacion: 1,
                   unidadPresentacion: unidad,
                   fechaUltimaCompra: new Date()
                 }

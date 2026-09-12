@@ -69,16 +69,34 @@ export default function ExpensesPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let parsedValue = value;
+    if (['descripcion', 'periodo', 'observaciones'].includes(name)) {
+      parsedValue = value.toUpperCase();
+    }
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: parsedValue
     }));
   };
 
   const isDirty = !!formData.categoria || !!formData.descripcion || !!formData.valor;
 
+  const missingFields = [];
+  if (!formData.fecha) missingFields.push('Fecha');
+  if (!formData.periodo?.trim()) missingFields.push('Periodo');
+  if (!formData.categoria) missingFields.push('Categoría');
+  if (!formData.tipoGasto) missingFields.push('Tipo de gasto');
+  if (!formData.descripcion?.trim()) missingFields.push('Descripción');
+  if (!formData.valor || Number(String(formData.valor).replace(/\D/g, '')) <= 0) missingFields.push('Valor');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     const cleanValue = cleanCurrency(formData.valor);
     if (!cleanValue || cleanValue <= 0) {
       setSubmitError('El valor del gasto debe ser mayor a cero');
@@ -91,13 +109,16 @@ export default function ExpensesPage() {
     try {
       await apiClient.post('/expenses', {
         ...formData,
+        periodo: (formData.periodo || '').trim().toUpperCase(),
+        descripcion: (formData.descripcion || '').trim().toUpperCase(),
+        observaciones: (formData.observaciones || '').trim().toUpperCase() || null,
         valor: cleanValue,
         fecha: new Date(formData.fecha).toISOString()
       });
       handleCloseModal();
       fetchExpenses();
     } catch (err) {
-      setSubmitError(err.message || 'Error al guardar el gasto');
+      setSubmitError(err.response?.data?.message || err.message || 'Error al guardar el gasto');
     } finally {
       setIsSubmitting(false);
     }
@@ -152,8 +173,20 @@ export default function ExpensesPage() {
         isSubmitting={isSubmitting}
       >
         {submitError && (
-          <div className={modalStyles.errorBanner}>
-            {submitError}
+          <div style={{
+            marginBottom: '1rem',
+            backgroundColor: '#FEF2F2',
+            border: '1px solid #F87171',
+            color: '#B91C1C',
+            padding: '0.6rem 0.85rem',
+            borderRadius: '6px',
+            fontSize: '0.8rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span>⚠️</span>
+            <span>{submitError}</span>
           </div>
         )}
 
@@ -177,8 +210,9 @@ export default function ExpensesPage() {
                 name="periodo" 
                 value={formData.periodo} 
                 onChange={handleChange} 
-                placeholder="Ej: Enero 2026"
+                placeholder="Ej: ENERO 2026"
                 className={modalStyles.input} 
+                style={{ textTransform: 'uppercase' }}
                 required 
               />
             </div>
@@ -223,8 +257,9 @@ export default function ExpensesPage() {
               name="descripcion" 
               value={formData.descripcion} 
               onChange={handleChange} 
-              placeholder="Descripción del gasto"
+              placeholder="DESCRIPCIÓN DEL GASTO"
               className={modalStyles.input} 
+              style={{ textTransform: 'uppercase' }}
               required 
             />
           </div>
@@ -262,13 +297,13 @@ export default function ExpensesPage() {
               value={formData.observaciones} 
               onChange={handleChange} 
               className={modalStyles.input} 
-              style={{ minHeight: '80px', resize: 'vertical' }}
+              style={{ minHeight: '80px', resize: 'vertical', textTransform: 'uppercase' }}
             />
           </div>
 
-          {formData.categoria && formData.descripcion && formData.valor && formData.tipoGasto && (
-            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-              <strong>Resumen:</strong> Se registrará un gasto de <strong>{formData.categoria.replace('_', ' ')}</strong> por un valor de <strong>{formatCurrency(formData.valor)}</strong>, clasificado como gasto <strong>{formData.tipoGasto.toLowerCase()}</strong> para el periodo de {formData.periodo || 'no especificado'}.
+          {formData.categoria && formData.descripcion && formData.valor && (
+            <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+              <strong>Resumen:</strong> Se registrará un gasto de <strong>{formData.categoria.replace('_', ' ')}</strong> por un valor de <strong>{formatCurrency(formData.valor)}</strong>, clasificado como gasto <strong>{formData.tipoGasto ? formData.tipoGasto.toLowerCase() : 'operativo'}</strong> para el periodo de <strong>{formData.periodo || 'no especificado'}</strong>.
             </div>
           )}
 
@@ -283,7 +318,9 @@ export default function ExpensesPage() {
             <SubmitButton 
               isSubmitting={isSubmitting} 
               text="Guardar Gasto"
-              disabled={!formData.categoria || !formData.valor || !formData.descripcion || isSubmitting}
+              disabled={isSubmitDisabled}
+              title={submitTitle}
+              style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
             />
           </div>
         </form>

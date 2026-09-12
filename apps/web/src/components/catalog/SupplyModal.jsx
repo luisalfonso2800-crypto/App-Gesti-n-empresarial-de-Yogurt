@@ -103,7 +103,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
     const { name, value, type, checked } = e.target;
     let parsedValue = value;
     if (type === 'checkbox') parsedValue = checked;
-    if (name === 'nombre' || name === 'marca' || name === 'subcategoria') {
+    if (['nombre', 'marca', 'subcategoria', 'observaciones'].includes(name)) {
       parsedValue = value.toUpperCase();
     }
     if (name === 'stockMinimo' || name === 'costoBase') {
@@ -123,11 +123,14 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     setIsSubmitting(true);
     setErrorMsg('');
     try {
       const payload = {
         ...formData,
+        nombre: (formData.nombre || '').trim(),
+        marca: (formData.marca || '').trim(),
         stockMinimo: formData.stockMinimo ? Number(String(formData.stockMinimo).replace(/\./g, '')) : 0,
         costoBase: formData.costoBase ? Number(String(formData.costoBase).replace(/\./g, '')) : null
       };
@@ -141,7 +144,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
       onClose();
       if (onSuccess) onSuccess(result || payload);
     } catch (err) {
-      setErrorMsg(err.message || err.response?.data?.message || 'Error al guardar');
+      setErrorMsg(err.response?.data?.message || err.message || 'Error al guardar');
     } finally {
       setIsSubmitting(false);
     }
@@ -153,7 +156,20 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
     'kg': 'kilogramos', 'g': 'gramos', 'L': 'litros', 'ml': 'mililitros', 'oz': 'onzas', 'und': 'unidades'
   };
   const selectedUnitName = unitNames[formData.unidadBase] || formData.unidadBase;
-  const rawCostoBase = formData.costoBase ? Number(formData.costoBase.replace(/\./g, '')) : 0;
+  const rawCostoBase = formData.costoBase ? Number(String(formData.costoBase).replace(/\./g, '')) : 0;
+  const minStockNum = formData.stockMinimo ? Number(String(formData.stockMinimo).replace(/\./g, '')) : 0;
+
+  const missingFields = [];
+  if (!formData.nombre?.trim()) missingFields.push('Nombre del insumo');
+  if (!formData.categoria) missingFields.push('Categoría');
+  if (!formData.marca?.trim()) missingFields.push('Marca');
+  if (!formData.unidadBase) missingFields.push('Unidad base');
+  if (!formData.stockMinimo) missingFields.push('Stock mínimo');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
 
   return (
     <SmartModal 
@@ -164,8 +180,20 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
       isSubmitting={isSubmitting}
     >
       {errorMsg && (
-        <div className={styles.errorBanner}>
-          {errorMsg}
+        <div style={{
+          marginBottom: '1rem',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #F87171',
+          color: '#B91C1C',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '6px',
+          fontSize: '0.8rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>⚠️</span>
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -178,6 +206,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
             onChange={handleChange} 
             placeholder="Ej: LECHE ENTERA"
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
             required 
           />
         </div>
@@ -213,6 +242,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
               value={formData.marca ?? ''} 
               onChange={handleChange} 
               className={styles.input} 
+              style={{ textTransform: 'uppercase' }}
               required 
             />
           </div>
@@ -268,7 +298,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
             />
             {formData.stockMinimo && formData.unidadBase && (
               <span style={{ fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic', marginTop: '0.25rem', display: 'block' }}>
-                El stock mínimo de {formData.nombre || 'este insumo'}{formData.marca ? ` de la marca ${formData.marca}` : ''} es de {formData.stockMinimo} {selectedUnitName}.
+                *El mínimo {minStockNum === 1 ? 'es' : 'son'} {formData.stockMinimo} {selectedUnitName} para emitir alertas de reabastecimiento.*
               </span>
             )}
           </div>
@@ -308,6 +338,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
             value={formData.observaciones ?? ''} 
             onChange={handleChange} 
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
           />
         </div>
 
@@ -321,9 +352,9 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
           <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Insumo Activo</span>
         </label>
 
-        {formData.nombre && formData.categoria && formData.unidadBase && (
-          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el insumo <strong>{formData.nombre}</strong> (categoría {formData.categoria.replace('_', ' ').toLowerCase()}), el cual será medido en <strong>{formData.unidadBase}</strong> con un umbral de alerta en <strong>{formData.stockMinimo || 0}</strong> {selectedUnitName}.
+        {formData.nombre && (
+          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el insumo <strong>{formData.nombre}</strong>{formData.categoria ? <> (categoría <strong>{formData.categoria.replace('_', ' ').toLowerCase()}</strong>)</> : null}{formData.unidadBase ? <>, medido en <strong>{formData.unidadBase}</strong> con umbral de alerta en <strong>{formData.stockMinimo || 0}</strong> {selectedUnitName}</> : null}{rawCostoBase > 0 ? <> y costo base de <strong>${rawCostoBase.toLocaleString('es-CO')}</strong></> : null}.
           </div>
         )}
 
@@ -338,7 +369,9 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Insumo"
-            disabled={!formData.nombre || !formData.categoria || !formData.unidadBase || !formData.stockMinimo || isSubmitting}
+            disabled={isSubmitDisabled}
+            title={submitTitle}
+            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
         </div>
       </form>

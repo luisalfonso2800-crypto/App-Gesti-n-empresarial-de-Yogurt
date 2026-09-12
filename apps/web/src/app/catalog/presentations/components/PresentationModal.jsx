@@ -18,21 +18,13 @@ export function PresentationModal({
 }) {
   const isDirty = !!formData.nombre || !!formData.tipoEnvase;
 
-  const handleNumericChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Permite números y un punto o coma (para decimales), pero elimina el signo menos u otras letras
-    let cleanVal = value.replace(/[^0-9.,]/g, '');
-    
-    // Normalizar coma a punto
-    cleanVal = cleanVal.replace(/,/g, '.');
-
-    // Evitar múltiples puntos
-    const parts = cleanVal.split('.');
-    if (parts.length > 2) {
-      cleanVal = parts[0] + '.' + parts.slice(1).join('');
+    if (['nombre', 'observaciones'].includes(name)) {
+      handleChange({ target: { name, value: value.toUpperCase() } });
+    } else {
+      handleChange(e);
     }
-
-    setFormData(prev => ({ ...prev, [name]: cleanVal }));
   };
 
   const handleKeyDownNumeric = (e) => {
@@ -43,15 +35,29 @@ export function PresentationModal({
 
   const onSubmit = (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     const cantOz = Math.max(0, Number(formData.cantidadOz) || 0);
     const cantMl = Math.max(0, Number(formData.cantidadMl) || 0);
 
     handleSubmit(e, {
       ...formData,
+      nombre: (formData.nombre || '').trim().toUpperCase(),
+      observaciones: (formData.observaciones || '').trim().toUpperCase(),
       cantidadOz: cantOz,
       cantidadMl: cantMl
     });
   };
+
+  const missingFields = [];
+  if (!formData.nombre?.trim()) missingFields.push('Nombre de la presentación');
+  if (formData.cantidadOz === '' || formData.cantidadOz === null || formData.cantidadOz === undefined) missingFields.push('Cantidad en Oz');
+  if (formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined) missingFields.push('Cantidad en Ml');
+  if (!formData.tipoEnvase) missingFields.push('Tipo de envase');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
 
   return (
     <SmartModal 
@@ -62,8 +68,20 @@ export function PresentationModal({
       isSubmitting={isSubmitting}
     >
       {errorMsg && (
-        <div className={styles.errorBanner}>
-          {errorMsg}
+        <div style={{
+          marginBottom: '1rem',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #F87171',
+          color: '#B91C1C',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '6px',
+          fontSize: '0.8rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>⚠️</span>
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -73,9 +91,10 @@ export function PresentationModal({
           <input 
             name="nombre" 
             value={formData.nombre ?? ''} 
-            onChange={handleChange} 
-            placeholder="Ej: Botella Vidrio 250ml"
+            onChange={handleInputChange} 
+            placeholder="Ej: BOTELLA VIDRIO 250ML"
             className={styles.input}
+            style={{ textTransform: 'uppercase' }}
             required 
           />
         </div>
@@ -173,8 +192,9 @@ export function PresentationModal({
           <input 
             name="observaciones" 
             value={formData.observaciones ?? ''} 
-            onChange={handleChange} 
+            onChange={handleInputChange} 
             className={styles.input}
+            style={{ textTransform: 'uppercase' }}
           />
         </div>
 
@@ -188,9 +208,9 @@ export function PresentationModal({
           <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Presentación Activa</span>
         </label>
 
-        {formData.nombre && formData.tipoEnvase && (formData.cantidadOz !== '' || formData.cantidadMl !== '') && (
-          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'registrará'} la presentación <strong>{formData.nombre}</strong> (envase de {formData.tipoEnvase.replace('_', ' ').toLowerCase()}), con capacidad de <strong>{formData.cantidadOz || 0} Oz</strong> ({formData.cantidadMl || 0} Ml).
+        {formData.nombre && (
+          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'registrará'} la presentación <strong>{formData.nombre}</strong>{formData.tipoEnvase ? <> (envase de <strong>{formData.tipoEnvase.replace('_', ' ').toLowerCase()}</strong>)</> : null}, con capacidad de <strong>{formData.cantidadOz || 0} Oz</strong> ({formData.cantidadMl || 0} Ml).
           </div>
         )}
 
@@ -205,7 +225,9 @@ export function PresentationModal({
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Presentación"
-            disabled={!formData.nombre || !formData.tipoEnvase || formData.cantidadOz === '' || formData.cantidadMl === '' || isSubmitting}
+            disabled={isSubmitDisabled}
+            title={submitTitle}
+            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
         </div>
       </form>

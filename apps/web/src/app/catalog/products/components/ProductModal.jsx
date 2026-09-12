@@ -2,14 +2,13 @@
  * @file ProductModal.jsx
  * @module catalog/products/components
  * @description Modal de administración de atributos del producto (CSS Modules + Summary).
- * @responsibility Formulario para los valores comerciales del producto.
+ * @responsibility Formulario para los valores comerciales del producto con validación Poka-Yoke.
  * @usedBy apps/web/src/app/catalog/products/page.jsx
  * @dependencies SmartModal, SmartSelect, CurrencySmartInput, StrictNumberInput
  */
 import React, { useRef } from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
-import CurrencySmartInput from '@/components/ui/inputs/CurrencySmartInput';
 import { cleanCurrency, formatCurrency } from '@/lib/formatters';
 import { PRESETS } from '@/lib/presetImages';
 import styles from '@/components/ui/SmartModal.module.css';
@@ -21,6 +20,15 @@ export function ProductModal({
 }) {
   const fileInputRef = useRef(null);
   
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (['nombre', 'descripcion', 'observaciones'].includes(name)) {
+      handleChange({ target: { name, value: value.toUpperCase() } });
+    } else {
+      handleChange(e);
+    }
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -54,10 +62,14 @@ export function ProductModal({
 
   const onSubmit = (e) => {
     e.preventDefault();
+    if (isSubmitDisabled) return;
     const pc = cleanCurrency(formData.precioVenta);
     const mO = Number(formData.margenObjetivo);
     handleSubmit(e, {
       ...formData,
+      nombre: (formData.nombre || '').trim().toUpperCase(),
+      descripcion: (formData.descripcion || '').trim().toUpperCase(),
+      observaciones: (formData.observaciones || '').trim().toUpperCase(),
       precioVenta: pc,
       margenObjetivo: mO
     });
@@ -69,6 +81,20 @@ export function ProductModal({
     return pres ? pres.nombre : 'desconocida';
   };
 
+  const missingFields = [];
+  if (!formData.nombre?.trim()) missingFields.push('Nombre');
+  if (!formData.idPresentacion) missingFields.push('Presentación');
+  if (!formData.categoria) missingFields.push('Categoría');
+  if (!formData.canalVenta) missingFields.push('Canal de venta');
+  if (!formData.descripcion?.trim()) missingFields.push('Descripción');
+  if (!formData.precioVenta) missingFields.push('Precio de venta');
+  if (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined) missingFields.push('Margen objetivo');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
   return (
     <SmartModal 
       isOpen={isOpen} 
@@ -78,8 +104,20 @@ export function ProductModal({
       isSubmitting={isSubmitting}
     >
       {errorMsg && (
-        <div className={styles.errorBanner}>
-          {errorMsg}
+        <div style={{
+          marginBottom: '1rem',
+          backgroundColor: '#FEF2F2',
+          border: '1px solid #F87171',
+          color: '#B91C1C',
+          padding: '0.6rem 0.85rem',
+          borderRadius: '6px',
+          fontSize: '0.8rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <span>⚠️</span>
+          <span>{errorMsg}</span>
         </div>
       )}
 
@@ -90,9 +128,10 @@ export function ProductModal({
             <input 
               name="nombre" 
               value={formData.nombre ?? ''} 
-              onChange={handleChange} 
-              placeholder="Ej: Yogurt Fresa"
+              onChange={handleInputChange} 
+              placeholder="Ej: YOGURT FRESA"
               className={styles.input} 
+              style={{ textTransform: 'uppercase' }}
               required 
             />
           </div>
@@ -154,7 +193,7 @@ export function ProductModal({
               />
             ))}
             <button 
-              type="button"
+              type="button" 
               onClick={() => fileInputRef.current?.click()}
               style={{ marginLeft: '1rem', padding: '0.5rem 1rem', background: '#F7F4EE', border: '1px solid #D97706', borderRadius: '4px', cursor: 'pointer', color: '#1C3F35', fontWeight: '500' }}
             >
@@ -188,8 +227,9 @@ export function ProductModal({
           <input 
             name="descripcion" 
             value={formData.descripcion ?? ''} 
-            onChange={handleChange} 
+            onChange={handleInputChange} 
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
             required 
           />
         </div>
@@ -242,8 +282,9 @@ export function ProductModal({
           <input 
             name="observaciones" 
             value={formData.observaciones ?? ''} 
-            onChange={handleChange} 
+            onChange={handleInputChange} 
             className={styles.input} 
+            style={{ textTransform: 'uppercase' }}
           />
         </div>
 
@@ -257,9 +298,9 @@ export function ProductModal({
           <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Producto Activo</span>
         </label>
 
-        {formData.nombre && formData.idPresentacion && formData.precioVenta && (
-          <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '0.75rem', borderRadius: '6px', fontSize: '0.85rem' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el producto <strong>{formData.nombre}</strong> (en presentación {getPresentationName()}), destinado al canal <strong>{formData.canalVenta || 'no definido'}</strong>, con un precio sugerido de <strong>{formatCurrency(formData.precioVenta)}</strong>.
+        {formData.nombre && (
+          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el producto <strong>{formData.nombre}</strong>{formData.idPresentacion ? <> (en presentación <strong>{getPresentationName()}</strong>)</> : null}{formData.canalVenta ? <>, destinado al canal <strong>{formData.canalVenta}</strong></> : null}{formData.precioVenta ? <>, con precio sugerido de <strong>{formatCurrency(formData.precioVenta)}</strong></> : null}.
           </div>
         )}
 
@@ -274,7 +315,9 @@ export function ProductModal({
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Producto"
-            disabled={!formData.nombre || !formData.idPresentacion || !formData.precioVenta || isSubmitting}
+            disabled={isSubmitDisabled}
+            title={submitTitle}
+            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           />
         </div>
       </form>
