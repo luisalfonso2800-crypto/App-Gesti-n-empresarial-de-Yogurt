@@ -1,4 +1,4 @@
-import { Injectable, Dependencies, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { SuppliersRepository } from './suppliers.repository';
 
 @Injectable()
@@ -25,14 +25,6 @@ export class SuppliersService {
   }
 
   async create(createDto) {
-    const { nombre, nitCedula } = createDto;
-    const existing = await this.repository.findByNombreOrNit(nombre, nitCedula);
-    if (existing) {
-      if (existing.nitCedula === nitCedula) {
-        throw new BadRequestException(`El NIT/Cédula ${nitCedula} ya se encuentra registrado.`);
-      }
-      throw new BadRequestException(`El proveedor con razón social ${nombre} ya se encuentra registrado.`);
-    }
     return this.repository.create(createDto);
   }
 

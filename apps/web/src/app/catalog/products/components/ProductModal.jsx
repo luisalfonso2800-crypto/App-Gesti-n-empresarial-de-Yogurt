@@ -13,6 +13,7 @@ import CurrencySmartInput from '@/components/ui/inputs/CurrencySmartInput';
 import { cleanCurrency, formatCurrency } from '@/lib/formatters';
 import { PRESETS } from '@/lib/presetImages';
 import styles from '@/components/ui/SmartModal.module.css';
+import { montoATextoPesos } from '@/utils/numberToWords';
 
 export function ProductModal({ 
   isOpen, onClose, editingItem, formData, handleChange, handleSubmit, 
@@ -194,14 +195,31 @@ export function ProductModal({
         </div>
 
         <div className={styles.twoColumns}>
-          <CurrencySmartInput
-            label="Precio de Venta"
-            name="precioVenta"
-            value={formData.precioVenta ?? ''}
-            onChange={handleChange}
-            placeholder="Ej: 5.000"
-            required
-          />
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Precio de Venta ($) <span style={{color: '#e11d48'}}>*</span></label>
+            <input
+              name="precioVenta"
+              type="text"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={formData.precioVenta ? String(formData.precioVenta).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                handleChange({ target: { name: 'precioVenta', value: raw } });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === '-') e.preventDefault();
+              }}
+              className={styles.input}
+              required
+            />
+            {formData.precioVenta && parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10) > 0 && (
+              <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                ✦ {montoATextoPesos(parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10))}
+              </span>
+            )}
+          </div>
 
           <div className={styles.inputGroup}>
             <label className={styles.label}>Margen Objetivo (%) <span style={{color: '#e11d48'}}>*</span></label>
@@ -256,7 +274,7 @@ export function ProductModal({
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Producto"
-            disabled={!formData.nombre || !formData.idPresentacion}
+            disabled={!formData.nombre || !formData.idPresentacion || !formData.precioVenta || isSubmitting}
           />
         </div>
       </form>

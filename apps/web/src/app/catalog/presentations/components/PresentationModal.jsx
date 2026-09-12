@@ -87,10 +87,13 @@ export function PresentationModal({
               name="cantidadOz" 
               type="text"
               inputMode="decimal"
-              value={formData.cantidadOz ?? ''} 
-              onChange={handleNumericChange}
+              value={formData.cantidadOz ? String(formData.cantidadOz).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''} 
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                handleChange({ target: { name: 'cantidadOz', value: raw } });
+              }}
               onKeyDown={handleKeyDownNumeric}
-              placeholder="Ej: 12"
+              placeholder="0"
               className={styles.input}
               required 
             />
@@ -102,10 +105,13 @@ export function PresentationModal({
               name="cantidadMl" 
               type="text"
               inputMode="decimal"
-              value={formData.cantidadMl ?? ''} 
-              onChange={handleNumericChange}
+              value={formData.cantidadMl ? String(formData.cantidadMl).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''} 
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                handleChange({ target: { name: 'cantidadMl', value: raw } });
+              }}
               onKeyDown={handleKeyDownNumeric}
-              placeholder="Ej: 350"
+              placeholder="0"
               className={styles.input}
               required 
             />
@@ -118,11 +124,15 @@ export function PresentationModal({
           value={formData.tipoEnvase ?? ''}
           onChange={handleChange}
           options={[
-            { id: 'VIDRIO', label: 'Vidrio' },
-            { id: 'PLASTICO_PET', label: 'Plástico PET' },
-            { id: 'CARTON', label: 'Cartón (Tetra)' },
-            { id: 'BOLSA', label: 'Bolsa Plástica' },
-            { id: 'OTRO', label: 'Otro' },
+            { id: 'UNIDAD', label: 'UNIDAD' },
+            { id: 'ENVASE', label: 'ENVASE' },
+            { id: 'BOLSA', label: 'BOLSA' },
+            { id: 'CAJA', label: 'CAJA' },
+            { id: 'BULTO', label: 'BULTO' },
+            { id: 'BOTELLA', label: 'BOTELLA' },
+            { id: 'BIDÓN', label: 'BIDÓN' },
+            { id: 'CANASTILLA', label: 'CANASTILLA' },
+            { id: 'OTRO', label: 'OTRO' }
           ]}
           required
           placeholder="Seleccione envase"
@@ -195,7 +205,7 @@ export function PresentationModal({
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Presentación"
-            disabled={!formData.nombre || !formData.tipoEnvase || formData.cantidadOz === '' || formData.cantidadMl === ''}
+            disabled={!formData.nombre || !formData.tipoEnvase || formData.cantidadOz === '' || formData.cantidadMl === '' || isSubmitting}
           />
         </div>
       </form>

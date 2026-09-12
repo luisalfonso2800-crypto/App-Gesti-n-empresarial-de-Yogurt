@@ -12,6 +12,7 @@ import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import CurrencySmartInput from '@/components/ui/inputs/CurrencySmartInput';
 import { formatCurrency, cleanCurrency } from '@/lib/formatters';
 import styles from '@/components/ui/SmartModal.module.css';
+import { montoATextoPesos } from '@/utils/numberToWords';
 
 export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, allInsumos = [], allProveedores = [] }) {
   const [formData, setFormData] = useState({
@@ -156,7 +157,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
               name="presentacionCompra" 
               value={formData.presentacionCompra ?? ''} 
               onChange={handleChange} 
-              placeholder="Ej: Bulto 25kg"
+              placeholder="Ej: BOLSA x 900 ml, BULTO x 25 kg"
               className={styles.input} 
               required 
             />
@@ -166,11 +167,14 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
             <label className={styles.label}>Cant. Presentación <span style={{color: '#e11d48'}}>*</span></label>
             <input 
               name="cantidadPresentacion" 
-              type="number"
-              step="0.01"
-              min="0.01"
+              type="text"
+              inputMode="decimal"
               value={formData.cantidadPresentacion ?? ''} 
-              onChange={handleChange} 
+              onChange={(e) => {
+                let val = e.target.value.replace(/[^0-9.]/g, '');
+                if ((val.match(/\./g) || []).length > 1) val = val.replace(/\.+$/, '');
+                handleChange({ target: { name: 'cantidadPresentacion', value: val } });
+              }}
               className={styles.input} 
               required 
             />
@@ -194,24 +198,45 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
             <label className={styles.label}>Equivalente Unidad Base <span style={{color: '#e11d48'}}>*</span></label>
             <input 
               name="cantidadEquivalenteBase" 
-              type="number"
-              step="0.01"
-              min="0.01"
+              type="text"
+              inputMode="decimal"
               value={formData.cantidadEquivalenteBase ?? ''} 
-              onChange={handleChange} 
+              onChange={(e) => {
+                let val = e.target.value.replace(/[^0-9.]/g, '');
+                if ((val.match(/\./g) || []).length > 1) val = val.replace(/\.+$/, '');
+                handleChange({ target: { name: 'cantidadEquivalenteBase', value: val } });
+              }}
               placeholder="Ej: 25000 (para gramos)"
               className={styles.input} 
               required 
             />
           </div>
 
-          <CurrencySmartInput
-            label="Precio de Compra"
-            name="precioCompra"
-            value={formData.precioCompra ?? ''}
-            onChange={handleChange}
-            required
-          />
+          <div className={styles.inputGroup}>
+            <label className={styles.label}>Precio de Compra ($) <span style={{color: '#e11d48'}}>*</span></label>
+            <input
+              name="precioCompra"
+              type="text"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={formData.precioCompra ? String(formData.precioCompra).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                handleChange({ target: { name: 'precioCompra', value: raw } });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === '-') e.preventDefault();
+              }}
+              className={styles.input}
+              required
+            />
+            {formData.precioCompra && parseInt(String(formData.precioCompra).replace(/\D/g, ''), 10) > 0 && (
+              <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                ✦ {montoATextoPesos(parseInt(String(formData.precioCompra).replace(/\D/g, ''), 10))}
+              </span>
+            )}
+          </div>
         </div>
 
         <div style={{ backgroundColor: '#fafaf9', border: '1px solid #e7e5e4', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
@@ -261,7 +286,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Precio"
-            disabled={!formData.idInsumo || !formData.idProveedor || !formData.costoUnidadBase}
+            disabled={!formData.idInsumo || !formData.idProveedor || !formData.costoUnidadBase || isSubmitting}
           />
         </div>
       </form>

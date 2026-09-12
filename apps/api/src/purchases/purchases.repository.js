@@ -13,7 +13,7 @@ export class PurchasesRepository {
       return await this.prisma.compra.findMany({
         include: { 
           detalles: {
-            include: { insumo: true }
+            include: { insumo: true, proveedor: true }
           },
           proveedor: true,
           orden: {
@@ -38,9 +38,9 @@ export class PurchasesRepository {
   async createWithTransaction(data) {
     try {
       return await this.prisma.$transaction(async (prisma) => {
-        // 1. Manejar Proveedor nuevo si viene
-        let idProveedorFinal = data.idProveedor;
-        if (data.esNuevoProveedor) {
+        // 1. Proveedor root (opcional) si viene de una compra mono-proveedor
+        let idProveedorFinal = data.idProveedor || null;
+        if (data.esNuevoProveedor && data.nuevoProveedor) {
           const prov = await prisma.proveedor.create({
             data: {
               nombre: data.nuevoProveedor.nombre,
@@ -59,23 +59,27 @@ export class PurchasesRepository {
         const consecutive = `CMP-${year}-${String(count + 1).padStart(4, '0')}`;
 
         const paymentConditionStr = data.condicion || 'CONTADO';
+        
+        let observacionesExtra = data.observaciones ? ` - ${data.observaciones}` : '';
+        if (data.esDirecta) observacionesExtra += ' [Compra Directa Consolidada]';
 
-        const obsFinal = data.observaciones
-          ? `${consecutive} - Condición: ${paymentConditionStr} - ${data.observaciones}`
-          : `${consecutive} - Condición: ${paymentConditionStr}`;
+        const obsFinal = `${consecutive} - Condición: ${paymentConditionStr}${observacionesExtra}`;
+        const total = Number(data.total) || 0;
+        const flete = Number(data.fleteGlobal) || 0;
 
-        // 3. Crear Compra con Detalles
+        // 3. Crear Compra con Detalles (Consolidado)
         const newCompra = await prisma.compra.create({
           data: {
             idProveedor: idProveedorFinal,
             idOrden: data.idOrden || null,
             fechaCompra: data.fechaCompra ? new Date(data.fechaCompra) : new Date(),
-            total: Number(data.total) || 0,
+            total: total + flete,
             observaciones: obsFinal,
             estado: 'COMPLETADO',
             detalles: {
               create: data.detalles.map(d => ({
                 idInsumo: d.idInsumo,
+                idProveedor: d.idProveedor || idProveedorFinal,
                 cantidad: Number(d.cantidad) || 0,
                 precioUnitario: Number(d.precioUnitario) || 0,
                 subtotal: Number(d.subtotal) || 0
@@ -87,23 +91,25 @@ export class PurchasesRepository {
           }
         });
 
-        // 4. Actualizar Precios (Histórico e Insumo) e Inventarios
+        // 4. Actualizar Precios e Inventarios
         for (const detalle of data.detalles) {
+          const detalleProvId = detalle.idProveedor || idProveedorFinal;
           const currentInsumo = await prisma.insumo.findUnique({
             where: { id: detalle.idInsumo }
           });
 
-          // 4.1 Update Insumo Stock and Cost
           if (currentInsumo) {
+            // Regla estricta: ingreso neto real = empaques * contenido
+            // NOTA: Si el payload envía cantidadBaseTotal lo usamos, sino se asume (cantidad * contenidoBase)
+            const cantidadEmpaques = Number(detalle.cantidad) || 0;
+            const contenidoUnidad = Number(detalle.contenidoBase) || 1;
+            const cantidadBaseTotal = Number(detalle.cantidadBaseTotal) || (cantidadEmpaques * contenidoUnidad);
+
+            // 4.1 Update Inventario Stock (ya está en unidad base o necesita x1000 si es L/Kg vs g/ml?)
+            // Según la regla del negocio actual en el código anterior:
             const isLtsOrKgs = ['Lt', 'Lts', 'Kg', 'Kgs'].includes(currentInsumo.unidadBase);
-            const costoUnidadBaseNumber = Number(detalle.costoBase);
+            const incrementStock = isLtsOrKgs ? cantidadBaseTotal * 1000 : cantidadBaseTotal;
 
-            const cantidadBaseTotal = Number(detalle.cantidadBaseTotal) || Number(detalle.cantidad) || 0;
-            const incrementStock = isLtsOrKgs
-              ? cantidadBaseTotal * 1000
-              : cantidadBaseTotal;
-
-            // 4.1 Update Inventario Stock
             await prisma.inventario.upsert({
               where: { idInsumo: detalle.idInsumo },
               update: {
@@ -115,7 +121,7 @@ export class PurchasesRepository {
               }
             });
 
-            // 4.1.2 Record MovimientoInventario
+            // Record MovimientoInventario
             await prisma.movimientoInventario.create({
               data: {
                 idInsumo: detalle.idInsumo,
@@ -128,38 +134,63 @@ export class PurchasesRepository {
           }
 
           // 4.2 Upsert Supplier Link (PrecioProveedor)
-          const provLink = await prisma.precioProveedor.findFirst({
-            where: { idInsumo: detalle.idInsumo, idProveedor: idProveedorFinal }
-          });
+          if (detalleProvId) {
+            const provLink = await prisma.precioProveedor.findFirst({
+              where: { idInsumo: detalle.idInsumo, idProveedor: detalleProvId }
+            });
 
-          if (provLink) {
-            await prisma.precioProveedor.update({
-              where: { id: provLink.id },
-              data: {
-                precioCompra: Number(detalle.precioUnitario) || 0,
-                presentacionCompra: detalle.presentacion || 'N/A',
-                cantidadEquivalenteBase: Number(detalle.contenidoBase) || 1,
-                fechaUltimaCompra: new Date(),
-                costoUnidadBase: Number(detalle.costoBase) || Number(detalle.precioUnitario) || 0,
-                cantidadPresentacion: Number(detalle.empaques) || Number(detalle.cantidad) || 0,
-                unidadPresentacion: detalle.unidadEmpaque || 'Unidad'
-              }
-            });
-          } else {
-            await prisma.precioProveedor.create({
-              data: {
-                idInsumo: detalle.idInsumo,
-                idProveedor: idProveedorFinal,
-                precioCompra: Number(detalle.precioUnitario) || 0,
-                presentacionCompra: detalle.presentacion || 'N/A',
-                cantidadEquivalenteBase: Number(detalle.contenidoBase) || 1,
-                costoUnidadBase: Number(detalle.costoBase) || Number(detalle.precioUnitario) || 0,
-                cantidadPresentacion: Number(detalle.empaques) || Number(detalle.cantidad) || 0,
-                unidadPresentacion: detalle.unidadEmpaque || 'Unidad',
-                fechaUltimaCompra: new Date()
-              }
-            });
+            const pCompra = Number(detalle.precioUnitario) || 0;
+            const cUnidad = Number(detalle.costoBase) || pCompra;
+            
+            const empaqueFormateado = (detalle.presentacion && detalle.presentacion !== 'N/A') ? detalle.presentacion.toUpperCase() : 'UNIDAD';
+            const contenido = Number(detalle.contenidoBase) || 1;
+            const unidad = detalle.unidadEmpaque || 'und';
+            const presentacionComercial = `${empaqueFormateado} x ${contenido.toLocaleString('es-CO')} ${unidad}`;
+
+            if (provLink) {
+              await prisma.precioProveedor.update({
+                where: { id: provLink.id },
+                data: {
+                  precioCompra: pCompra,
+                  presentacionCompra: presentacionComercial,
+                  cantidadEquivalenteBase: contenido,
+                  fechaUltimaCompra: new Date(),
+                  costoUnidadBase: cUnidad,
+                  cantidadPresentacion: Number(detalle.empaques) || Number(detalle.cantidad) || 0,
+                  unidadPresentacion: unidad
+                }
+              });
+            } else {
+              await prisma.precioProveedor.create({
+                data: {
+                  idInsumo: detalle.idInsumo,
+                  idProveedor: detalleProvId,
+                  precioCompra: pCompra,
+                  presentacionCompra: presentacionComercial,
+                  cantidadEquivalenteBase: contenido,
+                  costoUnidadBase: cUnidad,
+                  cantidadPresentacion: Number(detalle.empaques) || Number(detalle.cantidad) || 0,
+                  unidadPresentacion: unidad,
+                  fechaUltimaCompra: new Date()
+                }
+              });
+            }
           }
+        }
+
+        // 5. Registrar Egreso Financiero Consolidado
+        if (total + flete > 0) {
+          await prisma.gasto.create({
+            data: {
+              fecha: new Date(),
+              categoria: 'COMPRAS',
+              descripcion: `Pago Compra ${consecutive}`,
+              valor: total + flete,
+              tipoGasto: 'OPERATIVO',
+              periodo: `${year}-${String(new Date().getMonth() + 1).padStart(2, '0')}`,
+              observaciones: `Consolidado de Compra Directa. Total: $${total} + Flete: $${flete}`
+            }
+          });
         }
 
         return newCompra;

@@ -11,6 +11,7 @@ import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/Sta
 import { formatCurrency, cleanCurrency } from '../../../lib/formatters';
 import styles from './expenses.module.css';
 import modalStyles from '../../../components/ui/SmartModal.module.css';
+import { montoATextoPesos } from '../../../utils/numberToWords';
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState([]);
@@ -228,14 +229,31 @@ export default function ExpensesPage() {
             />
           </div>
 
-          <CurrencySmartInput
-            label="Valor"
-            name="valor"
-            value={formData.valor}
-            onChange={handleChange}
-            placeholder="Ej: 150.000"
-            required
-          />
+          <div className={modalStyles.inputGroup}>
+            <label className={modalStyles.label}>Valor ($) <span style={{color: '#e11d48'}}>*</span></label>
+            <input
+              name="valor"
+              type="text"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={formData.valor ? String(formData.valor).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                handleChange({ target: { name: 'valor', value: raw } });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === '-') e.preventDefault();
+              }}
+              className={modalStyles.input}
+              required
+            />
+            {formData.valor && parseInt(String(formData.valor).replace(/\D/g, ''), 10) > 0 && (
+              <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                ✦ {montoATextoPesos(parseInt(String(formData.valor).replace(/\D/g, ''), 10))}
+              </span>
+            )}
+          </div>
 
           <div className={modalStyles.inputGroup}>
             <label className={modalStyles.label}>Observaciones</label>
@@ -265,7 +283,7 @@ export default function ExpensesPage() {
             <SubmitButton 
               isSubmitting={isSubmitting} 
               text="Guardar Gasto"
-              disabled={!formData.categoria || !formData.valor || !formData.descripcion}
+              disabled={!formData.categoria || !formData.valor || !formData.descripcion || isSubmitting}
             />
           </div>
         </form>

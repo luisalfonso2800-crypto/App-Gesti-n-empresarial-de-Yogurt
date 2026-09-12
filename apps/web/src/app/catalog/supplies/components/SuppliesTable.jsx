@@ -52,10 +52,10 @@ export function SuppliesTable({ items, loading, error, searchTerm, categoryFilte
             <TD>{generateCode(item)}</TD>
             <TD>{item.nombre}</TD>
             <TD>{item.categoria}</TD>
-            <TD>{item.marca}</TD>
+            <TD>{item.marca || 'N/A'}</TD>
             <TD>{item.unidadBase}</TD>
             <TD>{item.stockMinimo}</TD>
-            <TD>{item.precios && item.precios.length > 0 ? `$${item.precios[0].costoUnidadBase} / ${item.unidadBase || 'Unidad'}` : '-'}</TD>
+            <TD>$ {Number(item.costoBase || 0).toLocaleString('es-CO')}</TD>
             <TD>
               <Badge status={item.activo ? 'active' : 'inactive'}>{item.activo ? 'Activo' : 'Inactivo'}</Badge>
             </TD>

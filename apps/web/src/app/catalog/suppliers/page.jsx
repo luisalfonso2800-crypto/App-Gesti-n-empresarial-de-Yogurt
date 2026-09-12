@@ -12,7 +12,7 @@ import { useSuppliersData } from './hooks/useSuppliersData';
 import { useSupplierForm } from './hooks/useSupplierForm';
 import { SuppliersHeader } from './components/SuppliersHeader';
 import { SuppliersTable } from './components/SuppliersTable';
-import { SupplierModal } from './components/SupplierModal';
+import { SupplierModal } from '@/components/catalog/SupplierModal';
 
 export default function SuppliersPage() {
   const { items, loading, error, fetchItems, handleToggleActive } = useSuppliersData();
@@ -27,9 +27,7 @@ export default function SuppliersPage() {
       />
       <SupplierModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
-        editingItem={form.editingItem} formData={form.formData}
-        handleChange={form.handleChange} handleSubmit={form.handleSubmit}
-        isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
+        editingItem={form.editingItem} onSuccess={fetchItems}
       />
     </div>
   );

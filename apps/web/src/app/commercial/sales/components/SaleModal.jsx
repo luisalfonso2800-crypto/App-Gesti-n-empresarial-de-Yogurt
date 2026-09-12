@@ -14,6 +14,7 @@ import StrictNumberInput from '@/components/ui/inputs/StrictNumberInput';
 import { ShoppingCart, Plus, Trash2, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import styles from '@/components/ui/SmartModal.module.css';
+import { montoATextoPesos } from '@/utils/numberToWords';
 
 export function SaleModal({ 
   isOpen, onClose, formData, products, clients, 
@@ -184,13 +185,29 @@ export function SaleModal({
             </div>
             
             <div style={{ width: '8rem' }}>
-              <CurrencySmartInput
-                label="Precio Unit."
+              <label className={styles.label}>Precio Unit. <span style={{color: '#e11d48'}}>*</span></label>
+              <input
                 name="price"
-                value={price ?? ''}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Ej: 5.000"
+                type="text"
+                inputMode="numeric"
+                min="0"
+                placeholder="0"
+                value={price ? String(price).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, '');
+                  setPrice(raw);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-') e.preventDefault();
+                }}
+                className={styles.input}
+                required
               />
+              {price && parseInt(String(price).replace(/\D/g, ''), 10) > 0 && (
+                <span style={{ fontSize: '0.65rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                  ✦ {montoATextoPesos(parseInt(String(price).replace(/\D/g, ''), 10))}
+                </span>
+              )}
             </div>
 
             <div style={{ paddingBottom: '2px' }}>
@@ -271,13 +288,30 @@ export function SaleModal({
 
         {formData.tipoPago === 'CREDITO' && (
           <div className={styles.twoColumns} style={{ marginTop: '0.5rem' }}>
-            <CurrencySmartInput
-              label="Valor Pagado (Abono)"
-              name="valorPagado"
-              value={formData.valorPagado ?? ''}
-              onChange={handleChange}
-              placeholder="0"
-            />
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Valor Pagado (Abono)</label>
+              <input
+                name="valorPagado"
+                type="text"
+                inputMode="numeric"
+                min="0"
+                placeholder="0"
+                value={formData.valorPagado ? String(formData.valorPagado).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, '');
+                  handleChange({ target: { name: 'valorPagado', value: raw } });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-') e.preventDefault();
+                }}
+                className={styles.input}
+              />
+              {formData.valorPagado && parseInt(String(formData.valorPagado).replace(/\D/g, ''), 10) > 0 && (
+                <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                  ✦ {montoATextoPesos(parseInt(String(formData.valorPagado).replace(/\D/g, ''), 10))}
+                </span>
+              )}
+            </div>
             <div className={styles.inputGroup}>
               <label className={styles.label}>Fecha Límite <span style={{color: '#e11d48'}}>*</span></label>
               <input 
@@ -309,7 +343,7 @@ export function SaleModal({
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Despachar y Facturar"
-            disabled={formData.detalles.length === 0 || stockError}
+            disabled={formData.detalles.length === 0 || stockError || !formData.idCliente || !formData.fechaVenta || (formData.tipoPago === 'CREDITO' && !formData.fechaLimitePago) || isSubmitting}
           />
         </div>
       </form>

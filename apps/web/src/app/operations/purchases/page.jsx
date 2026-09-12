@@ -91,7 +91,7 @@ export default function PurchasesPage() {
         const group = orderMap.get(compra.idOrden);
         group.total += Number(compra.total);
         group.compras.push(compra);
-        const mappedDetalles = (compra.detalles || []).map(d => ({ ...d, proveedor: compra.proveedor }));
+        const mappedDetalles = (compra.detalles || []).map(d => ({ ...d, proveedor: d.proveedor || compra.proveedor }));
         group.detalles.push(...mappedDetalles);
         if (new Date(compra.fechaCompra) > new Date(group.fechaCompra)) {
           group.fechaCompra = compra.fechaCompra;
@@ -102,7 +102,7 @@ export default function PurchasesPage() {
           isGrouped: false,
           fechaCompra: compra.fechaCompra,
           total: Number(compra.total),
-          detalles: (compra.detalles || []).map(d => ({ ...d, proveedor: compra.proveedor })),
+          detalles: (compra.detalles || []).map(d => ({ ...d, proveedor: d.proveedor || compra.proveedor })),
           compra: compra
         });
       }
@@ -357,6 +357,22 @@ export default function PurchasesPage() {
                             )}
                           </tbody>
                         </table>
+                        
+                        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '0.875rem', gap: '0.25rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '250px' }}>
+                            <span style={{ color: '#64748b' }}>Subtotal Ítems:</span>
+                            <span>${Number(group.detalles.reduce((acc, d) => acc + Number(d.subtotal), 0)).toLocaleString('es-CO')}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '250px' }}>
+                            <span style={{ color: '#64748b' }}>Flete Global:</span>
+                            <span>${Number(group.total - group.detalles.reduce((acc, d) => acc + Number(d.subtotal), 0)).toLocaleString('es-CO')}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '250px', fontWeight: 600, borderTop: '1px solid #e2e8f0', paddingTop: '0.25rem', marginTop: '0.25rem' }}>
+                            <span>Total Compra:</span>
+                            <span>${Number(group.total).toLocaleString('es-CO')}</span>
+                          </div>
+                        </div>
+
                       </div>
                     </TD>
                   </TR>

@@ -27,6 +27,11 @@ export class UpdateSupplyDto {
   stockMinimo;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costoBase;
+
+  @IsOptional()
   @IsBoolean()
   activo;
 

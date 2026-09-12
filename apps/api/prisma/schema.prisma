@@ -28,8 +28,10 @@ model Insumo {
   categoria          String                 @map("Categoria")
   subcategoria       String                 @map("Subcategoria")
   marca              String                 @map("Marca")
+  empaque            String?                @map("Empaque")
   unidadBase         String                 @map("Unidad_Base")
   stockMinimo        Decimal                @map("Stock_Minimo")
+  costoBase          Decimal?               @map("Costo_Base") @db.Decimal(12, 2)
   activo             Boolean                @default(true) @map("Activo")
   observaciones      String?                @map("Observaciones")
   detallesCompra     DetalleCompra[]
@@ -56,6 +58,7 @@ model Proveedor {
   activo           Boolean           @default(true) @map("Activo")
   observaciones    String?           @map("Observaciones")
   compras          Compra[]
+  detallesCompra   DetalleCompra[]
   precios          PrecioProveedor[]
   ordenCompraItems OrdenCompraItem[]
 
@@ -125,8 +128,8 @@ model Cliente {
 
 model Compra {
   id            String          @id @default(uuid()) @map("ID_Compra")
-  idProveedor   String          @map("ID_Proveedor")
-  proveedor     Proveedor       @relation(fields: [idProveedor], references: [id])
+  idProveedor   String?         @map("ID_Proveedor")
+  proveedor     Proveedor?      @relation(fields: [idProveedor], references: [id])
   idOrden       String?         @map("ID_Orden")
   orden         OrdenCompra?    @relation(fields: [idOrden], references: [id])
   fechaCompra   DateTime        @map("Fecha_Compra")
@@ -139,14 +142,16 @@ model Compra {
 }
 
 model DetalleCompra {
-  id             String  @id @default(uuid()) @map("ID_Detalle_Compra")
-  idCompra       String  @map("ID_Compra")
-  compra         Compra  @relation(fields: [idCompra], references: [id])
-  idInsumo       String  @map("ID_Insumo")
-  insumo         Insumo  @relation(fields: [idInsumo], references: [id])
-  cantidad       Decimal @map("Cantidad")
-  precioUnitario Decimal @map("Precio_Unitario") @db.Decimal(12, 2)
-  subtotal       Decimal @map("Subtotal") @db.Decimal(12, 2)
+  id             String     @id @default(uuid()) @map("ID_Detalle_Compra")
+  idCompra       String     @map("ID_Compra")
+  compra         Compra     @relation(fields: [idCompra], references: [id])
+  idInsumo       String     @map("ID_Insumo")
+  insumo         Insumo     @relation(fields: [idInsumo], references: [id])
+  idProveedor    String?    @map("ID_Proveedor")
+  proveedor      Proveedor? @relation(fields: [idProveedor], references: [id])
+  cantidad       Decimal    @map("Cantidad")
+  precioUnitario Decimal    @map("Precio_Unitario") @db.Decimal(12, 2)
+  subtotal       Decimal    @map("Subtotal") @db.Decimal(12, 2)
 
   @@map("Detalle_Compras")
 }

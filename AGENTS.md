@@ -383,3 +383,73 @@ Una tarea se considera terminada cuando:
 5. Los cambios fueron documentados en el reporte de cierre.
 
 Una vez cumplidos estos cinco puntos, la IA DEBE detenerse inmediatamente. Queda PROHIBIDO continuar explorando o refactorizando tras alcanzar el criterio de finalización.
+
+---
+
+## BLOQUE VI: REGLAS GLOBALES DE FORMULARIOS E INPUTS
+
+### 31. TRANSFORMACIÓN A MAYÚSCULAS (TEXT TRANSFORM)
+* Todo campo de texto en formularios debe transformarse y almacenarse en mayúsculas automáticamente (`UPPERCASE`), incluyendo campos como nombres de personas de contacto, descripciones y direcciones.
+* En CSS/UI: Usar `uppercase` visualmente y asegurar que en el estado/payload se envíe siempre en mayúsculas.
+
+### 32. CÉDULAS Y NITS (DOCUMENTOS DE IDENTIDAD)
+* **Entrada de usuario**: Restringir estrictamente la entrada. NO permitir letras, puntos, comas, guiones ni espacios manuales (solo caracteres `0-9`).
+* **Formateo en vivo (Máscara/Display)**: A medida que el usuario escribe, el sistema debe insertar automáticamente espacios donde tradicionalmente irían los separadores de miles para mejorar la legibilidad.
+* **Almacenamiento**: El valor subyacente limpio (`raw value`) debe guardarse únicamente como dígitos numéricos.
+
+### 33. NÚMEROS TELEFÓNICOS
+* **Entrada de usuario**: Solo permitir números (`0-9`). Bloquear el ingreso manual de guiones, espacios o paréntesis.
+* **Formato automático en vivo**: Aplicar máscara visual con el patrón estándar `XXX XXX XXXX` (3 dígitos, espacio, 3 dígitos, espacio, 4 dígitos):
+  * Ejemplo visual: `300 123 4567`
+  * Nota de arquitectura: La lógica debe quedar modular para permitir adaptaciones a formatos internacionales en futuras versiones.
+### 34. DISEÑO VISUAL HOMOLOGADO PARA MODALES
+* **Estructura Estándar:** Todos los modales del sistema DEBEN usar el componente `SmartModal` (`@/components/ui/SmartModal`) o replicar exactamente sus clases y estructura (fondo desenfocado `backdrop-filter: blur`, tarjeta fondo `#FAF8F5`, bordes redondeados `12px`, sombras `box-shadow: 0 20px 25px -5px`).
+* **Encabezado:** Título en negrita a la izquierda (`#1c1917`), con línea separadora inferior tenue y un botón `X` de cierre a la derecha (sin fondo, icono o carácter `✕` color gris).
+* **Campos (Tipografía y Labels):** Las etiquetas deben escribirse en MAYÚSCULAS compactas, fuente pequeña (`0.75rem`), color `#44403c`, peso `600`. Los campos obligatorios deben llevar un asterisco en color coral/rojo (`#e11d48`).
+* **Inputs y Selects:** Fondo blanco puro, padding consistente, bordes grises suaves (`border: 1px solid #d6d3d1`), y placeholders explicativos en gris claro.
+* **Acciones (Footer):** Separador superior tenue. Botones a la derecha. "Cancelar" con fondo gris claro (`#e7e5e4`) y texto oscuro. Botón primario ("Guardar") con fondo oscuro (`#292524`), texto claro (`#fafaf9`) y cambio a opacidad `0.5` si está deshabilitado.
+
+### 35. REGLAS FINANCIERAS Y DE MONEDA
+
+* **Puntuación y Cero Decimales:** Todo valor monetario debe formatearse automáticamente con puntos de miles (es-CO) y sin decimales (ej. $ 25.000 o $ 1.250.000).
+* **No Inicializar en Cero:** Ningún campo de dinero debe arrancar clavado con un 0 en el estado inicial; debe usar campo limpio o placeholder="0" para evitar que el usuario deba borrar el número manualmente.
+* **Bloqueo de Negativos:** Queda restringido el ingreso de signos negativos (-) o letras en los campos de dinero; la máscara debe limpiar caracteres no numéricos al vuelo.
+* **Ayuda Visual Textual Obligatoria (Número a Letras):** Todo input de dinero (flete, precio unitario, costo base, subtotal) debe proyectar en tiempo real su equivalencia en palabras (ej. ✦ Veinticinco mil pesos) consumiendo la utilidad centralizada montoATextoPesos de @/utils/numberToWords.
+* **Ubicación de la Ayuda Textual:** Debe ubicarse al frente (inline a la derecha) del input siempre que el ancho lo permita, o en una cápsula pill (#F7F4EE, borde #CAD5B5, texto verde #065F46) sin quebrar verticalmente la alineación de las filas contiguas.
+
+### 36. REGLAS DE PUNTUACIÓN NUMÉRICA Y EXCEPCIONES
+
+* **Cantidades y Stock:** Todo número representativo de volumen, existencias, conteo o contenido por empaque debe formatearse con separador de miles con punto (10.800 ml, 5.400 g) y estar acompañado siempre de su unidad técnica.
+* **Cédulas de Ciudadanía:** Deben incluir formato de puntuación de miles tradicional para facilitar la lectura visual (ej. 1.020.345.678).
+* **NIT (Norma Colombiana DIAN):**
+  * Se formatea con puntos de separación de miles en el cuerpo principal.
+  * Debe permitir e incluir el guion de separación (-).
+  * Debe incluir el Dígito de Verificación (DV) único al final (ej. 900.123.456-7).
+* **Excepciones de Puntuación (Sin formato de miles):**
+  * **Teléfonos y Celulares:** Se capturan y visualizan continuos o agrupados por código de operador/área (ej. 300 123 4567 o 3001234567), nunca con puntuación monetaria ni puntos de miles.
+  * **Códigos de Barra, Lotes y SKUs:** Se mantienen como secuencias alfanuméricas continuas sin formateadores numéricos.
+
+### 37. UNIDADES DE MEDIDA Y CATÁLOGOS EN FORMULARIOS
+
+* **Unidades Base Soportadas:** El selector técnico de unidades debe incluir de forma fija: kg (Kilogramo), g (Gramo), L (Litro), ml (Mililitro), oz (Onza) y und (Unidad / Pieza).
+* **Tipos de Empaque Estandarizados:** Las opciones de empaque en listas desplegables contemplan: UNIDAD, ENVASE, BOLSA, CAJA, BULTO, BOTELLA, BIDÓN, CANASTILLA y OTRO.
+* **Texto Dinámico de Ayuda:** Debajo de los inputs de umbral o mínimos (como stock mínimo), el texto de ayuda debe autocomponerse en cursiva pluralizando correctamente la unidad (ej. "El mínimo son 1000 gramos de..." o "El mínimo son 24 onzas de...").
+
+### 38. ANATOMÍA Y COMPORTAMIENTO UX DE MODALES (DESIGN SYSTEM MANNÁ)
+
+* **Estructura Visual de la Ventana:**
+  * **Fondo y Tarjeta:** Contenedor blanco marfil (#FFFFFF) con bordes sutiles (#E5DFD5 o #D6D3D1), radios de curvatura de 8px y sombra flotante suave.
+  * **Cabecera:** Título en negrita (#182622) y botón de cierre ✕ en gris suave (#78716C) con realce al cursor.
+  * **Inputs:** Altura estandarizada, esquinas de 6px, bordes neutros y alineación a la derecha para valores monetarios y cantidades.
+* **Botonera de Acción:**
+  * **Botón Cancelar:** Apariencia neutra/secundaria (#F7F4EE o fondo grisáceo suave #E5DFD5, texto #182622), cerrando el modal sin persistir cambios.
+  * **Botón Guardar:** Acción primaria en tono corporativo oscuro (#182622 o verde oscuro).
+  * **Estado Deshabilitado (disabled):** Si faltan campos obligatorios (*) o los valores no son válidos, el botón debe verse grisáceo (#D6D3D1), con opacity: 0.6, cursor: not-allowed, pointer-events: none y tooltip explicativo al usuario.
+  * Todo desplazamiento debe quedar confinado exclusivamente al interior del modal si la pantalla tiene altura reducida, evitando scrollbars en el layout general del dashboard.
+
+### 39. REGLAS DE FLEXIBILIDAD EN ENTIDADES Y PREVENCIÓN DE ERRORES (POKA-YOKE)
+
+* **Regla de Flexibilidad en Proveedores:**
+  * En entidades proveedoras, `nombreContacto` y `email` son estrictamente opcionales. El sistema interactúa con almacenes de cadena y compras de mostrador (D1, ARA, supermercados locales) donde no existe un contacto individual ni buzón asignado.
+* **Regla de Retroalimentación de Errores en Modales (Poka-Yoke):**
+  * Queda estrictamente prohibido emitir alertas genéricas ('Error en la petición') o fallar en silencio sin retroalimentación visual. Todo modal debe capturar la respuesta del backend y proyectar un banner de advertencia inferior (`#FEF2F2`, borde `#F87171`) explicando en lenguaje natural y comprensible la causa raíz (ej. duplicidad de NIT/Cédula, nombre ya registrado o código inválido).

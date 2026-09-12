@@ -10,17 +10,18 @@ import { useState } from 'react';
 
 export function usePurchaseModals() {
   const [showProvModal, setShowProvModal] = useState(false);
-  const [newProv, setNewProv] = useState({ nombre: '', nitCedula: '', telefono: '', personaContacto: '', email: '', direccion: '', observaciones: '', activo: true });
-  
   const [showInsumoModal, setShowInsumoModal] = useState(false);
   const [targetRowId, setTargetRowId] = useState(null);
-  const [newInsumo, setNewInsumo] = useState({ nombre: '', categoria: 'MATERIA_PRIMA', unidadBase: 'KG', stockMinimo: 0, marca: '' });
+
+  // Initial data can be passed, but the modals manage their own forms
+  const [initialProvData, setInitialProvData] = useState({});
+  const [initialSupplyData, setInitialSupplyData] = useState({});
 
   return {
     showProvModal, setShowProvModal,
-    newProv, setNewProv,
     showInsumoModal, setShowInsumoModal,
     targetRowId, setTargetRowId,
-    newInsumo, setNewInsumo
+    initialProvData, setInitialProvData,
+    initialSupplyData, setInitialSupplyData
   };
 }

@@ -11,8 +11,6 @@ import styles from './new-purchase.module.css';
 import { usePurchaseData } from './hooks/usePurchaseData';
 import { useChecklistManager } from './hooks/useChecklistManager';
 import { usePurchaseModals } from './hooks/usePurchaseModals';
-import { QuickSupplierModal } from './components/QuickSupplierModal';
-import { QuickSupplyModal } from './components/QuickSupplyModal';
 import { ChecklistPhase } from './components/ChecklistPhase';
 import { FormPhase } from './components/FormPhase';
 
@@ -46,26 +44,6 @@ function NewPurchasePageContent() {
 
   return (
     <>
-      <QuickSupplierModal 
-        show={modals.showProvModal} 
-        onClose={() => modals.setShowProvModal(false)}
-        newProv={modals.newProv}
-        setNewProv={modals.setNewProv}
-        setProveedoresDB={setProveedoresDB}
-        targetRowId={modals.targetRowId}
-        setTargetRowId={modals.setTargetRowId}
-        showNotification={showNotification}
-      />
-      
-      <QuickSupplyModal 
-        show={modals.showInsumoModal}
-        onClose={() => modals.setShowInsumoModal(false)}
-        newInsumo={modals.newInsumo}
-        setNewInsumo={modals.setNewInsumo}
-        setInsumosDB={setInsumosDB}
-        showNotification={showNotification}
-      />
-
       {(!isDirectMode && phase === 1) ? (
          <ChecklistPhase 
             checklistMgr={checklistMgr} 

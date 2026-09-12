@@ -1,4 +1,4 @@
-import { Controller, Dependencies, Get, Post, Body, Patch, Param, Delete, Bind } from '@nestjs/common';
+import { Controller, Dependencies, Get, Post, Body, Patch, Param, Delete, Bind, HttpException, HttpStatus } from '@nestjs/common';
 import { SuppliesService } from './supplies.service';
 
 @Controller('supplies')
@@ -10,8 +10,16 @@ export class SuppliesController {
 
   @Post()
   @Bind(Body())
-  create(createDto) {
-    return this.suppliesService.create(createDto);
+  async create(createDto) {
+    try {
+      return await this.suppliesService.create(createDto);
+    } catch (error) {
+      throw new HttpException({
+        status: HttpStatus.BAD_REQUEST,
+        error: 'No se pudo crear el insumo',
+        message: error.message
+      }, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get()

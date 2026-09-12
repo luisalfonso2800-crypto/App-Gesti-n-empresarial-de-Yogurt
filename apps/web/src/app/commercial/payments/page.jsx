@@ -11,6 +11,7 @@ import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/Sta
 import { formatCurrency, cleanCurrency } from '../../../lib/formatters';
 import styles from './payments.module.css';
 import modalStyles from '../../../components/ui/SmartModal.module.css';
+import { montoATextoPesos } from '../../../utils/numberToWords';
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState([]);
@@ -222,15 +223,36 @@ export default function PaymentsPage() {
             />
           )}
 
-          <CurrencySmartInput
-            label="Valor Pagado"
-            name="valorPagado"
-            value={formData.valorPagado ?? ''}
-            onChange={handleChange}
-            placeholder="Ej: 50.000"
-            required
-            error={showExceedError ? 'El valor excede el saldo pendiente' : null}
-          />
+          <div className={modalStyles.inputGroup}>
+            <label className={modalStyles.label}>Valor Pagado ($) <span style={{color: '#e11d48'}}>*</span></label>
+            <input
+              name="valorPagado"
+              type="text"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={formData.valorPagado ? String(formData.valorPagado).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, '');
+                handleChange({ target: { name: 'valorPagado', value: raw } });
+              }}
+              onKeyDown={(e) => {
+                if (e.key === '-') e.preventDefault();
+              }}
+              className={modalStyles.input}
+              required
+            />
+            {showExceedError && (
+              <span style={{ fontSize: '0.75rem', color: '#e11d48', marginTop: '0.25rem', display: 'block' }}>
+                El valor excede el saldo pendiente
+              </span>
+            )}
+            {formData.valorPagado && parseInt(String(formData.valorPagado).replace(/\D/g, ''), 10) > 0 && (
+              <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                ✦ {montoATextoPesos(parseInt(String(formData.valorPagado).replace(/\D/g, ''), 10))}
+              </span>
+            )}
+          </div>
 
           <SmartSelect
             label="Método de Pago"
@@ -278,7 +300,7 @@ export default function PaymentsPage() {
             <SubmitButton 
               isSubmitting={isSubmitting} 
               text="Guardar Pago"
-              disabled={!isPaymentValid || (formData.idCliente && pendingSales.length === 0)}
+              disabled={!isPaymentValid || (formData.idCliente && pendingSales.length === 0) || isSubmitting}
             />
           </div>
         </form>

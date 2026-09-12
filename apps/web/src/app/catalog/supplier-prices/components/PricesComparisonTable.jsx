@@ -74,12 +74,12 @@ export function PricesComparisonTable({
                 <TR key={item.id}>
                   <TD>{item.insumo?.Nombre_Insumo || item.insumo?.nombre || item.idInsumo}</TD>
                   <TD>{item.proveedor?.Nombre_Proveedor || item.proveedor?.nombre || item.idProveedor}</TD>
-                  <TD>{item.cantidadPresentacion || 1} {item.unidadPresentacion || 'Paquete'}</TD>
-                  <TD>{item.cantidadEquivalenteBase} {item.insumo?.Unidad_Base || item.insumo?.unidadBase || ''}</TD>
-                  <TD>${item.precioCompra}</TD>
+                  <TD>{item.presentacionCompra || `${item.cantidadPresentacion || 1} ${item.unidadPresentacion || 'Paquete'}`}</TD>
+                  <TD>{item.cantidadEquivalenteBase ? Number(item.cantidadEquivalenteBase).toLocaleString('es-CO') : ''} {item.insumo?.Unidad_Base || item.insumo?.unidadBase || ''}</TD>
+                  <TD>${Number(item.precioCompra).toLocaleString('es-CO')}</TD>
                   <TD>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <span>${item.costoUnidadBase} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</span>
+                      <span>${Number(item.costoUnidadBase).toLocaleString('es-CO')} / {item.insumo?.Unidad_Base || item.insumo?.unidadBase || 'Unidad'}</span>
                       {isBestPrice && (
                         <span className={styles.bestPriceBadge}>Recomendado</span>
                       )}
