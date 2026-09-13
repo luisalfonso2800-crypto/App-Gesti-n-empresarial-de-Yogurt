@@ -197,6 +197,22 @@
 * **Adaptación Visual de Campos (Hiding/Showing):** Si la selección de un campo vuelve irrelevante a otros (ej. costo de producción vs precio de venta comercial), los campos no aplicables deben ocultarse o sustituirse por tarjetas informativas contextuales.
 * **Imposibilidad de Estados Inválidos:** La interfaz debe hacer físicamente imposible que el usuario arme combinaciones contradictorias antes de presionar guardar.
 
+### 35. ERGONOMÍA OPERATIVA Y FLUJO MENTAL (CAUSA -> EFECTO)
+- **Orden Cognitivo Natural (Causa antes de Efecto):** El primer campo de cualquier vista o modal debe ser siempre el recurso maestro desencadenante (ej. en Recetas: primero el *Producto a fabricar*, luego el nombre de la fórmula; en Compras: primero el *Proveedor*, luego los insumos). Nunca obligar al usuario a adivinar nombres o detalles antes de elegir el elemento principal.
+- **Prohibición de Vacíos Blancos (Empty States Asistidos Obligatorios):** Está terminantemente prohibido dejar secciones secundarias (como tablas de etapas, listas de insumos o desglose de pagos) vacías en un fondo blanco sin guía. Si un arreglo está vacío (`length === 0`), se DEBE mostrar una tarjeta orientadora con borde discontinuo (`2px dashed #D6D3D1`), fondo `#FAFAF9`, ícono temático, mensaje explicativo y botones de plantillas rápidas de 1 clic para arrancar.
+- **Campos Derivados con Bloqueo Visual Explícito:** Todo campo cuyo valor provenga o sea forzado por otro (ej. unidad de rendimiento fija según el envase del producto, costos promedio de inventario) NO debe presentarse como input editable libre. Debe renderizarse con fondo tenue `#F7F4EE`, borde `#D6D3D1`, texto `#182622` y cursor bloqueado (`readOnly`/`disabled`), acompañado de un micro-texto en cursiva que explique su origen automático.
+- **Inputs Limpios sin Cero Falso:** Ningún input numérico debe iniciar con el valor `0` clavado en su estado; deben iniciar en cadena vacía `''` con un placeholder contextual que indique un ejemplo realista (ej. `placeholder="Ej: 100"`).
+
+### 36. IDENTIDAD VISUAL MANNÁ Y VETO A ESTILOS GENÉRICOS (ANTI-BLUE)
+- **Prohibición del Azul Genérico:** Queda estrictamente vetado el uso del azul genérico de framework (`#2563EB`, `#3B82F6` o similares) en botones principales, modales o acentos de la plataforma.
+- **Paleta Oficial Homologada:**
+  * **Acción Primaria / Botón de Guardado:** Verde Bosque Profundo (`#182622`), texto `#FFFFFF`, hover `#2C3E38`, esquinas suaves (`6px` a `8px`) y tipografía en negrita (`font-weight: 700`).
+  * **Superficies y Fondos Secundarios:** Lino Cálido / Pergamino (`#F7F4EE` o `#FAF8F5`), con bordes atenuados en `#E8E2D7` o `#D6D3D1`.
+  * **Botones Secundarios y Plantillas de 1 Clic:** Fondo blanco o `#F7F4EE`, borde `1px solid #182622` o `#D6D3D1`, texto `#182622`, con feedback táctil al hover.
+  * **Acentos e Indicadores:** Ámbar / Oro Viejo (`#C58A3E`) para preavisos y detalles visuales, Verde Esmeralda (`#166534` / fondo `#F0FDF4`) para rentabilidad asegurada y Rojo Óxido / Arcilla suave (`#991B1B` / fondo `#FEF2F2`) para alertas y sobrecostos.
+- **Botones Deshabilitados (Disabled State):** Cuando una guarda Poka-Yoke impida guardar (por falta de empaque, stock insuficiente o campos obligatorios vacíos), el botón primario debe pasar a fondo `#A8A29E`, opacidad `0.5` y cursor `not-allowed`.
+
+
 ### 14. ANÁLISIS DE IMPACTO OBLIGATORIO
 
 * Antes de modificar una entidad, tabla, endpoint o estructura utilizada por otros módulos, la IA DEBE identificar sus dependencias.
@@ -461,3 +477,5 @@ Una vez cumplidos estos cinco puntos, la IA DEBE detenerse inmediatamente. Queda
   * En entidades proveedoras, `nombreContacto` y `email` son estrictamente opcionales. El sistema interactúa con almacenes de cadena y compras de mostrador (D1, ARA, supermercados locales) donde no existe un contacto individual ni buzón asignado.
 * **Regla de Retroalimentación de Errores en Modales (Poka-Yoke):**
   * Queda estrictamente prohibido emitir alertas genéricas ('Error en la petición') o fallar en silencio sin retroalimentación visual. Todo modal debe capturar la respuesta del backend y proyectar un banner de advertencia inferior (`#FEF2F2`, borde `#F87171`) explicando en lenguaje natural y comprensible la causa raíz (ej. duplicidad de NIT/Cédula, nombre ya registrado o código inválido).
+* **REGLA POKA-YOKE DE ORIENTACIÓN CONTEXTUAL Y LENGUAJE DE PLANTA:**
+  * El usuario nunca debe memorizar teoría contable ni adivinar por qué un campo se deshabilita, oculta o recalcula en pantalla. Toda variación reactiva debe justificarse en el instante exacto y en lenguaje llano de operario de planta (ej. 'leche en tanque', 'envase comercial', 'ganancia por unidad') en lugar de tecnicismos abstractos (WIP, BOM, CIF, margen de contribución marginal). Las fórmulas de rentabilidad deben traducirse en tiempo real a valores monetarios concretos ($) según los datos ingresados.

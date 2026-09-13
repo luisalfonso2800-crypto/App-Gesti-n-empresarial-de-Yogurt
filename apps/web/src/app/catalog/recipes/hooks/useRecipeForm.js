@@ -1,11 +1,12 @@
 /**
  * @file useRecipeForm.js
  * @module catalog/recipes/hooks
- * @description Estado y manejo del formulario/modal de recetas con soporte dual para insumos y productos WIP.
- * @responsibility Controlar la creación y edición de la receta técnica, gestionar etapas, detalles y costeo dinámico.
+ * @description Estado y manejo del formulario/modal de recetas con sincronización reactiva, soporte dual Insumo/WIP y plantillas de etapas.
+ * @responsibility Controlar la creación y edición de la receta técnica, gestionar etapas automáticas, detalles y costeo dinámico.
  * @usedBy apps/web/src/app/catalog/recipes/page.jsx
  * @dependencies @/lib/api-client
  */
+
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 
@@ -14,7 +15,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
   const [formData, setFormData] = useState({
     nombre: '',
     idProducto: '',
-    rendimientoBase: 0,
+    rendimientoBase: '',
     unidadRendimiento: 'Litros',
     observaciones: '',
     activo: true,
@@ -26,7 +27,10 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
       try {
         const fullItem = await apiClient.get(`/recipes/${item.id}/bom`);
         // Asegurar que cada detalle preserve su idInsumo o idProductoIntermedio intacto
-        setFormData(fullItem);
+        setFormData({
+          ...fullItem,
+          rendimientoBase: fullItem.rendimientoBase ?? ''
+        });
       } catch (err) {
         alert('Error al cargar la receta: ' + err.message);
         return;
@@ -35,7 +39,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
       setFormData({
         nombre: '',
         idProducto: '',
-        rendimientoBase: 0,
+        rendimientoBase: '',
         unidadRendimiento: 'Litros',
         observaciones: '',
         activo: true,
@@ -49,31 +53,135 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
+    // Sincronización reactiva del producto destino: sugiere nombre y ajusta unidad de rendimiento
+    if (name === 'idProducto') {
+      const selectedProd = products.find(p => String(p.id) === String(value));
+      const isGranel = selectedProd ? (
+        selectedProd.presentacion?.tipoEnvase === 'TANQUE_GRANEL' ||
+        selectedProd.presentacion?.nombre?.toUpperCase().includes('GRANEL') ||
+        ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProd.categoria)
+      ) : false;
+
+      setFormData(prev => {
+        const autoNombre = selectedProd ? `Fórmula - ${selectedProd.nombre}` : '';
+        const shouldUpdateNombre = !prev.nombre || prev.nombre.startsWith('Fórmula - ');
+        return {
+          ...prev,
+          idProducto: value,
+          nombre: shouldUpdateNombre ? autoNombre : prev.nombre,
+          unidadRendimiento: isGranel ? 'Litros' : 'Unidades'
+        };
+      });
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? (value === '' ? '' : parseFloat(value) || 0) : value
+      [name]: type === 'checkbox'
+        ? checked
+        : (name === 'rendimientoBase' && value === '')
+          ? ''
+          : type === 'number'
+            ? (value === '' ? '' : parseFloat(value) || 0)
+            : value
     }));
   };
 
-  const addEtapa = () => {
-    setFormData(prev => ({
-      ...prev,
-      etapas: [
-        ...prev.etapas,
-        {
-          nombre: '',
-          orden: prev.etapas.length + 1,
-          tiempoMinimoMin: 0,
-          tiempoEstandarMin: 0,
-          tiempoMaximoMin: 0,
-          tempMinimaGrados: 0,
-          tempMaximaGrados: 0,
-          instrucciones: '',
-          activo: true,
-          detalles: []
-        }
-      ]
-    }));
+  // Plantillas rápidas de etapas en 1 clic (Base en Tanque vs Envasado Comercial)
+  const applyStageTemplate = (templateType) => {
+    if (templateType === 'BASE_TANQUE') {
+      setFormData(prev => ({
+        ...prev,
+        etapas: [
+          {
+            nombre: 'Pasteurización y Acondicionamiento',
+            orden: 1,
+            tempMinimaGrados: 85,
+            tempMaximaGrados: 90,
+            tiempoEstandarMin: 30,
+            tiempoMinimoMin: 25,
+            tiempoMaximoMin: 35,
+            instrucciones: 'Calentamiento y homogenización de base láctea',
+            activo: true,
+            detalles: []
+          },
+          {
+            nombre: 'Inoculación e Incubación',
+            orden: 2,
+            tempMinimaGrados: 42,
+            tempMaximaGrados: 44,
+            tiempoEstandarMin: 480,
+            tiempoMinimoMin: 420,
+            tiempoMaximoMin: 540,
+            instrucciones: 'Sembrado de cultivo láctico y fermentación controlada',
+            activo: true,
+            detalles: []
+          }
+        ]
+      }));
+    } else if (templateType === 'ENVASADO_COMERCIAL') {
+      setFormData(prev => ({
+        ...prev,
+        etapas: [
+          {
+            nombre: 'Mezcla y Saborizado',
+            orden: 1,
+            tiempoEstandarMin: 20,
+            tiempoMinimoMin: 15,
+            tiempoMaximoMin: 30,
+            tempMinimaGrados: 4,
+            tempMaximaGrados: 10,
+            instrucciones: 'Adición de mermelada/fruta y estabilizantes en frío',
+            activo: true,
+            detalles: []
+          },
+          {
+            nombre: 'Dosificación, Sellado y Rotulado',
+            orden: 2,
+            tiempoEstandarMin: 40,
+            tiempoMinimoMin: 30,
+            tiempoMaximoMin: 60,
+            tempMinimaGrados: 4,
+            tempMaximaGrados: 6,
+            instrucciones: 'Envasado en recipientes primarios, termosellado y tapado',
+            activo: true,
+            detalles: []
+          }
+        ]
+      }));
+    }
+  };
+
+  const addEtapa = (templateType, insertAtStart = true) => {
+    if (templateType && typeof templateType === 'string') {
+      applyStageTemplate(templateType);
+      return;
+    }
+    const nuevaEtapa = {
+      nombre: '',
+      orden: 1,
+      tiempoMinimoMin: 0,
+      tiempoEstandarMin: 0,
+      tiempoMaximoMin: 0,
+      tempMinimaGrados: 0,
+      tempMaximaGrados: 0,
+      instrucciones: '',
+      activo: true,
+      detalles: []
+    };
+
+    setFormData(prev => {
+      const updatedEtapas = insertAtStart 
+        ? [nuevaEtapa, ...prev.etapas]
+        : [...prev.etapas, nuevaEtapa];
+      
+      updatedEtapas.forEach((e, i) => { e.orden = i + 1; });
+      return {
+        ...prev,
+        etapas: updatedEtapas
+      };
+    });
   };
 
   const updateEtapa = (index, field, value) => {
@@ -94,7 +202,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
     newEtapas[etapaIndex].detalles.push({
       idInsumo: null,
       idProductoIntermedio: null,
-      cantidadRequerida: 0,
+      cantidadRequerida: '',
       unidad: '',
       mermaPorcentaje: 0,
       esOpcional: false,
@@ -122,7 +230,16 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
         det.idInsumo = insumoId;
         det.idProductoIntermedio = null;
         det.unidad = ins ? ins.unidadBase : 'Unidades';
-        if (det.tipoInsumo === 'INTERMEDIO_WIP') {
+
+        // Detección automática de insumos de empaque vs materias primas
+        const cat = (ins?.categoria || '').toUpperCase();
+        const subcat = (ins?.subcategoria || '').toUpperCase();
+        const nom = (ins?.nombre || '').toUpperCase();
+        const isPackaging = cat.includes('EMPAQUE') || subcat.includes('ENVASE') || subcat.includes('TAPA') || nom.includes('VASO') || nom.includes('BOTELLA') || nom.includes('TAPA') || nom.includes('CÚPULA') || nom.includes('CUPULA') || nom.includes('ETIQUETA');
+
+        if (isPackaging) {
+          det.tipoInsumo = 'EMPAQUE_BASE';
+        } else if (det.tipoInsumo === 'INTERMEDIO_WIP' || det.tipoInsumo === 'EMPAQUE_BASE') {
           det.tipoInsumo = 'BASE';
         }
       } else if (value.startsWith('PROD:')) {
@@ -228,6 +345,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
     handleOpenEditor,
     handleCloseEditor,
     handleChange,
+    applyStageTemplate,
     addEtapa,
     updateEtapa,
     removeEtapa,

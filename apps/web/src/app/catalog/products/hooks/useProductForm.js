@@ -34,8 +34,10 @@ export function useProductForm({ onSuccess }) {
     loadPresentations();
     if (item) {
       setEditingItem(item);
+      const { presentacion, recetas, lotes, inventario, ...restItem } = item;
       setFormData({
-        ...item,
+        ...restItem,
+        idPresentacion: item.idPresentacion || item.presentacion?.id || '',
         precioVenta: item.precioVenta || '',
         margenObjetivo: item.margenObjetivo || ''
       });
@@ -68,13 +70,34 @@ export function useProductForm({ onSuccess }) {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      const payload = customData || formData;
+      const rawPayload = customData || formData;
+      const {
+        presentacion,
+        recetas,
+        producciones,
+        lotes,
+        inventario,
+        detalleVentas,
+        movimientos,
+        recetasConsumo,
+        detallesProduccionConsumo,
+        ...cleanPayload
+      } = rawPayload;
+
+      const payload = {
+        ...cleanPayload,
+        idPresentacion: String(cleanPayload.idPresentacion || presentacion?.id || '')
+      };
+
       if (editingItem) {
         await apiClient.patch(`/products/${editingItem.id}`, payload);
       } else {
         await apiClient.post('/products', payload);
       }
       handleCloseModal();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('onboarding-refresh'));
+      }
       if (onSuccess) onSuccess();
     } catch (err) {
       setErrorMsg(err.message || 'Error al guardar');

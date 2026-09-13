@@ -16,10 +16,26 @@ import { montoATextoPesos } from '@/utils/numberToWords';
 
 // Categorías exclusivas para bases líquidas/semielaboradas en planta
 const CATEGORIAS_WIP = [
-  { id: 'INSUMO_BASE_WIP', label: 'Insumo Base / Semielaborado (WIP)' },
-  { id: 'BASES_LACTEAS', label: 'Bases Lácteas (Tanque / Cava)' },
-  { id: 'DULCES_JALEAS', label: 'Dulces y Jaleas Artesanales' }
+  { id: 'BASES_LACTEAS', label: 'Bases Lácteas (Yogur base blanco, leche cultivada en tanque)' },
+  { id: 'DULCES_JALEAS', label: 'Dulces y Jaleas (Fruta cocida, jaleas en marmita)' },
+  { id: 'INSUMO_BASE_WIP', label: 'Otras Premezclas de Planta (Jarabes, estabilizantes, no lácteos)' }
 ];
+
+// Textos didácticos Poka-Yoke de orientación de planta según categoría WIP
+const HINTS_CATEGORIA_WIP = {
+  BASES_LACTEAS: {
+    icon: '🥛',
+    text: 'Yogur natural base, leche fermentada o base para yogur griego antes de filtrar o saborizar. Se almacena por litros en tanques o cavas.'
+  },
+  DULCES_JALEAS: {
+    icon: '🍓',
+    text: 'Preparados artesanales de fruta (fresa, mora, melocotón, maracuyá) cocinados en paila o marmita para mezclar o fondear el yogur.'
+  },
+  INSUMO_BASE_WIP: {
+    icon: '⚙️',
+    text: 'Premezclas líquidas intermedias que no sean leche ni dulce (ej. jarabes invertidos, mezclas de féculas o neutros).'
+  }
+};
 
 // Categorías exclusivas para productos envasados de venta comercial
 const CATEGORIAS_COMERCIALES = [
@@ -27,6 +43,39 @@ const CATEGORIAS_COMERCIALES = [
   { id: 'POSTRES', label: 'Postres y Otros' },
   { id: 'BEBIDAS', label: 'Bebidas' }
 ];
+
+// Opciones de canales de venta con etiquetas de planta sin ambigüedad
+const CANALES_VENTA = [
+  { id: 'USO_INTERNO', label: 'Solo Planta / Transformación (Uso interno)' },
+  { id: 'MIXTO', label: 'Mixto (Base de Planta + Venta Directa)' },
+  { id: 'B2B', label: 'Tiendas y Mayoristas (B2B)' },
+  { id: 'B2C', label: 'Mostrador y Cliente Final (B2C)' },
+  { id: 'AMBOS', label: 'Comercial Completo (Mayoristas + Mostrador)' }
+];
+
+// Micro-textos didácticos Poka-Yoke de impacto según Canal de Venta seleccionado
+const HINTS_CANAL_VENTA = {
+  USO_INTERNO: {
+    icon: '🏭',
+    text: 'Exclusivo para consumo interno de planta. No genera precio al público y se utiliza como ingrediente en las recetas de producción.'
+  },
+  MIXTO: {
+    icon: '🔄',
+    text: 'Doble propósito: sirve como base para elaborar otros productos en planta y también permite despachos o venta directa a granel.'
+  },
+  B2B: {
+    icon: '🏬',
+    text: 'Orientado a despachos por volumen para tiendas, distribuidores o clientes mayoristas.'
+  },
+  B2C: {
+    icon: '🛒',
+    text: 'Orientado a venta unitaria directa al consumidor final en punto de venta o mostrador.'
+  },
+  AMBOS: {
+    icon: '🌐',
+    text: 'Habilitado tanto para pedidos mayoristas (B2B) como para venta directa en mostrador (B2C).'
+  }
+};
 
 export function ProductModal({ 
   isOpen, onClose, editingItem, formData, handleChange, handleSubmit, 
@@ -49,7 +98,7 @@ export function ProductModal({
       if (!formData.categoria || ['LACTEOS', 'POSTRES', 'BEBIDAS'].includes(formData.categoria)) {
         handleChange({ target: { name: 'categoria', value: 'INSUMO_BASE_WIP' } });
       }
-      if (formData.canalVenta !== 'USO_INTERNO') {
+      if (formData.canalVenta !== 'USO_INTERNO' && formData.canalVenta !== 'MIXTO') {
         handleChange({ target: { name: 'canalVenta', value: 'USO_INTERNO' } });
       }
       if (formData.precioVenta !== 0 && formData.precioVenta !== '0') {
@@ -114,12 +163,14 @@ export function ProductModal({
     if (isSubmitDisabled) return;
     const pc = isGranel ? 0 : cleanCurrency(formData.precioVenta);
     const mO = isGranel ? 0 : Number(formData.margenObjetivo);
+    const { presentacion, ...restFormData } = formData;
     handleSubmit(e, {
-      ...formData,
+      ...restFormData,
+      idPresentacion: String(formData.idPresentacion || presentacion?.id || ''),
       nombre: (formData.nombre || '').trim().toUpperCase(),
       descripcion: (formData.descripcion || '').trim().toUpperCase(),
       observaciones: (formData.observaciones || '').trim().toUpperCase(),
-      canalVenta: isGranel ? 'USO_INTERNO' : formData.canalVenta,
+      canalVenta: isGranel ? (formData.canalVenta || 'USO_INTERNO') : formData.canalVenta,
       precioVenta: pc,
       margenObjetivo: mO
     });
@@ -248,22 +299,57 @@ export function ProductModal({
               required
               placeholder="Seleccione categoría"
             />
+            {isGranel && HINTS_CATEGORIA_WIP[formData.categoria] && (
+              <div style={{
+                width: '100%',
+                backgroundColor: '#F1F5F9',
+                border: '1px solid #CBD5E1',
+                borderRadius: '6px',
+                padding: '0.5rem 0.75rem',
+                marginTop: '0.45rem',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.45rem',
+                boxSizing: 'border-box'
+              }}>
+                <span style={{ fontSize: '0.95rem', lineHeight: 1.2 }}>
+                  {HINTS_CATEGORIA_WIP[formData.categoria].icon}
+                </span>
+                <span style={{ fontSize: '0.73rem', color: '#334155', lineHeight: '1.35' }}>
+                  <strong>Aplica para:</strong> {HINTS_CATEGORIA_WIP[formData.categoria].text}
+                </span>
+              </div>
+            )}
           </div>
-          
-          <SmartSelect
-            label="Canal de Venta"
-            name="canalVenta"
-            value={formData.canalVenta ?? ''}
-            onChange={handleChange}
-            options={[
-              { id: 'USO_INTERNO', label: 'Uso Interno / Planta (Transformación)' },
-              { id: 'B2B', label: 'B2B (Mayoristas)' },
-              { id: 'B2C', label: 'B2C (Consumidor Final)' },
-              { id: 'AMBOS', label: 'Ambos' }
-            ]}
-            required
-            placeholder="Seleccione canal"
-          />
+          <div>
+            <SmartSelect
+              label="Canal de Venta"
+              name="canalVenta"
+              value={formData.canalVenta ?? ''}
+              onChange={handleChange}
+              options={CANALES_VENTA}
+              required
+              placeholder="Seleccione destino del producto..."
+            />
+            {formData.canalVenta && HINTS_CANAL_VENTA[formData.canalVenta] && (
+              <div style={{
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                color: '#334155',
+                padding: '0.45rem 0.65rem',
+                borderRadius: '6px',
+                fontSize: '0.72rem',
+                marginTop: '0.35rem',
+                lineHeight: '1.3',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.4rem'
+              }}>
+                <span style={{ fontSize: '0.9rem', lineHeight: 1 }}>{HINTS_CANAL_VENTA[formData.canalVenta].icon}</span>
+                <span>{HINTS_CANAL_VENTA[formData.canalVenta].text}</span>
+              </div>
+            )}
+          </div>
 
           {/* Micro-texto explicativo de Semielaborado (WIP) a ancho completo */}
           {(isGranel || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS'].includes(formData.categoria)) && (
@@ -340,13 +426,41 @@ export function ProductModal({
         {/* RENDERIZADO CONDICIONAL SEGÚN PRESENTACIÓN (WIP/A GRANEL vs COMERCIAL) */}
         {isGranel ? (
           /* Tarjeta de Costeo Operativo de Planta para Productos a Granel / Semielaborados */
-          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.85rem 1rem', marginTop: '0.5rem' }}>
+          <div style={{
+            gridColumn: '1 / -1',
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #CBD5E1',
+            borderRadius: '8px',
+            padding: '0.85rem 1rem',
+            marginTop: '0.5rem'
+          }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', color: '#0F172A', fontWeight: '700', fontSize: '0.8rem' }}>
-              <span>⚙️</span> Ficha de Costeo por Transformación (Uso Interno)
+              <span>🏭</span> Base Láctea en Tanque (Para Consumo Interno)
             </div>
-            <p style={{ margin: 0, fontSize: '0.75rem', color: '#475569', lineHeight: '1.4' }}>
-              Este producto no tiene precio de venta al público ($ 0). Su costo real por litro o kilo se liquidará automáticamente en cada orden de fabricación según las materias primas consumidas en el tanque (leche cruda, cultivo láctico, pulpas, azúcar).
+            <p style={{ margin: '0 0 0.65rem 0', fontSize: '0.75rem', color: '#475569', lineHeight: '1.4' }}>
+              Este producto se almacena por litros en marmita/cava y no tiene precio de venta al público porque no está envasado. Su costo se liquidará automáticamente según la leche y los fermentos que consuma la orden de fabricación.
             </p>
+            <div style={{
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #BFDBFE',
+              borderRadius: '6px',
+              padding: '0.6rem 0.85rem',
+              fontSize: '0.73rem',
+              color: '#1E40AF',
+              lineHeight: '1.4'
+            }}>
+              <div style={{ fontWeight: '700', marginBottom: '0.25rem' }}>
+                💡 ¿También comercializas este yogur natural al cliente final?
+              </div>
+              <ol style={{ margin: 0, paddingLeft: '1.15rem' }}>
+                <li style={{ marginBottom: '0.2rem' }}>
+                  Guarda primero este registro a granel para acumular los litros de base elaborados en planta.
+                </li>
+                <li>
+                  Luego crea otro producto llamado por ejemplo <em>&quot;Yogurt Natural 1 Litro&quot;</em> con su respectiva presentación en botella, donde sí podrás fijar el precio de venta.
+                </li>
+              </ol>
+            </div>
           </div>
         ) : (
           /* Fila y Tarjeta de Proyección Financiera para Productos Terminados Comerciales */

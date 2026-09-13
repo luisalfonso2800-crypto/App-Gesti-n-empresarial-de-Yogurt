@@ -2,7 +2,7 @@
 .title { font-size: 1.5rem; font-weight: bold; color: #111827; margin: 0; }
 .actions { display: flex; gap: 1rem; }
 .form { display: flex; flex-direction: column; gap: 1rem; }
-.formActions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+.formActions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
 
 .headerTitle { display: flex; flex-direction: column; }
 .subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
@@ -10,18 +10,37 @@
 .editorContainer { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-.sectionTitle { font-size: 1.25rem; font-weight: bold; margin-bottom: 0.5rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+.sectionTitle { font-size: 1.25rem; font-weight: bold; color: #182622; margin-bottom: 0.75rem; border-bottom: 1px solid #e5e7eb; padding-bottom: 0.5rem; }
+
+.label { display: block; font-size: 0.75rem; font-weight: 700; color: #182622; margin-bottom: 0.35rem; letter-spacing: 0.025em; }
 
 .stageCard { border: 1px solid #d1d5db; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: #f9fafb; }
 .stageHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
-.stageHeader h3 { margin: 0; font-size: 1.1rem; }
+.stageHeader h3 { margin: 0; font-size: 1.1rem; color: #182622; }
 
 .bomTable { width: 100%; border-collapse: collapse; margin-top: 1rem; }
 .bomTable th, .bomTable td { border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left; font-size: 0.875rem; }
-.bomTable th { background: #f3f4f6; }
+.bomTable th { background: #f3f4f6; color: #182622; font-weight: 600; }
 
-.input, .select { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; }
-.input:focus, .select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 1px #2563eb; }
+.input, .select { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; color: #182622; background-color: #ffffff; }
+.input:focus, .select:focus { outline: none; border-color: #182622; box-shadow: 0 0 0 1px #182622; }
+
+.readOnlyInput { background-color: #F7F4EE; border: 1px solid #D6D3D1; color: #182622; padding: 0.5rem; border-radius: 0.375rem; font-size: 0.875rem; width: 100%; cursor: not-allowed; font-weight: 600; }
+
+.emptyStateCard { border: 2px dashed #D6D3D1; background-color: #FAFAF9; border-radius: 8px; padding: 1.75rem 1.5rem; text-align: center; margin: 1rem 0; }
+
+.templateBtn { background-color: #F7F4EE; border: 1px solid #E5DFD5; color: #182622; padding: 0.45rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s ease-in-out; }
+.templateBtn:hover { background-color: #EFECE4; border-color: #D6D0C4; color: #111816; }
+
+.addStageBtn { background-color: #FFFFFF; border: 1px solid #182622; color: #182622; padding: 0.45rem 0.85rem; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease-in-out; }
+.addStageBtn:hover { background-color: #F7F4EE; }
+
+.saveBtn { background-color: #182622; color: #FFFFFF; border: 1px solid #182622; padding: 0.55rem 1.25rem; border-radius: 6px; font-weight: 700; font-size: 0.875rem; cursor: pointer; transition: all 0.15s ease-in-out; }
+.saveBtn:hover:not(:disabled) { background-color: #2C3E38; border-color: #2C3E38; }
+.saveBtn:disabled { background-color: #A8A29E; border-color: #A8A29E; opacity: 0.5; cursor: not-allowed; }
+
+.cancelBtn { background-color: #E5DFD5; color: #182622; border: 1px solid #D6D0C4; padding: 0.55rem 1.25rem; border-radius: 6px; font-weight: 600; font-size: 0.875rem; cursor: pointer; transition: all 0.15s ease-in-out; }
+.cancelBtn:hover { background-color: #D9D2C6; }
 
 .summaryCard { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 1rem; margin-top: 2rem; }
 .summaryCard h4 { margin: 0 0 0.5rem 0; color: #1e3a8a; }
@@ -31,3 +50,73 @@
 .summaryCardPokaYoke { background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 1.25rem; margin-top: 2rem; }
 .summaryCardPokaYoke h4 { margin: 0 0 0.75rem 0; color: #166534; font-size: 1.1rem; }
 .summaryTotalPokaYoke { font-weight: bold; border-top: 1px solid #BBF7D0; padding-top: 0.75rem; margin-top: 0.5rem; font-size: 1.15rem; color: #15803D; }
+
+/* Acordeón exclusivo para etapas */
+.collapsedStageRow {
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  margin-bottom: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 45px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+.collapsedStageRow:hover {
+  background-color: #F5EFE6;
+  border-color: #D6CEBE;
+}
+.collapsedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  color: #182622;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Botón Finalizar y Resumir */
+.summarizeBtn {
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  color: #182622;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+}
+.summarizeBtn:hover {
+  background-color: #E8EFE2;
+  border-color: #B5C69E;
+}
+
+/* Balance General Horizontal */
+.balanceBar {
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  box-sizing: border-box;
+}
+

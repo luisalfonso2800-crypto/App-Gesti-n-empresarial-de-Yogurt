@@ -1,5 +1,20 @@
+/**
+ * @file production.repository.js
+ * @module Production/Repository
+ * @description Repositorio de persistencia transaccional para órdenes de manufactura, explosión de materiales (BOM) y liquidación de costos.
+ * @responsibility Administrar la creación de órdenes de producción con snapshots inmutables de receta, trazabilidad de lotes y redondeo de consumo discreto de empaques.
+ * @usedBy apps/api/src/production/production.service.js
+ * @dependencies @nestjs/common, apps/api/src/database/prisma.service.js
+ */
+
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+
+/**
+ * Familias de unidades de medida discretas e indivisibles en planta.
+ * Requieren redondeo estricto hacia arriba (Math.ceil) para evitar fraccionamiento físico en kardex.
+ */
+const UNIDADES_DISCRETAS = ['UNIDAD', 'UNIDADES', 'UND', 'PZA', 'PIEZA', 'VASO', 'BOTELLA', 'TAPA', 'ETIQUETA'];
 
 const includeProduction = {
   detalles: {
@@ -89,9 +104,9 @@ export class ProductionRepository {
         const merma = Number(det.mermaPorcentaje) || 0;
         reqTeorico = reqTeorico * (1 + (merma / 100));
 
-        if (det.unidad === 'Unidades') {
-          reqTeorico = Math.ceil(reqTeorico);
-        }
+        const esUnidadDiscreta = UNIDADES_DISCRETAS.includes((det.unidad || '').toUpperCase().trim());
+        const cantidadFinal = esUnidadDiscreta ? Math.ceil(reqTeorico) : Number(reqTeorico.toFixed(4));
+        reqTeorico = cantidadFinal;
 
         if (det.idProductoIntermedio) {
           // Consultar inventario de producto intermedio / semielaborado WIP
@@ -173,7 +188,69 @@ export class ProductionRepository {
 
   async createWithTransaction(data) {
     return this.prisma.$transaction(async (prisma) => {
-      // Create production record with snapshot of BOM
+      // 1. Consultar receta técnica activa para congelar snapshot inmutable de fabricación
+      const recetaActiva = await prisma.receta.findFirst({
+        where: data.idReceta
+          ? { id: data.idReceta }
+          : { idProducto: data.idProducto, activo: true },
+        include: {
+          etapas: {
+            where: { activo: true },
+            orderBy: { orden: 'asc' },
+            include: {
+              detalles: {
+                where: { activo: true },
+                include: {
+                  insumo: true,
+                  productoIntermedio: true
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // 2. Estructurar snapshot técnico inmutable con tiempos, temperaturas e instrucciones de planta
+      const snapshotReceta = recetaActiva ? {
+        idRecetaOriginal: recetaActiva.id,
+        nombreReceta: recetaActiva.nombre,
+        rendimientoBase: Number(recetaActiva.rendimientoBase),
+        unidadRendimiento: recetaActiva.unidadRendimiento,
+        fechaSnapshot: new Date().toISOString(),
+        etapas: recetaActiva.etapas.map(e => ({
+          nombre: e.nombre,
+          orden: e.orden,
+          tiempoMinimoMin: e.tiempoMinimoMin,
+          tiempoEstandarMin: e.tiempoEstandarMin,
+          tiempoMaximoMin: e.tiempoMaximoMin,
+          tempMinimaGrados: e.tempMinimaGrados ? Number(e.tempMinimaGrados) : null,
+          tempMaximaGrados: e.tempMaximaGrados ? Number(e.tempMaximaGrados) : null,
+          instrucciones: e.instrucciones,
+          detalles: e.detalles.map(d => ({
+            idInsumo: d.idInsumo,
+            nombreInsumo: d.insumo?.nombre || null,
+            idProductoIntermedio: d.idProductoIntermedio,
+            nombreProductoIntermedio: d.productoIntermedio?.nombre || null,
+            cantidadRequerida: Number(d.cantidadRequerida),
+            unidad: d.unidad,
+            mermaPorcentaje: Number(d.mermaPorcentaje),
+            tipoInsumo: d.tipoInsumo,
+            grupoVariante: d.grupoVariante,
+            esOpcional: d.esOpcional
+          }))
+        }))
+      } : null;
+
+      // 3. Serializar metadatos y observaciones conservando cualquier nota manual previa
+      let observacionesPayload = data.observaciones || '';
+      if (snapshotReceta) {
+        observacionesPayload = JSON.stringify({
+          userNotes: data.observaciones || null,
+          recipeSnapshot: snapshotReceta
+        });
+      }
+
+      // 4. Crear orden de producción con cantidades discretas redondeadas y snapshot inmutable
       const produccion = await prisma.produccion.create({
         data: {
           fechaPlanificada: data.fechaPlanificada ? new Date(data.fechaPlanificada) : null,
@@ -183,18 +260,22 @@ export class ProductionRepository {
           cantidadProducidaReal: data.cantidadProducidaReal || 0,
           estado: data.estado || 'PLANIFICADA',
           fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : null,
-          observaciones: data.observaciones,
+          observaciones: observacionesPayload,
           detalles: {
-            create: data.detalles.map(d => ({
-              idInsumo: d.idInsumo || null,
-              idProductoIntermedio: d.idProductoIntermedio || null,
-              cantidadTeorica: d.cantidadTeorica,
-              unidad: d.unidad,
-              costoTeorico: d.costoTeorico,
-              cantidadRealUtilizada: null,
-              costoReal: null,
-              diferencia: null
-            }))
+            create: data.detalles.map(d => {
+              const esUnidadDiscreta = UNIDADES_DISCRETAS.includes((d.unidad || '').toUpperCase().trim());
+              const cantTeorica = esUnidadDiscreta ? Math.ceil(Number(d.cantidadTeorica)) : Number(Number(d.cantidadTeorica).toFixed(4));
+              return {
+                idInsumo: d.idInsumo || null,
+                idProductoIntermedio: d.idProductoIntermedio || null,
+                cantidadTeorica: cantTeorica,
+                unidad: d.unidad,
+                costoTeorico: d.costoTeorico,
+                cantidadRealUtilizada: null,
+                costoReal: null,
+                diferencia: null
+              };
+            })
           }
         },
         include: includeProduction
@@ -202,6 +283,10 @@ export class ProductionRepository {
 
       return produccion;
     });
+  }
+
+  async create(data) {
+    return this.createWithTransaction(data);
   }
 
   async startProduction(id) {
@@ -284,7 +369,9 @@ export class ProductionRepository {
       for (const updateDet of data.detalles) {
         const det = produccion.detalles.find(d => d.id === updateDet.id);
         if (det) {
-          const qtyReal = Number(updateDet.cantidadRealUtilizada);
+          const rawQty = Number(updateDet.cantidadRealUtilizada);
+          const esUnidadDiscreta = UNIDADES_DISCRETAS.includes((det.unidad || '').toUpperCase().trim());
+          const qtyReal = esUnidadDiscreta ? Math.ceil(rawQty) : Number(rawQty.toFixed(4));
           const diferencia = qtyReal - Number(det.cantidadTeorica);
 
           if (det.idInsumo) {

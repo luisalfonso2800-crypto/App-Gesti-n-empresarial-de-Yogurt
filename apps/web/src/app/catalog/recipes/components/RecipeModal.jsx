@@ -1,24 +1,140 @@
 /**
  * @file RecipeModal.jsx
  * @module catalog/recipes/components
- * @description Editor principal para crear/editar recetas técnicas con soporte dual para insumos y WIP.
- * @responsibility Formularios, etapas, BOM dual, protección anti-recursión y cápsula resumen Poka-Yoke.
+ * @description Editor ergonómico para crear/editar recetas técnicas con flujo visual causa-efecto, paleta MANNÁ y semáforo financiero.
+ * @responsibility Formulario de cabecera con producto como campo protagónico, unidad bloqueada, empty state asistido y prevención Poka-Yoke.
  * @usedBy apps/web/src/app/catalog/recipes/page.jsx
- * @dependencies @/components/ui/Button, @/components/ui/ContextBanner, IngredientsFormSection, styles local
+ * @dependencies @/components/ui/ContextBanner, @/lib/formatters, IngredientsFormSection, styles local
  */
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
 import { ContextBanner } from '@/components/ui/ContextBanner';
+import { formatCurrency } from '@/lib/formatters';
 import { IngredientsFormSection } from './IngredientsFormSection';
 import styles from '../recipes.module.css';
 
+/**
+ * Genera dinámicamente un párrafo descriptivo en lenguaje natural de planta para una etapa.
+ * @param {Object} etapa - Datos de la etapa (tiempos, temperaturas, instrucciones, detalles)
+ * @param {Array} supplies - Catálogo de insumos
+ * @param {Array} products - Catálogo de productos
+ * @returns {string} Síntesis en lenguaje natural de planta
+ */
+export function generateStageSummaryText(etapa, supplies = [], products = []) {
+  if (!etapa) return '';
+
+  // 1. Insumos y bases agregados
+  const activeDetails = etapa.detalles?.filter(d => d.activo !== false) || [];
+  let insumosPart = '';
+
+  if (activeDetails.length === 0) {
+    insumosPart = 'Fase de proceso térmico/espera sin adición de materiales físicos';
+  } else {
+    const itemsList = activeDetails.map(det => {
+      let nombreItem = '';
+      if (det.idProductoIntermedio) {
+        const prod = products.find(p => String(p.id) === String(det.idProductoIntermedio));
+        nombreItem = prod ? prod.nombre : 'BASE INTERMEDIA (WIP)';
+      } else if (det.idInsumo) {
+        const ins = supplies.find(s => String(s.id) === String(det.idInsumo));
+        nombreItem = ins ? ins.nombre : 'INSUMO';
+      } else {
+        nombreItem = 'MATERIAL';
+      }
+
+      const cantNum = Number(det.cantidadRequerida) || 0;
+      const cantFormateada = cantNum.toLocaleString('es-CO', { maximumFractionDigits: 4 });
+      const unidad = det.unidad || '';
+
+      return `${cantFormateada} ${unidad} de ${nombreItem}`.trim();
+    });
+
+    insumosPart = `Adición de: ${itemsList.join(', ')}`;
+  }
+
+  // 2. Temperaturas
+  let tempPart = '';
+  const tempMin = etapa.tempMinimaGrados !== '' && etapa.tempMinimaGrados !== null && etapa.tempMinimaGrados !== undefined ? Number(etapa.tempMinimaGrados) : null;
+  const tempMax = etapa.tempMaximaGrados !== '' && etapa.tempMaximaGrados !== null && etapa.tempMaximaGrados !== undefined ? Number(etapa.tempMaximaGrados) : null;
+
+  if (tempMin !== null && tempMax !== null && (tempMin > 0 || tempMax > 0)) {
+    if (tempMin === tempMax) {
+      tempPart = `a temperatura de ${tempMin}°C`;
+    } else {
+      tempPart = `manteniendo temperatura entre ${tempMin}°C y ${tempMax}°C`;
+    }
+  } else if (tempMin !== null && tempMin > 0) {
+    tempPart = `a temperatura de ${tempMin}°C`;
+  } else if (tempMax !== null && tempMax > 0) {
+    tempPart = `a temperatura máxima de ${tempMax}°C`;
+  }
+
+  // 3. Tiempos y Conversión Horaria
+  let tiempoPart = '';
+  const tiempoEst = Number(etapa.tiempoEstandarMin) || 0;
+  const tMin = Number(etapa.tiempoMinimoMin) || 0;
+  const tMax = Number(etapa.tiempoMaximoMin) || 0;
+
+  if (tiempoEst > 0) {
+    let conversion = '';
+    if (tiempoEst >= 60) {
+      const horas = tiempoEst / 60;
+      const horasFormatted = Number.isInteger(horas) ? horas : horas.toFixed(1);
+      const sufijoHora = horas === 1 ? 'hora' : 'horas';
+      conversion = ` (${horasFormatted} ${sufijoHora})`;
+    }
+
+    tiempoPart = `durante ${tiempoEst} min${conversion}`;
+  }
+
+  if (tMin > 0 || tMax > 0) {
+    const rangoStr = `rango admisible: ${tMin} a ${tMax} min`;
+    tiempoPart = tiempoPart ? `${tiempoPart} (${rangoStr})` : `en ${rangoStr}`;
+  }
+
+  // 4. Instrucción
+  let instruccionPart = '';
+  if (etapa.instrucciones && etapa.instrucciones.trim()) {
+    instruccionPart = `para: ${etapa.instrucciones.trim()}`;
+  }
+
+  // Ensamblar componentes con fluidez natural
+  const clauses = [insumosPart];
+  if (tempPart) clauses.push(tempPart);
+  if (tiempoPart) clauses.push(tiempoPart);
+  if (instruccionPart) clauses.push(instruccionPart);
+
+  let sentence = clauses.join(', ');
+  if (!sentence.endsWith('.')) {
+    sentence += '.';
+  }
+
+  return sentence;
+}
+
 export function RecipeModal({ 
   formData, products = [], supplies = [], onClose, onSubmit, onChange,
-  onAddEtapa, onUpdateEtapa, onRemoveEtapa,
+  onApplyStageTemplate, onAddEtapa, onUpdateEtapa, onRemoveEtapa,
   onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost
 }) {
-  // Conteo de insumos y bases intermedias para la cápsula de resumen Poka-Yoke
+  // Estado para acordeón exclusivo (índice de la etapa expandida; -1 si todas están colapsadas)
+  const [expandedStageIndex, setExpandedStageIndex] = useState(0);
+
+  // Estado para mostrar panel de lectura continua "Finalizar y Resumir Proceso"
+  const [showSummaryPanel, setShowSummaryPanel] = useState(false);
+
+  // Estado para revelación progresiva del campo de observaciones
+  const [showNotes, setShowNotes] = useState(Boolean(formData.observaciones && formData.observaciones.trim()));
+
+  // Asegurar que si hay observaciones se active el campo al abrir
+  useEffect(() => {
+    if (formData.observaciones && formData.observaciones.trim()) {
+      setShowNotes(true);
+    }
+  }, [formData.observaciones]);
+
+  // Conteo de insumos y bases intermedias para el balance general de materiales
   let totalMateriasPrimas = 0;
   let totalBasesWip = 0;
 
@@ -34,6 +150,9 @@ export function RecipeModal({
     });
   });
 
+  const activeStages = formData.etapas?.filter(e => e.activo !== false) || [];
+  const activeStagesCount = activeStages.length;
+
   const totalCost = calculateCost();
   const rendimientoNum = parseFloat(formData.rendimientoBase) || 0;
   const costPerUnit = rendimientoNum > 0 ? (totalCost / rendimientoNum) : 0;
@@ -41,59 +160,260 @@ export function RecipeModal({
   // Guardia Poka-Yoke: Secuencia de Planta (Base a Granel ➔ Producto Comercial Envasado)
   const hasBulkProduct = products.some(p => 
     p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 
-    p.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+    p.presentacion?.nombre?.toUpperCase().includes('GRANEL') ||
+    ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(p.categoria)
   );
 
   const selectedProduct = products.find(p => String(p.id) === String(formData.idProducto));
   const isSelectedProductBulk = selectedProduct ? (
     selectedProduct.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 
-    selectedProduct.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+    selectedProduct.presentacion?.nombre?.toUpperCase().includes('GRANEL') ||
+    ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProduct.categoria)
   ) : false;
 
   const isCommercialWithoutBulk = selectedProduct && !isSelectedProductBulk && !hasBulkProduct;
+  const isCommercialProduct = selectedProduct && !isSelectedProductBulk;
+
+  // Detección Poka-Yoke de Empaque Obligatorio en Productos Comerciales
+  const hasPackagingItem = formData.etapas?.some(etapa => {
+    if (etapa.activo === false) return false;
+    return etapa.detalles?.some(det => {
+      if (det.activo === false) return false;
+      if (det.tipoInsumo === 'EMPAQUE_BASE' || det.tipoInsumo === 'EMPAQUE_COMPLEMENTO') {
+        return true;
+      }
+      if (det.idInsumo) {
+        const ins = supplies.find(s => s.id === det.idInsumo);
+        if (ins) {
+          const cat = (ins.categoria || '').toUpperCase();
+          const subcat = (ins.subcategoria || '').toUpperCase();
+          const nom = (ins.nombre || '').toUpperCase();
+          return cat.includes('EMPAQUE') || subcat.includes('ENVASE') || subcat.includes('TAPA') || nom.includes('VASO') || nom.includes('BOTELLA') || nom.includes('TAPA');
+        }
+      }
+      return false;
+    });
+  });
+
+  const isMissingCommercialPackaging = isCommercialProduct && !hasPackagingItem;
+
+  // Parámetros financieros del producto para el semáforo de costo en tiempo real
+  const precioVentaNum = Number(selectedProduct?.precioVenta) || 0;
+  const margenObjetivoNum = Number(selectedProduct?.margenObjetivo) || 0;
+  const costoTopePermitido = precioVentaNum > 0 && margenObjetivoNum > 0
+    ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100)))
+    : 0;
+
+  const isInternoOrBulk = precioVentaNum === 0 || isSelectedProductBulk;
+  const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging;
+
+  let submitTooltip = '';
+  if (isCommercialWithoutBulk) {
+    submitTooltip = 'Debe existir al menos un producto base a granel en el catálogo para formular productos terminados';
+  } else if (isMissingCommercialPackaging) {
+    submitTooltip = 'Debe agregar al menos un insumo de empaque primario (vaso, botella o tapa) a la receta';
+  }
+
+  const handleApplyTemplate = (type) => {
+    if (onApplyStageTemplate) {
+      onApplyStageTemplate(type);
+    } else if (onAddEtapa) {
+      onAddEtapa(type);
+    }
+    setExpandedStageIndex(0);
+    setShowSummaryPanel(false);
+  };
+
+  const handleAddNewStage = () => {
+    if (onAddEtapa) {
+      onAddEtapa(null, true);
+    }
+    setExpandedStageIndex(0);
+    setShowSummaryPanel(false);
+  };
+
+  const handleToggleSummarize = () => {
+    if (showSummaryPanel) {
+      setShowSummaryPanel(false);
+      setExpandedStageIndex(0);
+    } else {
+      setShowSummaryPanel(true);
+      setExpandedStageIndex(-1);
+    }
+  };
 
   return (
     <div>
+      {/* Botonera Superior Fija: Acciones clave accesibles inmediatamente sin scroll */}
       <div className={styles.header}>
         <div className={styles.headerTitle}>
           <h1 className={styles.title}>{formData.id ? 'Editar Receta Técnica' : 'Nueva Receta Técnica'}</h1>
+          <span className={styles.subtitle}>Formulación estandarizada y hoja de ruta de fabricación</span>
         </div>
-        <Button variant="secondary" onClick={onClose}>Volver al Listado</Button>
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          <button 
+            type="button" 
+            className={styles.cancelBtn} 
+            onClick={onClose}
+            style={{
+              backgroundColor: '#F7F4EE',
+              border: '1px solid #D6D3D1',
+              color: '#182622',
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Cancelar
+          </button>
+          <button 
+            type="button"
+            className={styles.saveBtn}
+            onClick={onSubmit}
+            disabled={!canSubmit}
+            title={submitTooltip}
+            style={{
+              backgroundColor: canSubmit ? '#182622' : '#A8A29E',
+              color: '#FFFFFF',
+              border: '1px solid #182622',
+              padding: '0.5rem 1.25rem',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: canSubmit ? 'pointer' : 'not-allowed',
+              opacity: canSubmit ? 1 : 0.5
+            }}
+          >
+            Guardar Receta
+          </button>
+        </div>
       </div>
+
       <ContextBanner
         title="Concepto Técnico"
         description="Instrucciones paso a paso para fabricar los productos. Permite formular tanto materias primas compradas como bases semielaboradas (WIP) producidas en planta."
       />
 
       <form onSubmit={onSubmit} className={styles.editorContainer}>
+        {/* Cabecera Ergonómica (Flujo Causa -> Efecto) */}
         <div>
           <h2 className={styles.sectionTitle}>Cabecera de Receta</h2>
           <div className={styles.grid2}>
-            <div>
-              <label className={styles.label}>Nombre de la Receta</label>
-              <input className={styles.input} name="nombre" value={formData.nombre} onChange={onChange} required />
+            {/* Columna 1: Causa Protagónica (Producto a fabricar y Nombre resultante) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label className={styles.label}>PRODUCTO A FABRICAR *</label>
+                <select 
+                  className={styles.select} 
+                  name="idProducto" 
+                  value={formData.idProducto} 
+                  onChange={onChange} 
+                  required
+                >
+                  <option value="">Seleccione el producto a fabricar...</option>
+                  {products.map(p => (
+                    <option key={p.id} value={p.id}>{p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={styles.label}>NOMBRE TÉCNICO DE LA RECETA *</label>
+                <input 
+                  className={styles.input} 
+                  name="nombre" 
+                  value={formData.nombre} 
+                  onChange={onChange} 
+                  required 
+                  placeholder="Ej: Fórmula Maestra - Yogur Tradicional Fresa 1L" 
+                />
+              </div>
             </div>
-            <div>
-              <label className={styles.label}>Producto Asociado</label>
-              <select className={styles.select} name="idProducto" value={formData.idProducto} onChange={onChange} required>
-                <option value="">Seleccione un producto...</option>
-                {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})</option>
-                ))}
-              </select>
+
+            {/* Columna 2: Efecto Operativo (Rendimiento Base y Unidad Bloqueada) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label className={styles.label}>CANTIDAD RENDIMIENTO BASE *</label>
+                  <input 
+                    className={styles.input} 
+                    type="number" 
+                    step="0.01" 
+                    min="0.01" 
+                    name="rendimientoBase" 
+                    value={formData.rendimientoBase} 
+                    placeholder="Ej: 100" 
+                    onChange={onChange} 
+                    required 
+                  />
+                </div>
+                <div>
+                  <label className={styles.label}>UNIDAD DE MEDIDA</label>
+                  <input 
+                    className={styles.readOnlyInput} 
+                    name="unidadRendimiento" 
+                    value={formData.unidadRendimiento || 'Litros'} 
+                    readOnly 
+                    tabIndex={-1} 
+                  />
+                  <span style={{ fontSize: '0.72rem', color: '#78716C', fontStyle: 'italic', marginTop: '0.25rem', display: 'block' }}>
+                    Definida por la presentación del producto
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className={styles.label}>Rendimiento Base</label>
-              <input className={styles.input} type="number" step="0.01" min="0.01" name="rendimientoBase" value={formData.rendimientoBase} onChange={onChange} required />
+
+            {/* Compactación de Observaciones Técnicas (Revelación Progresiva) */}
+            <div style={{ gridColumn: '1 / -1', marginTop: '0.25rem' }}>
+              {!showNotes ? (
+                <button
+                  type="button"
+                  onClick={() => setShowNotes(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    color: '#78716C',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  <span>📝 + Agregar notas u observaciones técnicas de planta</span>
+                </button>
+              ) : (
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                    <label className={styles.label} style={{ margin: 0 }}>OBSERVACIONES TÉCNICAS O NOTAS DE PLANTA</label>
+                    <button
+                      type="button"
+                      onClick={() => setShowNotes(false)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#78716C',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Ocultar campo
+                    </button>
+                  </div>
+                  <input 
+                    className={styles.input} 
+                    name="observaciones" 
+                    value={formData.observaciones || ''} 
+                    onChange={onChange} 
+                    placeholder="Notas operativas, especificaciones de textura, temperatura de envasado, etc. (Opcional)" 
+                  />
+                </div>
+              )}
             </div>
-            <div>
-              <label className={styles.label}>Unidad Rendimiento</label>
-              <input className={styles.input} name="unidadRendimiento" value={formData.unidadRendimiento} onChange={onChange} required />
-            </div>
-          </div>
-          <div style={{ marginTop: '1rem' }}>
-            <label className={styles.label}>Observaciones</label>
-            <input className={styles.input} name="observaciones" value={formData.observaciones || ''} onChange={onChange} />
           </div>
         </div>
 
@@ -120,7 +440,7 @@ export function RecipeModal({
             <Link
               href="/catalog/products"
               style={{
-                backgroundColor: '#1E40AF',
+                backgroundColor: '#182622',
                 color: '#FFFFFF',
                 padding: '0.45rem 0.9rem',
                 borderRadius: '6px',
@@ -135,106 +455,445 @@ export function RecipeModal({
           </div>
         )}
 
+        {/* Alerta Poka-Yoke de Empaque Obligatorio en Productos Comerciales */}
+        {isMissingCommercialPackaging && (
+          <div style={{
+            backgroundColor: '#FFFBEB',
+            border: '1px solid #FCD34D',
+            color: '#92400E',
+            padding: '0.6rem 0.85rem',
+            borderRadius: '6px',
+            fontSize: '0.76rem',
+            marginBottom: '0.75rem',
+            lineHeight: '1.4'
+          }}>
+            ⚠️ <strong>Atención de Planta:</strong> Este producto requiere al menos un insumo de empaque primario (vaso, botella o tapa) para poder guardarse y descontarse de bodega.
+          </div>
+        )}
+
+        {/* Sección de Etapas de Producción */}
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className={styles.sectionTitle} style={{ border: 'none', margin: 0 }}>Etapas de Producción</h2>
-            <Button type="button" onClick={onAddEtapa}>+ Agregar Etapa</Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <h2 className={styles.sectionTitle} style={{ border: 'none', margin: 0, padding: 0 }}>Etapas de Producción</h2>
+            
+            {/* Desduplicación de Botones: si hay 0 etapas solo se muestra '+ Agregar Etapa Manual' */}
+            {activeStagesCount === 0 ? (
+              <button
+                type="button"
+                onClick={handleAddNewStage}
+                className={styles.addStageBtn}
+              >
+                + Agregar Etapa Manual
+              </button>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => handleApplyTemplate('BASE_TANQUE')}
+                  className={styles.templateBtn}
+                  title="Cargar etapas estándar de preparación de base en tanque"
+                >
+                  🥛 Tanque
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleApplyTemplate('ENVASADO_COMERCIAL')}
+                  className={styles.templateBtn}
+                  title="Cargar etapas estándar de mezcla, dosificación y sellado"
+                >
+                  🍓 Envasado
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddNewStage}
+                  className={styles.addStageBtn}
+                  title="Inserta una nueva etapa arriba del listado"
+                >
+                  + Agregar Etapa
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToggleSummarize}
+                  className={styles.summarizeBtn}
+                  title="Colapsa todas las etapas y activa la lectura integral de planta"
+                >
+                  📋 {showSummaryPanel ? 'Editar Etapas' : 'Finalizar y Resumir'}
+                </button>
+              </div>
+            )}
           </div>
           
-          {formData.etapas?.map((etapa, eIdx) => {
-            if (etapa.activo === false) return null;
-            return (
-              <div key={eIdx} className={styles.stageCard}>
-                <div className={styles.stageHeader}>
-                  <h3>Etapa {etapa.orden}: {etapa.nombre || 'Nueva Etapa'}</h3>
-                  <Button type="button" variant="danger" onClick={() => onRemoveEtapa(eIdx)}>Eliminar Etapa</Button>
+          {/* Empty State Asistido exclusivo cuando NO hay etapas */}
+          {activeStagesCount === 0 ? (
+            <div className={styles.emptyStateCard}>
+              <span style={{ fontSize: '1.8rem', display: 'block', marginBottom: '0.5rem' }}>📋</span>
+              <h4 style={{ fontSize: '0.9rem', fontWeight: '700', color: '#182622', margin: '0 0 0.25rem 0' }}>
+                No hay etapas configuradas en esta receta
+              </h4>
+              <p style={{ fontSize: '0.78rem', color: '#78716C', margin: '0 0 1rem 0' }}>
+                Usa una de las plantillas rápidas de un solo clic para cargar los tiempos y temperaturas estándar de planta, o agrega una etapa manualmente.
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <button type="button" onClick={() => handleApplyTemplate('BASE_TANQUE')} className={styles.templateBtn}>
+                  🥛 Cargar Etapas de Tanque (Pasteurización + Fermentación)
+                </button>
+                <button type="button" onClick={() => handleApplyTemplate('ENVASADO_COMERCIAL')} className={styles.templateBtn}>
+                  🍓 Cargar Etapas de Envasado (Mezcla + Dosificación)
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {/* Panel de Narrativa Continua al pulsar [ Finalizar y Resumir ] */}
+              {showSummaryPanel && (
+                <div style={{
+                  backgroundColor: '#F7F4EE',
+                  border: '1px solid #CAD5B5',
+                  borderRadius: '8px',
+                  padding: '1.1rem 1.25rem',
+                  marginBottom: '1rem',
+                  boxSizing: 'border-box'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.65rem' }}>
+                    <span style={{ fontSize: '1.2rem' }}>📜</span>
+                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#182622' }}>
+                      Ruta Continua de Fabricación (Lenguaje de Planta)
+                    </h3>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                    {formData.etapas?.map((etapa, idx) => {
+                      if (etapa.activo === false) return null;
+                      const summary = generateStageSummaryText(etapa, supplies, products);
+                      return (
+                        <div 
+                          key={idx} 
+                          style={{ 
+                            fontSize: '0.8rem', 
+                            lineHeight: '1.45', 
+                            color: '#182622',
+                            backgroundColor: '#FFFFFF',
+                            border: '1px solid #E5DFD5',
+                            padding: '0.65rem 0.85rem',
+                            borderRadius: '6px'
+                          }}
+                        >
+                          <strong style={{ color: '#182622' }}>Paso {etapa.orden} ({etapa.nombre || 'Etapa sin nombre'}):</strong> {summary}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className={styles.grid3}>
-                  <div>
-                    <label>Nombre Fase</label>
-                    <input className={styles.input} value={etapa.nombre} onChange={e => onUpdateEtapa(eIdx, 'nombre', e.target.value)} required />
-                  </div>
-                  <div>
-                    <label>Tiempo Estándar (Min)</label>
-                    <input className={styles.input} type="number" min="0" value={etapa.tiempoEstandarMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoEstandarMin', parseInt(e.target.value) || 0)} />
-                  </div>
-                  <div>
-                    <label>T. Min / Max (Min)</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input className={styles.input} type="number" min="0" value={etapa.tiempoMinimoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMinimoMin', parseInt(e.target.value) || 0)} />
-                      <input className={styles.input} type="number" min="0" value={etapa.tiempoMaximoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMaximoMin', parseInt(e.target.value) || 0)} />
+              )}
+
+              {/* Acordeón Exclusivo: solo una etapa abierta en edición a la vez */}
+              {formData.etapas?.map((etapa, eIdx) => {
+                if (etapa.activo === false) return null;
+                const isExpanded = expandedStageIndex === eIdx;
+                const summaryText = generateStageSummaryText(etapa, supplies, products);
+
+                // Si está colapsada: franja delgada (~45px) con badges y resumen
+                if (!isExpanded) {
+                  return (
+                    <div 
+                      key={eIdx} 
+                      className={styles.collapsedStageRow}
+                      onClick={() => {
+                        setExpandedStageIndex(eIdx);
+                        setShowSummaryPanel(false);
+                      }}
+                      title="Haz clic para desplegar y editar esta etapa"
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0, flex: 1 }}>
+                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#182622', whiteSpace: 'nowrap' }}>
+                          Etapa {etapa.orden}: {etapa.nombre || 'Etapa sin nombre'}
+                        </span>
+                        
+                        {/* Badges de Tiempo y Temperatura */}
+                        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0 }}>
+                          {Number(etapa.tiempoEstandarMin) > 0 && (
+                            <span className={styles.collapsedBadge}>
+                              ⏱️ {etapa.tiempoEstandarMin}m
+                            </span>
+                          )}
+                          {(Number(etapa.tempMinimaGrados) > 0 || Number(etapa.tempMaximaGrados) > 0) && (
+                            <span className={styles.collapsedBadge}>
+                              🌡️ {etapa.tempMinimaGrados}°C - {etapa.tempMaximaGrados}°C
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Síntesis textual de la etapa comprimida */}
+                        <span style={{
+                          fontSize: '0.74rem',
+                          color: '#78716C',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          marginLeft: '0.25rem'
+                        }}>
+                          {summaryText}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedStageIndex(eIdx);
+                            setShowSummaryPanel(false);
+                          }}
+                          style={{
+                            backgroundColor: '#FFFFFF',
+                            border: '1px solid #D6D3D1',
+                            color: '#182622',
+                            padding: '0.25rem 0.6rem',
+                            borderRadius: '4px',
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onRemoveEtapa(eIdx);
+                          }}
+                          style={{
+                            backgroundColor: '#FEF2F2',
+                            color: '#DC2626',
+                            border: '1px solid #FECACA',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '4px',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer'
+                          }}
+                          title="Eliminar etapa"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Etapa Expandida: renderiza controles completos, BOM y cápsula
+                return (
+                  <div key={eIdx} className={styles.stageCard}>
+                    <div className={styles.stageHeader}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h3>Etapa {etapa.orden}: {etapa.nombre || 'Nueva Etapa'}</h3>
+                        <span style={{ fontSize: '0.7rem', color: '#166534', backgroundColor: '#DCFCE7', padding: '0.15rem 0.45rem', borderRadius: '4px', fontWeight: 600 }}>
+                          En Edición
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedStageIndex(-1)}
+                          style={{
+                            backgroundColor: '#F7F4EE',
+                            border: '1px solid #D6D3D1',
+                            color: '#182622',
+                            padding: '0.35rem 0.65rem',
+                            borderRadius: '6px',
+                            fontSize: '0.76rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                          title="Contraer esta etapa"
+                        >
+                          Plegar ▲
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => onRemoveEtapa(eIdx)}
+                          style={{
+                            backgroundColor: '#FEF2F2',
+                            color: '#DC2626',
+                            border: '1px solid #FECACA',
+                            padding: '0.35rem 0.75rem',
+                            borderRadius: '6px',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Eliminar Etapa
+                        </button>
+                      </div>
+                    </div>
+                    <div className={styles.grid3}>
+                      <div>
+                        <label className={styles.label}>Nombre Fase</label>
+                        <input className={styles.input} value={etapa.nombre} onChange={e => onUpdateEtapa(eIdx, 'nombre', e.target.value)} required />
+                      </div>
+                      <div>
+                        <label className={styles.label}>Tiempo Estándar (Min)</label>
+                        <input className={styles.input} type="number" min="0" value={etapa.tiempoEstandarMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoEstandarMin', parseInt(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <label className={styles.label}>T. Min / Max (Min)</label>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <input className={styles.input} type="number" min="0" value={etapa.tiempoMinimoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMinimoMin', parseInt(e.target.value) || 0)} />
+                          <input className={styles.input} type="number" min="0" value={etapa.tiempoMaximoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMaximoMin', parseInt(e.target.value) || 0)} />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={styles.label}>Temp. Mínima (°C)</label>
+                        <input className={styles.input} type="number" step="0.1" value={etapa.tempMinimaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMinimaGrados', parseFloat(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <label className={styles.label}>Temp. Máxima (°C)</label>
+                        <input className={styles.input} type="number" step="0.1" value={etapa.tempMaximaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMaximaGrados', parseFloat(e.target.value) || 0)} />
+                      </div>
+                      <div>
+                        <label className={styles.label}>Instrucciones</label>
+                        <input className={styles.input} value={etapa.instrucciones || ''} onChange={e => onUpdateEtapa(eIdx, 'instrucciones', e.target.value)} />
+                      </div>
+                    </div>
+
+                    <IngredientsFormSection 
+                      etapa={etapa} 
+                      etapaIndex={eIdx}
+                      supplies={supplies}
+                      products={products}
+                      currentRecipeProductId={formData.idProducto}
+                      onAdd={onAddDetalle}
+                      onUpdate={onUpdateDetalle}
+                      onRemove={onRemoveDetalle}
+                    />
+
+                    {/* Cápsula Reactiva de Retroalimentación Textual en Lenguaje de Planta */}
+                    <div style={{
+                      marginTop: '1rem',
+                      padding: '0.65rem 0.95rem',
+                      backgroundColor: '#F7F4EE',
+                      border: '1px solid #E5DFD5',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.6rem',
+                      boxSizing: 'border-box'
+                    }}>
+                      <span style={{ fontSize: '1rem', lineHeight: '1.2' }}>📋</span>
+                      <div style={{ fontSize: '0.76rem', color: '#182622', lineHeight: '1.45' }}>
+                        <strong style={{ color: '#182622', textTransform: 'uppercase', fontSize: '0.7rem', letterSpacing: '0.04em' }}>
+                          Lectura de Operación en Planta:
+                        </strong>
+                        <div style={{ marginTop: '0.15rem' }}>
+                          {summaryText}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label>Temp. Mínima (°C)</label>
-                    <input className={styles.input} type="number" step="0.1" value={etapa.tempMinimaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMinimaGrados', parseFloat(e.target.value) || 0)} />
-                  </div>
-                  <div>
-                    <label>Temp. Máxima (°C)</label>
-                    <input className={styles.input} type="number" step="0.1" value={etapa.tempMaximaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMaximaGrados', parseFloat(e.target.value) || 0)} />
-                  </div>
-                  <div>
-                    <label>Instrucciones</label>
-                    <input className={styles.input} value={etapa.instrucciones || ''} onChange={e => onUpdateEtapa(eIdx, 'instrucciones', e.target.value)} />
-                  </div>
-                </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-                <IngredientsFormSection 
-                  etapa={etapa} 
-                  etapaIndex={eIdx}
-                  supplies={supplies}
-                  products={products}
-                  currentRecipeProductId={formData.idProducto}
-                  onAdd={onAddDetalle}
-                  onUpdate={onUpdateDetalle}
-                  onRemove={onRemoveDetalle}
-                />
+        {/* Balance General de Materiales y Costos (Barra Horizontal Compacta) */}
+        <div className={styles.balanceBar}>
+          {/* Lado Izquierdo: Resumen de insumos y rendimiento */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <strong style={{ fontSize: '0.9rem', color: '#182622', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Balance General de Materiales y Costos
+            </strong>
+            <div style={{ fontSize: '0.8rem', color: '#57534E', display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <span>
+                <strong>Rendimiento:</strong> {formData.rendimientoBase || 0} {formData.unidadRendimiento || 'Litros'}
+              </span>
+              <span>•</span>
+              <span>
+                <strong>Composición:</strong> {totalMateriasPrimas} materias primas/empaques
+                {totalBasesWip > 0 ? ` + ${totalBasesWip} bases WIP` : ''}
+              </span>
+              <span>•</span>
+              <span>
+                <strong>Etapas activas:</strong> {activeStagesCount}
+              </span>
+            </div>
+          </div>
+
+          {/* Lado Derecho: Valores destacados y Semáforo Financiero */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.72rem', color: '#78716C', textTransform: 'uppercase', fontWeight: 600 }}>
+                Costo Unitario Proyectado
               </div>
-            );
-          })}
-        </div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#182622' }}>
+                {formatCurrency(costPerUnit)} <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>/ {formData.unidadRendimiento || 'Und'}</span>
+              </div>
+            </div>
 
-        {/* Cápsula Resumen Poka-Yoke estilizada en verde */}
-        <div className={styles.summaryCardPokaYoke}>
-          <h4>Resumen de Composición & Proyección de Costo (Poka-Yoke)</h4>
-          <div className={styles.summaryRow}>
-            <span>Rendimiento Formulado:</span>
-            <strong>{formData.rendimientoBase || 0} {formData.unidadRendimiento || 'Litros'}</strong>
-          </div>
-          <div className={styles.summaryRow}>
-            <span>Materias Primas & Empaques:</span>
-            <span>{totalMateriasPrimas} ingredientes</span>
-          </div>
-          <div className={styles.summaryRow}>
-            <span>Bases & Semielaborados en Planta (WIP):</span>
-            <span>{totalBasesWip} bases intermedias</span>
-          </div>
-          <div className={styles.summaryRow}>
-            <span>Total Etapas Activas:</span>
-            <span>{formData.etapas?.filter(e => e.activo !== false).length || 0}</span>
-          </div>
-          <div className={styles.summaryRow}>
-            <span>Costo Unitario Proyectado:</span>
-            <strong>${costPerUnit.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / {formData.unidadRendimiento || 'Unidad'}</strong>
-          </div>
-          <div className={`${styles.summaryRow} ${styles.summaryTotalPokaYoke}`}>
-            <span>Costo Teórico Total del Batch:</span>
-            <span>${totalCost.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-          </div>
-        </div>
+            <div style={{ textAlign: 'right', borderLeft: '1px solid #D6D3D1', paddingLeft: '1.25rem' }}>
+              <div style={{ fontSize: '0.72rem', color: '#78716C', textTransform: 'uppercase', fontWeight: 600 }}>
+                Costo Total Batch
+              </div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#166534' }}>
+                {formatCurrency(totalCost)}
+              </div>
+            </div>
 
-        <div className={styles.formActions}>
-          <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button 
-            type="submit" 
-            disabled={isCommercialWithoutBulk}
-            title={isCommercialWithoutBulk ? "Debe existir al menos un producto base a granel en el catálogo para formular productos terminados" : ""}
-            style={isCommercialWithoutBulk ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-          >
-            Guardar Receta
-          </Button>
+            {/* Semáforo Financiero Compacto */}
+            {selectedProduct && (
+              <div style={{ flexShrink: 0 }}>
+                {isInternoOrBulk ? (
+                  <span style={{
+                    backgroundColor: '#EFF6FF',
+                    border: '1px solid #BFDBFE',
+                    color: '#1E40AF',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem'
+                  }}>
+                    ⚙️ Costo Interno
+                  </span>
+                ) : costoTopePermitido > 0 && costPerUnit <= costoTopePermitido ? (
+                  <span style={{
+                    backgroundColor: '#DCFCE7',
+                    border: '1px solid #86EFAC',
+                    color: '#166534',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem'
+                  }}>
+                    🟢 Rentable (Tope: {formatCurrency(costoTopePermitido)})
+                  </span>
+                ) : costoTopePermitido > 0 && costPerUnit > costoTopePermitido ? (
+                  <span style={{
+                    backgroundColor: '#FEF2F2',
+                    border: '1px solid #FECACA',
+                    color: '#991B1B',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.3rem'
+                  }}>
+                    🔴 Sobrecosto (+{formatCurrency(costPerUnit - costoTopePermitido)})
+                  </span>
+                ) : null}
+              </div>
+            )}
+          </div>
         </div>
       </form>
     </div>
   );
 }
+

@@ -25,12 +25,54 @@ export class ProductsService {
   }
 
   async create(createDto) {
-    return this.repository.create(createDto);
+    const {
+      id,
+      presentacion,
+      recetas,
+      producciones,
+      lotes,
+      detalleVentas,
+      inventario,
+      movimientos,
+      recetasConsumo,
+      detallesProduccionConsumo,
+      createdAt,
+      updatedAt,
+      ...cleanData
+    } = createDto || {};
+
+    const idPresentacionFinal = cleanData.idPresentacion || presentacion?.id;
+    if (idPresentacionFinal) {
+      cleanData.idPresentacion = idPresentacionFinal;
+    }
+
+    return this.repository.create(cleanData);
   }
 
   async update(id, updateDto) {
     await this.findOne(id);
-    return this.repository.update(id, updateDto);
+    const {
+      id: _id,
+      presentacion,
+      recetas,
+      producciones,
+      lotes,
+      detalleVentas,
+      inventario,
+      movimientos,
+      recetasConsumo,
+      detallesProduccionConsumo,
+      createdAt,
+      updatedAt,
+      ...cleanData
+    } = updateDto || {};
+
+    const idPresentacionFinal = cleanData.idPresentacion || presentacion?.id;
+    if (idPresentacionFinal) {
+      cleanData.idPresentacion = idPresentacionFinal;
+    }
+
+    return this.repository.update(id, cleanData);
   }
 
   async remove(id) {

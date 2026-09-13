@@ -9,18 +9,22 @@ export class ProductsRepository {
   }
 
   async findAll() {
-    return this.prisma.producto.findMany();
+    return this.prisma.producto.findMany({
+      include: { presentacion: true },
+    });
   }
 
   async findActive() {
     return this.prisma.producto.findMany({
       where: { activo: true },
+      include: { presentacion: true },
     });
   }
 
   async findById(id) {
     return this.prisma.producto.findUnique({
       where: { id },
+      include: { presentacion: true },
     });
   }
 
@@ -31,9 +35,30 @@ export class ProductsRepository {
   }
 
   async update(id, data) {
+    const {
+      id: _id,
+      presentacion,
+      recetas,
+      producciones,
+      lotes,
+      detalleVentas,
+      inventario,
+      movimientos,
+      recetasConsumo,
+      detallesProduccionConsumo,
+      createdAt,
+      updatedAt,
+      ...cleanData
+    } = data || {};
+
+    const idPresentacionFinal = cleanData.idPresentacion || presentacion?.id;
+    if (idPresentacionFinal) {
+      cleanData.idPresentacion = idPresentacionFinal;
+    }
+
     return this.prisma.producto.update({
       where: { id },
-      data,
+      data: cleanData,
     });
   }
 

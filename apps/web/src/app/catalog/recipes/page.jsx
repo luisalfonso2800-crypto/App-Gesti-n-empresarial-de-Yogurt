@@ -24,7 +24,7 @@ export default function RecipesPage() {
 
   const {
     isEditing, formData, handleOpenEditor, handleCloseEditor,
-    handleChange, addEtapa, updateEtapa, removeEtapa,
+    handleChange, applyStageTemplate, addEtapa, updateEtapa, removeEtapa,
     addDetalle, updateDetalle, removeDetalle,
     handleSubmit, calculateCost
   } = useRecipeForm({ supplies, products, prices, onSaveSuccess: fetchData });
@@ -38,6 +38,7 @@ export default function RecipesPage() {
         onClose={handleCloseEditor}
         onSubmit={handleSubmit}
         onChange={handleChange}
+        onApplyStageTemplate={applyStageTemplate}
         onAddEtapa={addEtapa}
         onUpdateEtapa={updateEtapa}
         onRemoveEtapa={removeEtapa}

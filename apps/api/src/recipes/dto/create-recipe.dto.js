@@ -1,4 +1,13 @@
-import { IsString, IsNumber, IsOptional, IsArray, IsBoolean, Min } from 'class-validator';
+/**
+ * @file create-recipe.dto.js
+ * @module Recipes/DTO
+ * @description Data Transfer Object para la creación de recetas técnicas, etapas y detalles de manufactura.
+ * @responsibility Validar tipos, rangos numéricos estrictos y obligatoriedad de campos al registrar una nueva receta.
+ * @usedBy apps/api/src/recipes/recipes.controller.js
+ * @dependencies class-validator
+ */
+
+import { IsString, IsNumber, IsOptional, IsArray, IsBoolean, Min, Max, IsNotEmpty } from 'class-validator';
 
 export class CreateRecipeDetailDto {
   @IsOptional()
@@ -10,15 +19,17 @@ export class CreateRecipeDetailDto {
   idProductoIntermedio;
 
   @IsNumber()
-  @Min(0)
+  @Min(0.0001, { message: 'La cantidad requerida debe ser estrictamente mayor a 0' })
   cantidadRequerida;
 
   @IsString()
+  @IsNotEmpty({ message: 'La unidad de medida no puede estar vacía' })
   unidad;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Max(100, { message: 'El porcentaje de merma no puede exceder el 100%' })
   mermaPorcentaje;
 
   @IsOptional()

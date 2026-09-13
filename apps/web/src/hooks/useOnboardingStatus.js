@@ -35,6 +35,19 @@ export function useOnboardingStatus() {
 
   useEffect(() => {
     fetchStatus();
+
+    const handleRefresh = () => {
+      fetchStatus();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('onboarding-refresh', handleRefresh);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('onboarding-refresh', handleRefresh);
+      }
+    };
   }, [fetchStatus]);
 
   return {

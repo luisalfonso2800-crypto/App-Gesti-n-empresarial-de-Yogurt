@@ -37,6 +37,13 @@ function ProductsContent() {
       if (granelPres) {
         form.handleChange({ target: { name: 'idPresentacion', value: granelPres.id } });
       }
+      // Limpiar de forma silenciosa el query param de la URL para permitir re-apertura posterior
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/catalog/products');
+      }
+    }
+    if (!isBaseIntermediaMode) {
+      autoOpenedRef.current = false;
     }
   }, [isBaseIntermediaMode, presentations, form]);
 
@@ -140,7 +147,14 @@ function ProductsContent() {
       )}
 
       <ProductModal 
-        isOpen={form.isModalOpen} onClose={form.handleCloseModal}
+        isOpen={form.isModalOpen} 
+        onClose={() => {
+          form.handleCloseModal();
+          autoOpenedRef.current = false;
+          if (typeof window !== 'undefined' && window.location.search.includes('crear=')) {
+            window.history.replaceState({}, '', '/catalog/products');
+          }
+        }}
         editingItem={form.editingItem} formData={form.formData}
         handleChange={form.handleChange} handleSubmit={form.handleSubmit}
         presentations={form.presentations}

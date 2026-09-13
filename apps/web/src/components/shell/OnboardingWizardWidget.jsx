@@ -38,7 +38,10 @@ export function OnboardingWizardWidget() {
         if (isMounted && Array.isArray(prods)) {
           const bulkExists = prods.some(p => 
             p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 
-            p.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+            p.presentacion?.nombre?.toUpperCase().includes('GRANEL') ||
+            ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(p.categoria) ||
+            p.canalVenta === 'USO_INTERNO' ||
+            (Number(p.precioVenta) === 0 && p.categoria !== 'LACTEOS')
           );
           setHasBulkProduct(bulkExists);
         }
@@ -48,7 +51,21 @@ export function OnboardingWizardWidget() {
       }
     };
     checkBulk();
-    return () => { isMounted = false; };
+
+    const handleRefresh = () => {
+      checkBulk();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('onboarding-refresh', handleRefresh);
+    }
+
+    return () => { 
+      isMounted = false; 
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('onboarding-refresh', handleRefresh);
+      }
+    };
   }, [isOpen]);
 
   // Cerrar al hacer clic fuera del dropdown
