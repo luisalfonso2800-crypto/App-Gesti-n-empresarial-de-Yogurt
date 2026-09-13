@@ -1,25 +1,31 @@
 /**
  * @file useRecipeForm.js
  * @module catalog/recipes/hooks
- * @description Estado y manejo del modal/formulario de recetas (BOM, cálculos).
- * @responsibility Controlar la creación y edición de la receta técnica, gestionar etapas y detalles.
+ * @description Estado y manejo del formulario/modal de recetas con soporte dual para insumos y productos WIP.
+ * @responsibility Controlar la creación y edición de la receta técnica, gestionar etapas, detalles y costeo dinámico.
  * @usedBy apps/web/src/app/catalog/recipes/page.jsx
  * @dependencies @/lib/api-client
  */
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 
-export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
+export function useRecipeForm({ supplies = [], products = [], prices = [], onSaveSuccess }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    nombre: '', idProducto: '', rendimientoBase: 0, unidadRendimiento: 'Litros',
-    observaciones: '', activo: true, etapas: []
+    nombre: '',
+    idProducto: '',
+    rendimientoBase: 0,
+    unidadRendimiento: 'Litros',
+    observaciones: '',
+    activo: true,
+    etapas: []
   });
 
   const handleOpenEditor = async (item) => {
     if (item) {
       try {
         const fullItem = await apiClient.get(`/recipes/${item.id}/bom`);
+        // Asegurar que cada detalle preserve su idInsumo o idProductoIntermedio intacto
         setFormData(fullItem);
       } catch (err) {
         alert('Error al cargar la receta: ' + err.message);
@@ -27,8 +33,13 @@ export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
       }
     } else {
       setFormData({
-        nombre: '', idProducto: '', rendimientoBase: 0, unidadRendimiento: 'Litros',
-        observaciones: '', activo: true, etapas: []
+        nombre: '',
+        idProducto: '',
+        rendimientoBase: 0,
+        unidadRendimiento: 'Litros',
+        observaciones: '',
+        activo: true,
+        etapas: []
       });
     }
     setIsEditing(true);
@@ -40,7 +51,7 @@ export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseFloat(value) || 0 : value
+      [name]: type === 'checkbox' ? checked : type === 'number' ? (value === '' ? '' : parseFloat(value) || 0) : value
     }));
   };
 
@@ -50,9 +61,16 @@ export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
       etapas: [
         ...prev.etapas,
         {
-          nombre: '', orden: prev.etapas.length + 1, tiempoMinimoMin: 0, tiempoEstandarMin: 0,
-          tiempoMaximoMin: 0, tempMinimaGrados: 0, tempMaximaGrados: 0, instrucciones: '',
-          activo: true, detalles: []
+          nombre: '',
+          orden: prev.etapas.length + 1,
+          tiempoMinimoMin: 0,
+          tiempoEstandarMin: 0,
+          tiempoMaximoMin: 0,
+          tempMinimaGrados: 0,
+          tempMaximaGrados: 0,
+          instrucciones: '',
+          activo: true,
+          detalles: []
         }
       ]
     }));
@@ -67,26 +85,57 @@ export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
   const removeEtapa = (index) => {
     const newEtapas = [...formData.etapas];
     newEtapas.splice(index, 1);
-    newEtapas.forEach((e, i) => e.orden = i + 1);
+    newEtapas.forEach((e, i) => { e.orden = i + 1; });
     setFormData(prev => ({ ...prev, etapas: newEtapas }));
   };
 
   const addDetalle = (etapaIndex) => {
     const newEtapas = [...formData.etapas];
     newEtapas[etapaIndex].detalles.push({
-      idInsumo: '', cantidadRequerida: 0, unidad: '', mermaPorcentaje: 0,
-      esOpcional: false, grupoVariante: 'NINGUNO', tipoInsumo: 'BASE', activo: true
+      idInsumo: null,
+      idProductoIntermedio: null,
+      cantidadRequerida: 0,
+      unidad: '',
+      mermaPorcentaje: 0,
+      esOpcional: false,
+      grupoVariante: 'NINGUNO',
+      tipoInsumo: 'BASE',
+      activo: true
     });
     setFormData(prev => ({ ...prev, etapas: newEtapas }));
   };
 
   const updateDetalle = (etapaIndex, detalleIndex, field, value) => {
     const newEtapas = [...formData.etapas];
-    const det = { ...newEtapas[etapaIndex].detalles[detalleIndex], [field]: value };
-    if (field === 'idInsumo') {
-      const ins = supplies.find(s => s.id === value);
-      if (ins) det.unidad = ins.unidadBase;
+    const currentDet = newEtapas[etapaIndex].detalles[detalleIndex];
+    let det = { ...currentDet };
+
+    if (field === 'resourceSelector') {
+      // Manejar el selector agrupado con prefijo 'INS:' o 'PROD:'
+      if (!value) {
+        det.idInsumo = null;
+        det.idProductoIntermedio = null;
+        det.unidad = '';
+      } else if (value.startsWith('INS:')) {
+        const insumoId = value.replace('INS:', '');
+        const ins = supplies.find(s => s.id === insumoId);
+        det.idInsumo = insumoId;
+        det.idProductoIntermedio = null;
+        det.unidad = ins ? ins.unidadBase : 'Unidades';
+        if (det.tipoInsumo === 'INTERMEDIO_WIP') {
+          det.tipoInsumo = 'BASE';
+        }
+      } else if (value.startsWith('PROD:')) {
+        const prodId = value.replace('PROD:', '');
+        det.idProductoIntermedio = prodId;
+        det.idInsumo = null;
+        det.unidad = 'Litros';
+        det.tipoInsumo = 'INTERMEDIO_WIP';
+      }
+    } else {
+      det[field] = value;
     }
+
     newEtapas[etapaIndex].detalles[detalleIndex] = det;
     setFormData(prev => ({ ...prev, etapas: newEtapas }));
   };
@@ -100,10 +149,34 @@ export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // Sanitizar el payload para asegurar que cada ingrediente viaje con idInsumo / idProductoIntermedio normalizados
+      const sanitizedPayload = {
+        ...formData,
+        rendimientoBase: Number(formData.rendimientoBase) || 0,
+        etapas: formData.etapas?.map(etapa => ({
+          ...etapa,
+          orden: Number(etapa.orden) || 1,
+          tiempoMinimoMin: Number(etapa.tiempoMinimoMin) || 0,
+          tiempoEstandarMin: Number(etapa.tiempoEstandarMin) || 0,
+          tiempoMaximoMin: Number(etapa.tiempoMaximoMin) || 0,
+          tempMinimaGrados: Number(etapa.tempMinimaGrados) || 0,
+          tempMaximaGrados: Number(etapa.tempMaximaGrados) || 0,
+          detalles: etapa.detalles?.map(det => ({
+            ...det,
+            idInsumo: det.idInsumo || null,
+            idProductoIntermedio: det.idProductoIntermedio || null,
+            cantidadRequerida: Number(det.cantidadRequerida) || 0,
+            mermaPorcentaje: Number(det.mermaPorcentaje) || 0,
+            esOpcional: Boolean(det.esOpcional),
+            tipoInsumo: det.tipoInsumo || (det.idProductoIntermedio ? 'INTERMEDIO_WIP' : 'BASE')
+          }))
+        }))
+      };
+
       if (formData.id) {
-        await apiClient.patch(`/recipes/${formData.id}`, formData);
+        await apiClient.patch(`/recipes/${formData.id}`, sanitizedPayload);
       } else {
-        await apiClient.post('/recipes', formData);
+        await apiClient.post('/recipes', sanitizedPayload);
       }
       handleCloseEditor();
       if (onSaveSuccess) onSaveSuccess();
@@ -112,36 +185,56 @@ export function useRecipeForm({ supplies, prices, onSaveSuccess }) {
     }
   };
 
-  // Cálculo de costos, componente crítico comentado línea a línea
+  // Cálculo de costos dinámico con soporte dual: Insumos y Productos Intermedios / WIP
   const calculateCost = () => {
     let total = 0;
-    // 1. Convertir el arreglo de precios en un diccionario de acceso rápido
+    // Mapa rápido de precios de insumos
     const priceMap = prices.reduce((acc, p) => ({ ...acc, [p.idInsumo]: p.costoUnidadBase }), {});
-    
-    // 2. Iterar sobre las etapas de la receta
+
     formData.etapas?.forEach(etapa => {
-      // 3. Iterar sobre los detalles de cada etapa
       etapa.detalles?.forEach(det => {
-        // 4. Buscar el precio del insumo en el mapa
-        const cost = parseFloat(priceMap[det.idInsumo]) || 0;
-        // 5. Determinar la cantidad neta requerida del insumo
-        const req = parseFloat(det.cantidadRequerida) || 0;
-        // 6. Obtener el porcentaje de merma esperado
-        const merma = parseFloat(det.mermaPorcentaje) || 0;
-        // 7. Calcular cantidad bruta incluyendo merma
-        const totalReq = req * (1 + (merma / 100));
-        // 8. Sumar al costo total solo si el insumo es obligatorio y está activo
         if (!det.esOpcional && det.activo !== false) {
-            total += (totalReq * cost);
+          const req = parseFloat(det.cantidadRequerida) || 0;
+          const merma = parseFloat(det.mermaPorcentaje) || 0;
+          const totalReq = req * (1 + (merma / 100));
+
+          let unitCost = 0;
+          if (det.idProductoIntermedio) {
+            // Resolver costo unitario para producto semielaborado (costoBase o costoPromedio del inventario)
+            const prod = products.find(p => p.id === det.idProductoIntermedio);
+            if (prod) {
+              unitCost = Number(prod.costoBase ?? prod.inventario?.costoPromedio ?? prod.inventarioProducto?.costoPromedio ?? 0);
+            }
+          } else if (det.idInsumo) {
+            // Resolver costo unitario para insumo desde precio proveedor o costoBase
+            const insumoRecord = supplies.find(s => s.id === det.idInsumo);
+            const priceFromMap = parseFloat(priceMap[det.idInsumo]);
+            unitCost = !isNaN(priceFromMap) && priceFromMap > 0
+              ? priceFromMap
+              : Number(insumoRecord?.costoBase || 0);
+          }
+
+          total += (totalReq * unitCost);
         }
       });
     });
+
     return total;
   };
 
   return {
-    isEditing, formData, handleOpenEditor, handleCloseEditor,
-    handleChange, addEtapa, updateEtapa, removeEtapa,
-    addDetalle, updateDetalle, removeDetalle, handleSubmit, calculateCost
+    isEditing,
+    formData,
+    handleOpenEditor,
+    handleCloseEditor,
+    handleChange,
+    addEtapa,
+    updateEtapa,
+    removeEtapa,
+    addDetalle,
+    updateDetalle,
+    removeDetalle,
+    handleSubmit,
+    calculateCost
   };
 }

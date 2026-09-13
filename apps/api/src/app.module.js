@@ -19,6 +19,8 @@ import { SalesModule } from './sales/sales.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { UploadsModule } from './uploads/uploads.module';
+import { SystemModule } from './system/system.module';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
       validationSchema,
     }),
     DatabaseModule,
+    UploadsModule,
     PresentationsModule,
     SuppliesModule,
     SuppliersModule,
@@ -42,6 +45,7 @@ import { DashboardModule } from './dashboard/dashboard.module';
     PaymentsModule,
     ExpensesModule,
     DashboardModule,
+    SystemModule,
   ],
   controllers: [AppController],
   providers: [AppService],

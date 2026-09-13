@@ -1,11 +1,13 @@
 import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
 import { PresentationsRepository } from './presentations.repository';
+import { UploadsService } from '../uploads/uploads.service';
 
 @Injectable()
-@Dependencies(PresentationsRepository)
+@Dependencies(PresentationsRepository, UploadsService)
 export class PresentationsService {
-  constructor(repository) {
+  constructor(repository, uploadsService) {
     this.repository = repository;
+    this.uploadsService = uploadsService;
   }
 
   async findAll() {
@@ -19,7 +21,7 @@ export class PresentationsService {
   async findOne(id) {
     const presentation = await this.repository.findById(id);
     if (!presentation) {
-      throw new NotFoundException(`Presentation with ID ${id} not found`);
+      throw new NotFoundException(`La presentación con ID ${id} no fue encontrada`);
     }
     return presentation;
   }
@@ -29,7 +31,14 @@ export class PresentationsService {
   }
 
   async update(id, updateDto) {
-    await this.findOne(id);
+    const current = await this.findOne(id);
+    if (
+      updateDto.imagenUrl !== undefined &&
+      current.imagenUrl &&
+      current.imagenUrl !== updateDto.imagenUrl
+    ) {
+      this.uploadsService.deletePhysicalFile(current.imagenUrl);
+    }
     return this.repository.update(id, updateDto);
   }
 

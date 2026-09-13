@@ -1,8 +1,8 @@
 /**
  * @file RecipeModal.jsx
  * @module catalog/recipes/components
- * @description Editor principal para crear/editar recetas técnicas (vista de página completa simulada).
- * @responsibility Formularios, etapas, y llamadas a cálculos de costo.
+ * @description Editor principal para crear/editar recetas técnicas con soporte dual para insumos y WIP.
+ * @responsibility Formularios, etapas, BOM dual, protección anti-recursión y cápsula resumen Poka-Yoke.
  * @usedBy apps/web/src/app/catalog/recipes/page.jsx
  * @dependencies @/components/ui/Button, @/components/ui/ContextBanner, IngredientsFormSection, styles local
  */
@@ -13,10 +13,30 @@ import { IngredientsFormSection } from './IngredientsFormSection';
 import styles from '../recipes.module.css';
 
 export function RecipeModal({ 
-  formData, products, supplies, onClose, onSubmit, onChange,
+  formData, products = [], supplies = [], onClose, onSubmit, onChange,
   onAddEtapa, onUpdateEtapa, onRemoveEtapa,
   onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost
 }) {
+  // Conteo de insumos y bases intermedias para la cápsula de resumen Poka-Yoke
+  let totalMateriasPrimas = 0;
+  let totalBasesWip = 0;
+
+  formData.etapas?.forEach(etapa => {
+    etapa.detalles?.forEach(det => {
+      if (det.activo !== false) {
+        if (det.idProductoIntermedio) {
+          totalBasesWip += 1;
+        } else if (det.idInsumo) {
+          totalMateriasPrimas += 1;
+        }
+      }
+    });
+  });
+
+  const totalCost = calculateCost();
+  const rendimientoNum = parseFloat(formData.rendimientoBase) || 0;
+  const costPerUnit = rendimientoNum > 0 ? (totalCost / rendimientoNum) : 0;
+
   return (
     <div>
       <div className={styles.header}>
@@ -25,14 +45,17 @@ export function RecipeModal({
         </div>
         <Button variant="secondary" onClick={onClose}>Volver al Listado</Button>
       </div>
-      <ContextBanner title="Concepto Técnico" description="Instrucciones paso a paso para fabricar los productos. Incluye la lista de ingredientes, cantidades exactas y los tiempos o temperaturas requeridos en el proceso." />
+      <ContextBanner
+        title="Concepto Técnico"
+        description="Instrucciones paso a paso para fabricar los productos. Permite formular tanto materias primas compradas como bases semielaboradas (WIP) producidas en planta."
+      />
 
       <form onSubmit={onSubmit} className={styles.editorContainer}>
         <div>
           <h2 className={styles.sectionTitle}>Cabecera de Receta</h2>
           <div className={styles.grid2}>
             <div>
-              <label className={styles.label}>Nombre</label>
+              <label className={styles.label}>Nombre de la Receta</label>
               <input className={styles.input} name="nombre" value={formData.nombre} onChange={onChange} required />
             </div>
             <div>
@@ -40,13 +63,13 @@ export function RecipeModal({
               <select className={styles.select} name="idProducto" value={formData.idProducto} onChange={onChange} required>
                 <option value="">Seleccione un producto...</option>
                 {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.nombre} ({p.presentacion?.nombre})</option>
+                  <option key={p.id} value={p.id}>{p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})</option>
                 ))}
               </select>
             </div>
             <div>
               <label className={styles.label}>Rendimiento Base</label>
-              <input className={styles.input} type="number" step="0.01" name="rendimientoBase" value={formData.rendimientoBase} onChange={onChange} required />
+              <input className={styles.input} type="number" step="0.01" min="0.01" name="rendimientoBase" value={formData.rendimientoBase} onChange={onChange} required />
             </div>
             <div>
               <label className={styles.label}>Unidad Rendimiento</label>
@@ -80,22 +103,22 @@ export function RecipeModal({
                   </div>
                   <div>
                     <label>Tiempo Estándar (Min)</label>
-                    <input className={styles.input} type="number" value={etapa.tiempoEstandarMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoEstandarMin', parseInt(e.target.value))} />
+                    <input className={styles.input} type="number" min="0" value={etapa.tiempoEstandarMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoEstandarMin', parseInt(e.target.value) || 0)} />
                   </div>
                   <div>
                     <label>T. Min / Max (Min)</label>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <input className={styles.input} type="number" value={etapa.tiempoMinimoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMinimoMin', parseInt(e.target.value))} />
-                      <input className={styles.input} type="number" value={etapa.tiempoMaximoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMaximoMin', parseInt(e.target.value))} />
+                      <input className={styles.input} type="number" min="0" value={etapa.tiempoMinimoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMinimoMin', parseInt(e.target.value) || 0)} />
+                      <input className={styles.input} type="number" min="0" value={etapa.tiempoMaximoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMaximoMin', parseInt(e.target.value) || 0)} />
                     </div>
                   </div>
                   <div>
                     <label>Temp. Mínima (°C)</label>
-                    <input className={styles.input} type="number" step="0.1" value={etapa.tempMinimaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMinimaGrados', parseFloat(e.target.value))} />
+                    <input className={styles.input} type="number" step="0.1" value={etapa.tempMinimaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMinimaGrados', parseFloat(e.target.value) || 0)} />
                   </div>
                   <div>
                     <label>Temp. Máxima (°C)</label>
-                    <input className={styles.input} type="number" step="0.1" value={etapa.tempMaximaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMaximaGrados', parseFloat(e.target.value))} />
+                    <input className={styles.input} type="number" step="0.1" value={etapa.tempMaximaGrados || 0} onChange={e => onUpdateEtapa(eIdx, 'tempMaximaGrados', parseFloat(e.target.value) || 0)} />
                   </div>
                   <div>
                     <label>Instrucciones</label>
@@ -107,28 +130,43 @@ export function RecipeModal({
                   etapa={etapa} 
                   etapaIndex={eIdx}
                   supplies={supplies}
+                  products={products}
+                  currentRecipeProductId={formData.idProducto}
                   onAdd={onAddDetalle}
                   onUpdate={onUpdateDetalle}
                   onRemove={onRemoveDetalle}
                 />
               </div>
-            )
+            );
           })}
         </div>
 
-        <div className={styles.summaryCard}>
-          <h4>Resumen de Proyección (Componentes Base)</h4>
+        {/* Cápsula Resumen Poka-Yoke estilizada en verde */}
+        <div className={styles.summaryCardPokaYoke}>
+          <h4>Resumen de Composición & Proyección de Costo (Poka-Yoke)</h4>
           <div className={styles.summaryRow}>
             <span>Rendimiento Formulado:</span>
-            <span>{formData.rendimientoBase} {formData.unidadRendimiento}</span>
+            <strong>{formData.rendimientoBase || 0} {formData.unidadRendimiento || 'Litros'}</strong>
+          </div>
+          <div className={styles.summaryRow}>
+            <span>Materias Primas & Empaques:</span>
+            <span>{totalMateriasPrimas} ingredientes</span>
+          </div>
+          <div className={styles.summaryRow}>
+            <span>Bases & Semielaborados en Planta (WIP):</span>
+            <span>{totalBasesWip} bases intermedias</span>
           </div>
           <div className={styles.summaryRow}>
             <span>Total Etapas Activas:</span>
             <span>{formData.etapas?.filter(e => e.activo !== false).length || 0}</span>
           </div>
-          <div className={styles.summaryTotal}>
-            <span>Costo Teórico Proyectado:</span>
-            <span>${calculateCost().toLocaleString('es-CO', { minimumFractionDigits: 2 })}</span>
+          <div className={styles.summaryRow}>
+            <span>Costo Unitario Proyectado:</span>
+            <strong>${costPerUnit.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / {formData.unidadRendimiento || 'Unidad'}</strong>
+          </div>
+          <div className={`${styles.summaryRow} ${styles.summaryTotalPokaYoke}`}>
+            <span>Costo Teórico Total del Batch:</span>
+            <span>${totalCost.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
         </div>
 

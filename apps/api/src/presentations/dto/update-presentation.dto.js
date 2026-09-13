@@ -24,6 +24,10 @@ export class UpdatePresentationDto {
   tapilla;
 
   @IsOptional()
+  @IsString()
+  imagenUrl;
+
+  @IsOptional()
   @IsBoolean()
   activo;
 

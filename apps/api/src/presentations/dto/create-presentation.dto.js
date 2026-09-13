@@ -20,6 +20,10 @@ export class CreatePresentationDto {
   tapilla;
 
   @IsOptional()
+  @IsString()
+  imagenUrl;
+
+  @IsOptional()
   @IsBoolean()
   activo;
 

@@ -104,6 +104,8 @@ model Producto {
   detalleVentas  DetalleVenta[]
   inventario     InventarioProducto?
   movimientos    MovimientoInventario[]
+  recetasConsumo DetalleReceta[]        @relation("ProductoConsumidoReceta")
+  detallesProduccionConsumo DetalleProduccion[] @relation("ProductoConsumidoProduccion")
 
   @@unique([nombre, idPresentacion])
   @@map("Productos")
@@ -230,22 +232,25 @@ model EtapaReceta {
 }
 
 model DetalleReceta {
-  id                String      @id @default(uuid()) @map("ID_Detalle_Receta")
-  idEtapaReceta     String      @map("ID_Etapa_Receta")
-  etapa             EtapaReceta @relation(fields: [idEtapaReceta], references: [id])
-  idInsumo          String      @map("ID_Insumo")
-  insumo            Insumo      @relation(fields: [idInsumo], references: [id])
-  cantidadRequerida Decimal     @map("Cantidad_Requerida")
-  unidad            String      @map("Unidad")
-  mermaPorcentaje   Decimal     @map("Merma_Porcentaje")
-  esOpcional        Boolean     @default(false) @map("Es_Opcional")
-  grupoVariante     String?     @map("Grupo_Variante")
-  tipoInsumo        String      @default("BASE") @map("Tipo_Insumo")
-  activo            Boolean     @default(true) @map("Activo")
-  observaciones     String?     @map("Observaciones")
+  id                   String       @id @default(uuid()) @map("ID_Detalle_Receta")
+  idEtapaReceta        String       @map("ID_Etapa_Receta")
+  etapa                EtapaReceta  @relation(fields: [idEtapaReceta], references: [id])
+  idInsumo             String?      @map("ID_Insumo")
+  insumo               Insumo?      @relation(fields: [idInsumo], references: [id])
+  idProductoIntermedio String?      @map("ID_Producto_Intermedio")
+  productoIntermedio   Producto?    @relation("ProductoConsumidoReceta", fields: [idProductoIntermedio], references: [id])
+  cantidadRequerida    Decimal      @map("Cantidad_Requerida")
+  unidad               String       @map("Unidad")
+  mermaPorcentaje      Decimal      @map("Merma_Porcentaje")
+  esOpcional           Boolean      @default(false) @map("Es_Opcional")
+  grupoVariante        String?      @map("Grupo_Variante")
+  tipoInsumo           String       @default("BASE") @map("Tipo_Insumo")
+  activo               Boolean      @default(true) @map("Activo")
+  observaciones        String?      @map("Observaciones")
 
   @@index([idEtapaReceta])
   @@index([idInsumo])
+  @@index([idProductoIntermedio])
   @@map("Detalle_Recetas")
 }
 
@@ -268,18 +273,20 @@ model Produccion {
 }
 
 model DetalleProduccion {
-  id                    String     @id @default(uuid()) @map("ID_Detalle_Produccion")
-  idProduccion          String     @map("ID_Produccion")
-  produccion            Produccion @relation(fields: [idProduccion], references: [id])
-  idInsumo              String     @map("ID_Insumo")
-  insumo                Insumo     @relation(fields: [idInsumo], references: [id])
-  cantidadTeorica       Decimal    @map("Cantidad_Teorica")
-  cantidadRealUtilizada Decimal?   @map("Cantidad_Real_Utilizada")
-  diferencia            Decimal?   @map("Diferencia")
-  unidad                String     @map("Unidad")
-  costoTeorico          Decimal?   @map("Costo_Teorico") @db.Decimal(12, 2)
-  costoReal             Decimal?   @map("Costo_Real") @db.Decimal(12, 2)
-  observaciones         String?    @map("Observaciones")
+  id                    String      @id @default(uuid()) @map("ID_Detalle_Produccion")
+  idProduccion          String      @map("ID_Produccion")
+  produccion            Produccion  @relation(fields: [idProduccion], references: [id])
+  idInsumo              String?     @map("ID_Insumo")
+  insumo                Insumo?     @relation(fields: [idInsumo], references: [id])
+  idProductoIntermedio  String?     @map("ID_Producto_Intermedio")
+  productoIntermedio    Producto?   @relation("ProductoConsumidoProduccion", fields: [idProductoIntermedio], references: [id])
+  cantidadTeorica       Decimal     @map("Cantidad_Teorica")
+  cantidadRealUtilizada Decimal?    @map("Cantidad_Real_Utilizada")
+  diferencia            Decimal?    @map("Diferencia")
+  unidad                String      @map("Unidad")
+  costoTeorico          Decimal?    @map("Costo_Teorico") @db.Decimal(12, 2)
+  costoReal             Decimal?    @map("Costo_Real") @db.Decimal(12, 2)
+  observaciones         String?     @map("Observaciones")
 
   @@map("Detalle_Producciones")
 }
@@ -293,6 +300,9 @@ model Lote {
   producto           Producto?      @relation(fields: [idProducto], references: [id])
   idInsumo           String?        @map("ID_Insumo")
   insumo             Insumo?        @relation(fields: [idInsumo], references: [id])
+  idLotePadre        String?        @map("ID_Lote_Padre")
+  lotePadre          Lote?          @relation("GenealogiaLotes", fields: [idLotePadre], references: [id])
+  lotesHijos         Lote[]         @relation("GenealogiaLotes")
   fechaProduccion    DateTime       @map("Fecha_Produccion")
   fechaVencimiento   DateTime?      @map("Fecha_Vencimiento")
   cantidadInicial    Decimal        @map("Cantidad_Inicial")

@@ -8,11 +8,24 @@ const includeRecipe = {
     include: {
       detalles: {
         where: { activo: true },
-        include: { insumo: true }
+        include: {
+          insumo: true,
+          productoIntermedio: {
+            include: {
+              presentacion: true,
+              inventario: true
+            }
+          }
+        }
       }
     }
   },
-  producto: true
+  producto: {
+    include: {
+      presentacion: true,
+      inventario: true
+    }
+  }
 };
 
 @Injectable()
@@ -54,7 +67,7 @@ export class RecipesRepository {
           observaciones: data.observaciones,
           etapas: data.etapas ? {
             create: data.etapas.map((e, index) => {
-              const insumosEnEtapa = new Set();
+              const itemsEnEtapa = new Set();
               return {
                 nombre: e.nombre,
                 orden: e.orden !== undefined ? e.orden : (index + 1),
@@ -67,20 +80,25 @@ export class RecipesRepository {
                 activo: e.activo !== undefined ? e.activo : true,
                 detalles: e.detalles ? {
                   create: e.detalles.map(d => {
+                    if (!d.idInsumo && !d.idProductoIntermedio) {
+                      throw new Error('Cada detalle de receta debe especificar idInsumo o idProductoIntermedio');
+                    }
+                    const itemKey = d.idInsumo ? `INS:${d.idInsumo}` : `PROD:${d.idProductoIntermedio}`;
                     if (d.activo !== false) {
-                      if (insumosEnEtapa.has(d.idInsumo)) {
-                        throw new Error(`Insumo duplicado en la misma etapa: ${d.idInsumo}`);
+                      if (itemsEnEtapa.has(itemKey)) {
+                        throw new Error(`Ítem duplicado en la misma etapa: ${itemKey}`);
                       }
-                      insumosEnEtapa.add(d.idInsumo);
+                      itemsEnEtapa.add(itemKey);
                     }
                     return {
-                      idInsumo: d.idInsumo,
+                      idInsumo: d.idInsumo || null,
+                      idProductoIntermedio: d.idProductoIntermedio || null,
                       cantidadRequerida: d.cantidadRequerida,
                       unidad: d.unidad,
                       mermaPorcentaje: d.mermaPorcentaje,
                       esOpcional: d.esOpcional !== undefined ? d.esOpcional : false,
                       grupoVariante: d.grupoVariante,
-                      tipoInsumo: d.tipoInsumo || 'BASE',
+                      tipoInsumo: d.tipoInsumo || (d.idProductoIntermedio ? 'INTERMEDIO_WIP' : 'BASE'),
                       activo: d.activo !== undefined ? d.activo : true,
                       observaciones: d.observaciones
                     };
@@ -182,26 +200,31 @@ export class RecipesRepository {
               });
             }
 
-            const insumosEnEtapa = new Set();
+            const itemsEnEtapa = new Set();
             for (const det of etapa.detalles) {
+              if (!det.idInsumo && !det.idProductoIntermedio) {
+                throw new Error('Cada detalle de receta debe especificar idInsumo o idProductoIntermedio');
+              }
+              const itemKey = det.idInsumo ? `INS:${det.idInsumo}` : `PROD:${det.idProductoIntermedio}`;
               if (det.activo !== false) {
-                if (insumosEnEtapa.has(det.idInsumo)) {
-                  throw new Error(`Insumo duplicado en la misma etapa: ${det.idInsumo}`);
+                if (itemsEnEtapa.has(itemKey)) {
+                  throw new Error(`Ítem duplicado en la misma etapa: ${itemKey}`);
                 }
-                insumosEnEtapa.add(det.idInsumo);
+                itemsEnEtapa.add(itemKey);
               }
 
               if (det.id) {
                 await tx.detalleReceta.update({
                   where: { id: det.id },
                   data: {
-                    idInsumo: det.idInsumo,
+                    idInsumo: det.idInsumo || null,
+                    idProductoIntermedio: det.idProductoIntermedio || null,
                     cantidadRequerida: det.cantidadRequerida,
                     unidad: det.unidad,
                     mermaPorcentaje: det.mermaPorcentaje,
                     esOpcional: det.esOpcional,
                     grupoVariante: det.grupoVariante,
-                    tipoInsumo: det.tipoInsumo,
+                    tipoInsumo: det.tipoInsumo || (det.idProductoIntermedio ? 'INTERMEDIO_WIP' : 'BASE'),
                     activo: det.activo,
                     observaciones: det.observaciones
                   }
@@ -210,13 +233,14 @@ export class RecipesRepository {
                 await tx.detalleReceta.create({
                   data: {
                     idEtapaReceta: etapaId,
-                    idInsumo: det.idInsumo,
+                    idInsumo: det.idInsumo || null,
+                    idProductoIntermedio: det.idProductoIntermedio || null,
                     cantidadRequerida: det.cantidadRequerida,
                     unidad: det.unidad,
                     mermaPorcentaje: det.mermaPorcentaje,
                     esOpcional: det.esOpcional !== undefined ? det.esOpcional : false,
                     grupoVariante: det.grupoVariante,
-                    tipoInsumo: det.tipoInsumo || 'BASE',
+                    tipoInsumo: det.tipoInsumo || (det.idProductoIntermedio ? 'INTERMEDIO_WIP' : 'BASE'),
                     activo: det.activo !== undefined ? det.activo : true,
                     observaciones: det.observaciones
                   }

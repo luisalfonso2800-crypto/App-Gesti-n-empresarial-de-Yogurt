@@ -32,11 +32,16 @@ export function usePresentationsData() {
   }, []);
 
   const handleToggleActive = async (item) => {
+    const targetId = item?.id ?? item?.idPresentacion ?? item?.ID_Presentacion ?? item?._id;
+    if (!targetId) {
+      console.error('Identificador no válido para alternar estado:', item);
+      return;
+    }
     try {
-      await apiClient.patch(`/presentations/${item.id}`, { activo: !item.activo });
+      await apiClient.patch(`/presentations/${targetId}`, { activo: !item.activo });
       fetchPresentations();
     } catch (err) {
-      alert(err.message || 'Error al cambiar estado');
+      console.error('Error al cambiar estado de presentación:', err);
     }
   };
 

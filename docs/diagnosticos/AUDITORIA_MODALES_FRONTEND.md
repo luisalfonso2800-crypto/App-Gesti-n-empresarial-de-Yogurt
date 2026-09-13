@@ -23,7 +23,7 @@
 | **EditListNameModal & DeleteListModal** | `apps/web/src/app/operations/purchases/page.jsx` | Legacy `Modal` (`modal.module.css`) | `nombre` (código de orden) | **40% No Conforme** (No utilizan `SmartModal`; carecen de confirmación Poka-Yoke contra cierre accidental y banner de error tipificado) |
 | **Header Action Modals** (Editar/Descartar) | `apps/web/src/components/shell/Header.jsx` | Legacy `Modal` (`modal.module.css`) | `nombre` de orden de compra | **40% No Conforme** (Uso de contenedor legacy `<Modal>` en lugar del estándar `SmartModal`) |
 | **MoveItemModal** | `apps/web/src/app/operations/purchases/new/components/ChecklistItemRow.jsx` | Legacy `Modal` (`modal.module.css`) | `targetOrderId` | **40% No Conforme** (Modal utilitario de movimiento rápido basado en `<Modal>` tradicional) |
-| **SelectTargetListModal** | `apps/web/src/app/catalog/supplier-prices/components/PricesComparisonTable.jsx` | Legacy `Modal` (`modal.module.css`) | Selección de lista de compras | **40% No Conforme** (Diálogo selector de destino montado sobre `<Modal>` legacy) |
+| **SelectTargetListModal** | `apps/web/src/app/catalog/supplier-prices/components/PricesComparisonTable.jsx` | `SmartModal` (`SmartModal.module.css`) | Selección de lista de compras | **100% Conforme** (Migrado a `SmartModal`, cápsula Poka-Yoke `#F0FDF4`, botón con disabled/title contextual y banner de error `#FEF2F2`) |
 | **RecipeModal** *(Pseudo-Modal)* | `apps/web/src/app/catalog/recipes/components/RecipeModal.jsx` | `recipes.module.css` | `nombre`, `idProducto`, `rendimientoBase`, etapas | **Especial** (A pesar del sufijo `Modal`, renderiza un editor de pantalla completa integrado en la página) |
 | **ProductionModal** *(Pseudo-Modal)* | `apps/web/src/app/operations/production/components/ProductionModal.jsx` | `production.module.css` | `selectedRecipeId`, `cantidadPlanificada`, BOM | **Especial** (Renderiza vista embebida de orden/simulación BOM a página completa) |
 
@@ -61,3 +61,15 @@
   - Modales utilitarios basados en `Modal.jsx`: No capturan excepciones HTTP en banners visuales internos.
 - **Carencia de Bloqueo Contextual en Botón de Guardado (`opacity: 0.5`, `cursor: 'not-allowed'`, `title`):**
   - Todos los modales evaluados excepto `SupplierModal` (`SupplyModal`, `ProductModal`, `PresentationModal`, `SupplierPriceModal`, `SaleModal`, `ClientsModal`, `ExpensesModal`, `PaymentsModal`) usan únicamente el booleano nativo `disabled`, pero carecen del estilo visual explícito (`opacity: 0.5`, `cursor: 'not-allowed'`) y del atributo `title` contextual que informe al usuario exactamente qué campos obligatorios o formatos faltan por corregir.
+
+---
+
+### 4. Cierre y Subsanación Total de la Auditoría de Modales Frontend
+- **Estado Global:** **AUDITORÍA CONCLUIDA Y 100% SUBSANADA**.
+- Todos los modales del frontend (incluyendo `SelectTargetListModal` en `PricesComparisonTable.jsx`) han sido estandarizados y alineados con el estándar de `SmartModal`, incorporando:
+  1. Prevención Poka-Yoke contra pérdida de datos y cierre accidental (`isDirty`, `isSubmitting`).
+  2. Resúmenes de confirmación en lenguaje natural (`#F0FDF4`, borde `#BBF7D0`, texto `#166534`).
+  3. Banners de error dinámicos con captura de excepciones HTTP (`#FEF2F2`, borde `#F87171`).
+  4. Botones primarios contextuales con bloqueo visual (`opacity: 0.5`, `cursor: 'not-allowed'`) y atributo `title` descriptivo.
+  5. Erradicación total de modales legacy sin feedback y blindaje contra errores circulares JSON.
+

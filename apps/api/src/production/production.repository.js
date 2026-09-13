@@ -1,6 +1,32 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 
+const includeProduction = {
+  detalles: {
+    include: {
+      insumo: true,
+      productoIntermedio: {
+        include: {
+          presentacion: true,
+          inventario: true
+        }
+      }
+    }
+  },
+  lotes: {
+    include: {
+      lotePadre: true,
+      lotesHijos: true
+    }
+  },
+  producto: {
+    include: {
+      presentacion: true,
+      inventario: true
+    }
+  }
+};
+
 @Injectable()
 @Dependencies(PrismaService)
 export class ProductionRepository {
@@ -10,14 +36,15 @@ export class ProductionRepository {
 
   async findAll() {
     return this.prisma.produccion.findMany({
-      include: { detalles: true, lotes: true }
+      include: includeProduction,
+      orderBy: { fechaProduccion: 'desc' }
     });
   }
 
   async findById(id) {
     return this.prisma.produccion.findUnique({
       where: { id },
-      include: { detalles: true, lotes: true }
+      include: includeProduction
     });
   }
 
@@ -27,60 +54,120 @@ export class ProductionRepository {
       include: {
         etapas: {
           where: { activo: true },
-          include: { detalles: { where: { activo: true }, include: { insumo: true } } }
+          include: {
+            detalles: {
+              where: { activo: true },
+              include: {
+                insumo: true,
+                productoIntermedio: {
+                  include: {
+                    presentacion: true,
+                    inventario: true
+                  }
+                }
+              }
+            }
+          }
         }
       }
     });
-    
+
     if (!receta) throw new Error("Receta no encontrada");
-    
+
     const variantes = variantesQuery ? variantesQuery.split(',') : [];
     const factorEscala = cantidadProduccion / (Number(receta.rendimientoBase) || 1);
-    
+
     const bom = [];
-    
+
     for (const etapa of receta.etapas) {
       for (const det of etapa.detalles) {
         if (det.esOpcional && !variantes.includes(det.grupoVariante)) {
           continue; // Skip optional items not in active variants
         }
-        
+
         let reqTeorico = Number(det.cantidadRequerida) * factorEscala;
         const merma = Number(det.mermaPorcentaje) || 0;
         reqTeorico = reqTeorico * (1 + (merma / 100));
-        
+
         if (det.unidad === 'Unidades') {
           reqTeorico = Math.ceil(reqTeorico);
         }
-        
-        const inv = await this.prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
-        const stockActual = inv ? Number(inv.cantidadActual) : 0;
-        const faltante = Math.max(0, reqTeorico - stockActual);
-        
-        // Find cost from latest provider prices
-        const price = await this.prisma.precioProveedor.findFirst({
-          where: { idInsumo: det.idInsumo, activo: true },
-          orderBy: { fechaRegistro: 'desc' }
-        });
-        const costoUnitario = price ? Number(price.costoUnidadBase) : 0;
-        const costoTeorico = reqTeorico * costoUnitario;
-        
-        bom.push({
-          idInsumo: det.idInsumo,
-          nombreInsumo: det.insumo.nombre,
-          etapa: etapa.nombre,
-          tipoInsumo: det.tipoInsumo,
-          requeridoTeorico: reqTeorico,
-          unidad: det.unidad,
-          stockActual: stockActual,
-          faltante: faltante,
-          ok: faltante === 0,
-          costoTeorico: costoTeorico,
-          costoUnitario: costoUnitario
-        });
+
+        if (det.idProductoIntermedio) {
+          // Consultar inventario de producto intermedio / semielaborado WIP
+          const invProd = await this.prisma.inventarioProducto.findUnique({
+            where: { idProducto: det.idProductoIntermedio }
+          });
+          const stockActual = invProd ? Number(invProd.cantidadActual) : 0;
+          const faltante = Math.max(0, reqTeorico - stockActual);
+
+          // Buscar lote padre activo/disponible para costeo y trazabilidad
+          const loteWip = await this.prisma.lote.findFirst({
+            where: {
+              idProducto: det.idProductoIntermedio,
+              estado: 'DISPONIBLE',
+              cantidadDisponible: { gt: 0 }
+            },
+            orderBy: { fechaProduccion: 'asc' } // FIFO
+          });
+
+          const costoUnitario = loteWip && Number(loteWip.costoUnitario) > 0
+            ? Number(loteWip.costoUnitario)
+            : (invProd && Number(invProd.costoPromedio) > 0 ? Number(invProd.costoPromedio) : 0);
+
+          const costoTeorico = reqTeorico * costoUnitario;
+
+          bom.push({
+            idInsumo: null,
+            idProductoIntermedio: det.idProductoIntermedio,
+            nombreInsumo: det.productoIntermedio ? `${det.productoIntermedio.nombre} (Base / WIP)` : 'Producto Semielaborado',
+            etapa: etapa.nombre,
+            tipoInsumo: det.tipoInsumo || 'INTERMEDIO_WIP',
+            requeridoTeorico: reqTeorico,
+            unidad: det.unidad || 'Litros',
+            stockActual: stockActual,
+            faltante: faltante,
+            ok: faltante === 0,
+            costoTeorico: costoTeorico,
+            costoUnitario: costoUnitario,
+            esProductoIntermedio: true,
+            idLoteSugerido: loteWip ? loteWip.id : null
+          });
+        } else {
+          // Consultar inventario de insumo tradicional
+          const inv = await this.prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
+          const stockActual = inv ? Number(inv.cantidadActual) : 0;
+          const faltante = Math.max(0, reqTeorico - stockActual);
+
+          // Find cost from latest provider prices or inventory average
+          const price = await this.prisma.precioProveedor.findFirst({
+            where: { idInsumo: det.idInsumo, activo: true },
+            orderBy: { fechaRegistro: 'desc' }
+          });
+          const costoUnitario = price
+            ? Number(price.costoUnidadBase)
+            : (inv && Number(inv.costoPromedio) > 0 ? Number(inv.costoPromedio) : 0);
+          const costoTeorico = reqTeorico * costoUnitario;
+
+          bom.push({
+            idInsumo: det.idInsumo,
+            idProductoIntermedio: null,
+            nombreInsumo: det.insumo ? det.insumo.nombre : 'Insumo',
+            etapa: etapa.nombre,
+            tipoInsumo: det.tipoInsumo || 'BASE',
+            requeridoTeorico: reqTeorico,
+            unidad: det.unidad,
+            stockActual: stockActual,
+            faltante: faltante,
+            ok: faltante === 0,
+            costoTeorico: costoTeorico,
+            costoUnitario: costoUnitario,
+            esProductoIntermedio: false
+          });
+        }
       }
     }
-    
+
     return bom;
   }
 
@@ -99,18 +186,18 @@ export class ProductionRepository {
           observaciones: data.observaciones,
           detalles: {
             create: data.detalles.map(d => ({
-              idInsumo: d.idInsumo,
+              idInsumo: d.idInsumo || null,
+              idProductoIntermedio: d.idProductoIntermedio || null,
               cantidadTeorica: d.cantidadTeorica,
               unidad: d.unidad,
               costoTeorico: d.costoTeorico,
-              // Init to 0 or same as theoretical, but usually 0 until complete
               cantidadRealUtilizada: null,
               costoReal: null,
               diferencia: null
             }))
           }
         },
-        include: { detalles: true }
+        include: includeProduction
       });
 
       return produccion;
@@ -127,17 +214,25 @@ export class ProductionRepository {
       if (produccion.estado !== 'PLANIFICADA') throw new Error("Solo órdenes planificadas pueden iniciarse");
 
       for (const det of produccion.detalles) {
-        const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
-        const stock = inv ? Number(inv.cantidadActual) : 0;
-        if (stock < Number(det.cantidadTeorica)) {
-          throw new Error(`Stock insuficiente para el insumo ${det.idInsumo}`);
+        if (det.idInsumo) {
+          const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
+          const stock = inv ? Number(inv.cantidadActual) : 0;
+          if (stock < Number(det.cantidadTeorica)) {
+            throw new Error(`Stock insuficiente para el insumo ${det.idInsumo}`);
+          }
+        } else if (det.idProductoIntermedio) {
+          const invProd = await prisma.inventarioProducto.findUnique({ where: { idProducto: det.idProductoIntermedio } });
+          const stock = invProd ? Number(invProd.cantidadActual) : 0;
+          if (stock < Number(det.cantidadTeorica)) {
+            throw new Error(`Stock insuficiente para el producto intermedio/base ${det.idProductoIntermedio}`);
+          }
         }
       }
 
       return prisma.produccion.update({
         where: { id },
         data: { estado: 'EN_PROCESO' },
-        include: { detalles: true }
+        include: includeProduction
       });
     });
   }
@@ -146,6 +241,12 @@ export class ProductionRepository {
     const { itemsFaltantes } = data; // Array of { idInsumo, faltante }
     if (!itemsFaltantes || itemsFaltantes.length === 0) throw new Error("No hay items faltantes especificados");
 
+    // Filtrar solo insumos comprables (no productos intermedios producidos internamente)
+    const insumosFaltantes = itemsFaltantes.filter(f => f.idInsumo);
+    if (insumosFaltantes.length === 0) {
+      throw new Error("Los faltantes corresponden a bases intermedias fabricadas en planta; deben programarse en una orden de producción previa");
+    }
+
     return this.prisma.$transaction(async (prisma) => {
       const oc = await prisma.ordenCompra.create({
         data: {
@@ -153,7 +254,7 @@ export class ProductionRepository {
           nombre: `Abastecimiento Automático por Faltante de Producción`,
           estado: 'PENDIENTE',
           items: {
-            create: itemsFaltantes.map(f => ({
+            create: insumosFaltantes.map(f => ({
               idInsumo: f.idInsumo,
               cantidad: f.faltante,
               estadoItem: 'PENDIENTE'
@@ -170,57 +271,136 @@ export class ProductionRepository {
     return this.prisma.$transaction(async (prisma) => {
       const produccion = await prisma.produccion.findUnique({
         where: { id },
-        include: { detalles: true }
+        include: { detalles: true, producto: true }
       });
-      
+
       if (!produccion) throw new Error("Producción no encontrada");
       if (produccion.estado === 'COMPLETADA') throw new Error("Producción ya completada");
 
       let costoTotalLote = 0;
+      let idLotePadreDetectado = null;
 
-      // Update production details and discount raw materials
+      // Update production details and discount items (Insumos or Intermediate Products)
       for (const updateDet of data.detalles) {
         const det = produccion.detalles.find(d => d.id === updateDet.id);
         if (det) {
           const qtyReal = Number(updateDet.cantidadRealUtilizada);
           const diferencia = qtyReal - Number(det.cantidadTeorica);
-          
-          const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
-          const stockAnterior = inv ? Number(inv.cantidadActual) : 0;
-          const costoUnitarioInsumo = inv ? Number(inv.costoPromedio || 0) : (Number(det.costoTeorico) / Number(det.cantidadTeorica) || 0);
-          
-          const costReal = qtyReal * costoUnitarioInsumo;
-          costoTotalLote += costReal;
-          
-          await prisma.detalleProduccion.update({
-            where: { id: det.id },
-            data: {
-              cantidadRealUtilizada: qtyReal,
-              diferencia: diferencia,
-              costoReal: costReal
-            }
-          });
 
-          const stockNuevo = stockAnterior - qtyReal;
+          if (det.idInsumo) {
+            // 1. Manejo de Insumo Tradicional
+            const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
+            const stockAnterior = inv ? Number(inv.cantidadActual) : 0;
+            const costoUnitarioInsumo = inv && Number(inv.costoPromedio) > 0
+              ? Number(inv.costoPromedio)
+              : (Number(det.costoTeorico) / (Number(det.cantidadTeorica) || 1) || 0);
 
-          await prisma.movimientoInventario.create({
-            data: {
-              idInsumo: det.idInsumo,
-              tipoMovimiento: 'SALIDA_PRODUCCION',
-              cantidad: qtyReal,
-              stockAnterior: stockAnterior,
-              stockNuevo: stockNuevo,
-              costoUnitario: costoUnitarioInsumo,
-              motivo: 'Consumo por orden de producción',
-              operacionOrigen: produccion.id
+            const costReal = qtyReal * costoUnitarioInsumo;
+            costoTotalLote += costReal;
+
+            await prisma.detalleProduccion.update({
+              where: { id: det.id },
+              data: {
+                cantidadRealUtilizada: qtyReal,
+                diferencia: diferencia,
+                costoReal: costReal
+              }
+            });
+
+            const stockNuevo = stockAnterior - qtyReal;
+
+            await prisma.movimientoInventario.create({
+              data: {
+                idInsumo: det.idInsumo,
+                tipoMovimiento: 'SALIDA_PRODUCCION',
+                cantidad: qtyReal,
+                stockAnterior: stockAnterior,
+                stockNuevo: stockNuevo,
+                costoUnitario: costoUnitarioInsumo,
+                motivo: 'Consumo por orden de producción',
+                operacionOrigen: produccion.id
+              }
+            });
+
+            await prisma.inventario.upsert({
+              where: { idInsumo: det.idInsumo },
+              update: { cantidadActual: stockNuevo },
+              create: { idInsumo: det.idInsumo, cantidadActual: stockNuevo }
+            });
+
+          } else if (det.idProductoIntermedio) {
+            // 2. Manejo de Producto Intermedio / Semielaborado (WIP a granel)
+            const invProd = await prisma.inventarioProducto.findUnique({
+              where: { idProducto: det.idProductoIntermedio }
+            });
+            const stockAnterior = invProd ? Number(invProd.cantidadActual) : 0;
+            const costoUnitarioIntermedio = invProd && Number(invProd.costoPromedio) > 0
+              ? Number(invProd.costoPromedio)
+              : (Number(det.costoTeorico) / (Number(det.cantidadTeorica) || 1) || 0);
+
+            const costReal = qtyReal * costoUnitarioIntermedio;
+            costoTotalLote += costReal;
+
+            await prisma.detalleProduccion.update({
+              where: { id: det.id },
+              data: {
+                cantidadRealUtilizada: qtyReal,
+                diferencia: diferencia,
+                costoReal: costReal
+              }
+            });
+
+            const stockNuevo = stockAnterior - qtyReal;
+
+            // Descontar inventario de producto intermedio
+            await prisma.inventarioProducto.upsert({
+              where: { idProducto: det.idProductoIntermedio },
+              update: { cantidadActual: stockNuevo },
+              create: { idProducto: det.idProductoIntermedio, cantidadActual: stockNuevo, costoPromedio: costoUnitarioIntermedio }
+            });
+
+            // Registrar movimiento de inventario de salida para el semielaborado
+            await prisma.movimientoInventario.create({
+              data: {
+                idProducto: det.idProductoIntermedio,
+                tipoMovimiento: 'SALIDA_PRODUCCION_WIP',
+                cantidad: qtyReal,
+                stockAnterior: stockAnterior,
+                stockNuevo: stockNuevo,
+                costoUnitario: costoUnitarioIntermedio,
+                motivo: `Consumo de base semielaborada en producción ${produccion.id}`,
+                operacionOrigen: produccion.id
+              }
+            });
+
+            // Trazabilidad de Lote Padre: Buscar lote padre activo y deducir cantidad
+            let lotePadre = null;
+            if (updateDet.idLotePadre) {
+              lotePadre = await prisma.lote.findUnique({ where: { id: updateDet.idLotePadre } });
+            } else {
+              lotePadre = await prisma.lote.findFirst({
+                where: {
+                  idProducto: det.idProductoIntermedio,
+                  cantidadDisponible: { gt: 0 }
+                },
+                orderBy: { fechaProduccion: 'asc' } // FIFO
+              });
             }
-          });
-          
-          await prisma.inventario.upsert({
-            where: { idInsumo: det.idInsumo },
-            update: { cantidadActual: stockNuevo },
-            create: { idInsumo: det.idInsumo, cantidadActual: stockNuevo }
-          });
+
+            if (lotePadre) {
+              idLotePadreDetectado = lotePadre.id;
+              const nuevaCantDisponible = Math.max(0, Number(lotePadre.cantidadDisponible) - qtyReal);
+              const nuevoEstado = nuevaCantDisponible === 0 ? 'AGOTADO' : lotePadre.estado;
+
+              await prisma.lote.update({
+                where: { id: lotePadre.id },
+                data: {
+                  cantidadDisponible: nuevaCantDisponible,
+                  estado: nuevoEstado
+                }
+              });
+            }
+          }
         }
       }
 
@@ -228,26 +408,38 @@ export class ProductionRepository {
       const costoUnitarioFabricacion = qtyProducida > 0 ? costoTotalLote / qtyProducida : 0;
 
       // Update main production status
+      const fechaVencimientoFinal = data.fechaVencimiento
+        ? new Date(data.fechaVencimiento)
+        : (produccion.fechaVencimiento
+            ? new Date(produccion.fechaVencimiento)
+            : new Date(Date.now() + (produccion.producto?.diasVidaUtil ?? 21) * 86400000));
+
       await prisma.produccion.update({
         where: { id },
         data: {
           estado: 'COMPLETADA',
           cantidadProducidaReal: qtyProducida,
-          fechaProduccion: new Date()
+          fechaProduccion: new Date(),
+          fechaVencimiento: fechaVencimientoFinal
         }
       });
 
-      // Generate Lot for Finished Product
+      // Determinar si es producto intermedio o producto terminado
+      const esIntermedio = produccion.producto?.categoria === 'INTERMEDIO_WIP';
+      const tipoLoteGenerado = esIntermedio ? 'SEMIELABORADO_WIP' : 'PRODUCTO_TERMINADO';
+
+      // Generate Lot with ancestry (idLotePadre)
       const lote = await prisma.lote.create({
         data: {
-          tipoLote: 'PRODUCTO_TERMINADO',
+          tipoLote: tipoLoteGenerado,
           idProduccion: produccion.id,
           idProducto: produccion.idProducto,
+          idLotePadre: idLotePadreDetectado || null,
           fechaProduccion: new Date(),
-          fechaVencimiento: produccion.fechaVencimiento || new Date(Date.now() + 15 * 86400000),
+          fechaVencimiento: fechaVencimientoFinal,
           cantidadInicial: qtyProducida,
           cantidadDisponible: qtyProducida,
-          unidad: 'UNIDAD',
+          unidad: esIntermedio ? 'Litros' : 'UNIDAD',
           estado: 'DISPONIBLE',
           costoUnitario: costoUnitarioFabricacion
         }
@@ -258,11 +450,11 @@ export class ProductionRepository {
         data: { idLote: lote.id }
       });
 
-      // Upsert Finished Product Inventory
+      // Upsert Finished or Intermediate Product Inventory
       const invProd = await prisma.inventarioProducto.findUnique({ where: { idProducto: produccion.idProducto } });
       const stockAnteriorProd = invProd ? Number(invProd.cantidadActual) : 0;
       const stockNuevoProd = stockAnteriorProd + qtyProducida;
-      
+
       // Calculate new weighted average cost
       let nuevoCostoPromedio = costoUnitarioFabricacion;
       if (invProd && stockAnteriorProd > 0) {
@@ -277,7 +469,7 @@ export class ProductionRepository {
         create: { idProducto: produccion.idProducto, cantidadActual: stockNuevoProd, costoPromedio: nuevoCostoPromedio }
       });
 
-      // Insert Movement for Finished Product
+      // Insert Movement for Generated Product
       await prisma.movimientoInventario.create({
         data: {
           idProducto: produccion.idProducto,
@@ -286,14 +478,14 @@ export class ProductionRepository {
           stockAnterior: stockAnteriorProd,
           stockNuevo: stockNuevoProd,
           costoUnitario: costoUnitarioFabricacion,
-          motivo: 'Ingreso a cava de producto terminado',
+          motivo: esIntermedio ? 'Ingreso a tanque de base semielaborada' : 'Ingreso a cava de producto terminado',
           operacionOrigen: produccion.id
         }
       });
 
       return prisma.produccion.findUnique({
         where: { id },
-        include: { detalles: true, lotes: true }
+        include: includeProduction
       });
     });
   }

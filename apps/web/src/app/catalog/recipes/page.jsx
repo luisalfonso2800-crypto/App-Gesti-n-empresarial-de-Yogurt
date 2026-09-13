@@ -9,6 +9,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { useRecipesData } from './hooks/useRecipesData';
 import { useRecipeForm } from './hooks/useRecipeForm';
 import { RecipesHeader } from './components/RecipesHeader';
@@ -26,7 +27,7 @@ export default function RecipesPage() {
     handleChange, addEtapa, updateEtapa, removeEtapa,
     addDetalle, updateDetalle, removeDetalle,
     handleSubmit, calculateCost
-  } = useRecipeForm({ supplies, prices, onSaveSuccess: fetchData });
+  } = useRecipeForm({ supplies, products, prices, onSaveSuccess: fetchData });
 
   if (isEditing) {
     return (
@@ -48,9 +49,100 @@ export default function RecipesPage() {
     );
   }
 
+  const hasProducts = products.length > 0;
+  const hasSupplies = supplies.length > 0;
+  const canCreate = !loading && hasProducts && hasSupplies;
+
+  let disabledTooltip = '';
+  if (!canCreate) {
+    if (!hasProducts && !hasSupplies) {
+      disabledTooltip = 'Debe registrar Productos e Insumos antes de formular recetas';
+    } else if (!hasProducts) {
+      disabledTooltip = 'Debe registrar al menos un Producto antes de formular recetas';
+    } else {
+      disabledTooltip = 'Debe registrar al menos un Insumo antes de formular recetas';
+    }
+  }
+
   return (
     <div>
-      <RecipesHeader onNewRecipe={handleOpenEditor} />
+      <RecipesHeader 
+        onNewRecipe={handleOpenEditor} 
+        canCreate={canCreate} 
+        disabledTooltip={disabledTooltip} 
+      />
+
+      {!loading && !hasProducts && (
+        <div style={{
+          backgroundColor: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          color: '#1E40AF',
+          padding: '0.875rem 1.25rem',
+          borderRadius: '8px',
+          marginBottom: '1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '0.875rem',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div>
+            <strong>Prerrequisito requerido:</strong> Debe registrar al menos un Producto antes de formular recetas.
+          </div>
+          <Link 
+            href="/catalog/products" 
+            style={{
+              backgroundColor: '#1E40AF',
+              color: '#FFFFFF',
+              padding: '0.45rem 0.9rem',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontWeight: 500,
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Ir a Productos
+          </Link>
+        </div>
+      )}
+
+      {!loading && !hasSupplies && (
+        <div style={{
+          backgroundColor: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          color: '#1E40AF',
+          padding: '0.875rem 1.25rem',
+          borderRadius: '8px',
+          marginBottom: '1.25rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '0.875rem',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div>
+            <strong>Prerrequisito requerido:</strong> Debe registrar al menos un Insumo antes de formular recetas.
+          </div>
+          <Link 
+            href="/catalog/supplies" 
+            style={{
+              backgroundColor: '#1E40AF',
+              color: '#FFFFFF',
+              padding: '0.45rem 0.9rem',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontWeight: 500,
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Ir a Insumos
+          </Link>
+        </div>
+      )}
       
       <RecipesList 
         items={items}

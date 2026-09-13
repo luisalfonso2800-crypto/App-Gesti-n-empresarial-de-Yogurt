@@ -1,12 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // Habilitar servicio de archivos estáticos para subida de presentaciones
+  const uploadsDir = path.join(process.cwd(), 'uploads', 'presentations');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  app.use('/uploads/presentations', express.static(uploadsDir));
+  app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.setGlobalPrefix('api/v1');
   app.enableCors({

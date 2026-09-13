@@ -11,7 +11,9 @@ import { apiClient } from '@/lib/api-client';
 
 export function useProductsData() {
   const [items, setItems] = useState([]);
+  const [presentations, setPresentations] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingPresentations, setLoadingPresentations] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchItems = async () => {
@@ -27,8 +29,22 @@ export function useProductsData() {
     }
   };
 
+  const fetchPresentations = async () => {
+    setLoadingPresentations(true);
+    try {
+      const data = await apiClient.get('/presentations');
+      setPresentations(data || []);
+    } catch (err) {
+      console.error('Error al cargar presentaciones en productos:', err);
+      setPresentations([]);
+    } finally {
+      setLoadingPresentations(false);
+    }
+  };
+
   useEffect(() => {
     fetchItems();
+    fetchPresentations();
   }, []);
 
   const handleToggleActive = async (item) => {
@@ -40,5 +56,5 @@ export function useProductsData() {
     }
   };
 
-  return { items, loading, error, fetchItems, handleToggleActive };
+  return { items, presentations, loading, loadingPresentations, fetchPresentations, error, fetchItems, handleToggleActive };
 }

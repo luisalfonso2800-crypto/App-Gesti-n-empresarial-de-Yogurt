@@ -1,3 +1,12 @@
+/**
+ * @file page.jsx
+ * @module operations/inventory
+ * @description Vista principal de bitácora de inventario (Bodega y Cava).
+ * @responsibility Gestionar visualización de stock, valorización, historial de movimientos y ajustes globales.
+ * @usedBy Next.js router (/operations/inventory)
+ * @dependencies react, @/lib/api-client, @/components/ui/Table, @/components/ui/States, @/components/ui/Badge, @/components/ui/Button, lucide-react, ./components/GlobalInventoryAdjustmentModal
+ */
+
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -7,6 +16,7 @@ import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ChevronDown, ChevronUp, AlertCircle, TrendingDown, TrendingUp, DollarSign, PackageOpen, LayoutGrid, RotateCcw } from 'lucide-react';
+import { GlobalInventoryAdjustmentModal } from './components/GlobalInventoryAdjustmentModal';
 import styles from './inventory.module.css';
 
 export default function InventoryPage() {
@@ -22,7 +32,10 @@ export default function InventoryPage() {
   const [movements, setMovements] = useState({});
   const [loadingMovements, setLoadingMovements] = useState(false);
 
-  // Modal Ajuste
+  // Modal Ajuste Global / Saldo Inicial
+  const [isGlobalAdjustmentOpen, setIsGlobalAdjustmentOpen] = useState(false);
+
+  // Modal Ajuste Fila
   const [adjustmentModal, setAdjustmentModal] = useState({ open: false, item: null, tipo: 'AJUSTE_POSITIVO', cantidad: '', motivo: '' });
 
   const fetchData = async () => {
@@ -103,12 +116,20 @@ export default function InventoryPage() {
   return (
     <div className={styles.container}>
       <header className={styles.headerPanel}>
-        <div className={styles.titleSection}>
-          <LayoutGrid size={28} className={styles.titleIcon} />
-          <div>
-            <h1 className={styles.mainTitle}>Bitácora de Inventario</h1>
-            <p className={styles.subTitle}>Control maestro de almacén y cava. Valorización en tiempo real.</p>
+        <div className={styles.headerTopRow}>
+          <div className={styles.titleSection}>
+            <LayoutGrid size={28} className={styles.titleIcon} />
+            <div>
+              <h1 className={styles.mainTitle}>Bitácora de Inventario</h1>
+              <p className={styles.subTitle}>Control maestro de almacén y cava. Valorización en tiempo real.</p>
+            </div>
           </div>
+          <Button
+            variant="primary"
+            onClick={() => setIsGlobalAdjustmentOpen(true)}
+          >
+            + Saldo Inicial / Ajuste Global
+          </Button>
         </div>
         <div className={styles.tabs}>
           <button className={`${styles.tabBtn} ${activeTab === 'INSUMOS' ? styles.tabActive : ''}`} onClick={() => setActiveTab('INSUMOS')}>
@@ -293,6 +314,15 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL GLOBAL DE SALDO INICIAL / AJUSTE */}
+      <GlobalInventoryAdjustmentModal
+        isOpen={isGlobalAdjustmentOpen}
+        onClose={() => setIsGlobalAdjustmentOpen(false)}
+        onSuccess={() => {
+          fetchData();
+        }}
+      />
     </div>
   );
 }

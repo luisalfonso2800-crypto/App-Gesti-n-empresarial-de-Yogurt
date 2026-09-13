@@ -10,14 +10,21 @@ import React from 'react';
 import { Button } from '@/components/ui/Button';
 import styles from '../recipes.module.css';
 
-export function RecipesHeader({ onNewRecipe }) {
+export function RecipesHeader({ onNewRecipe, canCreate = true, disabledTooltip = '' }) {
   return (
     <div className={styles.header}>
       <div className={styles.headerTitle}>
         <h1 className={styles.title}>Recetas Técnicas (V2)</h1>
         <p className={styles.subtitle}>Fórmulas estándar de elaboración con BOM y Etapas (Ruta de proceso).</p>
       </div>
-      <Button onClick={() => onNewRecipe(null)}>Nueva Receta</Button>
+      <Button 
+        onClick={() => { if (canCreate) onNewRecipe(null); }}
+        disabled={!canCreate}
+        title={!canCreate ? disabledTooltip : 'Registrar nueva receta'}
+        style={!canCreate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+      >
+        Nueva Receta
+      </Button>
     </div>
   );
 }

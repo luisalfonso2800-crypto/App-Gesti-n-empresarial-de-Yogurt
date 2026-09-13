@@ -236,7 +236,10 @@ export default function ProductionPage() {
             <div className={styles.orderBody}>
               <p><strong>Planificado:</strong> {Number(order.cantidadPlanificada)} und</p>
               {order.estado === 'COMPLETADA' && <p><strong>Producido:</strong> {Number(order.cantidadProducidaReal)} und</p>}
-              <p><strong>Fecha:</strong> {new Date(order.fechaProduccion).toLocaleDateString()}</p>
+              <p><strong>Fecha Fabricación:</strong> {new Date(order.fechaProduccion).toLocaleDateString()}</p>
+              {order.fechaVencimiento && (
+                <p><strong>Vencimiento:</strong> {new Date(order.fechaVencimiento).toLocaleDateString()}</p>
+              )}
             </div>
             <div className={styles.orderFooter}>
               {order.estado === 'PLANIFICADA' && (

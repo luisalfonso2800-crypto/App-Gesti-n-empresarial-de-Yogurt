@@ -15,8 +15,13 @@ export const apiClient = {
     const url = `${API_URL}${endpoint}`;
     
     const headers = new Headers(options.headers);
-    if (!headers.has('Content-Type')) {
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+    if (!headers.has('Content-Type') && !isFormData) {
       headers.set('Content-Type', 'application/json');
+    } else if (isFormData && headers.has('Content-Type')) {
+      if (headers.get('Content-Type').includes('multipart/form-data')) {
+        headers.delete('Content-Type');
+      }
     }
 
     const response = await fetch(url, { ...options, headers });
@@ -47,10 +52,11 @@ export const apiClient = {
   },
 
   post(endpoint, data, options= {}) {
+    const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
     return this.fetch(endpoint, {
       ...options,
       method: 'POST',
-      body: JSON.stringify(data),
+      body: isFormData ? data : JSON.stringify(data),
     });
   },
 

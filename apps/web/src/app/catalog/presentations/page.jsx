@@ -20,14 +20,14 @@ export default function PresentationsPage() {
 
   return (
     <div>
-      <PresentationsHeader onNew={form.handleOpenModal} />
+      <PresentationsHeader onNew={() => form.handleOpenModal(null)} />
       <PresentationsTable 
         presentations={presentations} loading={loading} error={error}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
       />
       <PresentationModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
-        editingItem={form.editingItem} formData={form.formData}
+        isEditing={form.isEditing} editingItem={form.editingItem} formData={form.formData}
         setFormData={form.setFormData} handleChange={form.handleChange} handleSubmit={form.handleSubmit}
         isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
       />

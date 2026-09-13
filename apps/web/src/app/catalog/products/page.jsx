@@ -12,11 +12,12 @@ import { useProductsData } from './hooks/useProductsData';
 import { useProductForm } from './hooks/useProductForm';
 import { ProductsHeader } from './components/ProductsHeader';
 import { ProductsTable } from './components/ProductsTable';
+import Link from 'next/link';
 import { ProductModal } from './components/ProductModal';
 import styles from './products.module.css';
 
 export default function ProductsPage() {
-  const { items, loading, error, fetchItems, handleToggleActive } = useProductsData();
+  const { items, presentations, loading, loadingPresentations, fetchItems, handleToggleActive } = useProductsData();
   const form = useProductForm({ onSuccess: fetchItems });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -31,9 +32,49 @@ export default function ProductsPage() {
     }
   };
 
+  const hasPresentations = presentations.length > 0;
+  const canCreate = !loadingPresentations && hasPresentations;
+
   return (
     <div>
-      <ProductsHeader onNew={form.handleOpenModal} />
+      <ProductsHeader onNew={form.handleOpenModal} canCreate={canCreate} />
+
+      {!loadingPresentations && !hasPresentations && (
+        <div style={{
+          backgroundColor: '#EFF6FF',
+          border: '1px solid #BFDBFE',
+          color: '#1E40AF',
+          padding: '0.875rem 1.25rem',
+          borderRadius: '8px',
+          marginBottom: '1.25rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '0.875rem',
+          gap: '1rem',
+          flexWrap: 'wrap'
+        }}>
+          <div>
+            <strong>Prerrequisito requerido:</strong> Para registrar productos terminados debe configurar primero los formatos de envase.
+          </div>
+          <Link 
+            href="/catalog/presentations" 
+            style={{
+              backgroundColor: '#1E40AF',
+              color: '#FFFFFF',
+              padding: '0.45rem 0.9rem',
+              borderRadius: '6px',
+              textDecoration: 'none',
+              fontWeight: 500,
+              fontSize: '0.8rem',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Configurar Presentaciones
+          </Link>
+        </div>
+      )}
+
       <ProductsTable 
         items={paginatedProducts} loading={loading} error={error}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}

@@ -18,6 +18,7 @@ import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import { apiClient } from '@/lib/api-client';
 import { useCart } from '@/context/CartContext';
 import { useNotification } from '@/context/NotificationContext';
+import { OnboardingWizardWidget } from './OnboardingWizardWidget';
 
 export function Header() {
   const router = useRouter();
@@ -136,6 +137,7 @@ export function Header() {
         </div>
       </div>
       <div className={styles.headerRight}>
+        <OnboardingWizardWidget />
         {activeList && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', background: '#f3f4f6', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
              <Layers size={16} /> Lista Activa: {activeList.customName}

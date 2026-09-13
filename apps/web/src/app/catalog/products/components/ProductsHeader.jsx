@@ -10,14 +10,21 @@ import React from 'react';
 import { Button } from '@/components/ui/Button';
 import styles from '../products.module.css';
 
-export function ProductsHeader({ onNew }) {
+export function ProductsHeader({ onNew, canCreate = true }) {
   return (
     <div className={styles.header}>
       <div className={styles.headerTitle}>
         <h1 className={styles.title}>Productos</h1>
         <p className={styles.subtitle}>Catálogo de productos terminados listos para distribución comercial.</p>
       </div>
-      <Button onClick={() => onNew()}>Nuevo Registro</Button>
+      <Button 
+        onClick={() => { if (canCreate) onNew(); }}
+        disabled={!canCreate}
+        title={!canCreate ? 'Debe registrar al menos una Presentación antes de crear productos' : 'Registrar nuevo producto'}
+        style={!canCreate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+      >
+        Nuevo Registro
+      </Button>
     </div>
   );
 }
