@@ -705,10 +705,16 @@ function DashboardContent() {
         <div className={styles.cardHeader}>TELEMETRÍA DE PRODUCCIÓN</div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {(() => {
-            const prod = plant.productsTelemetry[activeProductIndex];
-            if (!prod) return null;
+            const prod = currentProduct || plant.productsTelemetry?.[currentProductIdx] || plant.productsTelemetry?.[0] || null;
+            if (!prod) {
+              return (
+                <div style={{ padding: '1rem', color: '#78716C', textAlign: 'center', margin: 'auto' }}>
+                  No hay productos activos para telemetría
+                </div>
+              );
+            }
             return (
-              <div key={prod.idProducto} className={styles.monitorGrid} style={{ flex: 1, margin: 0, padding: '0.25rem', display: 'flex', flexDirection: 'column' }}>
+              <div key={prod.idProducto || 'plant-prod'} className={styles.monitorGrid} style={{ flex: 1, margin: 0, padding: '0.25rem', display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                   <ProductAvatar 
                     src={resolveProductImage(prod)} 
@@ -719,15 +725,15 @@ function DashboardContent() {
                   />
                   <div className={styles.productNameInfo}>
                     <span className={styles.prodName} style={{ fontSize: '1.25rem' }}>{prod.nombre}</span>
-                    <span className={styles.prodCat}>{prod.categoria}</span>
-                    <span style={{ fontSize: '0.85rem', color: '#1C3F35', marginTop: '0.5rem' }}>Stock Cava: {prod.stockCava} und</span>
+                    <span className={styles.prodCat}>{prod.categoria?.nombre || prod.categoria || 'LÁCTEOS'}</span>
+                    <span style={{ fontSize: '0.85rem', color: '#1C3F35', marginTop: '0.5rem' }}>Stock Cava: {prod.stockCava ?? 0} und</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-around', borderTop: '1px solid #E8E2D7', paddingTop: '1rem', marginTop: 'auto' }}>
-                   <AnalogGauge value={prod.margenPorcentaje} label="MARGEN %" />
+                   <AnalogGauge value={prod.margenPorcentaje ?? 0} label="MARGEN %" />
                    <div style={{ textAlign: 'center' }}>
                      <div style={{ fontSize: '0.75rem', color: '#78716C' }}>ÓRDENES PROCESO</div>
-                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#D97706' }}>{plant.activeOrdersCount}</div>
+                     <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#D97706' }}>{plant.activeOrdersCount ?? 0}</div>
                    </div>
                 </div>
               </div>

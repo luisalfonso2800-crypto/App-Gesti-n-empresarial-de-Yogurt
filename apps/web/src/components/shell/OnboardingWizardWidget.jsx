@@ -20,12 +20,36 @@ import {
   Check
 } from 'lucide-react';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { apiClient } from '@/lib/api-client';
 import styles from './onboarding-wizard.module.css';
 
 export function OnboardingWizardWidget() {
   const { data, loading, refreshOnboarding } = useOnboardingStatus();
   const [isOpen, setIsOpen] = useState(false);
+  const [hasBulkProduct, setHasBulkProduct] = useState(true);
   const containerRef = useRef(null);
+
+  // Consultar si existe al menos un producto a granel registrado
+  useEffect(() => {
+    let isMounted = true;
+    const checkBulk = async () => {
+      try {
+        const prods = await apiClient.get('/products');
+        if (isMounted && Array.isArray(prods)) {
+          const bulkExists = prods.some(p => 
+            p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 
+            p.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+          );
+          setHasBulkProduct(bulkExists);
+        }
+      } catch (e) {
+        // En caso de error, mantener estado seguro
+        console.error('Error al verificar productos a granel en onboarding:', e);
+      }
+    };
+    checkBulk();
+    return () => { isMounted = false; };
+  }, [isOpen]);
 
   // Cerrar al hacer clic fuera del dropdown
   useEffect(() => {
@@ -148,24 +172,43 @@ export function OnboardingWizardWidget() {
                       <span className={`${styles.stepTitle} ${isCurrent ? styles.stepTitleActive : ''}`}>
                         {stepItem.title}
                       </span>
-                      <span className={styles.stepDetail}>
-                        {stepItem.detail}
-                      </span>
+                      {stepItem.step === 4 ? (
+                        <>
+                          <span className={styles.stepDetail} title="Secuencia: 1° Base en Tanque (A Granel) ➔ 2° Producto Envasado Comercial">
+                            Secuencia: 1° Base en Tanque (A Granel) ➔ 2° Producto Envasado Comercial
+                          </span>
+                          {data.counts?.products > 0 && !hasBulkProduct && (
+                            <span style={{ fontSize: '0.66rem', color: '#b45309', fontWeight: '500', marginTop: '1px' }}>
+                              ⚠️ Pendiente: Base láctea a granel requerida para enlazar fórmulas secundarias.
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className={styles.stepDetail}>
+                          {stepItem.detail}
+                        </span>
+                      )}
                     </div>
                   </div>
 
                   {/* Enlace o acción directa */}
-                  {stepItem.route && (
-                    <Link
-                      href={stepItem.route}
-                      className={styles.stepActionBtn}
-                      onClick={() => setIsOpen(false)}
-                      title={`Ir a ${stepItem.title}`}
-                    >
-                      <span>{isCurrent ? 'Completar' : 'Ver'}</span>
-                      <ArrowRight size={12} />
-                    </Link>
-                  )}
+                  {stepItem.route && (() => {
+                    const targetRoute = (stepItem.step === 4 && !hasBulkProduct)
+                      ? '/catalog/products?crear=base-intermedia'
+                      : stepItem.route;
+
+                    return (
+                      <Link
+                        href={targetRoute}
+                        className={styles.stepActionBtn}
+                        onClick={() => setIsOpen(false)}
+                        title={`Ir a ${stepItem.title}`}
+                      >
+                        <span>{isCurrent ? 'Completar' : 'Ver'}</span>
+                        <ArrowRight size={12} />
+                      </Link>
+                    );
+                  })()}
                 </div>
               );
             })}

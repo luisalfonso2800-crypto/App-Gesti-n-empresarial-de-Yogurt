@@ -6,7 +6,7 @@
  * @usedBy apps/web/src/app/catalog/products/page.jsx
  * @dependencies SmartModal, SmartSelect, CurrencySmartInput, StrictNumberInput
  */
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import { cleanCurrency, formatCurrency } from '@/lib/formatters';
@@ -14,11 +14,60 @@ import { PRESETS } from '@/lib/presetImages';
 import styles from '@/components/ui/SmartModal.module.css';
 import { montoATextoPesos } from '@/utils/numberToWords';
 
+// Categorías exclusivas para bases líquidas/semielaboradas en planta
+const CATEGORIAS_WIP = [
+  { id: 'INSUMO_BASE_WIP', label: 'Insumo Base / Semielaborado (WIP)' },
+  { id: 'BASES_LACTEAS', label: 'Bases Lácteas (Tanque / Cava)' },
+  { id: 'DULCES_JALEAS', label: 'Dulces y Jaleas Artesanales' }
+];
+
+// Categorías exclusivas para productos envasados de venta comercial
+const CATEGORIAS_COMERCIALES = [
+  { id: 'LACTEOS', label: 'Lácteos Terminados (Comercial)' },
+  { id: 'POSTRES', label: 'Postres y Otros' },
+  { id: 'BEBIDAS', label: 'Bebidas' }
+];
+
 export function ProductModal({ 
   isOpen, onClose, editingItem, formData, handleChange, handleSubmit, 
-  presentations = [], isSubmitting, errorMsg 
+  presentations = [], isSubmitting, errorMsg, isBaseIntermedia = false 
 }) {
   const fileInputRef = useRef(null);
+
+  // Identificar si la presentación seleccionada es A GRANEL
+  const selectedPres = presentations.find(p => String(p.id) === String(formData.idPresentacion));
+  const isGranel = selectedPres?.tipoEnvase === 'TANQUE_GRANEL' || selectedPres?.nombre?.toUpperCase().includes('GRANEL');
+
+  // Determinar catálogo de categorías según tipo de presentación (WIP vs Comercial)
+  const availableCategories = isGranel ? CATEGORIAS_WIP : CATEGORIAS_COMERCIALES;
+
+  // Adaptación reactiva al seleccionar presentación: sincronizar categoría, canal y campos según corresponda
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (isGranel) {
+      if (!formData.categoria || ['LACTEOS', 'POSTRES', 'BEBIDAS'].includes(formData.categoria)) {
+        handleChange({ target: { name: 'categoria', value: 'INSUMO_BASE_WIP' } });
+      }
+      if (formData.canalVenta !== 'USO_INTERNO') {
+        handleChange({ target: { name: 'canalVenta', value: 'USO_INTERNO' } });
+      }
+      if (formData.precioVenta !== 0 && formData.precioVenta !== '0') {
+        handleChange({ target: { name: 'precioVenta', value: 0 } });
+      }
+      if (formData.margenObjetivo !== 0 && formData.margenObjetivo !== '0') {
+        handleChange({ target: { name: 'margenObjetivo', value: 0 } });
+      }
+    } else {
+      // Si la presentación es comercial y la categoría quedó en una de WIP, reajustar a comercial por defecto
+      if (!formData.categoria || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS'].includes(formData.categoria)) {
+        handleChange({ target: { name: 'categoria', value: 'LACTEOS' } });
+      }
+      if (formData.canalVenta === 'USO_INTERNO') {
+        handleChange({ target: { name: 'canalVenta', value: 'AMBOS' } });
+      }
+    }
+  }, [isGranel, isOpen]);
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -63,13 +112,14 @@ export function ProductModal({
   const onSubmit = (e) => {
     e.preventDefault();
     if (isSubmitDisabled) return;
-    const pc = cleanCurrency(formData.precioVenta);
-    const mO = Number(formData.margenObjetivo);
+    const pc = isGranel ? 0 : cleanCurrency(formData.precioVenta);
+    const mO = isGranel ? 0 : Number(formData.margenObjetivo);
     handleSubmit(e, {
       ...formData,
       nombre: (formData.nombre || '').trim().toUpperCase(),
       descripcion: (formData.descripcion || '').trim().toUpperCase(),
       observaciones: (formData.observaciones || '').trim().toUpperCase(),
+      canalVenta: isGranel ? 'USO_INTERNO' : formData.canalVenta,
       precioVenta: pc,
       margenObjetivo: mO
     });
@@ -87,13 +137,27 @@ export function ProductModal({
   if (!formData.categoria) missingFields.push('Categoría');
   if (!formData.canalVenta) missingFields.push('Canal de venta');
   if (!formData.descripcion?.trim()) missingFields.push('Descripción');
-  if (!formData.precioVenta) missingFields.push('Precio de venta');
-  if (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined) missingFields.push('Margen objetivo');
+  if (!isGranel) {
+    if (!formData.precioVenta && formData.precioVenta !== 0) missingFields.push('Precio de venta');
+    if (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined) missingFields.push('Margen objetivo');
+  }
 
   const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
   const submitTitle = missingFields.length > 0
     ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
     : '';
+
+  // Cálculo reactivo de costo máximo y ganancia según margen objetivo
+  const precioVentaNum = Number(String(formData.precioVenta || '').replace(/\D/g, '')) || 0;
+  const margenObjetivoNum = Number(formData.margenObjetivo) || 0;
+
+  const costoMaximoPermitido = precioVentaNum > 0 && margenObjetivoNum > 0
+    ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100)))
+    : 0;
+
+  const gananciaEsperada = precioVentaNum > 0 && margenObjetivoNum > 0
+    ? precioVentaNum - costoMaximoPermitido
+    : 0;
 
   return (
     <SmartModal 
@@ -136,31 +200,55 @@ export function ProductModal({
             />
           </div>
           
-          <SmartSelect
-            label="Presentación"
-            name="idPresentacion"
-            value={formData.idPresentacion ?? ''}
-            onChange={handleChange}
-            options={presentations.map(p => ({ id: p.id, label: p.nombre }))}
-            required
-            placeholder="Seleccione presentación"
-          />
+          <div>
+            <SmartSelect
+              label="Presentación"
+              name="idPresentacion"
+              value={formData.idPresentacion ?? ''}
+              onChange={handleChange}
+              options={presentations.map(p => ({ id: p.id, label: p.nombre }))}
+              required
+              placeholder="Seleccione presentación"
+            />
+          </div>
+
+          {/* TARJETA INFORMATIVA UNIFICADA A ANCHO COMPLETO (WIP / A GRANEL) */}
+          {isGranel && (
+            <div style={{
+              gridColumn: '1 / -1',
+              width: '100%',
+              backgroundColor: '#EFF6FF',
+              border: '1px solid #BFDBFE',
+              borderRadius: '8px',
+              padding: '0.65rem 0.95rem',
+              marginTop: '0.5rem',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '0.6rem'
+            }}>
+              <span style={{ fontSize: '1.05rem', lineHeight: 1 }}>{isBaseIntermedia ? '🥛' : '💡'}</span>
+              <div style={{ fontSize: '0.76rem', color: '#1E40AF', lineHeight: '1.35' }}>
+                <strong>{isBaseIntermedia ? 'Paso Clave: Crear Producto Base (A Granel):' : 'Producto Semielaborado / Base en Tanque:'}</strong>{' '}
+                {isBaseIntermedia
+                  ? "Registra aquí la base láctea (ej. 'Base Blanca de Yogurt' o 'Jalea Frutos Rojos') que se elaborará en tanque o marmita. Este producto semielaborado quedará en inventario a granel y servirá como insumo para preparar todos los yogures y postres terminados de la planta."
+                  : "Este producto se formulará y fabricará a granel (litros/kilos) en tanque o marmita. Una vez producido, su stock quedará disponible automáticamente como ingrediente base para elaborar los yogures, jaleas y postres comerciales de la planta."}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={styles.twoColumns}>
-          <SmartSelect
-            label="Categoría"
-            name="categoria"
-            value={formData.categoria ?? ''}
-            onChange={handleChange}
-            options={[
-              { id: 'LACTEOS', label: 'Lácteos' },
-              { id: 'POSTRES', label: 'Postres' },
-              { id: 'BEBIDAS', label: 'Bebidas' }
-            ]}
-            required
-            placeholder="Seleccione categoría"
-          />
+          <div>
+            <SmartSelect
+              label="Categoría"
+              name="categoria"
+              value={formData.categoria ?? ''}
+              onChange={handleChange}
+              options={availableCategories}
+              required
+              placeholder="Seleccione categoría"
+            />
+          </div>
           
           <SmartSelect
             label="Canal de Venta"
@@ -168,6 +256,7 @@ export function ProductModal({
             value={formData.canalVenta ?? ''}
             onChange={handleChange}
             options={[
+              { id: 'USO_INTERNO', label: 'Uso Interno / Planta (Transformación)' },
               { id: 'B2B', label: 'B2B (Mayoristas)' },
               { id: 'B2C', label: 'B2C (Consumidor Final)' },
               { id: 'AMBOS', label: 'Ambos' }
@@ -175,6 +264,20 @@ export function ProductModal({
             required
             placeholder="Seleccione canal"
           />
+
+          {/* Micro-texto explicativo de Semielaborado (WIP) a ancho completo */}
+          {(isGranel || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS'].includes(formData.categoria)) && (
+            <div style={{
+              gridColumn: '1 / -1',
+              color: '#475569',
+              fontSize: '0.74rem',
+              lineHeight: '1.35',
+              fontStyle: 'italic',
+              marginTop: '0.15rem'
+            }}>
+              💡 <strong>¿Qué es un Semielaborado (WIP - Work in Process)?</strong> Es un producto intermedio elaborado dentro de la planta (ej. Base Blanca de yogur, jalea casera de frutos) que no se comercializa de forma directa al público, sino que se almacena temporalmente a granel (litros/kilos) para ser consumido como materia prima en las recetas de envasado final.
+            </div>
+          )}
         </div>
 
         <div className={styles.inputGroup}>
@@ -234,48 +337,135 @@ export function ProductModal({
           />
         </div>
 
-        <div className={styles.twoColumns}>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Precio de Venta ($) <span style={{color: '#e11d48'}}>*</span></label>
-            <input
-              name="precioVenta"
-              type="text"
-              inputMode="numeric"
-              min="0"
-              placeholder="0"
-              value={formData.precioVenta ? String(formData.precioVenta).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
-              onChange={(e) => {
-                const raw = e.target.value.replace(/\D/g, '');
-                handleChange({ target: { name: 'precioVenta', value: raw } });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === '-') e.preventDefault();
-              }}
-              className={styles.input}
-              required
-            />
-            {formData.precioVenta && parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10) > 0 && (
-              <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
-                ✦ {montoATextoPesos(parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10))}
-              </span>
-            )}
+        {/* RENDERIZADO CONDICIONAL SEGÚN PRESENTACIÓN (WIP/A GRANEL vs COMERCIAL) */}
+        {isGranel ? (
+          /* Tarjeta de Costeo Operativo de Planta para Productos a Granel / Semielaborados */
+          <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.85rem 1rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem', color: '#0F172A', fontWeight: '700', fontSize: '0.8rem' }}>
+              <span>⚙️</span> Ficha de Costeo por Transformación (Uso Interno)
+            </div>
+            <p style={{ margin: 0, fontSize: '0.75rem', color: '#475569', lineHeight: '1.4' }}>
+              Este producto no tiene precio de venta al público ($ 0). Su costo real por litro o kilo se liquidará automáticamente en cada orden de fabricación según las materias primas consumidas en el tanque (leche cruda, cultivo láctico, pulpas, azúcar).
+            </p>
           </div>
+        ) : (
+          /* Fila y Tarjeta de Proyección Financiera para Productos Terminados Comerciales */
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.85rem' }}>
+            {/* Columna Izquierda: Precio de Venta */}
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Precio de Venta ($) <span style={{color: '#e11d48'}}>*</span></label>
+              <input
+                name="precioVenta"
+                type="text"
+                inputMode="numeric"
+                min="0"
+                placeholder="0"
+                value={formData.precioVenta ? String(formData.precioVenta).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, '');
+                  handleChange({ target: { name: 'precioVenta', value: raw } });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === '-') e.preventDefault();
+                }}
+                className={styles.input}
+                required
+              />
+              {Boolean(formData.precioVenta && parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10) > 0) && (
+                <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
+                  ✦ {montoATextoPesos(parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10))}
+                </span>
+              )}
+            </div>
 
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Margen Objetivo (%) <span style={{color: '#e11d48'}}>*</span></label>
-            <input 
-              type="number"
-              step="0.01"
-              min="0"
-              name="margenObjetivo" 
-              value={formData.margenObjetivo ?? ''} 
-              onChange={handleChange} 
-              placeholder="Ej: 30"
-              className={styles.input} 
-              required 
-            />
+            {/* Columna Derecha: Margen Objetivo */}
+            <div className={styles.inputGroup}>
+              <label className={styles.label}>Margen Objetivo (%) <span style={{color: '#e11d48'}}>*</span></label>
+              <input 
+                type="number"
+                step="5"
+                min="0"
+                max="100"
+                name="margenObjetivo" 
+                value={formData.margenObjetivo ?? ''} 
+                onChange={handleChange} 
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const current = Number(formData.margenObjetivo) || 0;
+                    const next = Math.min(100, Math.floor(current / 5) * 5 + 5);
+                    handleChange({ target: { name: 'margenObjetivo', value: next } });
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const current = Number(formData.margenObjetivo) || 0;
+                    const next = Math.max(0, Math.ceil(current / 5) * 5 - 5);
+                    handleChange({ target: { name: 'margenObjetivo', value: next } });
+                  }
+                }}
+                placeholder="Ej: 30"
+                className={styles.input} 
+                required 
+              />
+            </div>
+
+            {/* TARJETA DE PROYECCIÓN FINANCIERA (ANCHO COMPLETO) */}
+            <div style={{
+              gridColumn: '1 / -1',
+              backgroundColor: '#F8FAFC',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              padding: '0.75rem 1rem',
+              marginTop: '0.25rem'
+            }}>
+              <div style={{ fontSize: '0.74rem', color: '#64748B', lineHeight: '1.35', marginBottom: precioVentaNum > 0 ? '0.65rem' : '0' }}>
+                💡 <strong>Margen Objetivo:</strong> Ganancia bruta esperada sobre la venta. El costo total de receta (ingredientes + envase) no debe superar el tope admisible para garantizar la utilidad del negocio.
+              </div>
+
+              {Boolean(precioVentaNum > 0) && (
+                <div style={{
+                  backgroundColor: margenObjetivoNum > 0 ? '#F0FDF4' : '#FFFBEB',
+                  border: `1px solid ${margenObjetivoNum > 0 ? '#BBF7D0' : '#FDE68A'}`,
+                  borderRadius: '6px',
+                  padding: '0.55rem 0.85rem'
+                }}>
+                  {/* Tira Métrica de 3 Valores */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', textAlign: 'center', marginBottom: '0.45rem' }}>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '0.66rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Precio Venta</span>
+                      <strong style={{ fontSize: '0.88rem', color: '#0F172A' }}>$ {precioVentaNum.toLocaleString('es-CO')}</strong>
+                    </div>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '0.66rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Costo Máx. Receta</span>
+                      <strong style={{ fontSize: '0.88rem', color: '#0F172A' }}>$ {costoMaximoPermitido.toLocaleString('es-CO')}</strong>
+                    </div>
+                    <div>
+                      <span style={{ display: 'block', fontSize: '0.66rem', color: '#64748B', fontWeight: '700', textTransform: 'uppercase' }}>Ganancia Esperada</span>
+                      <strong style={{ fontSize: '0.88rem', color: margenObjetivoNum > 0 ? '#166534' : '#B45309' }}>
+                        $ {gananciaEsperada.toLocaleString('es-CO')} ({margenObjetivoNum}%)
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Resumen explicativo dinámico */}
+                  <div style={{
+                    fontSize: '0.72rem',
+                    fontWeight: '600',
+                    color: margenObjetivoNum > 0 ? '#166534' : '#B45309',
+                    borderTop: `1px solid ${margenObjetivoNum > 0 ? '#DCFCE7' : '#FEF3C7'}`,
+                    paddingTop: '0.35rem',
+                    textAlign: 'center'
+                  }}>
+                    {margenObjetivoNum > 0 ? (
+                      `✦ Para un valor de venta de $ ${precioVentaNum.toLocaleString('es-CO')}, se espera que el costo sea máx. $ ${costoMaximoPermitido.toLocaleString('es-CO')} para una ganancia de $ ${gananciaEsperada.toLocaleString('es-CO')}/und.`
+                    ) : (
+                      `⚠️ Con margen de 0%, se espera que el costo sea de $ ${precioVentaNum.toLocaleString('es-CO')} y la ganancia sea de $ 0 (venta al costo exacto de producción).`
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className={styles.inputGroup}>
           <label className={styles.label}>Observaciones</label>
@@ -300,7 +490,7 @@ export function ProductModal({
 
         {formData.nombre && (
           <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el producto <strong>{formData.nombre}</strong>{formData.idPresentacion ? <> (en presentación <strong>{getPresentationName()}</strong>)</> : null}{formData.canalVenta ? <>, destinado al canal <strong>{formData.canalVenta}</strong></> : null}{formData.precioVenta ? <>, con precio sugerido de <strong>{formatCurrency(formData.precioVenta)}</strong></> : null}.
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el producto <strong>{formData.nombre}</strong>{formData.idPresentacion ? <> (en presentación <strong>{getPresentationName()}</strong>)</> : null}{formData.canalVenta ? <>, destinado al canal <strong>{formData.canalVenta}</strong></> : null}{precioVentaNum > 0 ? <>, con precio sugerido de <strong>{formatCurrency(formData.precioVenta)}</strong></> : null}.
           </div>
         )}
 

@@ -7,6 +7,7 @@
  * @dependencies @/components/ui/Button, @/components/ui/ContextBanner, IngredientsFormSection, styles local
  */
 import React from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { ContextBanner } from '@/components/ui/ContextBanner';
 import { IngredientsFormSection } from './IngredientsFormSection';
@@ -36,6 +37,20 @@ export function RecipeModal({
   const totalCost = calculateCost();
   const rendimientoNum = parseFloat(formData.rendimientoBase) || 0;
   const costPerUnit = rendimientoNum > 0 ? (totalCost / rendimientoNum) : 0;
+
+  // Guardia Poka-Yoke: Secuencia de Planta (Base a Granel ➔ Producto Comercial Envasado)
+  const hasBulkProduct = products.some(p => 
+    p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 
+    p.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+  );
+
+  const selectedProduct = products.find(p => String(p.id) === String(formData.idProducto));
+  const isSelectedProductBulk = selectedProduct ? (
+    selectedProduct.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 
+    selectedProduct.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+  ) : false;
+
+  const isCommercialWithoutBulk = selectedProduct && !isSelectedProductBulk && !hasBulkProduct;
 
   return (
     <div>
@@ -81,6 +96,44 @@ export function RecipeModal({
             <input className={styles.input} name="observaciones" value={formData.observaciones || ''} onChange={onChange} />
           </div>
         </div>
+
+        {/* Banner Poka-Yoke: Bloqueo y orientación para productos comerciales sin base previa */}
+        {isCommercialWithoutBulk && (
+          <div style={{
+            backgroundColor: '#EFF6FF',
+            border: '1px solid #BFDBFE',
+            color: '#1E40AF',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '1rem',
+            flexWrap: 'wrap',
+            fontSize: '0.85rem',
+            lineHeight: '1.4'
+          }}>
+            <div style={{ flex: 1, minWidth: '260px' }}>
+              ⚠️ <strong>Secuencia de Planta:</strong> Estás formulando un producto comercial envasado. Para una elaboración láctea estándar, debes registrar primero el producto base (ej. &apos;Base Blanca de Yogurt&apos; con presentación A GRANEL) antes de formular el producto envasado.
+            </div>
+            <Link
+              href="/catalog/products"
+              style={{
+                backgroundColor: '#1E40AF',
+                color: '#FFFFFF',
+                padding: '0.45rem 0.9rem',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              + Registrar Producto A GRANEL
+            </Link>
+          </div>
+        )}
 
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -172,7 +225,14 @@ export function RecipeModal({
 
         <div className={styles.formActions}>
           <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-          <Button type="submit">Guardar Receta</Button>
+          <Button 
+            type="submit" 
+            disabled={isCommercialWithoutBulk}
+            title={isCommercialWithoutBulk ? "Debe existir al menos un producto base a granel en el catálogo para formular productos terminados" : ""}
+            style={isCommercialWithoutBulk ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          >
+            Guardar Receta
+          </Button>
         </div>
       </form>
     </div>

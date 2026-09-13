@@ -189,6 +189,14 @@
    * **Correos electrónicos:** Forzar `type="email"`, sanitizar espacios accidentales en blanco (`trim()`) y validar en tiempo real el formato estándar (`usuario@dominio.ext`) antes de habilitar el botón de guardado.
    * **Sanitización global:** Todo texto debe aplicar `.trim()` antes de enviarse al backend para evitar espacios residuales que distorsionen búsquedas e índices en PostgreSQL.
 
+### 13.2. SELECTORES EN CASCADA Y DEPENDENCIAS CONTEXTUALES (POKA-YOKE)
+
+* **Análisis de Dependencia Previo:** Al diseñar o intervenir cualquier formulario, la IA DEBE identificar si algún campo maestro condiciona las opciones, la validez o la pertinencia de otros campos dependientes.
+* **Filtrado Reactivo Estricto:** Los selectores dependientes NO deben mostrar opciones incompatibles con el valor actual del campo maestro (ej. si la presentación es "A GRANEL", el selector de categoría solo debe mostrar categorías de semielaborados/WIP; si es presentación comercial, solo categorías terminadas).
+* **Auto-Reseteo Preventivo:** Si el usuario cambia el valor de un campo maestro y el campo dependiente contiene un valor que ya no es válido en el nuevo contexto, la IA DEBE resetearlo inmediatamente en el estado a un valor por defecto seguro. Está terminantemente prohibido dejar valores huérfanos o contradictorios en el payload.
+* **Adaptación Visual de Campos (Hiding/Showing):** Si la selección de un campo vuelve irrelevante a otros (ej. costo de producción vs precio de venta comercial), los campos no aplicables deben ocultarse o sustituirse por tarjetas informativas contextuales.
+* **Imposibilidad de Estados Inválidos:** La interfaz debe hacer físicamente imposible que el usuario arme combinaciones contradictorias antes de presionar guardar.
+
 ### 14. ANÁLISIS DE IMPACTO OBLIGATORIO
 
 * Antes de modificar una entidad, tabla, endpoint o estructura utilizada por otros módulos, la IA DEBE identificar sus dependencias.

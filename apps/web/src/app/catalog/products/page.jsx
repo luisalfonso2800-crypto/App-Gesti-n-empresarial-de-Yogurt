@@ -7,7 +7,8 @@
  * @dependencies Hooks locales y componentes visuales.
  */
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useProductsData } from './hooks/useProductsData';
 import { useProductForm } from './hooks/useProductForm';
 import { ProductsHeader } from './components/ProductsHeader';
@@ -16,9 +17,28 @@ import Link from 'next/link';
 import { ProductModal } from './components/ProductModal';
 import styles from './products.module.css';
 
-export default function ProductsPage() {
-  const { items, presentations, loading, loadingPresentations, fetchItems, handleToggleActive } = useProductsData();
+function ProductsContent() {
+  const { items, presentations, loading, loadingPresentations, error, fetchItems, handleToggleActive } = useProductsData();
   const form = useProductForm({ onSuccess: fetchItems });
+  const searchParams = useSearchParams();
+  const autoOpenedRef = useRef(false);
+
+  const isBaseIntermediaMode = searchParams.get('crear') === 'base-intermedia';
+
+  // Detección de parámetro y auto-apertura con preselección de A GRANEL
+  useEffect(() => {
+    if (isBaseIntermediaMode && !autoOpenedRef.current && presentations.length > 0) {
+      autoOpenedRef.current = true;
+      form.handleOpenModal();
+      const granelPres = presentations.find(p => 
+        p.tipoEnvase === 'TANQUE_GRANEL' || 
+        p.nombre?.toUpperCase().includes('GRANEL')
+      );
+      if (granelPres) {
+        form.handleChange({ target: { name: 'idPresentacion', value: granelPres.id } });
+      }
+    }
+  }, [isBaseIntermediaMode, presentations, form]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
@@ -75,6 +95,12 @@ export default function ProductsPage() {
         </div>
       )}
 
+      {Boolean(error) && (
+        <div className={styles.errorMessage} style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '6px', color: '#B91C1C', fontSize: '0.875rem' }}>
+          {typeof error === 'string' ? error : error?.message || 'Error al cargar datos'}
+        </div>
+      )}
+
       <ProductsTable 
         items={paginatedProducts} loading={loading} error={error}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
@@ -119,7 +145,16 @@ export default function ProductsPage() {
         handleChange={form.handleChange} handleSubmit={form.handleSubmit}
         presentations={form.presentations}
         isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
+        isBaseIntermedia={isBaseIntermediaMode}
       />
     </div>
+  );
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>Cargando catálogo de productos...</div>}>
+      <ProductsContent />
+    </Suspense>
   );
 }

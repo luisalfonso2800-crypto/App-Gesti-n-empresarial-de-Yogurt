@@ -158,8 +158,11 @@ export function ProductionModal({
                   ORIGEN DE MATERIA PRIMA INTERMEDIA (BASE EN TANQUE)
                 </h4>
               </div>
-              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.825rem', color: '#64748b' }}>
+              <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.825rem', color: '#64748b' }}>
                 Esta receta requiere <strong>{Number(currentWipItem.requeridoTeorico).toFixed(2)} {currentWipItem.unidad}</strong> de base semielaborada ({currentWipItem.nombreInsumo}).
+              </p>
+              <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.78rem', color: '#0369a1', fontStyle: 'italic' }}>
+                Indica el lote o tanque de donde se extraerá físicamente la base líquida o jalea elaborada en planta para dosificar en este lote.
               </p>
 
               {parentLotsLoading ? (
@@ -182,7 +185,7 @@ export function ProductionModal({
                   >
                     {availableParentLots.map(l => (
                       <option key={l.id} value={l.id}>
-                        Lote: {l.id.split('-')[0].toUpperCase()} — Disponible: {Number(l.cantidadDisponible).toFixed(2)} {l.unidad} (Fabricado: {new Date(l.fechaProduccion).toLocaleDateString()})
+                        Lote: {l.codigoLote || l.id.split('-')[0].toUpperCase()} — Saldo en planta: {Number(l.cantidadDisponible).toFixed(2)} {l.unidad} (Fabricado: {new Date(l.fechaProduccion).toLocaleDateString()})
                       </option>
                     ))}
                   </select>
@@ -339,7 +342,7 @@ export function ProductionModal({
               >
                 {availableParentLots.map(l => (
                   <option key={l.id} value={l.id}>
-                    Lote: {l.id.split('-')[0].toUpperCase()} — Saldo: {Number(l.cantidadDisponible).toFixed(2)} {l.unidad}
+                    Lote: {l.codigoLote || l.id.split('-')[0].toUpperCase()} — Saldo en planta: {Number(l.cantidadDisponible).toFixed(2)} {l.unidad}
                   </option>
                 ))}
               </select>

@@ -31,6 +31,9 @@ export function IngredientsFormSection({
         <h4 style={{ margin: 0 }}>Lista de Materiales (BOM)</h4>
         <Button type="button" variant="secondary" onClick={() => onAdd(etapaIndex)}>+ Agregar Insumo / Base</Button>
       </div>
+      <p style={{ margin: '4px 0 8px 0', color: '#6B7280', fontSize: '0.75rem', fontStyle: 'italic' }}>
+        💡 Puedes mezclar materias primas de bodega (leche, azúcar, fruta) con bases previamente cocinadas en planta (Base Blanca, Jalea de Frutos).
+      </p>
       {activeDetalles.length > 0 && (
         <table className={styles.bomTable}>
           <thead>
