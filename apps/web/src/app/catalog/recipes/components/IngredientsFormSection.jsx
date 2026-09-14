@@ -29,7 +29,7 @@ export function IngredientsFormSection({
   return (
     <div style={{ marginTop: '1rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h4 style={{ margin: 0 }}>Lista de Materiales (BOM)</h4>
+        <h4 style={{ margin: 0 }}>BOM (Lista de Materiales y Fórmula)</h4>
         <Button type="button" variant="secondary" onClick={() => onAdd(etapaIndex)}>+ Agregar Insumo / Base</Button>
       </div>
       <p style={{ margin: '4px 0 8px 0', color: '#6B7280', fontSize: '0.75rem', fontStyle: 'italic' }}>

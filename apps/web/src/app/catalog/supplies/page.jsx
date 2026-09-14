@@ -35,6 +35,7 @@ export default function SuppliesPage() {
         items={items} loading={loading} error={error}
         searchTerm={searchTerm} categoryFilter={categoryFilter}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        onNew={() => form.handleOpenModal(null)}
       />
       <SupplyModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}

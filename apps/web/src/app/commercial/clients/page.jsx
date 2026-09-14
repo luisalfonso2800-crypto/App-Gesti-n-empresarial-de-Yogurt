@@ -8,7 +8,8 @@ import { Badge } from '../../../components/ui/Badge';
 import SmartModal, { SubmitButton } from '../../../components/ui/SmartModal';
 import SmartSelect from '../../../components/ui/inputs/SmartSelect';
 import StrictNumberInput from '../../../components/ui/inputs/StrictNumberInput';
-import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from './clients.module.css';
 import modalStyles from '../../../components/ui/SmartModal.module.css';
 
@@ -145,7 +146,14 @@ export default function ClientsPage() {
       ) : error ? (
         <ErrorState error={error} />
       ) : clients.length === 0 ? (
-        <EmptyState title="No hay clientes" description="Registra el primer cliente" />
+        <AssistedEmptyState
+          icon="👥"
+          title="Comienza registrando tu primer Cliente"
+          description="Directorio de compradores comerciales (supermercados, tiendas, cafeterías) y personas naturales."
+          actionLabel="+ Nuevo Cliente"
+          onAction={handleOpenModal}
+          topButtonLabel="Nuevo Cliente"
+        />
       ) : (
         <Table>
           <THead>

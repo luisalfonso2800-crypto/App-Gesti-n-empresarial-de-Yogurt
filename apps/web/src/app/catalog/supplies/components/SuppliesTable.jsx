@@ -10,13 +10,25 @@ import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from '../supplies.module.css';
 
-export function SuppliesTable({ items, loading, error, searchTerm, categoryFilter, onEdit, onToggleActive }) {
+export function SuppliesTable({ items, loading, error, searchTerm, categoryFilter, onEdit, onToggleActive, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (items.length === 0) return <EmptyState title="No hay registros" description="Crea el primer registro para comenzar" />;
+  if (items.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="📦"
+        title="Comienza registrando tu primer Insumo"
+        description="Registra las materias primas, cultivos y empaques necesarios para elaborar productos."
+        actionLabel="+ Nuevo Insumo"
+        onAction={() => onNew && onNew()}
+        topButtonLabel="Nuevo Insumo"
+      />
+    );
+  }
 
   const generateCode = (item) => {
     if (item.codigo) return item.codigo;

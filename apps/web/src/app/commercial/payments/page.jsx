@@ -7,7 +7,8 @@ import { Table, THead, TBody, TR, TH, TD } from '../../../components/ui/Table';
 import SmartModal, { SubmitButton } from '../../../components/ui/SmartModal';
 import SmartSelect from '../../../components/ui/inputs/SmartSelect';
 import CurrencySmartInput from '../../../components/ui/inputs/CurrencySmartInput';
-import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { formatCurrency, cleanCurrency } from '../../../lib/formatters';
 import styles from './payments.module.css';
 import modalStyles from '../../../components/ui/SmartModal.module.css';
@@ -163,7 +164,14 @@ export default function PaymentsPage() {
       ) : error ? (
         <ErrorState error={error} />
       ) : payments.length === 0 ? (
-        <EmptyState title="No hay pagos" description="Registra el primer pago" />
+        <AssistedEmptyState
+          icon="💵"
+          title="Comienza registrando tu primer Pago o Cobro"
+          description="Seguimiento a recaudos de cartera y control de ingresos por ventas."
+          actionLabel="+ Registrar Pago/Cobro"
+          onAction={handleOpenModal}
+          topButtonLabel="Nuevo Pago"
+        />
       ) : (
         <Table>
           <THead>

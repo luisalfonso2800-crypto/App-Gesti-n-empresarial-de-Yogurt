@@ -24,6 +24,7 @@ export default function SuppliersPage() {
       <SuppliersTable 
         items={items} loading={loading} error={error}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        onNew={() => form.handleOpenModal(null)}
       />
       <SupplierModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}

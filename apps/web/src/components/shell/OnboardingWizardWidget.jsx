@@ -210,15 +210,25 @@ export function OnboardingWizardWidget() {
 
                   {/* Enlace o acción directa */}
                   {stepItem.route && (() => {
-                    const targetRoute = (stepItem.step === 4 && !hasBulkProduct)
-                      ? '/catalog/products?crear=base-intermedia'
-                      : stepItem.route;
+                    let targetRoute = stepItem.route;
+                    if (stepItem.step === 4) {
+                      targetRoute = !hasBulkProduct 
+                        ? '/catalog/products?crear=base-intermedia' 
+                        : '/catalog/recipes?crear=receta';
+                    }
+
+                    const handleActionClick = () => {
+                      setIsOpen(false);
+                      if (stepItem.step === 4 && hasBulkProduct && typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('open-recipe-modal'));
+                      }
+                    };
 
                     return (
                       <Link
                         href={targetRoute}
                         className={styles.stepActionBtn}
-                        onClick={() => setIsOpen(false)}
+                        onClick={handleActionClick}
                         title={`Ir a ${stepItem.title}`}
                       >
                         <span>{isCurrent ? 'Completar' : 'Ver'}</span>

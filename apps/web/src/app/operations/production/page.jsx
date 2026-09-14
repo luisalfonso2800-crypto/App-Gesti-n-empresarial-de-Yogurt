@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ClipboardList, Play, CheckCircle, PackageOpen, AlertTriangle } from 'lucide-react';
@@ -179,7 +180,7 @@ export default function ProductionPage() {
 
           {selectedRecipe && (
             <div className={styles.bomSection}>
-              <h4>BOM Requerido (Explosión de Materiales)</h4>
+              <h4>BOM (Lista de Materiales y Fórmula Requerida)</h4>
               {bomLoading ? <p>Calculando...</p> : (
                 <>
                   {hasShortage && (
@@ -224,8 +225,18 @@ export default function ProductionPage() {
         </div>
       )}
 
-      <div className={styles.grid}>
-        {orders.map(order => (
+      {orders.length === 0 ? (
+        <AssistedEmptyState
+          icon="⚙️"
+          title="Comienza programando tu primera Orden de Producción"
+          description="Programa órdenes de transformación por lote a partir de las recetas activas."
+          actionLabel="+ Programar Producción"
+          onAction={() => setCreating(true)}
+          topButtonLabel="+ Nueva Producción"
+        />
+      ) : (
+        <div className={styles.grid}>
+          {orders.map(order => (
           <div key={order.id} className={styles.orderCard}>
             <div className={styles.orderHeader}>
               <span className={styles.orderId}>{order.id.split('-')[0].toUpperCase()}</span>
@@ -261,6 +272,7 @@ export default function ProductionPage() {
           </div>
         ))}
       </div>
+      )}
 
       {completeModal.open && (
         <div className={styles.modalOverlay}>

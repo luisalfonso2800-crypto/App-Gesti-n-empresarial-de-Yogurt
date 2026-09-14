@@ -7,7 +7,8 @@ import { Table, THead, TBody, TR, TH, TD } from '../../../components/ui/Table';
 import SmartModal, { SubmitButton } from '../../../components/ui/SmartModal';
 import SmartSelect from '../../../components/ui/inputs/SmartSelect';
 import CurrencySmartInput from '../../../components/ui/inputs/CurrencySmartInput';
-import { LoadingState, ErrorState, EmptyState } from '../../../components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { formatCurrency, cleanCurrency } from '../../../lib/formatters';
 import styles from './expenses.module.css';
 import modalStyles from '../../../components/ui/SmartModal.module.css';
@@ -139,7 +140,14 @@ export default function ExpensesPage() {
       ) : error ? (
         <ErrorState error={error} />
       ) : expenses.length === 0 ? (
-        <EmptyState title="No hay gastos" description="Registra el primer gasto" />
+        <AssistedEmptyState
+          icon="📊"
+          title="Comienza registrando tu primer Gasto Operativo"
+          description="Registro de servicios, nómina y costos operativos de la planta."
+          actionLabel="+ Nuevo Gasto"
+          onAction={handleOpenModal}
+          topButtonLabel="Nuevo Gasto"
+        />
       ) : (
         <Table>
           <THead>

@@ -112,6 +112,7 @@ function SupplierPricesContent() {
         bestPricesMap={bestPricesMap} selectedForPurchase={selectedForPurchase}
         handleOpenModal={handleOpenModal} handleToggleActive={handleToggleActive}
         togglePurchaseItem={togglePurchaseItem}
+        onNewTarifa={() => handleOpenModal(null)}
       />
 
       <CartSidebar 

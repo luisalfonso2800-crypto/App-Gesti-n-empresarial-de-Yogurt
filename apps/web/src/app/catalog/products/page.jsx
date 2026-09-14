@@ -111,6 +111,7 @@ function ProductsContent() {
       <ProductsTable 
         items={paginatedProducts} loading={loading} error={error}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        onNew={() => form.handleOpenModal(null)}
       />
       
       {items.length > 0 && !loading && !error && (

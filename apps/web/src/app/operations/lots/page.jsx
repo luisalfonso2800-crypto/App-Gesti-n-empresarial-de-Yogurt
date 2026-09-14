@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Package, AlertCircle, RefreshCw, Trash2 } from 'lucide-react';
@@ -61,13 +62,21 @@ export default function LotsPage() {
           <Package size={32} className={styles.icon} />
           <div>
             <h1 className={styles.title}>Trazabilidad de Lotes (Cava)</h1>
-            <p className={styles.subtitle}>Monitoreo de caducidad y existencias FEFO/PEPS</p>
+            <p className={styles.subtitle}>Monitoreo de caducidad y existencias FEFO (Primero en Vencer, Primero en Salir)</p>
           </div>
         </div>
         <Button variant="secondary" onClick={fetchLots}><RefreshCw size={16}/> Actualizar</Button>
       </header>
 
-      <Table>
+      {lots.length === 0 ? (
+        <AssistedEmptyState
+          icon="🏷️"
+          title="No hay lotes con existencias en Cava"
+          description="Rastrea la trazabilidad sanitaria, fechas de elaboración y vencimiento por lote producidos en planta."
+          topButtonLabel="Actualizar"
+        />
+      ) : (
+        <Table>
         <THead>
           <TR>
             <TH>Lote / ID</TH>
@@ -113,6 +122,7 @@ export default function LotsPage() {
           })}
         </TBody>
       </Table>
+      )}
     </div>
   );
 }

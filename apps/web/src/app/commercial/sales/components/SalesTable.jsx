@@ -9,12 +9,24 @@
 import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 
-export function SalesTable({ sales, loading, error }) {
+export function SalesTable({ sales, loading, error, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (sales.length === 0) return <EmptyState title="No hay ventas" description="Registra la primera venta" />;
+  if (sales.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="🛒"
+        title="Comienza registrando tu primera Venta"
+        description="Facturación y pedidos de despacho a clientes comerciales y minoristas."
+        actionLabel="+ Nueva Venta"
+        onAction={() => onNew && onNew()}
+        topButtonLabel="Nueva Venta"
+      />
+    );
+  }
 
   return (
     <Table>

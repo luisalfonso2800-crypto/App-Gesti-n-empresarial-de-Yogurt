@@ -10,13 +10,25 @@ import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from '../suppliers.module.css';
 
-export function SuppliersTable({ items, loading, error, onEdit, onToggleActive }) {
+export function SuppliersTable({ items, loading, error, onEdit, onToggleActive, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (items.length === 0) return <EmptyState title="No hay registros" description="Crea el primer registro para comenzar" />;
+  if (items.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="🚛"
+        title="Comienza registrando tu primer Proveedor"
+        description="Registra los fabricantes y distribuidores de materia prima y empaques."
+        actionLabel="+ Nuevo Proveedor"
+        onAction={() => onNew && onNew()}
+        topButtonLabel="Nuevo Proveedor"
+      />
+    );
+  }
 
   return (
     <Table>

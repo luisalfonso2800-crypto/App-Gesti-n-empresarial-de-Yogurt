@@ -12,7 +12,8 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ChevronDown, ChevronUp, AlertCircle, TrendingDown, TrendingUp, DollarSign, PackageOpen, LayoutGrid, RotateCcw } from 'lucide-react';
@@ -177,6 +178,15 @@ export default function InventoryPage() {
         <LoadingState />
       ) : error ? (
         <ErrorState error={error} />
+      ) : (activeTab === 'INSUMOS' ? inventory : finishedProducts).length === 0 ? (
+        <AssistedEmptyState
+          icon="📦"
+          title={activeTab === 'INSUMOS' ? "Comienza registrando existencias en Bodega" : "No hay existencias de Producto Terminado en Cava"}
+          description="Controla el stock disponible en bodega valorizado al costo promedio y registra entradas desde compras o producción."
+          actionLabel={activeTab === 'INSUMOS' ? "+ Registrar Compra de Insumos" : "+ Programar Producción"}
+          onAction={() => window.location.href = (activeTab === 'INSUMOS' ? '/operations/purchases/new?mode=direct' : '/operations/production')}
+          topButtonLabel="Ajuste Global / Saldo Inicial"
+        />
       ) : (
         <div className={styles.tableWrapper}>
           <Table>

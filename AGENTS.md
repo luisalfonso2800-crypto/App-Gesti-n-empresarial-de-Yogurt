@@ -212,6 +212,26 @@
   * **Acentos e Indicadores:** Ámbar / Oro Viejo (`#C58A3E`) para preavisos y detalles visuales, Verde Esmeralda (`#166534` / fondo `#F0FDF4`) para rentabilidad asegurada y Rojo Óxido / Arcilla suave (`#991B1B` / fondo `#FEF2F2`) para alertas y sobrecostos.
 - **Botones Deshabilitados (Disabled State):** Cuando una guarda Poka-Yoke impida guardar (por falta de empaque, stock insuficiente o campos obligatorios vacíos), el botón primario debe pasar a fondo `#A8A29E`, opacidad `0.5` y cursor `not-allowed`.
 
+### 37. ESTADOS VACÍOS ASISTIDOS OBLIGATORIOS (EXCEPTO DASHBOARD)
+- Queda prohibido mostrar textos fríos como "No hay registros", spinners infinitos o tablas desiertas sin guía cuando una entidad no tenga datos (`length === 0`).
+- Todo módulo (a excepción del Dashboard SCADA) DEBE renderizar el componente `AssistedEmptyState` con:
+  * Contenedor centrado: `max-width: 620px`, fondo lino `#FAF8F5`, borde discontinuo `1px dashed #D6D3D1`, `border-radius: 12px`, `padding: 3rem 2rem`.
+  * Ícono temático de dominio.
+  * Título orientado a la acción: "Comienza registrando tu primer [Recurso]".
+  * Microcopy pedagógico de planta: qué es y para qué sirve en la operativa diaria.
+  * Botón de acción primario con estilo Verde Bosque MANNÁ (`#182622`).
+  * Guía espacial con flecha al botón fijo superior: "o pulsa el botón [Nombre Botón] situado arriba a la derecha ↗".
+
+### 38. DESGLOSE OBLIGATORIO DE ACRÓNIMOS Y JERGA INDUSTRIAL (LENGUAJE DE PLANTA)
+- Toda sigla técnica o acrónimo visible en interfaz debe incluir obligatoriamente su definición en español entre paréntesis para que cualquier operario lo entienda de inmediato:
+  * `BOM` -> `BOM (Lista de Materiales y Fórmula)`
+  * `WIP` -> `WIP (Semielaborado en Proceso)`
+  * `FEFO` -> `FEFO (Primero en Vencer, Primero en Salir)`
+  * `FIFO` -> `FIFO (Primero en Entrar, Primero en Salir)`
+  * `CIP` -> `CIP (Limpieza y Sanitización en Sitio)`
+  * `SKU` -> `SKU (Código Comercial de Producto)`
+- Queda vetado el uso de siglas aisladas en encabezados, botones, tarjetas o tablas.
+
 
 ### 14. ANÁLISIS DE IMPACTO OBLIGATORIO
 

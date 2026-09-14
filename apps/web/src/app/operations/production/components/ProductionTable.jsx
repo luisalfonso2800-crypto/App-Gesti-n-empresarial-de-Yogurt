@@ -10,13 +10,25 @@ import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from '../production.module.css';
 
-export function ProductionTable({ productions, loading, error, onComplete }) {
+export function ProductionTable({ productions, loading, error, onComplete, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (productions.length === 0) return <EmptyState title="No hay producción" description="Registra la primera orden" />;
+  if (productions.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="⚙️"
+        title="Comienza programando tu primera Orden de Producción"
+        description="Programa órdenes de transformación por lote a partir de las recetas activas."
+        actionLabel="+ Programar Producción"
+        onAction={() => onNew && onNew()}
+        topButtonLabel="Nueva Producción"
+      />
+    );
+  }
 
   return (
     <Table>

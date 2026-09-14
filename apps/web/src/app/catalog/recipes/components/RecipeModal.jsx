@@ -113,9 +113,33 @@ export function generateStageSummaryText(etapa, supplies = [], products = []) {
   return sentence;
 }
 
+/**
+ * Convierte minutos numéricos en formato digital tipo reloj 00:00 h con desglose contextual.
+ * @param {number|string} val - Minutos a convertir
+ * @returns {string} Texto formateado con icono de reloj
+ */
+export function formatMinutesToDigitalClock(val) {
+  const totalMins = Math.max(0, Math.floor(Number(val) || 0));
+  const hours = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  const hh = hours.toString().padStart(2, '0');
+  const mm = mins.toString().padStart(2, '0');
+
+  if (totalMins === 0) {
+    return `${hh}:${mm} h`;
+  }
+  if (hours === 0) {
+    return `${hh}:${mm} h (${mins} min)`;
+  }
+  if (mins === 0) {
+    return `${hh}:${mm} h (${hours} h)`;
+  }
+  return `${hh}:${mm} h (${hours} h ${mins} min)`;
+}
+
 export function RecipeModal({ 
   formData, products = [], supplies = [], onClose, onSubmit, onChange,
-  onApplyStageTemplate, onAddEtapa, onUpdateEtapa, onRemoveEtapa,
+  onApplyStageTemplate, onAddEtapa, onUpdateEtapa, onRemoveEtapa, onMoveEtapa,
   onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost
 }) {
   // Estado para acordeón exclusivo (índice de la etapa expandida; -1 si todas están colapsadas)
@@ -123,6 +147,12 @@ export function RecipeModal({
 
   // Estado para mostrar panel de lectura continua "Finalizar y Resumir Proceso"
   const [showSummaryPanel, setShowSummaryPanel] = useState(false);
+
+  // Estado para el modal de auditoría técnica "Hoja de Ruta Operativa de Planta"
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+  // Estado de envío en curso
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estado para revelación progresiva del campo de observaciones
   const [showNotes, setShowNotes] = useState(Boolean(formData.observaciones && formData.observaciones.trim()));
@@ -214,21 +244,28 @@ export function RecipeModal({
     submitTooltip = 'Debe agregar al menos un insumo de empaque primario (vaso, botella o tapa) a la receta';
   }
 
+  // Cálculo del tiempo total acumulado de fabricación en minutos de las etapas activas
+  const totalProductionTimeMins = activeStages.reduce((acc, stg) => acc + (Number(stg.tiempoEstandarMin) || 0), 0);
+
   const handleApplyTemplate = (type) => {
+    const currentCount = formData.etapas?.length || 0;
     if (onApplyStageTemplate) {
       onApplyStageTemplate(type);
     } else if (onAddEtapa) {
       onAddEtapa(type);
     }
-    setExpandedStageIndex(0);
+    // Abre en edición la primera de las nuevas etapas añadidas
+    setExpandedStageIndex(currentCount);
     setShowSummaryPanel(false);
   };
 
   const handleAddNewStage = () => {
+    const nextIndex = formData.etapas?.length || 0;
     if (onAddEtapa) {
-      onAddEtapa(null, true);
+      onAddEtapa();
     }
-    setExpandedStageIndex(0);
+    // Abre la recién creada al final
+    setExpandedStageIndex(nextIndex);
     setShowSummaryPanel(false);
   };
 
@@ -239,6 +276,63 @@ export function RecipeModal({
     } else {
       setShowSummaryPanel(true);
       setExpandedStageIndex(-1);
+    }
+  };
+
+  // Validación y apertura del modal de auditoría técnica "Hoja de Ruta Operativa de Planta"
+  const handleOpenSummaryModal = () => {
+    if (!formData.idProducto) {
+      alert('Debe seleccionar el producto a fabricar antes de finalizar y resumir la receta.');
+      return;
+    }
+    if (!formData.rendimientoBase || Number(formData.rendimientoBase) <= 0) {
+      alert('Debe ingresar una cantidad de rendimiento base mayor a cero.');
+      return;
+    }
+    if (isCommercialWithoutBulk) {
+      alert('Debe existir al menos un producto base a granel en el catálogo para formular productos terminados.');
+      return;
+    }
+    if (isMissingCommercialPackaging) {
+      alert('Debe agregar al menos un insumo de empaque primario (vaso, botella o tapa) a la receta.');
+      return;
+    }
+    setShowSummaryModal(true);
+  };
+
+  // Manejo de confirmación para cancelar desde el header principal
+  const handleHeaderCancel = () => {
+    const hasDataEntered = Boolean(formData.idProducto || formData.nombre || formData.rendimientoBase || (formData.etapas && formData.etapas.length > 0));
+    if (hasDataEntered) {
+      const confirmLeave = window.confirm('¿Deseas salir del editor de recetas? Se perderán los cambios no guardados.');
+      if (!confirmLeave) return;
+    }
+    onClose();
+  };
+
+  // Confirmación destructiva de descarte total dentro del modal de resumen
+  const handleDiscardCompleteRecipe = () => {
+    const confirmed = window.confirm(
+      '⚠️ Atención: Si cancelas se descartará todo el proceso formulado y se perderán los datos ingresados.\n\n¿Estás seguro de que deseas descartar la receta completa y salir?'
+    );
+    if (confirmed) {
+      setShowSummaryModal(false);
+      onClose();
+    }
+  };
+
+  // Envío final desde el modal de resumen
+  const handleConfirmPublish = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (isSubmitting) return;
+    try {
+      setIsSubmitting(true);
+      await onSubmit(e);
+      setShowSummaryModal(false);
+    } catch (err) {
+      console.error('Error al publicar receta:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -254,7 +348,7 @@ export function RecipeModal({
           <button 
             type="button" 
             className={styles.cancelBtn} 
-            onClick={onClose}
+            onClick={handleHeaderCancel}
             style={{
               backgroundColor: '#F7F4EE',
               border: '1px solid #D6D3D1',
@@ -271,22 +365,25 @@ export function RecipeModal({
           <button 
             type="button"
             className={styles.saveBtn}
-            onClick={onSubmit}
-            disabled={!canSubmit}
-            title={submitTooltip}
+            onClick={handleOpenSummaryModal}
+            disabled={!canSubmit || !formData.idProducto || Number(formData.rendimientoBase) <= 0}
+            title={submitTooltip || (!formData.idProducto ? 'Seleccione un producto a fabricar' : Number(formData.rendimientoBase) <= 0 ? 'Indique el rendimiento base' : 'Revisar hoja de ruta de planta antes de publicar')}
             style={{
-              backgroundColor: canSubmit ? '#182622' : '#A8A29E',
+              backgroundColor: (canSubmit && formData.idProducto && Number(formData.rendimientoBase) > 0) ? '#182622' : '#A8A29E',
               color: '#FFFFFF',
               border: '1px solid #182622',
               padding: '0.5rem 1.25rem',
               borderRadius: '6px',
               fontSize: '0.85rem',
               fontWeight: 700,
-              cursor: canSubmit ? 'pointer' : 'not-allowed',
-              opacity: canSubmit ? 1 : 0.5
+              cursor: (canSubmit && formData.idProducto && Number(formData.rendimientoBase) > 0) ? 'pointer' : 'not-allowed',
+              opacity: (canSubmit && formData.idProducto && Number(formData.rendimientoBase) > 0) ? 1 : 0.5,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem'
             }}
           >
-            Guardar Receta
+            <span>📋</span> Finalizar y Resumir
           </button>
         </div>
       </div>
@@ -515,9 +612,9 @@ export function RecipeModal({
                   type="button"
                   onClick={handleToggleSummarize}
                   className={styles.summarizeBtn}
-                  title="Colapsa todas las etapas y activa la lectura integral de planta"
+                  title="Colapsa todas las etapas y activa la vista de Hoja de Ruta de Planta"
                 >
-                  📋 {showSummaryPanel ? 'Editar Etapas' : 'Finalizar y Resumir'}
+                  📋 {showSummaryPanel ? 'Editar Etapas' : 'Hoja de Ruta de Planta'}
                 </button>
               </div>
             )}
@@ -544,7 +641,7 @@ export function RecipeModal({
             </div>
           ) : (
             <div>
-              {/* Panel de Narrativa Continua al pulsar [ Finalizar y Resumir ] */}
+              {/* Panel de Narrativa Continua: Hoja de Ruta Operativa de Planta */}
               {showSummaryPanel && (
                 <div style={{
                   backgroundColor: '#F7F4EE',
@@ -556,9 +653,14 @@ export function RecipeModal({
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.65rem' }}>
                     <span style={{ fontSize: '1.2rem' }}>📜</span>
-                    <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#182622' }}>
-                      Ruta Continua de Fabricación (Lenguaje de Planta)
-                    </h3>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#182622' }}>
+                        Hoja de Ruta Operativa de Planta
+                      </h3>
+                      <span style={{ fontSize: '0.74rem', color: '#78716C', fontStyle: 'italic' }}>
+                        Protocolo paso a paso para la elaboración del lote en piso de producción
+                      </span>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                     {formData.etapas?.map((etapa, idx) => {
@@ -635,7 +737,58 @@ export function RecipeModal({
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexShrink: 0 }}>
+                        {/* Botones de reordenamiento cronológico */}
+                        {onMoveEtapa && (
+                          <div style={{ display: 'inline-flex', gap: '0.2rem' }}>
+                            <button
+                              type="button"
+                              disabled={eIdx === 0}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onMoveEtapa(eIdx, 'UP');
+                                if (expandedStageIndex === eIdx) setExpandedStageIndex(eIdx - 1);
+                              }}
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #D6D3D1',
+                                color: '#182622',
+                                padding: '0.2rem 0.45rem',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                cursor: eIdx === 0 ? 'not-allowed' : 'pointer',
+                                opacity: eIdx === 0 ? 0.35 : 1
+                              }}
+                              title="Subir etapa (ejecutar antes)"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              disabled={eIdx === (formData.etapas?.length || 1) - 1}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onMoveEtapa(eIdx, 'DOWN');
+                                if (expandedStageIndex === eIdx) setExpandedStageIndex(eIdx + 1);
+                              }}
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #D6D3D1',
+                                color: '#182622',
+                                padding: '0.2rem 0.45rem',
+                                borderRadius: '4px',
+                                fontSize: '0.7rem',
+                                fontWeight: 700,
+                                cursor: eIdx === (formData.etapas?.length || 1) - 1 ? 'not-allowed' : 'pointer',
+                                opacity: eIdx === (formData.etapas?.length || 1) - 1 ? 0.35 : 1
+                              }}
+                              title="Bajar etapa (ejecutar después)"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -690,7 +843,56 @@ export function RecipeModal({
                           En Edición
                         </span>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                        {/* Botones de reordenamiento cronológico en etapa abierta */}
+                        {onMoveEtapa && (
+                          <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
+                            <button
+                              type="button"
+                              disabled={eIdx === 0}
+                              onClick={() => {
+                                onMoveEtapa(eIdx, 'UP');
+                                setExpandedStageIndex(eIdx - 1);
+                              }}
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #D6D3D1',
+                                color: '#182622',
+                                padding: '0.35rem 0.55rem',
+                                borderRadius: '6px',
+                                fontSize: '0.76rem',
+                                fontWeight: 700,
+                                cursor: eIdx === 0 ? 'not-allowed' : 'pointer',
+                                opacity: eIdx === 0 ? 0.35 : 1
+                              }}
+                              title="Subir etapa (ejecutar antes)"
+                            >
+                              ▲ Subir
+                            </button>
+                            <button
+                              type="button"
+                              disabled={eIdx === (formData.etapas?.length || 1) - 1}
+                              onClick={() => {
+                                onMoveEtapa(eIdx, 'DOWN');
+                                setExpandedStageIndex(eIdx + 1);
+                              }}
+                              style={{
+                                backgroundColor: '#FFFFFF',
+                                border: '1px solid #D6D3D1',
+                                color: '#182622',
+                                padding: '0.35rem 0.55rem',
+                                borderRadius: '6px',
+                                fontSize: '0.76rem',
+                                fontWeight: 700,
+                                cursor: eIdx === (formData.etapas?.length || 1) - 1 ? 'not-allowed' : 'pointer',
+                                opacity: eIdx === (formData.etapas?.length || 1) - 1 ? 0.35 : 1
+                              }}
+                              title="Bajar etapa (ejecutar después)"
+                            >
+                              ▼ Bajar
+                            </button>
+                          </div>
+                        )}
                         <button
                           type="button"
                           onClick={() => setExpandedStageIndex(-1)}
@@ -733,13 +935,94 @@ export function RecipeModal({
                       </div>
                       <div>
                         <label className={styles.label}>Tiempo Estándar (Min)</label>
-                        <input className={styles.input} type="number" min="0" value={etapa.tiempoEstandarMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoEstandarMin', parseInt(e.target.value) || 0)} />
+                        <input 
+                          className={styles.input} 
+                          type="number" 
+                          min="0" 
+                          value={etapa.tiempoEstandarMin === 0 || etapa.tiempoEstandarMin === '0' ? '' : (etapa.tiempoEstandarMin ?? '')} 
+                          onChange={e => onUpdateEtapa(eIdx, 'tiempoEstandarMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} 
+                          placeholder="0"
+                        />
+                        <div style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          fontSize: '0.72rem',
+                          fontWeight: '600',
+                          color: '#182622',
+                          backgroundColor: '#F7F4EE',
+                          border: '1px solid #E5DFD5',
+                          borderRadius: '4px',
+                          padding: '0.15rem 0.45rem',
+                          marginTop: '0.25rem',
+                          width: 'fit-content'
+                        }}
+                        title="Equivalencia en horas y minutos"
+                        >
+                          ⏱️ {formatMinutesToDigitalClock(etapa.tiempoEstandarMin)}
+                        </div>
                       </div>
                       <div>
                         <label className={styles.label}>T. Min / Max (Min)</label>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                          <input className={styles.input} type="number" min="0" value={etapa.tiempoMinimoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMinimoMin', parseInt(e.target.value) || 0)} />
-                          <input className={styles.input} type="number" min="0" value={etapa.tiempoMaximoMin || 0} onChange={e => onUpdateEtapa(eIdx, 'tiempoMaximoMin', parseInt(e.target.value) || 0)} />
+                          <div style={{ flex: 1 }}>
+                            <input 
+                              className={styles.input} 
+                              type="number" 
+                              min="0" 
+                              value={etapa.tiempoMinimoMin === 0 || etapa.tiempoMinimoMin === '0' ? '' : (etapa.tiempoMinimoMin ?? '')} 
+                              onChange={e => onUpdateEtapa(eIdx, 'tiempoMinimoMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} 
+                              placeholder="Mín: 0"
+                            />
+                            <div 
+                              style={{ 
+                                backgroundColor: '#F7F4EE', 
+                                border: '1px solid #E5DFD5', 
+                                color: '#182622', 
+                                fontSize: '0.68rem', 
+                                fontWeight: 600, 
+                                padding: '0.12rem 0.35rem', 
+                                borderRadius: '4px',
+                                marginTop: '0.25rem',
+                                textAlign: 'center',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                              title="Equivalencia tiempo mínimo"
+                            >
+                              ⏱️ {formatMinutesToDigitalClock(etapa.tiempoMinimoMin)}
+                            </div>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <input 
+                              className={styles.input} 
+                              type="number" 
+                              min="0" 
+                              value={etapa.tiempoMaximoMin === 0 || etapa.tiempoMaximoMin === '0' ? '' : (etapa.tiempoMaximoMin ?? '')} 
+                              onChange={e => onUpdateEtapa(eIdx, 'tiempoMaximoMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} 
+                              placeholder="Máx: 0"
+                            />
+                            <div 
+                              style={{ 
+                                backgroundColor: '#F7F4EE', 
+                                border: '1px solid #E5DFD5', 
+                                color: '#182622', 
+                                fontSize: '0.68rem', 
+                                fontWeight: 600, 
+                                padding: '0.12rem 0.35rem', 
+                                borderRadius: '4px',
+                                marginTop: '0.25rem',
+                                textAlign: 'center',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                              title="Equivalencia tiempo máximo"
+                            >
+                              ⏱️ {formatMinutesToDigitalClock(etapa.tiempoMaximoMin)}
+                            </div>
+                          </div>
                         </div>
                       </div>
                       <div>
@@ -893,6 +1176,270 @@ export function RecipeModal({
           </div>
         </div>
       </form>
+
+      {/* Modal de Auditoría Técnica: Hoja de Ruta Operativa de Planta (SmartModal) */}
+      {showSummaryModal && (
+        <div 
+          className={styles.modalBackdrop}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isSubmitting) {
+              setShowSummaryModal(false);
+            }
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="summary-modal-title"
+        >
+          <div className={styles.summaryModalCard}>
+            {/* Header del Modal */}
+            <div className={styles.summaryModalHeader}>
+              <div>
+                <h2 id="summary-modal-title" className={styles.summaryModalTitle}>
+                  <span>📜</span> Hoja de Ruta Operativa de Planta
+                </h2>
+                <p className={styles.summaryModalSubtitle}>
+                  Protocolo paso a paso para la elaboración del lote en piso de producción
+                  {selectedProduct ? ` — ${selectedProduct.nombre} (${formData.rendimientoBase} ${formData.unidadRendimiento || 'Und'})` : ''}
+                </p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowSummaryModal(false)}
+                disabled={isSubmitting}
+                className={styles.summaryModalCloseBtn}
+                title="Cerrar y volver a edición"
+                aria-label="Cerrar modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Cuerpo del Modal con Scroll Suave */}
+            <div className={styles.summaryModalBody}>
+              {/* Ficha Técnica de Cabecera */}
+              <div className={styles.summaryTechHeaderCard}>
+                <div>
+                  <div className={styles.summaryTechFieldLabel}>Producto a Elaborar</div>
+                  <div className={styles.summaryTechFieldValue}>
+                    {selectedProduct?.nombre || 'No seleccionado'}
+                  </div>
+                  <span style={{ fontSize: '0.74rem', color: '#78716C' }}>
+                    {selectedProduct?.presentacion?.nombre || 'A GRANEL'}
+                  </span>
+                </div>
+
+                <div>
+                  <div className={styles.summaryTechFieldLabel}>Rendimiento Esperado</div>
+                  <div className={styles.summaryTechFieldValue} style={{ color: '#166534' }}>
+                    {formData.rendimientoBase || '0'} {formData.unidadRendimiento || 'Und'}
+                  </div>
+                  <span style={{ fontSize: '0.74rem', color: '#78716C' }}>
+                    Por lote de producción
+                  </span>
+                </div>
+
+                <div>
+                  <div className={styles.summaryTechFieldLabel}>Tiempo Acumulado Estimado</div>
+                  <div className={styles.summaryTechFieldValue} style={{ color: '#182622' }}>
+                    ⏱️ {formatMinutesToDigitalClock(totalProductionTimeMins)}
+                  </div>
+                  <span style={{ fontSize: '0.74rem', color: '#78716C' }}>
+                    {activeStagesCount} {activeStagesCount === 1 ? 'etapa activa' : 'etapas activas'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Secuencia Narrativa Cronológica de Etapas */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ fontSize: '0.76rem', color: '#78716C', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.025em' }}>
+                  Secuencia Cronológica de Proceso (Paso a Paso)
+                </div>
+
+                {activeStagesCount === 0 ? (
+                  <div style={{ 
+                    backgroundColor: '#FEF2F2', 
+                    border: '1px solid #FECACA', 
+                    borderRadius: '8px', 
+                    padding: '1rem', 
+                    textAlign: 'center', 
+                    color: '#991B1B', 
+                    fontSize: '0.85rem' 
+                  }}>
+                    ⚠️ No hay etapas registradas en esta receta. Regrese al editor para añadir etapas.
+                  </div>
+                ) : (
+                  activeStages.map((etapa, idx) => {
+                    const narrative = generateStageSummaryText(etapa, supplies, products);
+                    const tEst = Number(etapa.tiempoEstandarMin) || 0;
+                    const tempMin = etapa.tempMinimaGrados !== '' && etapa.tempMinimaGrados !== null && etapa.tempMinimaGrados !== undefined ? Number(etapa.tempMinimaGrados) : null;
+                    const tempMax = etapa.tempMaximaGrados !== '' && etapa.tempMaximaGrados !== null && etapa.tempMaximaGrados !== undefined ? Number(etapa.tempMaximaGrados) : null;
+
+                    return (
+                      <div key={idx} className={styles.summaryStageCard}>
+                        <div className={styles.summaryStageHead}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span className={styles.summaryStageStepBadge}>
+                              Paso {etapa.orden || idx + 1}
+                            </span>
+                            <span className={styles.summaryStageTitle}>
+                              {etapa.nombre || 'Etapa sin denominación'}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                            {tEst > 0 && (
+                              <span className={styles.collapsedBadge} style={{ backgroundColor: '#F7F4EE' }}>
+                                ⏱️ {tEst}m
+                              </span>
+                            )}
+                            {(tempMin !== null || tempMax !== null) && (
+                              <span className={styles.collapsedBadge} style={{ backgroundColor: '#F7F4EE' }}>
+                                🌡️ {tempMin ?? 0}°C - {tempMax ?? 0}°C
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <p className={styles.summaryStageText}>
+                          {narrative}
+                        </p>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Balance Resumido de Costos y Rentabilidad al pie del cuerpo */}
+              <div className={styles.balanceBar} style={{ margin: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ fontSize: '1.25rem' }}>💰</div>
+                  <div>
+                    <div style={{ fontSize: '0.72rem', color: '#78716C', textTransform: 'uppercase', fontWeight: 700 }}>
+                      Balance Económico Proyectado
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#57534E' }}>
+                      Costeo dinámico basado en materias primas y bases WIP
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#78716C', textTransform: 'uppercase', fontWeight: 600 }}>
+                      Costo Unitario
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#182622' }}>
+                      {formatCurrency(costPerUnit)} <span style={{ fontSize: '0.72rem', fontWeight: 500 }}>/ {formData.unidadRendimiento || 'Und'}</span>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right', borderLeft: '1px solid #D6D3D1', paddingLeft: '1.25rem' }}>
+                    <div style={{ fontSize: '0.72rem', color: '#78716C', textTransform: 'uppercase', fontWeight: 600 }}>
+                      Costo Total Lote
+                    </div>
+                    <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#166534' }}>
+                      {formatCurrency(totalCost)}
+                    </div>
+                  </div>
+
+                  {/* Badge de Rentabilidad */}
+                  {selectedProduct && (
+                    <div style={{ flexShrink: 0 }}>
+                      {isInternoOrBulk ? (
+                        <span style={{
+                          backgroundColor: '#EFF6FF',
+                          border: '1px solid #BFDBFE',
+                          color: '#1E40AF',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}>
+                          ⚙️ Costo Interno
+                        </span>
+                      ) : costoTopePermitido > 0 && costPerUnit <= costoTopePermitido ? (
+                        <span style={{
+                          backgroundColor: '#DCFCE7',
+                          border: '1px solid #86EFAC',
+                          color: '#166534',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}>
+                          🟢 Rentable (Tope: {formatCurrency(costoTopePermitido)})
+                        </span>
+                      ) : costoTopePermitido > 0 && costPerUnit > costoTopePermitido ? (
+                        <span style={{
+                          backgroundColor: '#FEF2F2',
+                          border: '1px solid #FECACA',
+                          color: '#991B1B',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem'
+                        }}>
+                          🔴 Sobrecosto (+{formatCurrency(costPerUnit - costoTopePermitido)})
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Pie de Acciones (Footer) */}
+            <div className={styles.summaryModalFooter}>
+              {/* Izquierda: Descartar Receta Completa */}
+              <button 
+                type="button" 
+                onClick={handleDiscardCompleteRecipe}
+                disabled={isSubmitting}
+                className={styles.btnDiscardRecipe}
+                title="Descarta la receta completa y sale del editor sin guardar"
+              >
+                <span>✕</span> Descartar Receta Completa
+              </button>
+
+              {/* Derecha: Corregir / Seguir Editando y Guardar y Publicar Receta */}
+              <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowSummaryModal(false)}
+                  disabled={isSubmitting}
+                  className={styles.btnContinueEditing}
+                  title="Cerrar resumen y volver al formulario para realizar ajustes"
+                >
+                  <span>✏️</span> Corregir / Seguir Editando
+                </button>
+
+                <button 
+                  type="button" 
+                  onClick={handleConfirmPublish}
+                  disabled={isSubmitting || !canSubmit}
+                  className={styles.btnPublishRecipe}
+                  title="Confirma y publica la receta en la base de datos"
+                >
+                  {isSubmitting ? (
+                    <>Guardando...</>
+                  ) : (
+                    <><span>✓</span> Guardar y Publicar Receta</>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -10,13 +10,25 @@ import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from '../presentations.module.css';
 
-export function PresentationsTable({ presentations, loading, error, onEdit, onToggleActive }) {
+export function PresentationsTable({ presentations, loading, error, onEdit, onToggleActive, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (presentations.length === 0) return <EmptyState title="No hay presentaciones" description="Crea la primera presentación para comenzar" />;
+  if (presentations.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="🧴"
+        title="Comienza registrando tu primera Presentación"
+        description="Define los envases y moldes físicos (botellas, vasos) donde se empacan los productos."
+        actionLabel="+ Nueva Presentación"
+        onAction={() => onNew && onNew()}
+        topButtonLabel="Nueva Presentación"
+      />
+    );
+  }
 
   return (
     <Table>

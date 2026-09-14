@@ -14,16 +14,26 @@ export function RecipesHeader({ onNewRecipe, canCreate = true, disabledTooltip =
   return (
     <div className={styles.header}>
       <div className={styles.headerTitle}>
-        <h1 className={styles.title}>Recetas Técnicas (V2)</h1>
-        <p className={styles.subtitle}>Fórmulas estándar de elaboración con BOM y Etapas (Ruta de proceso).</p>
+        <h1 className={styles.title}>Recetas Técnicas</h1>
+        <p className={styles.subtitle}>Fórmulas estándar de elaboración con BOM (Lista de Materiales y Fórmula) y Etapas (Ruta de proceso).</p>
       </div>
       <Button 
         onClick={() => { if (canCreate) onNewRecipe(null); }}
         disabled={!canCreate}
         title={!canCreate ? disabledTooltip : 'Registrar nueva receta'}
-        style={!canCreate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        style={{
+          backgroundColor: canCreate ? '#182622' : '#A8A29E',
+          borderColor: canCreate ? '#182622' : '#A8A29E',
+          color: '#FFFFFF',
+          fontWeight: '700',
+          borderRadius: '8px',
+          padding: '0.65rem 1.4rem',
+          boxShadow: canCreate ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+          opacity: canCreate ? 1 : 0.5,
+          cursor: canCreate ? 'pointer' : 'not-allowed'
+        }}
       >
-        Nueva Receta
+        + Nueva Receta
       </Button>
     </div>
   );

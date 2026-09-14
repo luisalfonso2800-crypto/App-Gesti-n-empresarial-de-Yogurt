@@ -8,15 +8,16 @@
  */
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useRecipesData } from './hooks/useRecipesData';
 import { useRecipeForm } from './hooks/useRecipeForm';
 import { RecipesHeader } from './components/RecipesHeader';
 import { RecipesList } from './components/RecipesList';
 import { RecipeModal } from './components/RecipeModal';
 
-export default function RecipesPage() {
+function RecipesContent() {
   const {
     items, products, supplies, prices,
     loading, error, fetchData, handleToggleActive
@@ -25,9 +26,56 @@ export default function RecipesPage() {
   const {
     isEditing, formData, handleOpenEditor, handleCloseEditor,
     handleChange, applyStageTemplate, addEtapa, updateEtapa, removeEtapa,
+    moveStage,
     addDetalle, updateDetalle, removeDetalle,
     handleSubmit, calculateCost
   } = useRecipeForm({ supplies, products, prices, onSaveSuccess: fetchData });
+
+  const searchParams = useSearchParams();
+  const autoOpenedRef = useRef(false);
+
+  const hasProducts = products.length > 0;
+  const hasSupplies = supplies.length > 0;
+  const canCreate = !loading && hasProducts && hasSupplies;
+
+  const isCreateParam = searchParams.get('crear') === 'receta';
+
+  // Sincronización query param ?crear=receta
+  useEffect(() => {
+    if (isCreateParam && !autoOpenedRef.current && !loading) {
+      if (canCreate) {
+        autoOpenedRef.current = true;
+        handleOpenEditor(null);
+      }
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/catalog/recipes');
+      }
+    }
+    if (!isCreateParam) {
+      autoOpenedRef.current = false;
+    }
+  }, [isCreateParam, loading, canCreate, handleOpenEditor]);
+
+  // Escucha del evento global open-recipe-modal disparado desde el Onboarding
+  useEffect(() => {
+    const handleGlobalOpenModal = () => {
+      if (canCreate) {
+        handleOpenEditor(null);
+      }
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/catalog/recipes');
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('open-recipe-modal', handleGlobalOpenModal);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('open-recipe-modal', handleGlobalOpenModal);
+      }
+    };
+  }, [canCreate, handleOpenEditor]);
 
   if (isEditing) {
     return (
@@ -42,6 +90,7 @@ export default function RecipesPage() {
         onAddEtapa={addEtapa}
         onUpdateEtapa={updateEtapa}
         onRemoveEtapa={removeEtapa}
+        onMoveEtapa={moveStage}
         onAddDetalle={addDetalle}
         onUpdateDetalle={updateDetalle}
         onRemoveDetalle={removeDetalle}
@@ -49,10 +98,6 @@ export default function RecipesPage() {
       />
     );
   }
-
-  const hasProducts = products.length > 0;
-  const hasSupplies = supplies.length > 0;
-  const canCreate = !loading && hasProducts && hasSupplies;
 
   let disabledTooltip = '';
   if (!canCreate) {
@@ -151,7 +196,18 @@ export default function RecipesPage() {
         error={error}
         onEdit={handleOpenEditor}
         onToggleActive={handleToggleActive}
+        onNewRecipe={handleOpenEditor}
+        canCreate={canCreate}
+        disabledTooltip={disabledTooltip}
       />
     </div>
+  );
+}
+
+export default function RecipesPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>Cargando recetas técnicas...</div>}>
+      <RecipesContent />
+    </Suspense>
   );
 }

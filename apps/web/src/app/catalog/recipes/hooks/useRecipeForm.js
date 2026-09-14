@@ -90,93 +90,104 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
 
   // Plantillas rápidas de etapas en 1 clic (Base en Tanque vs Envasado Comercial)
   const applyStageTemplate = (templateType) => {
+    let templateEtapas = [];
     if (templateType === 'BASE_TANQUE') {
-      setFormData(prev => ({
-        ...prev,
-        etapas: [
-          {
-            nombre: 'Pasteurización y Acondicionamiento',
-            orden: 1,
-            tempMinimaGrados: 85,
-            tempMaximaGrados: 90,
-            tiempoEstandarMin: 30,
-            tiempoMinimoMin: 25,
-            tiempoMaximoMin: 35,
-            instrucciones: 'Calentamiento y homogenización de base láctea',
-            activo: true,
-            detalles: []
-          },
-          {
-            nombre: 'Inoculación e Incubación',
-            orden: 2,
-            tempMinimaGrados: 42,
-            tempMaximaGrados: 44,
-            tiempoEstandarMin: 480,
-            tiempoMinimoMin: 420,
-            tiempoMaximoMin: 540,
-            instrucciones: 'Sembrado de cultivo láctico y fermentación controlada',
-            activo: true,
-            detalles: []
-          }
-        ]
-      }));
+      templateEtapas = [
+        {
+          nombre: 'Pasteurización y Acondicionamiento',
+          orden: 1,
+          tempMinimaGrados: 85,
+          tempMaximaGrados: 90,
+          tiempoEstandarMin: 30,
+          tiempoMinimoMin: 25,
+          tiempoMaximoMin: 35,
+          instrucciones: 'Calentamiento y homogenización de base láctea',
+          activo: true,
+          detalles: []
+        },
+        {
+          nombre: 'Inoculación e Incubación',
+          orden: 2,
+          tempMinimaGrados: 42,
+          tempMaximaGrados: 44,
+          tiempoEstandarMin: 480,
+          tiempoMinimoMin: 420,
+          tiempoMaximoMin: 540,
+          instrucciones: 'Sembrado de cultivo láctico y fermentación controlada',
+          activo: true,
+          detalles: []
+        }
+      ];
     } else if (templateType === 'ENVASADO_COMERCIAL') {
-      setFormData(prev => ({
-        ...prev,
-        etapas: [
-          {
-            nombre: 'Mezcla y Saborizado',
-            orden: 1,
-            tiempoEstandarMin: 20,
-            tiempoMinimoMin: 15,
-            tiempoMaximoMin: 30,
-            tempMinimaGrados: 4,
-            tempMaximaGrados: 10,
-            instrucciones: 'Adición de mermelada/fruta y estabilizantes en frío',
-            activo: true,
-            detalles: []
-          },
-          {
-            nombre: 'Dosificación, Sellado y Rotulado',
-            orden: 2,
-            tiempoEstandarMin: 40,
-            tiempoMinimoMin: 30,
-            tiempoMaximoMin: 60,
-            tempMinimaGrados: 4,
-            tempMaximaGrados: 6,
-            instrucciones: 'Envasado en recipientes primarios, termosellado y tapado',
-            activo: true,
-            detalles: []
-          }
-        ]
-      }));
+      templateEtapas = [
+        {
+          nombre: 'Mezcla y Saborizado',
+          orden: 1,
+          tiempoEstandarMin: 20,
+          tiempoMinimoMin: 15,
+          tiempoMaximoMin: 30,
+          tempMinimaGrados: 4,
+          tempMaximaGrados: 10,
+          instrucciones: 'Adición de mermelada/fruta y estabilizantes en frío',
+          activo: true,
+          detalles: []
+        },
+        {
+          nombre: 'Dosificación, Sellado y Rotulado',
+          orden: 2,
+          tiempoEstandarMin: 40,
+          tiempoMinimoMin: 30,
+          tiempoMaximoMin: 60,
+          tempMinimaGrados: 4,
+          tempMaximaGrados: 6,
+          instrucciones: 'Envasado en recipientes primarios, termosellado y tapado',
+          activo: true,
+          detalles: []
+        }
+      ];
     }
+
+    if (templateEtapas.length === 0) return;
+
+    setFormData(prev => {
+      const currentEtapas = prev.etapas || [];
+      const startOrder = currentEtapas.length + 1;
+      const mappedNewStages = templateEtapas.map((stg, idx) => ({
+        ...stg,
+        orden: startOrder + idx
+      }));
+
+      return {
+        ...prev,
+        etapas: [...currentEtapas, ...mappedNewStages]
+      };
+    });
   };
 
-  const addEtapa = (templateType, insertAtStart = true) => {
+  const addEtapa = (templateType) => {
     if (templateType && typeof templateType === 'string') {
       applyStageTemplate(templateType);
       return;
     }
-    const nuevaEtapa = {
-      nombre: '',
-      orden: 1,
-      tiempoMinimoMin: 0,
-      tiempoEstandarMin: 0,
-      tiempoMaximoMin: 0,
-      tempMinimaGrados: 0,
-      tempMaximaGrados: 0,
-      instrucciones: '',
-      activo: true,
-      detalles: []
-    };
 
     setFormData(prev => {
-      const updatedEtapas = insertAtStart 
-        ? [nuevaEtapa, ...prev.etapas]
-        : [...prev.etapas, nuevaEtapa];
-      
+      const nuevoOrden = (prev.etapas?.length || 0) + 1;
+      const nuevaEtapa = {
+        nombre: `Etapa ${nuevoOrden}`,
+        orden: nuevoOrden,
+        tiempoMinimoMin: '',
+        tiempoEstandarMin: '',
+        tiempoMaximoMin: '',
+        tempMinimaGrados: '',
+        tempMaximaGrados: '',
+        instrucciones: '',
+        activo: true,
+        detalles: []
+      };
+
+      const updatedEtapas = [...(prev.etapas || []), nuevaEtapa];
       updatedEtapas.forEach((e, i) => { e.orden = i + 1; });
+
       return {
         ...prev,
         etapas: updatedEtapas
@@ -191,10 +202,40 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
   };
 
   const removeEtapa = (index) => {
-    const newEtapas = [...formData.etapas];
-    newEtapas.splice(index, 1);
-    newEtapas.forEach((e, i) => { e.orden = i + 1; });
-    setFormData(prev => ({ ...prev, etapas: newEtapas }));
+    setFormData(prev => {
+      const filtered = prev.etapas.filter((_, i) => i !== index);
+      const reindexed = filtered.map((e, idx) => ({
+        ...e,
+        orden: idx + 1
+      }));
+      return {
+        ...prev,
+        etapas: reindexed
+      };
+    });
+  };
+
+  const moveStage = (index, direction) => {
+    setFormData(prev => {
+      const etapasCopy = [...(prev.etapas || [])];
+      const targetIndex = direction === 'UP' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= etapasCopy.length) return prev;
+
+      const temp = etapasCopy[index];
+      etapasCopy[index] = etapasCopy[targetIndex];
+      etapasCopy[targetIndex] = temp;
+
+      // Re-mapear orden: idx + 1 en todo el arreglo
+      const reindexed = etapasCopy.map((e, idx) => ({
+        ...e,
+        orden: idx + 1
+      }));
+
+      return {
+        ...prev,
+        etapas: reindexed
+      };
+    });
   };
 
   const addDetalle = (etapaIndex) => {
@@ -349,6 +390,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
     addEtapa,
     updateEtapa,
     removeEtapa,
+    moveStage,
     addDetalle,
     updateDetalle,
     removeDetalle,

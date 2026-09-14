@@ -10,13 +10,36 @@ import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from '../recipes.module.css';
 
-export function RecipesList({ items, loading, error, onEdit, onToggleActive }) {
+export function RecipesList({ 
+  items, 
+  loading, 
+  error, 
+  onEdit, 
+  onToggleActive, 
+  onNewRecipe,
+  canCreate = true,
+  disabledTooltip = ''
+}) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (items.length === 0) return <EmptyState title="No hay registros" description="Crea la primera receta para comenzar" />;
+  if (items.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="📋"
+        title="Comienza formulando tu primera Receta Técnica"
+        description="Las recetas vinculan tus productos con los insumos de bodega y las bases en tanque, definiendo ingredientes, empaques, tiempos y temperaturas de elaboración."
+        actionLabel="+ Formular Nueva Receta"
+        onAction={() => { if (canCreate && onNewRecipe) onNewRecipe(null); }}
+        topButtonLabel="Nueva Receta"
+        canAction={canCreate}
+        disabledTooltip={disabledTooltip}
+      />
+    );
+  }
 
   return (
     <Table>
@@ -44,7 +67,7 @@ export function RecipesList({ items, loading, error, onEdit, onToggleActive }) {
             </TD>
             <TD>
               <div className={styles.actions}>
-                <Button variant="secondary" onClick={() => onEdit(item)}>Editar / Ver BOM</Button>
+                <Button variant="secondary" onClick={() => onEdit(item)}>Editar / Ver BOM (Lista de Materiales)</Button>
                 <Button 
                   variant={item.activo ? 'danger' : 'primary'} 
                   onClick={() => onToggleActive(item)}

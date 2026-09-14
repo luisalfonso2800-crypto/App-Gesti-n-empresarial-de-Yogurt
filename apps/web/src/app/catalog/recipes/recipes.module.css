@@ -120,3 +120,245 @@
   box-sizing: border-box;
 }
 
+/* Modal de Confirmación y Hoja de Ruta Operativa de Planta */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(24, 38, 34, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 9999;
+}
+
+.summaryModalCard {
+  position: relative;
+  width: 100%;
+  max-width: 780px;
+  max-height: 90vh;
+  background-color: #FAF8F5;
+  border: 1px solid #D6D3D1;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.summaryModalHeader {
+  padding: 1.25rem 1.5rem;
+  background-color: #F5EFE6;
+  border-bottom: 1px solid #E5DFD5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.summaryModalTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #182622;
+  margin: 0 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summaryModalSubtitle {
+  font-size: 0.82rem;
+  color: #57534E;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.summaryModalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #78716C;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.summaryModalCloseBtn:hover {
+  color: #182622;
+}
+
+.summaryModalBody {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  max-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.summaryTechHeaderCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summaryTechFieldLabel {
+  font-size: 0.72rem;
+  color: #78716C;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  margin-bottom: 0.2rem;
+}
+
+.summaryTechFieldValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.summaryStageCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: border-color 0.15s;
+}
+
+.summaryStageCard:hover {
+  border-color: #CAD5B5;
+}
+
+.summaryStageHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.summaryStageStepBadge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  background-color: #182622;
+  color: #FFFFFF;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.summaryStageTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.summaryStageText {
+  font-size: 0.82rem;
+  color: #292524;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.summaryModalFooter {
+  padding: 1rem 1.5rem;
+  background-color: #F7F4EE;
+  border-top: 1px solid #E5DFD5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btnDiscardRecipe {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s;
+}
+
+.btnDiscardRecipe:hover {
+  background-color: #FEE2E2;
+  border-color: #F87171;
+  color: #7F1D1D;
+}
+
+.btnContinueEditing {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.55rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s;
+}
+
+.btnContinueEditing:hover {
+  background-color: #F5EFE6;
+  border-color: #A8A29E;
+}
+
+.btnPublishRecipe {
+  background-color: #182622;
+  border: 1px solid #182622;
+  color: #FFFFFF;
+  padding: 0.55rem 1.35rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s;
+}
+
+.btnPublishRecipe:hover:not(:disabled) {
+  background-color: #2C3E38;
+  border-color: #2C3E38;
+}
+
+.btnPublishRecipe:disabled {
+  background-color: #A8A29E;
+  border-color: #A8A29E;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+

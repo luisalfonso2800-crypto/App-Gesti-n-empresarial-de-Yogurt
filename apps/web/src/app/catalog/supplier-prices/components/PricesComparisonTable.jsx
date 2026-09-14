@@ -12,7 +12,8 @@ import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import SmartModal from '@/components/ui/SmartModal';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { useCart } from '@/context/CartContext';
 import styles from '../supplier-prices.module.css';
 
@@ -195,13 +196,25 @@ export function PricesComparisonTable({
   isSelectorOpen,
   setIsSelectorOpen,
   pendingItem,
-  handleToggleWithList
+  handleToggleWithList,
+  onNewTarifa
 }) {
   const { lists } = useCart();
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (items.length === 0) return <EmptyState title="No hay registros" description="Crea el primer registro para comenzar" />;
+  if (items.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="💰"
+        title="Comienza registrando tu primera Tarifa de Proveedor"
+        description="Cotiza tarifas de compra para calcular costos base de materia prima."
+        actionLabel="+ Nueva Tarifa"
+        onAction={() => onNewTarifa && onNewTarifa()}
+        topButtonLabel="Nueva Tarifa"
+      />
+    );
+  }
 
   return (
     <>

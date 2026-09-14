@@ -10,15 +10,27 @@ import React from 'react';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { resolveProductImage } from '@/lib/presetImages';
 import ProductAvatar from '@/components/ui/ProductAvatar';
 import styles from '../products.module.css';
 
-export function ProductsTable({ items, loading, error, onEdit, onToggleActive }) {
+export function ProductsTable({ items, loading, error, onEdit, onToggleActive, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (items.length === 0) return <EmptyState title="No hay registros" description="Crea el primer registro para comenzar" />;
+  if (items.length === 0) {
+    return (
+      <AssistedEmptyState
+        icon="🥛"
+        title="Comienza registrando tu primer Producto"
+        description="Registra los artículos comerciales terminados vinculados a su receta y envase."
+        actionLabel="+ Nuevo Producto"
+        onAction={() => onNew && onNew()}
+        topButtonLabel="Nuevo Producto"
+      />
+    );
+  }
 
   return (
     <Table>

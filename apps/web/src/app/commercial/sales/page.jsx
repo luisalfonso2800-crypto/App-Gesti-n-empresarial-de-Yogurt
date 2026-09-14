@@ -21,7 +21,7 @@ export default function SalesPage() {
   return (
     <div>
       <SalesHeader onNew={form.handleOpenModal} />
-      <SalesTable sales={sales} loading={loading} error={error} />
+      <SalesTable sales={sales} loading={loading} error={error} onNew={form.handleOpenModal} />
       <SaleModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
         formData={form.formData} handleChange={form.handleChange}

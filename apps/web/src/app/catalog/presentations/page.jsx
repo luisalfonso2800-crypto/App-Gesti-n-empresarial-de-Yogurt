@@ -24,6 +24,7 @@ export default function PresentationsPage() {
       <PresentationsTable 
         presentations={presentations} loading={loading} error={error}
         onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        onNew={() => form.handleOpenModal(null)}
       />
       <PresentationModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}

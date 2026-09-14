@@ -14,7 +14,8 @@ import { apiClient } from '@/lib/api-client';
 import { Button } from '@/components/ui/Button';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
-import { LoadingState, ErrorState, EmptyState } from '@/components/ui/States';
+import { LoadingState, ErrorState } from '@/components/ui/States';
+import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import styles from './purchases.module.css';
 import { ContextBanner } from '@/components/ui/ContextBanner';
@@ -269,7 +270,14 @@ export default function PurchasesPage() {
       ) : error ? (
         <ErrorState error={error} />
       ) : purchases.length === 0 ? (
-        <EmptyState title="No hay compras finalizadas" description="Registra la primera compra" />
+        <AssistedEmptyState
+          icon="🛒"
+          title="Comienza registrando tu primera Compra"
+          description="Registra entradas de insumos a bodega para abastecer la planta y actualizar Kardex."
+          actionLabel="+ Nueva Compra"
+          onAction={() => router.push('/operations/purchases/new?mode=direct')}
+          topButtonLabel="Nueva Compra Directa"
+        />
       ) : (
         <Table>
           <THead>

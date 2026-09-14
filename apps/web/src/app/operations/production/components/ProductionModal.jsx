@@ -251,7 +251,7 @@ export function ProductionModal({
 
           {bomSimulado.length > 0 && (
             <div>
-              <h3 className={styles.sectionTitle}>BOM Escalonado y Disponibilidad</h3>
+              <h3 className={styles.sectionTitle}>BOM (Lista de Materiales) Escalonado y Disponibilidad</h3>
               <table className={styles.bomTable}>
                 <thead>
                   <tr>
