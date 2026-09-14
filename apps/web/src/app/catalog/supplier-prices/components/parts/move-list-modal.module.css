@@ -1,0 +1,75 @@
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.modalText {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0;
+}
+
+.emptyStateContainer {
+  padding: 1rem;
+  background: #f3f4f6;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.emptyStateTitle {
+  margin: 0;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.emptyStateSubtitle {
+  margin: 0.5rem 0 0;
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.selectInput {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  font-size: 0.875rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-end;
+}
+
+.toastContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.toastActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid white;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  color: white;
+  font-size: 0.75rem;
+  transition: opacity 0.2s ease;
+}
+
+.toastActionBtnDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toastActionBtnEnabled {
+  opacity: 1;
+  cursor: pointer;
+}

@@ -26,12 +26,9 @@ import { SummaryCard } from './components/SummaryCard';
 import { Suspense } from 'react';
 
 function SupplierPricesContent() {
-  // Captura parámetros de deep-link del SCADA (ej. ?search=Leche+cruda&insumoId=uuid)
   const searchParams = useSearchParams();
-
   const {
-    items, loading, error, filteredItems,
-    handleToggleActive, handleSubmitForm,
+    items, loading, error, filteredItems, handleToggleActive, handleSubmitForm,
     filterInsumo, setFilterInsumo, filterProveedor, setFilterProveedor,
     filterEstado, setFilterEstado, filterSearch, setFilterSearch,
     filterSort, setFilterSort, clearFilters, hasFilters,
@@ -39,47 +36,30 @@ function SupplierPricesContent() {
   } = useSupplierPricesData();
 
   const {
-    selectedForPurchase, togglePurchaseItem,
-    clearPurchaseList, proceedToPurchase,
-    MoveListModal,
+    selectedForPurchase, togglePurchaseItem, clearPurchaseList, proceedToPurchase, MoveListModal
   } = useCartManager();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  
   const [allInsumos, setAllInsumos] = useState([]);
   const [allProveedores, setAllProveedores] = useState([]);
 
-  // Al montar: si la URL trae ?search= (deep-link del SCADA), precarga el filtro de búsqueda
   useEffect(() => {
     const searchFromUrl = searchParams?.get('search');
-    if (searchFromUrl) {
-      setFilterSearch(searchFromUrl);
-    }
-  }, [searchParams]);
+    if (searchFromUrl) setFilterSearch(searchFromUrl);
+  }, [searchParams, setFilterSearch]);
   
-  // Load global catalogs for the form
-  React.useEffect(() => {
+  useEffect(() => {
     import('@/lib/api-client').then(({ apiClient }) => {
-      Promise.all([
-        apiClient.get('/supplies'),
-        apiClient.get('/suppliers')
-      ]).then(([insumosData, proveedoresData]) => {
-        setAllInsumos(insumosData);
-        setAllProveedores(proveedoresData);
+      Promise.all([apiClient.get('/supplies'), apiClient.get('/suppliers')]).then(([ins, provs]) => {
+        setAllInsumos(ins);
+        setAllProveedores(provs);
       }).catch(err => console.error("Error loading catalogs:", err));
     });
   }, []);
 
-  const handleOpenModal = (item = null) => {
-    setEditingItem(item);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingItem(null);
-  };
+  const handleOpenModal = (item = null) => { setEditingItem(item); setIsModalOpen(true); };
+  const handleCloseModal = () => { setIsModalOpen(false); setEditingItem(null); };
 
   return (
     <div>
@@ -125,13 +105,10 @@ function SupplierPricesContent() {
         editingItem={editingItem} onSubmit={handleSubmitForm}
         allInsumos={allInsumos} allProveedores={allProveedores}
       />
-
-      {/* Modal selector de lista destino cuando hay 3+ listas activas */}
       {MoveListModal}
     </div>
   );
 }
-
 
 export default function SupplierPricesPage() {
   return (

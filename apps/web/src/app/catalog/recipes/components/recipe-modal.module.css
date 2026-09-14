@@ -1,0 +1,1051 @@
+/* Estilos desacoplados y modulares para RecipeModal y sus subcomponentes atómicos */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.headerTitle {
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #111827;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  font-weight: 400;
+}
+
+.headerActions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.btnCancelHeader {
+  background-color: #F7F4EE;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnCancelHeader:hover {
+  background-color: #EFECE4;
+  border-color: #A8A29E;
+}
+
+.btnSummarizeHeader {
+  color: #FFFFFF;
+  border: 1px solid #182622;
+  padding: 0.5rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnSummarizeHeaderEnabled {
+  background-color: #182622;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.btnSummarizeHeaderEnabled:hover {
+  background-color: #2C3E38;
+  border-color: #2C3E38;
+}
+
+.btnSummarizeHeaderDisabled {
+  background-color: #A8A29E;
+  border-color: #A8A29E;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.editorContainer {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #182622;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #E5E7EB;
+  padding-bottom: 0.5rem;
+}
+
+.stagesSectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.stagesTitle {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #182622;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #182622;
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.025em;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.input, .select {
+  padding: 0.5rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  width: 100%;
+  color: #182622;
+  background-color: #FFFFFF;
+  box-sizing: border-box;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.readOnlyInput {
+  background-color: #F7F4EE;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  width: 100%;
+  cursor: not-allowed;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.inputHelperText {
+  font-size: 0.72rem;
+  color: #78716C;
+  font-style: italic;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Campos de cabecera y notas */
+.headerFieldsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.yieldGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.notesToggleBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #78716C;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.notesHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.notesHideBtn {
+  background: none;
+  border: none;
+  color: #78716C;
+  font-size: 0.72rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Banners Poka-Yoke */
+.bulkWarningBanner {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.bulkWarningText {
+  flex: 1;
+  min-width: 260px;
+}
+
+.bulkWarningLink {
+  background-color: #182622;
+  color: #FFFFFF;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.packagingWarningBanner {
+  background-color: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+/* Botones de toolbar de etapas */
+.stageToolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.templateBtn {
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  color: #182622;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.templateBtn:hover {
+  background-color: #EFECE4;
+  border-color: #D6D0C4;
+  color: #111816;
+}
+
+.addStageBtn {
+  background-color: #FFFFFF;
+  border: 1px solid #182622;
+  color: #182622;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.addStageBtn:hover {
+  background-color: #F7F4EE;
+}
+
+.summarizeBtn {
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  color: #182622;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.summarizeBtn:hover {
+  background-color: #E8EFE2;
+  border-color: #B5C69E;
+}
+
+/* Empty State Asistido de etapas */
+.emptyStateCard {
+  border: 2px dashed #D6D3D1;
+  background-color: #FAFAF9;
+  border-radius: 8px;
+  padding: 1.75rem 1.5rem;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.emptyStateIcon {
+  font-size: 1.8rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.emptyStateTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #182622;
+  margin: 0 0 0.25rem 0;
+}
+
+.emptyStateText {
+  font-size: 0.78rem;
+  color: #78716C;
+  margin: 0 0 1rem 0;
+}
+
+.emptyStateButtons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Panel de Narrativa Continua (Inline) */
+.inlineSummaryPanel {
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+  margin-bottom: 1rem;
+  box-sizing: border-box;
+}
+
+.inlineSummaryHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.inlineSummaryTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.inlineSummarySubtitle {
+  font-size: 0.74rem;
+  color: #78716C;
+  font-style: italic;
+}
+
+.inlineSummaryList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.inlineSummaryItem {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #182622;
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+}
+
+/* Acordeón de etapas */
+.collapsedStageRow {
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  margin-bottom: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 45px;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.collapsedStageRow:hover {
+  background-color: #F5EFE6;
+  border-color: #D6CEBE;
+}
+
+.collapsedStageInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.collapsedStageName {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #182622;
+  white-space: nowrap;
+}
+
+.collapsedBadgesRow {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.collapsedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  color: #182622;
+  font-size: 0.72rem;
+  fontWeight: 600;
+  padding: 0.18rem 0.45rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.collapsedSummaryText {
+  font-size: 0.74rem;
+  color: #78716C;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 0.25rem;
+}
+
+.collapsedActions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.stageMoveGroup {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.btnMoveStage {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.btnMoveStage:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.btnMoveStage:not(:disabled) {
+  cursor: pointer;
+}
+
+.btnEditCollapsed {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnRemoveCollapsed {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+/* Etapa Expandida */
+.stageCard {
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #F9FAFB;
+}
+
+.stageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.stageHeaderTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stageHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #182622;
+}
+
+.stageEditingBadge {
+  font-size: 0.7rem;
+  color: #166534;
+  background-color: #DCFCE7;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.stageHeaderActions {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.btnMoveStageExpanded {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.35rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.btnMoveStageExpanded:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.btnMoveStageExpanded:not(:disabled) {
+  cursor: pointer;
+}
+
+.btnCollapseStage {
+  background-color: #F7F4EE;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnRemoveStage {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.timeInputContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeClockBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #182622;
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+  margin-top: 0.25rem;
+  width: fit-content;
+}
+
+.timeRangeInputsRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.timeRangeItem {
+  flex: 1;
+}
+
+.timeRangeClockBadge {
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  color: #182622;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stageFeedbackCapsule {
+  margin-top: 1rem;
+  padding: 0.65rem 0.95rem;
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  box-sizing: border-box;
+}
+
+.stageFeedbackIcon {
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.stageFeedbackContent {
+  font-size: 0.76rem;
+  color: #182622;
+  line-height: 1.45;
+}
+
+.stageFeedbackHeading {
+  color: #182622;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.stageFeedbackBody {
+  margin-top: 0.15rem;
+}
+
+/* Balance General Horizontal */
+.balanceBar {
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  box-sizing: border-box;
+}
+
+.balanceInfoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.balanceTitle {
+  font-size: 0.9rem;
+  color: #182622;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+}
+
+.balanceSubtextRow {
+  font-size: 0.8rem;
+  color: #57534E;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.balanceMetricsRow {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.balanceMetricBlock {
+  text-align: right;
+}
+
+.balanceMetricBlockWithBorder {
+  text-align: right;
+  border-left: 1px solid #D6D3D1;
+  padding-left: 1.25rem;
+}
+
+.balanceMetricLabel {
+  font-size: 0.72rem;
+  color: #78716C;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.balanceMetricValueUnit {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #182622;
+}
+
+.balanceMetricUnitSpan {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.balanceMetricValueTotal {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #166534;
+}
+
+/* Badges de rentabilidad */
+.profitBadgeInternal {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.profitBadgeProfitable {
+  background-color: #DCFCE7;
+  border: 1px solid #86EFAC;
+  color: #166534;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.profitBadgeOvercost {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Modal de Confirmación y Hoja de Ruta Operativa de Planta */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(24, 38, 34, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 9999;
+}
+
+.summaryModalCard {
+  position: relative;
+  width: 100%;
+  max-width: 780px;
+  max-height: 90vh;
+  background-color: #FAF8F5;
+  border: 1px solid #D6D3D1;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.summaryModalHeader {
+  padding: 1.25rem 1.5rem;
+  background-color: #F5EFE6;
+  border-bottom: 1px solid #E5DFD5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.summaryModalTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #182622;
+  margin: 0 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summaryModalSubtitle {
+  font-size: 0.82rem;
+  color: #57534E;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.summaryModalCloseBtn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #78716C;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.summaryModalCloseBtn:hover {
+  color: #182622;
+}
+
+.summaryModalBody {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  max-height: 55vh;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.summaryTechHeaderCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summaryTechFieldLabel {
+  font-size: 0.72rem;
+  color: #78716C;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.025em;
+  margin-bottom: 0.2rem;
+}
+
+.summaryTechFieldValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.summaryStageCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: border-color 0.15s;
+}
+
+.summaryStageCard:hover {
+  border-color: #CAD5B5;
+}
+
+.summaryStageHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.summaryStageStepBadge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  background-color: #182622;
+  color: #FFFFFF;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.summaryStageTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.summaryStageText {
+  font-size: 0.82rem;
+  color: #292524;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.summaryModalFooter {
+  padding: 1rem 1.5rem;
+  background-color: #F7F4EE;
+  border-top: 1px solid #E5DFD5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btnDiscardRecipe {
+  background-color: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  padding: 0.55rem 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s;
+}
+
+.btnDiscardRecipe:hover {
+  background-color: #FEE2E2;
+  border-color: #F87171;
+  color: #7F1D1D;
+}
+
+.btnContinueEditing {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.55rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s;
+}
+
+.btnContinueEditing:hover {
+  background-color: #F5EFE6;
+  border-color: #A8A29E;
+}
+
+.btnPublishRecipe {
+  background-color: #182622;
+  border: 1px solid #182622;
+  color: #FFFFFF;
+  padding: 0.55rem 1.35rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.15s;
+}
+
+.btnPublishRecipe:hover:not(:disabled) {
+  background-color: #2C3E38;
+  border-color: #2C3E38;
+}
+
+.btnPublishRecipe:disabled {
+  background-color: #A8A29E;
+  border-color: #A8A29E;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

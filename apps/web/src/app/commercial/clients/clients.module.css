@@ -12,20 +12,77 @@
   margin: 0;
 }
 
-.form {
+.headerTitle { 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.subtitle { 
+  font-size: 0.875rem; 
+  color: #6b7280; 
+  margin-top: 0.25rem; 
+  font-weight: 400; 
+}
+
+.formContainer {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 1.25rem;
 }
 
-.formActions {
+.errorMessage {
+  margin-bottom: 1rem;
+  background-color: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #B91C1C;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.headerTitle { display: flex; flex-direction: column; }
-.subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+.requiredAsterisk {
+  color: #E11D48;
+}
+
+.uppercaseInput {
+  text-transform: uppercase;
+}
+
+.inputErrorBorder {
+  border: 1px solid #EF4444;
+}
+
+.fieldErrorText {
+  color: #DC2626;
+  font-size: 0.72rem;
+  display: block;
+  margin-top: 3px;
+}
+
+.creditDaysCol {
+  width: 50%;
+}
+
+.textareaObservations {
+  min-height: 80px;
+  resize: vertical;
+  text-transform: uppercase;
+}
+
+.summaryBanner {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #166534;
+}
+
+.btnSubmitDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

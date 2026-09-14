@@ -67,7 +67,7 @@ export function Sidebar() {
   return (
     <div className={styles.sidebar}>
       {/* Wrapper superior para alinear header y listado, dejando footer abajo */}
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+      <div className={styles.sidebarContentWrapper}>
         <div className={styles.brandWrapper}>
           <Leaf className={styles.brandLogoIcon} size={28} />
           <h1 className={styles.brandTitle}>MANNÁ</h1>

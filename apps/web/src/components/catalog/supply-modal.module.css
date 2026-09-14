@@ -1,0 +1,84 @@
+/* Estilos desacoplados para SupplyModal y sus subcomponentes */
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.errorMessage {
+  margin-bottom: 1rem;
+  background-color: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #B91C1C;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requiredAsterisk {
+  color: #E11D48;
+}
+
+.uppercaseInput {
+  text-transform: uppercase;
+}
+
+.numberRightInput {
+  text-align: right;
+}
+
+.stockHelperText {
+  font-size: 0.75rem;
+  color: #6B7280;
+  font-style: italic;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.costBaseContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.costBaseBadge {
+  font-size: 0.75rem;
+  color: #065F46;
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  align-self: flex-end;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxText {
+  font-size: 0.875rem;
+  color: #1C1917;
+}
+
+.summaryCard {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #166534;
+}
+
+.btnSubmitDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

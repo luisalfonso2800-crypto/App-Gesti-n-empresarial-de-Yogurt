@@ -1,116 +1,52 @@
 /**
  * @file page.jsx
  * @module catalog/products
- * @description Controlador principal para el catálogo de productos terminados.
- * @responsibility Punto de entrada del Next.js Router (<120 líneas).
+ * @description Controlador principal para el catálogo de productos terminados (SRP <120 líneas, 0 inline styles).
+ * @responsibility Punto de entrada del Next.js Router, delegación a tabla, modal y banner.
  * @usedBy Next.js App Router
- * @dependencies Hooks locales y componentes visuales.
+ * @dependencies React, Link, ProductsHeader, ProductsTable, ProductModal, ./products.module.css, ./hooks/useProductsPageManager
  */
 'use client';
-import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { useProductsData } from './hooks/useProductsData';
-import { useProductForm } from './hooks/useProductForm';
+
+import React, { Suspense } from 'react';
+import Link from 'next/link';
 import { ProductsHeader } from './components/ProductsHeader';
 import { ProductsTable } from './components/ProductsTable';
-import Link from 'next/link';
 import { ProductModal } from './components/ProductModal';
 import styles from './products.module.css';
+import { useProductsPageManager } from './hooks/useProductsPageManager';
 
 function ProductsContent() {
-  const { items, presentations, loading, loadingPresentations, error, fetchItems, handleToggleActive } = useProductsData();
-  const form = useProductForm({ onSuccess: fetchItems });
-  const searchParams = useSearchParams();
-  const autoOpenedRef = useRef(false);
-
-  const isBaseIntermediaMode = searchParams.get('crear') === 'base-intermedia';
-
-  // Detección de parámetro y auto-apertura con preselección de A GRANEL
-  useEffect(() => {
-    if (isBaseIntermediaMode && !autoOpenedRef.current && presentations.length > 0) {
-      autoOpenedRef.current = true;
-      form.handleOpenModal();
-      const granelPres = presentations.find(p => 
-        p.tipoEnvase === 'TANQUE_GRANEL' || 
-        p.nombre?.toUpperCase().includes('GRANEL')
-      );
-      if (granelPres) {
-        form.handleChange({ target: { name: 'idPresentacion', value: granelPres.id } });
-      }
-      // Limpiar de forma silenciosa el query param de la URL para permitir re-apertura posterior
-      if (typeof window !== 'undefined') {
-        window.history.replaceState({}, '', '/catalog/products');
-      }
-    }
-    if (!isBaseIntermediaMode) {
-      autoOpenedRef.current = false;
-    }
-  }, [isBaseIntermediaMode, presentations, form]);
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
-  
-  const paginatedProducts = items.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  const hasPresentations = presentations.length > 0;
-  const canCreate = !loadingPresentations && hasPresentations;
+  const {
+    items, loading, loadingPresentations, error, form, isBaseIntermediaMode,
+    currentPage, paginatedProducts, totalPages, ITEMS_PER_PAGE,
+    handlePageChange, hasPresentations, canCreate, autoOpenedRef
+  } = useProductsPageManager();
 
   return (
     <div>
       <ProductsHeader onNew={form.handleOpenModal} canCreate={canCreate} />
 
       {!loadingPresentations && !hasPresentations && (
-        <div style={{
-          backgroundColor: '#EFF6FF',
-          border: '1px solid #BFDBFE',
-          color: '#1E40AF',
-          padding: '0.875rem 1.25rem',
-          borderRadius: '8px',
-          marginBottom: '1.25rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          fontSize: '0.875rem',
-          gap: '1rem',
-          flexWrap: 'wrap'
-        }}>
+        <div className={styles.prereqBanner}>
           <div>
             <strong>Prerrequisito requerido:</strong> Para registrar productos terminados debe configurar primero los formatos de envase.
           </div>
-          <Link 
-            href="/catalog/presentations" 
-            style={{
-              backgroundColor: '#1E40AF',
-              color: '#FFFFFF',
-              padding: '0.45rem 0.9rem',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontWeight: 500,
-              fontSize: '0.8rem',
-              whiteSpace: 'nowrap'
-            }}
-          >
+          <Link href="/catalog/presentations" className={styles.prereqLink}>
             Configurar Presentaciones
           </Link>
         </div>
       )}
 
       {Boolean(error) && (
-        <div className={styles.errorMessage} style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '6px', color: '#B91C1C', fontSize: '0.875rem' }}>
+        <div className={styles.errorMessage}>
           {typeof error === 'string' ? error : error?.message || 'Error al cargar datos'}
         </div>
       )}
 
       <ProductsTable 
         items={paginatedProducts} loading={loading} error={error}
-        onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        onEdit={form.handleOpenModal} onToggleActive={form.handleToggleActive}
         onNew={() => form.handleOpenModal(null)}
       />
       
@@ -120,11 +56,7 @@ function ProductsContent() {
             Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, items.length)} de {items.length} productos
           </span>
           <div className={styles.paginationControls}>
-            <button 
-              className={styles.pageBtn} 
-              disabled={currentPage === 1} 
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
+            <button className={styles.pageBtn} disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
               Anterior
             </button>
             {Array.from({ length: totalPages }).map((_, idx) => (
@@ -136,11 +68,7 @@ function ProductsContent() {
                 {idx + 1}
               </button>
             ))}
-            <button 
-              className={styles.pageBtn} 
-              disabled={currentPage === totalPages} 
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
+            <button className={styles.pageBtn} disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>
               Siguiente
             </button>
           </div>
@@ -168,7 +96,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: '#6B7280' }}>Cargando catálogo de productos...</div>}>
+    <Suspense fallback={<div className={styles.loaderFallback}>Cargando catálogo de productos...</div>}>
       <ProductsContent />
     </Suspense>
   );

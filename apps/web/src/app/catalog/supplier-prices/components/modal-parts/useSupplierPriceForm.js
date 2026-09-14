@@ -1,0 +1,126 @@
+/**
+ * @file useSupplierPriceForm.js
+ * @module catalog/supplier-prices/components/modal-parts
+ * @description Hook de estado, cálculo reactivo del costo unitario y validación Poka-Yoke para SupplierPriceModal.
+ * @responsibility Administrar el ciclo de vida del formulario de precios de proveedor, normalización de datos y cálculo inverso.
+ * @usedBy apps/web/src/app/catalog/supplier-prices/components/SupplierPriceModal.jsx
+ * @dependencies react, @/lib/formatters
+ */
+import { useState, useEffect } from 'react';
+import { cleanCurrency } from '@/lib/formatters';
+
+const INITIAL_STATE = {
+  idInsumo: '',
+  idProveedor: '',
+  presentacionCompra: '',
+  cantidadPresentacion: '',
+  unidadPresentacion: '',
+  cantidadEquivalenteBase: '',
+  precioCompra: '',
+  costoUnidadBase: '',
+  observaciones: '',
+  activo: true
+};
+
+export function useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, allInsumos, allProveedores }) {
+  const [formData, setFormData] = useState(INITIAL_STATE);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (editingItem) {
+      setFormData({
+        ...editingItem,
+        precioCompra: editingItem.precioCompra || '',
+        cantidadPresentacion: editingItem.cantidadPresentacion || '',
+        cantidadEquivalenteBase: editingItem.cantidadEquivalenteBase || ''
+      });
+    } else {
+      setFormData(INITIAL_STATE);
+    }
+    setErrorMsg('');
+  }, [editingItem, isOpen]);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    let parsedValue = value;
+    if (type === 'checkbox') parsedValue = checked;
+    if (['presentacionCompra', 'unidadPresentacion', 'observaciones'].includes(name)) {
+      parsedValue = value.toUpperCase();
+    }
+    setFormData(prev => ({ ...prev, [name]: parsedValue }));
+  };
+
+  // Cálculo inverso automático del costo base
+  useEffect(() => {
+    const pc = cleanCurrency(formData.precioCompra);
+    const cb = Number(formData.cantidadEquivalenteBase);
+    
+    if (pc > 0 && cb > 0) {
+      setFormData(prev => ({ ...prev, costoUnidadBase: pc / cb }));
+    } else {
+      setFormData(prev => ({ ...prev, costoUnidadBase: '' }));
+    }
+  }, [formData.precioCompra, formData.cantidadEquivalenteBase]);
+
+  const isDirty = !!formData.idInsumo || !!formData.idProveedor || !!formData.precioCompra;
+
+  const insumoName = allInsumos.find(x => String(x.id) === String(formData.idInsumo))?.nombre || 'desconocido';
+  const proveedorName = allProveedores.find(x => String(x.id) === String(formData.idProveedor))?.nombre || 'desconocido';
+
+  const missingFields = [];
+  if (!formData.idInsumo) missingFields.push('Insumo');
+  if (!formData.idProveedor) missingFields.push('Proveedor');
+  if (!formData.presentacionCompra?.trim()) missingFields.push('Presentación de compra');
+  if (!formData.cantidadPresentacion || Number(formData.cantidadPresentacion) <= 0) missingFields.push('Cantidad presentación');
+  if (!formData.unidadPresentacion?.trim()) missingFields.push('Unidad');
+  if (!formData.cantidadEquivalenteBase || Number(formData.cantidadEquivalenteBase) <= 0) missingFields.push('Equivalente unidad base');
+  if (!formData.precioCompra) missingFields.push('Precio de compra');
+  if (!formData.costoUnidadBase) missingFields.push('Costo base');
+
+  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
+  const submitTitle = missingFields.length > 0
+    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
+    : '';
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (isSubmitDisabled) return;
+    setIsSubmitting(true);
+    setErrorMsg('');
+    
+    try {
+      const pc = cleanCurrency(formData.precioCompra);
+      const payload = {
+        ...formData,
+        presentacionCompra: (formData.presentacionCompra || '').trim().toUpperCase(),
+        unidadPresentacion: (formData.unidadPresentacion || '').trim().toUpperCase(),
+        observaciones: (formData.observaciones || '').trim().toUpperCase(),
+        cantidadPresentacion: Number(formData.cantidadPresentacion),
+        cantidadEquivalenteBase: Number(formData.cantidadEquivalenteBase),
+        precioCompra: pc,
+        costoUnidadBase: Number(formData.costoUnidadBase)
+      };
+      
+      await onSubmit(payload, editingItem);
+      onClose();
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || err.message || 'Error al guardar');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return {
+    formData,
+    isSubmitting,
+    errorMsg,
+    isDirty,
+    insumoName,
+    proveedorName,
+    isSubmitDisabled,
+    submitTitle,
+    handleChange,
+    handleSubmit
+  };
+}

@@ -1,0 +1,211 @@
+/* Estilos desacoplados para Header, Dropdown de Compras y Modales */
+
+.activeListBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  background: #F3F4F6;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.cartDropdownContainer {
+  width: 450px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cartHeaderContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.cartHeaderTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.btnCreateList {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #4F46E5;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0;
+}
+
+.btnCreateListDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.listsScrollContainer {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.syncingMessage,
+.emptyListsMessage {
+  padding: 1rem;
+  text-align: center;
+  color: #6B7280;
+  font-size: 0.875rem;
+}
+
+.listItemWrapper {
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.listItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background: #FFFFFF;
+}
+
+.listItemHeaderActive {
+  background: #F8FAFC;
+}
+
+.listItemHeaderInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.listItemHeaderText {
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.listItemBadge {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  background: #E2E8F0;
+  border-radius: 999px;
+  color: #475569;
+}
+
+.btnActionIcon {
+  background: none;
+  border: none;
+  color: #6B7280;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnActionDanger {
+  color: #EF4444;
+}
+
+.listItemsDetails {
+  padding: 0.5rem 1rem;
+  background: #F8FAFC;
+}
+
+.cartItemInfoWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+}
+
+.cartItemSubInfo {
+  font-size: 0.75rem;
+  color: #374151;
+}
+
+.cartFooterCustom {
+  margin-top: 0.5rem;
+  border-top: none;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Modales */
+.modalFormLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.modalErrorMessage {
+  background: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #B91C1C;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.modalLabel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.modalTextInput {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #D1D5DB;
+  width: 100%;
+  text-transform: uppercase;
+}
+
+.modalSummaryBanner {
+  background: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.modalWarningBanner {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #991B1B;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.modalWarningText {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+.modalActionsRow {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  justify-content: flex-end;
+}

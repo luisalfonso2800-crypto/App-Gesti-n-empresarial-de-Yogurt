@@ -1,140 +1,34 @@
 /**
  * @file SupplierPriceModal.jsx
  * @module catalog/supplier-prices/components
- * @description Modal y formulario para la creación/edición de precios de proveedor (CSS Modules + Summary).
- * @responsibility Manejar la entrada de datos, cálculo inverso automático, y envío con validación Poka-Yoke.
+ * @description Modal declarativo para creación/edición de precios de proveedor (SRP + CSS Modules).
+ * @responsibility Orquestar la presentación visual y delegar estados en useSupplierPriceForm y subcomponentes atómicos.
  * @usedBy apps/web/src/app/catalog/supplier-prices/page.jsx
- * @dependencies SmartModal, SmartSelect, CurrencySmartInput, StrictNumberInput
+ * @dependencies SmartModal, SmartSelect, ./modal-parts/SupplierPricePresentationFields, ./modal-parts/SupplierPriceEquivalenceFields, ./modal-parts/useSupplierPriceForm
  */
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
-import { formatCurrency, cleanCurrency } from '@/lib/formatters';
-import styles from '@/components/ui/SmartModal.module.css';
-import { montoATextoPesos } from '@/utils/numberToWords';
+import { cleanCurrency } from '@/lib/formatters';
+import modalStyles from '@/components/ui/SmartModal.module.css';
+import styles from './supplier-price-modal.module.css';
+import SupplierPricePresentationFields from './modal-parts/SupplierPricePresentationFields';
+import SupplierPriceEquivalenceFields from './modal-parts/SupplierPriceEquivalenceFields';
+import { useSupplierPriceForm } from './modal-parts/useSupplierPriceForm';
 
 export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, allInsumos = [], allProveedores = [] }) {
-  const [formData, setFormData] = useState({
-    idInsumo: '',
-    idProveedor: '',
-    presentacionCompra: '',
-    cantidadPresentacion: '',
-    unidadPresentacion: '',
-    cantidadEquivalenteBase: '',
-    precioCompra: '',
-    costoUnidadBase: '',
-    observaciones: '',
-    activo: true
-  });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-
-  useEffect(() => {
-    if (editingItem) {
-      setFormData({
-        ...editingItem,
-        precioCompra: editingItem.precioCompra || '',
-        cantidadPresentacion: editingItem.cantidadPresentacion || '',
-        cantidadEquivalenteBase: editingItem.cantidadEquivalenteBase || ''
-      });
-    } else {
-      setFormData({
-        idInsumo: '',
-        idProveedor: '',
-        presentacionCompra: '',
-        cantidadPresentacion: '',
-        unidadPresentacion: '',
-        cantidadEquivalenteBase: '',
-        precioCompra: '',
-        costoUnidadBase: '',
-        observaciones: '',
-        activo: true
-      });
-    }
-    setErrorMsg('');
-  }, [editingItem, isOpen]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    let parsedValue = value;
-    if (type === 'checkbox') parsedValue = checked;
-    if (['presentacionCompra', 'unidadPresentacion', 'observaciones'].includes(name)) {
-      parsedValue = value.toUpperCase();
-    }
-    setFormData(prev => ({
-      ...prev,
-      [name]: parsedValue
-    }));
-  };
-
-  // Cálculo inverso automático del costo base
-  useEffect(() => {
-    const pc = cleanCurrency(formData.precioCompra);
-    const cb = Number(formData.cantidadEquivalenteBase);
-    
-    if (pc > 0 && cb > 0) {
-      const costo = pc / cb;
-      setFormData(prev => ({ ...prev, costoUnidadBase: costo }));
-    } else {
-      setFormData(prev => ({ ...prev, costoUnidadBase: '' }));
-    }
-  }, [formData.precioCompra, formData.cantidadEquivalenteBase]);
-
-  const isDirty = !!formData.idInsumo || !!formData.idProveedor || !!formData.precioCompra;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isSubmitDisabled) return;
-    setIsSubmitting(true);
-    setErrorMsg('');
-    
-    try {
-      const pc = cleanCurrency(formData.precioCompra);
-      const payload = {
-        ...formData,
-        presentacionCompra: (formData.presentacionCompra || '').trim().toUpperCase(),
-        unidadPresentacion: (formData.unidadPresentacion || '').trim().toUpperCase(),
-        observaciones: (formData.observaciones || '').trim().toUpperCase(),
-        cantidadPresentacion: Number(formData.cantidadPresentacion),
-        cantidadEquivalenteBase: Number(formData.cantidadEquivalenteBase),
-        precioCompra: pc,
-        costoUnidadBase: Number(formData.costoUnidadBase)
-      };
-      
-      await onSubmit(payload, editingItem);
-      onClose();
-    } catch (err) {
-      setErrorMsg(err.response?.data?.message || err.message || 'Error al guardar');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const getInsumoName = () => {
-    const i = allInsumos.find(x => String(x.id) === String(formData.idInsumo));
-    return i ? i.nombre : 'desconocido';
-  };
-  
-  const getProveedorName = () => {
-    const p = allProveedores.find(x => String(x.id) === String(formData.idProveedor));
-    return p ? p.nombre : 'desconocido';
-  };
-
-  const missingFields = [];
-  if (!formData.idInsumo) missingFields.push('Insumo');
-  if (!formData.idProveedor) missingFields.push('Proveedor');
-  if (!formData.presentacionCompra?.trim()) missingFields.push('Presentación de compra');
-  if (!formData.cantidadPresentacion || Number(formData.cantidadPresentacion) <= 0) missingFields.push('Cantidad presentación');
-  if (!formData.unidadPresentacion?.trim()) missingFields.push('Unidad');
-  if (!formData.cantidadEquivalenteBase || Number(formData.cantidadEquivalenteBase) <= 0) missingFields.push('Equivalente unidad base');
-  if (!formData.precioCompra) missingFields.push('Precio de compra');
-  if (!formData.costoUnidadBase) missingFields.push('Costo base');
-
-  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
-  const submitTitle = missingFields.length > 0
-    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
-    : '';
+  const {
+    formData,
+    isSubmitting,
+    errorMsg,
+    isDirty,
+    insumoName,
+    proveedorName,
+    isSubmitDisabled,
+    submitTitle,
+    handleChange,
+    handleSubmit
+  } = useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, allInsumos, allProveedores });
 
   return (
     <SmartModal 
@@ -145,25 +39,14 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
       isSubmitting={isSubmitting}
     >
       {errorMsg && (
-        <div style={{
-          marginBottom: '1rem',
-          backgroundColor: '#FEF2F2',
-          border: '1px solid #F87171',
-          color: '#B91C1C',
-          padding: '0.6rem 0.85rem',
-          borderRadius: '6px',
-          fontSize: '0.8rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem'
-        }}>
+        <div className={styles.errorMessage}>
           <span>⚠️</span>
           <span>{errorMsg}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        <div className={styles.twoColumns}>
+      <form onSubmit={handleSubmit} className={styles.formContainer}>
+        <div className={modalStyles.twoColumns}>
           <SmartSelect
             label="Insumo"
             name="idInsumo"
@@ -185,144 +68,41 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
           />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Presentación Compra <span style={{color: '#e11d48'}}>*</span></label>
-            <input 
-              name="presentacionCompra" 
-              value={formData.presentacionCompra ?? ''} 
-              onChange={handleChange} 
-              placeholder="Ej: BOLSA x 900 ml, BULTO x 25 kg"
-              className={styles.input} 
-              style={{ textTransform: 'uppercase' }}
-              required 
-            />
-          </div>
+        <SupplierPricePresentationFields formData={formData} handleChange={handleChange} />
 
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Cant. Presentación <span style={{color: '#e11d48'}}>*</span></label>
-            <input 
-              name="cantidadPresentacion" 
-              type="text" 
-              inputMode="decimal" 
-              placeholder="0"
-              value={formData.cantidadPresentacion ?? ''} 
-              onChange={(e) => {
-                let val = e.target.value.replace(/[^0-9.]/g, '');
-                if ((val.match(/\./g) || []).length > 1) val = val.replace(/\.+$/, '');
-                handleChange({ target: { name: 'cantidadPresentacion', value: val } });
-              }}
-              className={styles.input} 
-              required 
-            />
-          </div>
+        <SupplierPriceEquivalenceFields formData={formData} handleChange={handleChange} />
 
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Unidad <span style={{color: '#e11d48'}}>*</span></label>
-            <input 
-              name="unidadPresentacion" 
-              value={formData.unidadPresentacion ?? ''} 
-              onChange={handleChange} 
-              placeholder="Ej: KG, LITRO"
-              className={styles.input} 
-              style={{ textTransform: 'uppercase' }}
-              required 
-            />
-          </div>
-        </div>
-
-        <div className={styles.twoColumns}>
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Equivalente Unidad Base <span style={{color: '#e11d48'}}>*</span></label>
-            <input 
-              name="cantidadEquivalenteBase" 
-              type="text" 
-              inputMode="numeric" 
-              value={formData.cantidadEquivalenteBase ?? ''} 
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
-                handleChange({ target: { name: 'cantidadEquivalenteBase', value: val } });
-              }}
-              placeholder="Ej: 25000 (para gramos)"
-              className={styles.input} 
-              required 
-            />
-          </div>
-
-          <div className={styles.inputGroup}>
-            <label className={styles.label}>Precio de Compra ($) <span style={{color: '#e11d48'}}>*</span></label>
-            <input
-              name="precioCompra"
-              type="text"
-              inputMode="numeric"
-              min="0"
-              placeholder="0"
-              value={formData.precioCompra ? String(formData.precioCompra).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
-              onChange={(e) => {
-                const raw = e.target.value.replace(/\D/g, '');
-                handleChange({ target: { name: 'precioCompra', value: raw } });
-              }}
-              onKeyDown={(e) => {
-                if (e.key === '-') e.preventDefault();
-              }}
-              className={styles.input}
-              required
-            />
-            {formData.precioCompra && parseInt(String(formData.precioCompra).replace(/\D/g, ''), 10) > 0 && (
-              <span style={{ fontSize: '0.75rem', color: '#065F46', marginTop: '0.25rem', display: 'block', fontWeight: '600' }}>
-                ✦ {montoATextoPesos(parseInt(String(formData.precioCompra).replace(/\D/g, ''), 10))}
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: '#fafaf9', border: '1px solid #e7e5e4', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: '#57534e', fontWeight: 500 }}>Costo Calculado (Unidad Base):</span>
-            <span style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#1c1917' }}>
-              {formData.costoUnidadBase ? (
-                `$ ${Number(formData.costoUnidadBase).toLocaleString('es-CO', {
-                  minimumFractionDigits: Number(formData.costoUnidadBase) % 1 !== 0 ? 2 : 0,
-                  maximumFractionDigits: 2
-                })}`
-              ) : '$ 0'}
-            </span>
-          </div>
-          <p style={{ fontSize: '0.75rem', color: '#78716c', marginTop: '0.25rem' }}>Cálculo automático: Precio Compra ÷ Equivalente Base</p>
-        </div>
-
-        <div className={styles.inputGroup}>
-          <label className={styles.label}>Observaciones</label>
+        <div className={modalStyles.inputGroup}>
+          <label className={modalStyles.label}>Observaciones</label>
           <input 
             name="observaciones" 
             value={formData.observaciones ?? ''} 
             onChange={handleChange} 
-            className={styles.input} 
-            style={{ textTransform: 'uppercase' }}
+            className={`${modalStyles.input} ${styles.uppercaseInput}`}
           />
         </div>
 
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', userSelect: 'none' }}>
+        <label className={styles.checkboxLabel}>
           <input 
             type="checkbox" 
             name="activo" 
             checked={formData.activo} 
-            onChange={handleChange}
+            onChange={handleChange} 
           />
-          <span style={{ fontSize: '0.875rem', color: '#1c1917' }}>Mantener precio activo</span>
+          <span className={styles.checkboxText}>Mantener precio activo</span>
         </label>
 
         {formData.idInsumo && formData.idProveedor && (
-          <div style={{ marginTop: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '6px', fontSize: '0.76rem', color: '#166534' }}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el precio de compra del insumo <strong>{getInsumoName()}</strong> con el proveedor <strong>{getProveedorName()}</strong>. El sistema procesará el costo de <strong>${Number(cleanCurrency(formData.precioCompra) || 0).toLocaleString('es-CO')}</strong> para obtener un valor unitario base de <strong>${Number(formData.costoUnidadBase || 0).toLocaleString('es-CO', { minimumFractionDigits: Number(formData.costoUnidadBase) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })}</strong>.
+          <div className={styles.summaryCard}>
+            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el precio de compra del insumo <strong>{insumoName}</strong> con el proveedor <strong>{proveedorName}</strong>. El sistema procesará el costo de <strong>${Number(cleanCurrency(formData.precioCompra) || 0).toLocaleString('es-CO')}</strong> para obtener un valor unitario base de <strong>${Number(formData.costoUnidadBase || 0).toLocaleString('es-CO', { minimumFractionDigits: Number(formData.costoUnidadBase) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })}</strong>.
           </div>
         )}
 
-        <div className={styles.actions}>
+        <div className={modalStyles.actions}>
           <button 
             type="button" 
             onClick={onClose}
-            className={styles.btnCancel}
+            className={modalStyles.btnCancel}
           >
             Cancelar
           </button>
@@ -331,7 +111,7 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
             text="Guardar Precio"
             disabled={isSubmitDisabled}
             title={submitTitle}
-            style={isSubmitDisabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            className={isSubmitDisabled ? styles.btnSubmitDisabled : ''}
           />
         </div>
       </form>

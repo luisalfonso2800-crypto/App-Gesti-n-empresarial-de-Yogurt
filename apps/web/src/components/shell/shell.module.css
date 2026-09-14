@@ -24,6 +24,13 @@
   user-select: none;
 }
 
+.sidebarContentWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Header: Logotipo y Marca */
 .brandWrapper {
   display: flex;

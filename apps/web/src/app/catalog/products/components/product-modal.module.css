@@ -1,0 +1,329 @@
+/* Estilos desacoplados para ProductModal y sus subcomponentes */
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.errorMessage {
+  margin-bottom: 1rem;
+  background-color: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #B91C1C;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  fontSize: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requiredAsterisk {
+  color: #E11D48;
+}
+
+.uppercaseInput {
+  text-transform: uppercase;
+}
+
+/* Tarjeta WIP granel */
+.wipNoticeCard {
+  grid-column: 1 / -1;
+  width: 100%;
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 0.65rem 0.95rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  box-sizing: border-box;
+}
+
+.wipNoticeIcon {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.wipNoticeContent {
+  font-size: 0.76rem;
+  color: #1E40AF;
+  line-height: 1.35;
+}
+
+.wipHintBox {
+  width: 100%;
+  background-color: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  box-sizing: border-box;
+}
+
+.wipHintIcon {
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+.wipHintText {
+  font-size: 0.73rem;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.canalHintBox {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  color: #334155;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  margin-top: 0.35rem;
+  line-height: 1.3;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.canalHintIcon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.wipConceptText {
+  grid-column: 1 / -1;
+  color: #475569;
+  font-size: 0.74rem;
+  line-height: 1.35;
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+/* Image upload row */
+.imagePresetsRow {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+  align-items: center;
+}
+
+.presetThumb {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.presetThumbSelected {
+  border: 2px solid #1C3F35;
+}
+
+.presetThumbUnselected {
+  border: 1px solid #CCCCCC;
+}
+
+.btnUploadLocalImage {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  background: #F7F4EE;
+  border: 1px solid #D97706;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #1C3F35;
+  font-weight: 500;
+}
+
+.imagePreviewRow {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.imageInputFlex {
+  flex: 1;
+}
+
+.imagePreviewThumb {
+  width: 70px;
+  height: 70px;
+  border-radius: 8px;
+  object-fit: cover;
+  background-color: #FBF9F5;
+  border: 2px solid #D97706;
+}
+
+/* Costing and financial */
+.bulkCostingCard {
+  grid-column: 1 / -1;
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-top: 0.5rem;
+}
+
+.bulkCostingHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.bulkCostingText {
+  margin: 0 0 0.65rem 0;
+  font-size: 0.75rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.bulkCostingGuideBox {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.73rem;
+  color: #1E40AF;
+  line-height: 1.4;
+}
+
+.bulkCostingGuideTitle {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.bulkCostingGuideList {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+/* Commercial pricing and margin */
+.commercialPricingGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.85rem;
+}
+
+.currencyInWordsText {
+  font-size: 0.75rem;
+  color: #065F46;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 600;
+}
+
+.projectionCard {
+  grid-column: 1 / -1;
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-top: 0.25rem;
+}
+
+.projectionGuideText {
+  font-size: 0.74rem;
+  color: #64748B;
+  line-height: 1.35;
+}
+
+.projectionMetricsBoxGreen {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  padding: 0.55rem 0.85rem;
+}
+
+.projectionMetricsBoxAmber {
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+  padding: 0.55rem 0.85rem;
+}
+
+.projectionMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  text-align: center;
+  margin-bottom: 0.45rem;
+}
+
+.projectionMetricLabel {
+  display: block;
+  font-size: 0.66rem;
+  color: #64748B;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.projectionMetricValue {
+  font-size: 0.88rem;
+  color: #0F172A;
+}
+
+.projectionMetricGainGreen {
+  font-size: 0.88rem;
+  color: #166534;
+}
+
+.projectionMetricGainAmber {
+  font-size: 0.88rem;
+  color: #B45309;
+}
+
+.projectionExplanationGreen {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #166534;
+  border-top: 1px solid #DCFCE7;
+  padding-top: 0.35rem;
+  text-align: center;
+}
+
+.projectionExplanationAmber {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #B45309;
+  border-top: 1px solid #FEF3C7;
+  padding-top: 0.35rem;
+  text-align: center;
+}
+
+.activeCheckboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.activeCheckboxText {
+  font-size: 0.875rem;
+  color: #1C1917;
+}
+
+.productSummaryBanner {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #166534;
+}
+
+.btnSubmitDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

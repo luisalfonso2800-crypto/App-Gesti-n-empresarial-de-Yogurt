@@ -1,0 +1,57 @@
+/* Estilos desacoplados para GlobalInventoryAdjustmentModal y sus subcomponentes */
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.errorMessage {
+  margin-bottom: 1rem;
+  background-color: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #B91C1C;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requiredAsterisk {
+  color: #E11D48;
+}
+
+.uppercaseInput {
+  text-transform: uppercase;
+}
+
+.unitHelperText {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.summaryBox {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.btnSubmitDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

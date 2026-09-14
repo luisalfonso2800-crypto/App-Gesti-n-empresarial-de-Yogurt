@@ -1,0 +1,170 @@
+/* Estilos complementarios para ProductionModal y sus subcomponentes */
+
+.formFlexColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #57534E;
+  margin-bottom: 0.5rem;
+}
+
+.dateErrorText {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #DC2626;
+  font-weight: 500;
+}
+
+/* Sección Wip Parent Lot */
+.wipParentLotCard {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.wipHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.wipIcon {
+  color: #0369A1;
+}
+
+.wipTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0369A1;
+  font-weight: 600;
+}
+
+.wipRequirementText {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.825rem;
+  color: #64748B;
+}
+
+.wipHelperText {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.78rem;
+  color: #0369A1;
+  font-style: italic;
+}
+
+.wipLoadingText {
+  font-size: 0.85rem;
+  color: #64748B;
+}
+
+.wipEmptyAlert {
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 4px;
+  padding: 0.75rem;
+  color: #991B1B;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wipSelectContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wipSelectLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.wipErrorInsufficient {
+  font-size: 0.775rem;
+  color: #DC2626;
+  font-weight: 600;
+}
+
+/* Poka Yoke Resumen & Alert */
+.pokaYokeIconSuccess {
+  flex-shrink: 0;
+  color: #16A34A;
+}
+
+.pokaYokeIconError {
+  flex-shrink: 0;
+  color: #DC2626;
+}
+
+.pokaYokeWipConsumeInfo {
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #15803D;
+}
+
+/* Variantes */
+.variantLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* BOM Badge */
+.bomWipBadge {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  background-color: #E0F2FE;
+  color: #0369A1;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+/* Complete View */
+.completeDateContainer {
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+
+.completeParentLotBox {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 500px;
+}
+
+.completeParentLotLabel {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 0.5rem;
+}
+
+.btnReturn {
+  width: fit-content;
+  margin-top: 1rem;
+}
+
+.btnSubmitCreateDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSubmitCreateEnabled {
+  opacity: 1;
+  cursor: pointer;
+}

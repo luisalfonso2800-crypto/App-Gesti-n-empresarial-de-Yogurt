@@ -1,0 +1,73 @@
+/* Estilos desacoplados para SupplierModal y sus subcomponentes */
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.errorMessage {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background-color: #FEF2F2;
+  border: 1px solid #F87171;
+  border-radius: 6px;
+  color: #991B1B;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requiredAsterisk {
+  color: #E11D48;
+}
+
+.uppercaseInput {
+  text-transform: uppercase;
+}
+
+.inputErrorBorder {
+  border: 1px solid #EF4444;
+}
+
+.fieldErrorText {
+  color: #DC2626;
+  font-size: 0.72rem;
+  display: block;
+  margin-top: 3px;
+}
+
+.textareaObservations {
+  min-height: 80px;
+  resize: vertical;
+  text-transform: uppercase;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxText {
+  font-size: 0.875rem;
+  color: #1C1917;
+}
+
+.summaryCard {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #166534;
+}
+
+.btnSubmitDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

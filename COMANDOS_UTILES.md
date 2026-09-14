@@ -21,6 +21,9 @@ pnpm --filter web run dev --turbo
 
 ---
 
+# 3. Levantar backend y frontend simultáneamente
+pnpm dev
+
 ## 🗄️ 2. Gestión de Base de Datos (Prisma)
 
 Estos comandos son para administrar tu PostgreSQL usando Prisma.

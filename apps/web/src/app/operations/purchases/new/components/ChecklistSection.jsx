@@ -7,10 +7,10 @@ export function ChecklistSection({ items, checklistMgr, proveedoresDB, setPendin
 
   return (
     <div className={styles.checklistSection}>
-      <div className={styles.header} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <h3 style={{ margin: 0, fontSize: '1rem' }}>Progreso: {conseguidos} de {items.length} conseguidos</h3>
+      <div className={styles.sectionProgressHeader}>
+        <h3 className={styles.sectionProgressTitle}>Progreso: {conseguidos} de {items.length} conseguidos</h3>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className={styles.sectionItemsList}>
         {items.map(item => (
           <ChecklistItemRow 
             key={item._id} 

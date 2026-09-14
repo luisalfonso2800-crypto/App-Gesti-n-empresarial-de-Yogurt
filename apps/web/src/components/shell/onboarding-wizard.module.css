@@ -19,6 +19,11 @@
   transition: all 0.2s ease;
 }
 
+.onboardingTriggerLoading {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .onboardingTrigger:hover {
   background-color: #f3f4f6;
   border-color: #9ca3af;
@@ -62,6 +67,14 @@
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
+
+.progress0 { width: 0%; }
+.progress17 { width: 17%; }
+.progress33 { width: 33%; }
+.progress50 { width: 50%; }
+.progress67 { width: 67%; }
+.progress83 { width: 83%; }
+.progress100 { width: 100%; }
 
 .onboardingDropdown {
   position: absolute;
@@ -196,6 +209,13 @@
   text-overflow: ellipsis;
 }
 
+.warningPendingText {
+  font-size: 0.66rem;
+  color: #b45309;
+  font-weight: 500;
+  margin-top: 1px;
+}
+
 .stepActionBtn {
   font-size: 0.72rem;
   font-weight: 600;
@@ -226,4 +246,26 @@
   align-items: center;
   font-size: 0.72rem;
   color: #6b7280;
+}
+
+.btnFooterRefresh {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #6b7280;
+  font-size: 0.72rem;
+  padding: 0;
+}
+
+.btnFooterClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 0.72rem;
+  padding: 0;
 }

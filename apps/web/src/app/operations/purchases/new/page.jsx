@@ -36,8 +36,8 @@ function NewPurchasePageContent() {
 
   if (isInitializing) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f9fafb' }}>
-        <div style={{ color: '#6b7280', fontSize: '1.125rem' }}>Cargando módulo de compras...</div>
+      <div className={styles.initializingContainer}>
+        <div className={styles.initializingText}>Cargando módulo de compras...</div>
       </div>
     );
   }

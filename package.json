@@ -9,6 +9,7 @@
     "test:e2e": "pnpm --filter api test:e2e",
     "build:api": "pnpm --filter api build",
     "build:web": "pnpm --filter web build --no-lint",
-    "build": "pnpm --filter api build && pnpm --filter web build --no-lint"
+    "build": "pnpm --filter api build && pnpm --filter web build --no-lint",
+    "verify:srp": "node .agents/scripts/verify-srp.js"
   }
 }

@@ -1,0 +1,101 @@
+/* Estilos desacoplados para SupplierPriceModal y sus subcomponentes */
+
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.errorMessage {
+  margin-bottom: 1rem;
+  background-color: #FEF2F2;
+  border: 1px solid #F87171;
+  color: #B91C1C;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  fontSize: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.requiredAsterisk {
+  color: #E11D48;
+}
+
+.uppercaseInput {
+  text-transform: uppercase;
+}
+
+.presentationGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.priceWords {
+  font-size: 0.75rem;
+  color: #065F46;
+  margin-top: 0.25rem;
+  display: block;
+  font-weight: 600;
+}
+
+.costCard {
+  background-color: #FAFAF9;
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.5rem;
+}
+
+.costHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.costLabel {
+  color: #57534E;
+  font-weight: 500;
+}
+
+.costValue {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #1C1917;
+}
+
+.costHelperText {
+  font-size: 0.75rem;
+  color: #78716C;
+  margin-top: 0.25rem;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkboxText {
+  font-size: 0.875rem;
+  color: #1C1917;
+}
+
+.summaryCard {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  color: #166534;
+}
+
+.btnSubmitDisabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

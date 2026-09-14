@@ -284,3 +284,44 @@
   gap: 1rem;
   margin-top: 2rem;
 }
+
+.kpiIconValor {
+  background-color: #ECFDF5;
+  color: #059669;
+}
+
+.kpiIconAgotados {
+  background-color: #FEF2F2;
+  color: #DC2626;
+}
+
+.kpiIconBajoMinimo {
+  background-color: #FFFBEB;
+  color: #D97706;
+}
+
+.thRight, .tdRight {
+  text-align: right;
+}
+
+.thCenter, .tdCenter {
+  text-align: center;
+}
+
+.tdValorization {
+  text-align: right;
+  font-weight: 600;
+}
+
+.tdZeroPadding {
+  padding: 0;
+}
+
+.positiveText {
+  color: #059669;
+}
+
+.negativeText {
+  color: #DC2626;
+}
+

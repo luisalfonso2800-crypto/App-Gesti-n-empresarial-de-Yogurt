@@ -45,3 +45,12 @@
   color: #dc2626;
   font-weight: 600;
 }
+
+.textRight {
+  text-align: right;
+}
+
+.btnIcon {
+  margin-right: 4px;
+}
+
