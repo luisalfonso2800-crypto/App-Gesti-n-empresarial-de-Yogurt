@@ -109,7 +109,7 @@ export function ProductBasicFields({
         </div>
 
         {/* Micro-texto explicativo de Semielaborado (WIP) */}
-        {(isGranel || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS'].includes(formData.categoria)) && (
+        {(isGranel || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL'].includes(formData.categoria)) && (
           <div className={styles.wipConceptText}>
             💡 <strong>¿Qué es un Semielaborado (WIP - Work in Process)?</strong> Es un producto intermedio elaborado dentro de la planta (ej. Base Blanca de yogur, jalea casera de frutos) que no se comercializa de forma directa al público, sino que se almacena temporalmente a granel (litros/kilos) para ser consumido como materia prima en las recetas de envasado final.
           </div>

@@ -1,0 +1,175 @@
+.previewCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px -4px rgba(24, 38, 34, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+}
+
+.bannerContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-color: #F7F4EE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-bottom: 1px solid #E8E2D7;
+}
+
+.bannerImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  transition: transform 0.3s ease;
+}
+
+.bannerGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 45%;
+  background: linear-gradient(to top, rgba(24, 38, 34, 0.45) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.bannerBadges {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  display: flex;
+  gap: 0.35rem;
+  z-index: 2;
+}
+
+.typeBadge {
+  background-color: rgba(24, 38, 34, 0.85);
+  color: #FAF8F5;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+  backdrop-filter: blur(4px);
+}
+
+.cardBody {
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.productTitle {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #182622;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.presentationSubtitle {
+  font-size: 0.78rem;
+  color: #78716C;
+  font-weight: 500;
+}
+
+.categoryTag {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+}
+
+.metricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.metricLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #78716C;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.metricValue {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+  font-family: monospace;
+}
+
+.internalCostValue {
+  color: #78716C;
+  font-size: 0.8rem;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.recipeStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.recipeActive {
+  background-color: #F0FDF4;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+
+.recipeMissing {
+  background-color: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.descriptionSection {
+  border-top: 1px solid #F4F1EA;
+  padding-top: 0.65rem;
+}
+
+.descriptionLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #78716C;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.descriptionText {
+  font-size: 0.8rem;
+  color: #44403C;
+  line-height: 1.35;
+  margin: 0;
+}

@@ -21,7 +21,7 @@ export function ProductsHeader({ onNew, canCreate = true }) {
         onClick={() => { if (canCreate) onNew(); }}
         disabled={!canCreate}
         title={!canCreate ? 'Debe registrar al menos una Presentación antes de crear productos' : 'Registrar nuevo producto'}
-        style={!canCreate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        className={!canCreate ? styles.btnNewProductDisabled : ''}
       >
         Nuevo Registro
       </Button>

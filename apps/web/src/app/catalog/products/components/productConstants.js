@@ -9,12 +9,14 @@
 export const CATEGORIAS_WIP = [
   { id: 'BASES_LACTEAS', label: 'Bases Lácteas (Yogur base blanco, leche cultivada en tanque)' },
   { id: 'DULCES_JALEAS', label: 'Dulces y Jaleas (Fruta cocida, jaleas en marmita)' },
+  { id: 'TOPPING_CEREAL', label: 'Topping / Cereal Porcionado (WIP)' },
   { id: 'INSUMO_BASE_WIP', label: 'Otras Premezclas de Planta (Jarabes, estabilizantes, no lácteos)' }
 ];
 
 export const HINTS_CATEGORIA_WIP = {
   BASES_LACTEAS: { icon: '🥛', text: 'Yogur natural base, leche fermentada o base para yogur griego antes de filtrar o saborizar. Se almacena por litros en tanques o cavas.' },
   DULCES_JALEAS: { icon: '🍓', text: 'Preparados artesanales de fruta (fresa, mora, melocotón, maracuyá) cocinados en paila o marmita para mezclar o fondear el yogur.' },
+  TOPPING_CEREAL: { icon: '🥣', text: 'Copitas, domos o recipientes dosificados de cereal, granola o aditamentos porcionados para ensamble comercial en planta.' },
   INSUMO_BASE_WIP: { icon: '⚙️', text: 'Premezclas líquidas intermedias que no sean leche ni dulce (ej. jarabes invertidos, mezclas de féculas o neutros).' }
 };
 

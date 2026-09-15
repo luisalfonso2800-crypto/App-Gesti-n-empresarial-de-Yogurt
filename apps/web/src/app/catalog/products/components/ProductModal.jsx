@@ -45,7 +45,7 @@ export function ProductModal({
         handleChange({ target: { name: 'margenObjetivo', value: 0 } });
       }
     } else {
-      if (!formData.categoria || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS'].includes(formData.categoria)) {
+      if (!formData.categoria || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL'].includes(formData.categoria)) {
         handleChange({ target: { name: 'categoria', value: 'LACTEOS' } });
       }
       if (formData.canalVenta === 'USO_INTERNO') {

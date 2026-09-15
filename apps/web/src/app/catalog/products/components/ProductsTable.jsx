@@ -2,21 +2,32 @@
  * @file ProductsTable.jsx
  * @module catalog/products/components
  * @description Listado de productos finales de la planta.
- * @responsibility Renderizar tabla interactiva con CRUD.
+ * @responsibility Renderizar tabla interactiva con CRUD delegando filas a ProductTableRow.
  * @usedBy apps/web/src/app/catalog/products/page.jsx
- * @dependencies @/components/ui/Table, Badge, Button, States
+ * @dependencies @/components/ui/Table, States, AssistedEmptyState, ProductTableRow
  */
 import React from 'react';
-import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { Table, THead, TBody, TR, TH } from '@/components/ui/Table';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
-import { resolveProductImage } from '@/lib/presetImages';
-import ProductAvatar from '@/components/ui/ProductAvatar';
-import styles from '../products.module.css';
+import { ProductTableRow } from './ProductTableRow';
+import styles from './products-table.module.css';
 
-export function ProductsTable({ items, loading, error, onEdit, onToggleActive, onNew }) {
+export function ProductsTable({
+  items,
+  recipes = [],
+  loading,
+  error,
+  selectedIds = [],
+  onToggleSelect,
+  onToggleSelectAll,
+  hoveredProductId,
+  onHoverProduct,
+  onEdit,
+  onToggleActive = () => {},
+  onDelete,
+  onNew
+}) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
   if (items.length === 0) {
@@ -32,46 +43,42 @@ export function ProductsTable({ items, loading, error, onEdit, onToggleActive, o
     );
   }
 
+  const allSelected = items.length > 0 && items.every(item => selectedIds.includes(item.id));
+  const someSelected = items.some(item => selectedIds.includes(item.id));
+
   return (
     <Table>
       <THead>
         <TR>
+          <TH className={styles.checkboxCell}>
+            <input
+              type="checkbox"
+              className={styles.rowCheckbox}
+              checked={allSelected}
+              ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+              onChange={() => onToggleSelectAll && onToggleSelectAll(items)}
+              aria-label="Seleccionar todos los productos de esta página"
+            />
+          </TH>
           <TH>Imagen</TH>
           <TH>Nombre</TH>
           <TH>Categoría</TH>
           <TH>Precio Venta</TH>
           <TH>Estado</TH>
-          <TH>Acciones</TH>
+          <TH className={styles.actionsHeader}>Acciones</TH>
         </TR>
       </THead>
       <TBody>
         {items.map((item) => (
-          <TR key={item.id} style={{ minHeight: '85px', height: '85px' }}>
-            <TD style={{ width: '20%', verticalAlign: 'middle', textAlign: 'center' }}>
-              <ProductAvatar 
-                src={resolveProductImage(item)} 
-                alt={item.nombre} 
-                name={item.nombre}
-                fluid={true} 
-              />
-            </TD>
-            <TD>{item.nombre}</TD>
-            <TD>{item.categoria}</TD>
-            <TD>{item.precioVenta}</TD>
-            <TD>
-              <Badge status={item.activo ? 'active' : 'inactive'}>
-                {item.activo ? 'Activo' : 'Inactivo'}
-              </Badge>
-            </TD>
-            <TD>
-              <div className={styles.actions}>
-                <Button variant="secondary" onClick={() => onEdit(item)}>Editar</Button>
-                <Button variant={item.activo ? 'danger' : 'primary'} onClick={() => onToggleActive(item)}>
-                  {item.activo ? 'Desactivar' : 'Activar'}
-                </Button>
-              </div>
-            </TD>
-          </TR>
+          <ProductTableRow
+            key={item.id}
+            item={item}
+            isSelected={selectedIds.includes(item.id)}
+            onToggleSelect={onToggleSelect}
+            isHovered={String(hoveredProductId) === String(item.id)}
+            onHoverProduct={onHoverProduct}
+            onEdit={onEdit}
+          />
         ))}
       </TBody>
     </Table>

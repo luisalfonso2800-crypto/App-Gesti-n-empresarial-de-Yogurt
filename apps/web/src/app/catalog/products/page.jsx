@@ -1,94 +1,109 @@
 /**
  * @file page.jsx
  * @module catalog/products
- * @description Controlador principal para el catálogo de productos terminados (SRP <120 líneas, 0 inline styles).
- * @responsibility Punto de entrada del Next.js Router, delegación a tabla, modal y banner.
+ * @description Controlador principal para el catálogo de productos terminados (SRP <105 líneas, 0 inline styles).
+ * @responsibility Punto de entrada del Next.js Router, layout 2 columnas y delegación modular.
  * @usedBy Next.js App Router
- * @dependencies React, Link, ProductsHeader, ProductsTable, ProductModal, ./products.module.css, ./hooks/useProductsPageManager
+ * @dependencies React, ProductsHeader, ProductPageNotices, ProductBulkActionBar, ProductsTable, ProductPreviewCard, ProductsPagination, ProductsModalsContainer
  */
 'use client';
 
 import React, { Suspense } from 'react';
-import Link from 'next/link';
 import { ProductsHeader } from './components/ProductsHeader';
+import { ProductPageNotices } from './components/ProductPageNotices';
+import { ProductBulkActionBar } from './components/ProductBulkActionBar';
 import { ProductsTable } from './components/ProductsTable';
-import { ProductModal } from './components/ProductModal';
+import { ProductPreviewCard } from './components/ProductPreviewCard';
+import { ProductsPagination } from './components/ProductsPagination';
+import { ProductsModalsContainer } from './components/ProductsModalsContainer';
 import styles from './products.module.css';
 import { useProductsPageManager } from './hooks/useProductsPageManager';
+import { useProductDeleteManager } from './hooks/useProductDeleteManager';
+import { useBulkProductsActions } from './hooks/useBulkProductsActions';
 
 function ProductsContent() {
   const {
-    items, loading, loadingPresentations, error, form, isBaseIntermediaMode,
+    items, presentations, recipes, loading, loadingPresentations, error, form, isBaseIntermediaMode,
     currentPage, paginatedProducts, totalPages, ITEMS_PER_PAGE,
-    handlePageChange, hasPresentations, canCreate, autoOpenedRef
+    handlePageChange, fetchItems, handleToggleActive, deleteProduct, actionNotice, clearActionNotice, notifyUser,
+    selectedIds, handleToggleSelect, handleToggleSelectAll, handleClearSelection,
+    hasPresentations, canCreate, autoOpenedRef, hoveredProduct, setHoveredProduct
   } = useProductsPageManager();
+
+  const {
+    deletingItem, isDeleting, deleteError,
+    handleOpenDelete, handleCloseDelete, handleConfirmDelete
+  } = useProductDeleteManager({ onDeleteProduct: deleteProduct });
+
+  const {
+    handleBulkActivate, handleBulkDeactivate, handleBulkDelete
+  } = useBulkProductsActions({
+    onRefresh: fetchItems,
+    onNotify: notifyUser,
+    onClearSelection: handleClearSelection
+  });
 
   return (
     <div>
       <ProductsHeader onNew={form.handleOpenModal} canCreate={canCreate} />
 
-      {!loadingPresentations && !hasPresentations && (
-        <div className={styles.prereqBanner}>
-          <div>
-            <strong>Prerrequisito requerido:</strong> Para registrar productos terminados debe configurar primero los formatos de envase.
-          </div>
-          <Link href="/catalog/presentations" className={styles.prereqLink}>
-            Configurar Presentaciones
-          </Link>
-        </div>
-      )}
-
-      {Boolean(error) && (
-        <div className={styles.errorMessage}>
-          {typeof error === 'string' ? error : error?.message || 'Error al cargar datos'}
-        </div>
-      )}
-
-      <ProductsTable 
-        items={paginatedProducts} loading={loading} error={error}
-        onEdit={form.handleOpenModal} onToggleActive={form.handleToggleActive}
-        onNew={() => form.handleOpenModal(null)}
+      <ProductPageNotices
+        loadingPresentations={loadingPresentations}
+        hasPresentations={hasPresentations}
+        actionNotice={actionNotice}
+        clearActionNotice={clearActionNotice}
+        error={error}
       />
-      
-      {items.length > 0 && !loading && !error && (
-        <div className={styles.paginationContainer}>
-          <span className={styles.paginationInfo}>
-            Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, items.length)} de {items.length} productos
-          </span>
-          <div className={styles.paginationControls}>
-            <button className={styles.pageBtn} disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>
-              Anterior
-            </button>
-            {Array.from({ length: totalPages }).map((_, idx) => (
-              <button 
-                key={idx} 
-                className={`${styles.pageBtn} ${currentPage === idx + 1 ? styles.pageBtnActive : ''}`}
-                onClick={() => handlePageChange(idx + 1)}
-              >
-                {idx + 1}
-              </button>
-            ))}
-            <button className={styles.pageBtn} disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>
-              Siguiente
-            </button>
-          </div>
-        </div>
-      )}
 
-      <ProductModal 
-        isOpen={form.isModalOpen} 
-        onClose={() => {
-          form.handleCloseModal();
-          autoOpenedRef.current = false;
-          if (typeof window !== 'undefined' && window.location.search.includes('crear=')) {
-            window.history.replaceState({}, '', '/catalog/products');
-          }
-        }}
-        editingItem={form.editingItem} formData={form.formData}
-        handleChange={form.handleChange} handleSubmit={form.handleSubmit}
-        presentations={form.presentations}
-        isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
-        isBaseIntermedia={isBaseIntermediaMode}
+      <ProductBulkActionBar
+        selectedIds={selectedIds}
+        items={items}
+        recipes={recipes}
+        onClearSelection={handleClearSelection}
+        onNotify={notifyUser}
+        onBulkActivate={handleBulkActivate}
+        onBulkDeactivate={handleBulkDeactivate}
+        onBulkDelete={(ids) => handleOpenDelete({ ids, count: ids.length })}
+      />
+
+      <div className={styles.productsLayout}>
+        <div className={styles.tableColumn}>
+          <ProductsTable 
+            items={paginatedProducts} loading={loading} error={error}
+            recipes={recipes} selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect} onToggleSelectAll={handleToggleSelectAll}
+            hoveredProductId={hoveredProduct?.id} onHoverProduct={setHoveredProduct}
+            onEdit={form.handleOpenModal} onNew={() => form.handleOpenModal(null)}
+          />
+          
+          {!loading && !error && (
+            <ProductsPagination
+              currentPage={currentPage} totalPages={totalPages}
+              totalItems={items.length} itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={handlePageChange}
+            />
+          )}
+        </div>
+
+        {!loading && paginatedProducts.length > 0 && (
+          <div className={styles.previewColumn}>
+            <ProductPreviewCard
+              product={hoveredProduct || paginatedProducts[0]}
+              recipes={recipes}
+            />
+          </div>
+        )}
+      </div>
+
+      <ProductsModalsContainer
+        form={form}
+        autoOpenedRef={autoOpenedRef}
+        isBaseIntermediaMode={isBaseIntermediaMode}
+        deletingItem={deletingItem}
+        isDeleting={isDeleting}
+        deleteError={deleteError}
+        handleConfirmDelete={handleConfirmDelete}
+        handleCloseDelete={handleCloseDelete}
       />
     </div>
   );

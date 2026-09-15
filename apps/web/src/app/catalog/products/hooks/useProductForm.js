@@ -96,6 +96,7 @@ export function useProductForm({ onSuccess }) {
       }
       handleCloseModal();
       if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('onboarding:refresh'));
         window.dispatchEvent(new Event('onboarding-refresh'));
       }
       if (onSuccess) onSuccess();
