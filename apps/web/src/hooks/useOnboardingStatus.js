@@ -41,10 +41,12 @@ export function useOnboardingStatus() {
     };
 
     if (typeof window !== 'undefined') {
+      window.addEventListener('onboarding:refresh', handleRefresh);
       window.addEventListener('onboarding-refresh', handleRefresh);
     }
     return () => {
       if (typeof window !== 'undefined') {
+        window.removeEventListener('onboarding:refresh', handleRefresh);
         window.removeEventListener('onboarding-refresh', handleRefresh);
       }
     };

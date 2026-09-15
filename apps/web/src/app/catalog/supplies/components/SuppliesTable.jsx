@@ -14,7 +14,17 @@ import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import styles from '../supplies.module.css';
 
-export function SuppliesTable({ items, loading, error, searchTerm, categoryFilter, onEdit, onToggleActive, onNew }) {
+export function SuppliesTable({
+  items,
+  loading,
+  error,
+  searchTerm,
+  categoryFilter,
+  onEdit,
+  onToggleActive,
+  onDelete,
+  onNew
+}) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
   if (items.length === 0) {
@@ -77,6 +87,11 @@ export function SuppliesTable({ items, loading, error, searchTerm, categoryFilte
                 <Button variant={item.activo ? 'danger' : 'primary'} onClick={() => onToggleActive(item)}>
                   {item.activo ? 'Desactivar' : 'Activar'}
                 </Button>
+                {!item.activo && onDelete && (
+                  <Button variant="danger" onClick={() => onDelete(item)}>
+                    Eliminar Definitivamente
+                  </Button>
+                )}
               </div>
             </TD>
           </TR>

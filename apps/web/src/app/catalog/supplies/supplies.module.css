@@ -10,3 +10,39 @@
 
 .headerTitle { display: flex; flex-direction: column; }
 .subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+
+.confirmText { font-size: 0.95rem; color: #1f2937; margin: 0; line-height: 1.5; }
+.confirmSubtext { font-size: 0.85rem; color: #6b7280; margin: 0; line-height: 1.4; }
+.alertDanger {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.toastAlert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fef2f2;
+  border: 1px solid #f87171;
+  color: #991b1b;
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.toastClose {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #991b1b;
+  padding: 0;
+  line-height: 1;
+}

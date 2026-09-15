@@ -14,6 +14,7 @@ import styles from './header.module.css';
 import { ShoppingCartIcon } from '@/components/ui/icons';
 import { Layers } from 'lucide-react';
 import { OnboardingWizardWidget } from './OnboardingWizardWidget';
+import { PlantToolsModal } from '@/components/common/tools/PlantToolsModal';
 import { useHeaderCart } from './parts/useHeaderCart';
 import HeaderCartDropdown from './parts/HeaderCartDropdown';
 import HeaderCartModals from './parts/HeaderCartModals';
@@ -74,6 +75,8 @@ export function Header() {
             <Layers size={16} /> Lista Activa: {activeList.customName}
           </div>
         )}
+
+        <PlantToolsModal />
 
         <div className={shellStyles.cartContainer} ref={cartRef}>
           <button 

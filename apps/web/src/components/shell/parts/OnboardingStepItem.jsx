@@ -46,6 +46,17 @@ export default function OnboardingStepItem({
     }
   };
 
+  let stepTitle = stepItem.title;
+  let stepTooltip = stepItem.title;
+
+  if (stepItem.step === 4) {
+    stepTitle = 'Ficha Comercial y Receta de Base (Tanque)';
+    stepTooltip = '1° Semielaborado a granel (Tanque WIP) requerido antes de ensamblar productos comerciales';
+  } else if (stepItem.step === 5) {
+    stepTitle = 'Fabricar Primer Lote Comercial (Producto Terminado)';
+    stepTooltip = '2° Ensamblar la base con envases y presentación para poder pasar a la venta final';
+  }
+
   return (
     <div
       className={`${styles.stepItem} ${isCurrent ? styles.stepItemActive : ''} ${isDone ? styles.stepItemDone : ''}`}
@@ -63,13 +74,19 @@ export default function OnboardingStepItem({
           {isDone ? <Check size={12} strokeWidth={3} /> : stepItem.step}
         </div>
         <div className={styles.stepTextContainer}>
-          <span className={`${styles.stepTitle} ${isCurrent ? styles.stepTitleActive : ''}`}>
-            {stepItem.title}
+          <span
+            className={`${styles.stepTitle} ${isCurrent ? styles.stepTitleActive : ''}`}
+            title={stepTooltip}
+          >
+            {stepTitle}
           </span>
           {stepItem.step === 4 ? (
             <>
-              <span className={styles.stepDetail} title="Secuencia: 1° Base en Tanque (A Granel) ➔ 2° Producto Envasado Comercial">
-                Secuencia: 1° Base en Tanque (A Granel) ➔ 2° Producto Envasado Comercial
+              <span
+                className={styles.stepDetail}
+                title="Secuencia obligatoria: 1° Base en Tanque (WIP a granel) ➔ 2° Ensamble comercial para venta"
+              >
+                1° Semielaborado a granel en tanque (WIP)
               </span>
               {productsCount > 0 && !hasBulkProduct && (
                 <span className={styles.warningPendingText}>
@@ -77,6 +94,13 @@ export default function OnboardingStepItem({
                 </span>
               )}
             </>
+          ) : stepItem.step === 5 ? (
+            <span
+              className={styles.stepDetail}
+              title="Requiere ensamblar la base con envases y presentación para habilitar el Paso 6 de Ventas"
+            >
+              2° Ensamble de base + envases para venta final ({stepItem.detail})
+            </span>
           ) : (
             <span className={styles.stepDetail}>
               {stepItem.detail}

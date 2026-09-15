@@ -8,34 +8,33 @@
  */
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  CheckCircle2, 
-  ChevronDown, 
-  ChevronUp, 
-  Sparkles, 
-  RotateCw, 
-  Compass 
-} from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { CheckCircle2, ChevronDown, ChevronUp, Sparkles, RotateCw, Compass } from 'lucide-react';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import styles from './onboarding-wizard.module.css';
 import OnboardingStepItem, { getProgressClass } from './parts/OnboardingStepItem';
 import { useOnboardingBulkCheck } from './parts/useOnboardingBulkCheck';
 
 export function OnboardingWizardWidget() {
+  const pathname = usePathname();
   const { data, loading, refreshOnboarding } = useOnboardingStatus();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
   const hasBulkProduct = useOnboardingBulkCheck(isOpen);
 
   useEffect(() => {
+    refreshOnboarding();
+    const handleRefresh = () => refreshOnboarding();
+    window.addEventListener('onboarding:refresh', handleRefresh);
     const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-      }
+      if (containerRef.current && !containerRef.current.contains(e.target)) setIsOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    return () => {
+      window.removeEventListener('onboarding:refresh', handleRefresh);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [pathname, refreshOnboarding]);
 
   if (!data && loading) {
     return (
@@ -50,17 +49,19 @@ export function OnboardingWizardWidget() {
 
   if (!data) return null;
 
-  const {
-    currentStep,
-    isCompleted,
-    progressPercentage,
-    completedStepsCount,
-    totalSteps = 6,
-    steps = []
-  } = data;
-
+  const { currentStep, isCompleted, progressPercentage, completedStepsCount, totalSteps = 6, steps = [] } = data;
   const activeStepObj = steps.find((s) => s.step === currentStep) || steps[0];
   const progressClass = getProgressClass(progressPercentage);
+
+  const activeTitle = currentStep === 4
+    ? 'Ficha Comercial y Receta de Base (Tanque)'
+    : currentStep === 5
+    ? 'Fabricar Primer Lote Comercial (Producto Terminado)'
+    : (activeStepObj?.title || '');
+
+  const triggerTitle = isCompleted
+    ? 'Planta Operativa - Ver checklist de puesta en marcha'
+    : `Paso ${currentStep}/${totalSteps}: ${activeTitle}`;
 
   return (
     <div className={styles.onboardingContainer} ref={containerRef}>
@@ -68,7 +69,7 @@ export function OnboardingWizardWidget() {
         type="button"
         className={`${styles.onboardingTrigger} ${isCompleted ? styles.onboardingCompletedTrigger : ''}`}
         onClick={() => setIsOpen(!isOpen)}
-        title={isCompleted ? 'Planta Operativa - Ver checklist de puesta en marcha' : `Paso ${currentStep}/${totalSteps}: ${activeStepObj?.title}`}
+        title={triggerTitle}
       >
         {isCompleted ? (
           <>
