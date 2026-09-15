@@ -1,4 +1,4 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, ConflictException } from '@nestjs/common';
 import { ProductsRepository } from './products.repository';
 
 @Injectable()
@@ -77,6 +77,25 @@ export class ProductsService {
 
   async remove(id) {
     await this.findOne(id);
-    return this.repository.remove(id);
+
+    const relCounts = await this.repository.countDependencies(id);
+    const counts = relCounts?._count || {};
+    const totalDependencies =
+      (counts.recetas || 0) +
+      (counts.producciones || 0) +
+      (counts.lotes || 0) +
+      (counts.detalleVentas || 0) +
+      (counts.movimientos || 0) +
+      (counts.recetasConsumo || 0) +
+      (counts.detallesProduccionConsumo || 0);
+
+    if (totalDependencies > 0) {
+      throw new ConflictException(
+        'No se puede eliminar el producto porque cuenta con historial operativo o recetas asociadas. En su lugar, desactívelo.'
+      );
+    }
+
+    await this.repository.hardDelete(id);
+    return { success: true, message: 'Producto eliminado exitosamente' };
   }
 }

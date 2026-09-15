@@ -68,4 +68,34 @@ export class ProductsRepository {
       data: { activo: false },
     });
   }
+
+  async countDependencies(id) {
+    return this.prisma.producto.findUnique({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            recetas: true,
+            producciones: true,
+            lotes: true,
+            detalleVentas: true,
+            movimientos: true,
+            recetasConsumo: true,
+            detallesProduccionConsumo: true,
+          },
+        },
+      },
+    });
+  }
+
+  async hardDelete(id) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.inventarioProducto.deleteMany({
+        where: { idProducto: id },
+      });
+      return tx.producto.delete({
+        where: { id },
+      });
+    });
+  }
 }

@@ -60,4 +60,34 @@ export class SuppliesRepository {
       data: { activo: false },
     });
   }
+
+  async countDependencies(id) {
+    return this.prisma.insumo.findUnique({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            detallesCompra: true,
+            movimientos: true,
+            detallesReceta: true,
+            detallesProduccion: true,
+            lotes: true,
+            ordenCompraItems: true,
+            precios: true,
+          },
+        },
+      },
+    });
+  }
+
+  async hardDelete(id) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.inventario.deleteMany({
+        where: { idInsumo: id },
+      });
+      return tx.insumo.delete({
+        where: { id },
+      });
+    });
+  }
 }

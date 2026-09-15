@@ -1,4 +1,4 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, ConflictException } from '@nestjs/common';
 import { SuppliesRepository } from './supplies.repository';
 
 @Injectable()
@@ -35,6 +35,25 @@ export class SuppliesService {
 
   async remove(id) {
     await this.findOne(id);
-    return this.repository.remove(id);
+
+    const relCounts = await this.repository.countDependencies(id);
+    const counts = relCounts?._count || {};
+    const totalDependencies =
+      (counts.detallesCompra || 0) +
+      (counts.movimientos || 0) +
+      (counts.detallesReceta || 0) +
+      (counts.detallesProduccion || 0) +
+      (counts.lotes || 0) +
+      (counts.ordenCompraItems || 0) +
+      (counts.precios || 0);
+
+    if (totalDependencies > 0) {
+      throw new ConflictException(
+        'El insumo cuenta con historial de compras, inventario o recetas y no puede ser eliminado. Manténgalo desactivado.'
+      );
+    }
+
+    await this.repository.hardDelete(id);
+    return { success: true, message: 'Insumo eliminado exitosamente' };
   }
 }
