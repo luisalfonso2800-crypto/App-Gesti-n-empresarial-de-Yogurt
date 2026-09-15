@@ -16,6 +16,7 @@ export function useProductionPageData() {
   
   const [creating, setCreating] = useState(false);
   const [recipes, setRecipes] = useState([]);
+  const [products, setProducts] = useState([]);
   const [selectedRecipe, setSelectedRecipe] = useState('');
   const [qty, setQty] = useState(1);
   const [bom, setBom] = useState([]);
@@ -36,16 +37,20 @@ export function useProductionPageData() {
     }
   };
 
-  const fetchRecipes = async () => {
+  const fetchRecipesAndProducts = async () => {
     try {
-      const res = await apiClient.get('/recipes').catch(() => []); 
-      setRecipes(res || []);
+      const [recipesRes, productsRes] = await Promise.all([
+        apiClient.get('/recipes').catch(() => []),
+        apiClient.get('/products').catch(() => [])
+      ]);
+      setRecipes(recipesRes || []);
+      setProducts(productsRes || []);
     } catch (e) {}
   };
 
   useEffect(() => {
     fetchOrders();
-    fetchRecipes();
+    fetchRecipesAndProducts();
   }, []);
 
   const loadBom = async () => {
@@ -76,16 +81,17 @@ export function useProductionPageData() {
     }
   };
 
-  const handleCreateOrder = async () => {
+  const handleCreateOrder = async (targetEstado = 'PLANIFICADA') => {
     try {
       const rec = recipes.find(r => r.id === selectedRecipe);
       await apiClient.post('/production', {
         idProducto: rec?.idProducto || selectedRecipe, 
         cantidadPlanificada: qty,
         fechaProduccion: new Date().toISOString(),
-        estado: 'PLANIFICADA',
+        estado: targetEstado,
         detalles: bom.map(b => ({
           idInsumo: b.idInsumo,
+          idProductoIntermedio: b.idProductoIntermedio,
           cantidadTeorica: b.requeridoTeorico,
           unidad: b.unidad,
           costoTeorico: b.costoTeorico
@@ -125,6 +131,28 @@ export function useProductionPageData() {
         }))
       });
       setCompleteModal({ open: false, order: null, realQty: '' });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('onboarding:refresh'));
+        window.dispatchEvent(new Event('onboarding-refresh'));
+      }
+      fetchOrders();
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
+  const handleReportIncident = async ({ idProduccion, motivo, volumenRescatado, volumenPerdido, unidad, observaciones }) => {
+    try {
+      const ord = orders.find(o => o.id === idProduccion);
+      const payloadDetalles = ord?.detalles?.map(d => ({
+        id: d.id,
+        cantidadRealUtilizada: d.cantidadTeorica
+      })) || [];
+
+      await apiClient.patch(`/production/${idProduccion}/complete`, {
+        cantidadProducidaReal: volumenRescatado,
+        detalles: payloadDetalles
+      });
       fetchOrders();
     } catch (e) {
       alert(e.message);
@@ -153,6 +181,11 @@ export function useProductionPageData() {
     handleCreateOrder,
     handlePurchaseShortage,
     openComplete,
-    submitComplete
+    submitComplete,
+    handleReportIncident,
+    products,
+    orphanProducts: (products || []).filter(
+      (p) => (p.activo ?? true) && !recipes.some((r) => String(r.idProducto) === String(p.id))
+    )
   };
 }

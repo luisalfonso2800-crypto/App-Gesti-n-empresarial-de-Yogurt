@@ -1,13 +1,14 @@
 /**
  * @file ProductionOrderCompleteModal.jsx
  * @module operations/production/components
- * @description Modal para cerrar orden de producción, reportar consumo real de insumos y mermas.
- * @responsibility Presentar captura de producto terminado obtenido y desglose de insumos consumidos.
+ * @description Modal homologado a Design System MANNÁ para liquidar orden de producción y calcular mermas reales.
+ * @responsibility Presentar captura de producto terminado obtenido, comparativa de insumos y Poka-Yoke de liquidación.
  * @usedBy apps/web/src/app/operations/production/page.jsx
- * @dependencies react, @/components/ui/Button
+ * @dependencies react, lucide-react, @/components/ui/SmartModal, ../production.module.css
  */
 import React from 'react';
-import { Button } from '@/components/ui/Button';
+import { CheckCircle2, AlertCircle } from 'lucide-react';
+import SmartModal from '@/components/ui/SmartModal';
 import styles from '../production.module.css';
 
 export default function ProductionOrderCompleteModal({
@@ -17,58 +18,118 @@ export default function ProductionOrderCompleteModal({
   setRealDetails,
   submitComplete
 }) {
-  if (!completeModal.open) return null;
+  const order = completeModal.order;
+  const unidadMedida = order?.receta?.unidadRendimiento || order?.receta?.unidadMedida || 'Litros';
+  const nombreProducto = order?.receta?.nombre || order?.producto?.nombre || 'Producto Terminado';
+
+  const handleClose = () => {
+    setCompleteModal({ open: false, order: null, realQty: '' });
+  };
 
   return (
-    <div className={styles.modalOverlay}>
-      <div className={styles.modalContent}>
-        <h3>Cerrar Orden y Liquidar Lote</h3>
-        <p className={styles.modalSub}>Reporte de consumo real y mermas operativas.</p>
-        
-        <div className={styles.formGroup}>
-          <label>Unidades Reales Obtenidas</label>
-          <input 
-            type="number" 
-            min="0" 
-            value={completeModal.realQty} 
-            onChange={e => setCompleteModal({ ...completeModal, realQty: e.target.value })} 
-            className={styles.input} 
-          />
-        </div>
+    <SmartModal
+      isOpen={Boolean(completeModal.open)}
+      onClose={handleClose}
+      title={`Finalizar y Liquidar: ${nombreProducto}`}
+      isDirty={false}
+      isSubmitting={false}
+    >
+      <div className={styles.modalPokaYokeBanner}>
+        <CheckCircle2 size={18} />
+        <span>
+          Al liquidar, se descontarán los insumos de bodega y se ingresará el producto final a cava/tanque.
+        </span>
+      </div>
 
-        <h4 className={styles.consumoTitle}>Consumo de Insumos (Ajuste de Mermas)</h4>
-        <table className={styles.bomTable}>
-          <thead>
-            <tr>
-              <th>Insumo</th>
-              <th className={styles.thRight}>Teórico</th>
-              <th className={styles.thCenter}>Real Utilizado</th>
-            </tr>
-          </thead>
-          <tbody>
-            {completeModal.order?.detalles?.map((det) => (
+      <div className={styles.modalQtyRow}>
+        <span className={styles.modalQtyLabel}>Volumen Real Obtenido ({unidadMedida}):</span>
+        <div className={styles.modalQtyInputWrapper}>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={completeModal.realQty ?? ''}
+            onChange={(e) => setCompleteModal({ ...completeModal, realQty: e.target.value })}
+            className={styles.modalQtyInput}
+            placeholder="0.0"
+          />
+          <span className={styles.infoGridLabel}>{unidadMedida}</span>
+        </div>
+      </div>
+
+      <h4 className={styles.consumoTitle}>Consumo Real de Insumos vs Teórico</h4>
+      <table className={styles.bomTable}>
+        <thead>
+          <tr>
+            <th className={styles.colText}>Insumo / Material</th>
+            <th className={styles.thRight}>Teórico</th>
+            <th className={styles.thCenter}>Real Utilizado</th>
+            <th className={styles.thRight}>Merma / Desviación</th>
+          </tr>
+        </thead>
+        <tbody>
+          {order?.detalles?.map((det) => {
+            const teorico = Number(det.cantidadTeorica) || 0;
+            const realVal = realDetails[det.id] !== undefined ? realDetails[det.id] : det.cantidadTeorica;
+            const realNum = Number(realVal) || 0;
+            const diff = realNum - teorico;
+            const mermaPct = teorico > 0 ? ((diff / teorico) * 100).toFixed(1) : 0;
+            const nombreInsumo = det.insumo?.nombre || det.productoIntermedio?.nombre || 'Insumo';
+
+            return (
               <tr key={det.id}>
-                <td>ID: {det.idInsumo?.split('-')[0]}</td>
-                <td className={styles.thRight}>{Number(det.cantidadTeorica).toFixed(2)} {det.unidad}</td>
+                <td className={styles.colText}>
+                  <div className={styles.insumoName}>{nombreInsumo}</div>
+                  <div className={styles.insumoSub}>Unidad: {det.unidad}</div>
+                </td>
+                <td className={styles.thRight}>
+                  {teorico.toFixed(2)} {det.unidad}
+                </td>
                 <td className={styles.thCenter}>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
+                    min="0"
                     step="0.01"
-                    value={realDetails[det.id] || ''} 
-                    onChange={e => setRealDetails({ ...realDetails, [det.id]: e.target.value })}
+                    value={realDetails[det.id] ?? ''}
+                    onChange={(e) => setRealDetails({ ...realDetails, [det.id]: e.target.value })}
                     className={styles.inputTableQty}
                   />
                 </td>
+                <td className={styles.thRight}>
+                  {diff > 0 ? (
+                    <span className={styles.mermaDanger}>
+                      +{diff.toFixed(2)} (+{mermaPct}%)
+                    </span>
+                  ) : diff < 0 ? (
+                    <span className={styles.mermaSuccess}>
+                      {diff.toFixed(2)} ({mermaPct}%)
+                    </span>
+                  ) : (
+                    <span className={styles.infoGridLabel}>0.00 (0%)</span>
+                  )}
+                </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            );
+          })}
+        </tbody>
+      </table>
 
-        <div className={styles.modalActions}>
-          <Button variant="secondary" onClick={() => setCompleteModal({ open: false, order: null })}>Cancelar</Button>
-          <Button variant="primary" onClick={submitComplete}>Cerrar y Costear Lote</Button>
-        </div>
+      <div className={styles.modalActions}>
+        <button
+          type="button"
+          className={styles.btnMannaSecondary}
+          onClick={handleClose}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className={styles.btnMannaPrimary}
+          onClick={submitComplete}
+        >
+          <CheckCircle2 size={16} className={styles.iconSpaced} /> Confirmar Liquidación y Entrada a Stock
+        </button>
       </div>
-    </div>
+    </SmartModal>
   );
 }

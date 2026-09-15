@@ -18,6 +18,7 @@ import { useProductionPageData } from './hooks/useProductionPageData';
 import ProductionOrderCreator from './components/ProductionOrderCreator';
 import ProductionOrderCard from './components/ProductionOrderCard';
 import ProductionOrderCompleteModal from './components/ProductionOrderCompleteModal';
+import ProductionRecipeWarningBanner from './components/ProductionRecipeWarningBanner';
 
 export default function ProductionPage() {
   const {
@@ -42,7 +43,9 @@ export default function ProductionPage() {
     handleCreateOrder,
     handlePurchaseShortage,
     openComplete,
-    submitComplete
+    submitComplete,
+    handleReportIncident,
+    orphanProducts
   } = useProductionPageData();
 
   if (loading) return <LoadingState />;
@@ -61,6 +64,8 @@ export default function ProductionPage() {
         <Button variant="primary" onClick={() => setCreating(true)}>+ Nueva Producción</Button>
       </header>
 
+      <ProductionRecipeWarningBanner orphanProducts={orphanProducts} />
+
       {creating && (
         <ProductionOrderCreator
           recipes={recipes}
@@ -73,6 +78,7 @@ export default function ProductionPage() {
           hasShortage={hasShortage}
           handlePurchaseShortage={handlePurchaseShortage}
           handleCreateOrder={handleCreateOrder}
+          orphanProducts={orphanProducts}
           onClose={() => setCreating(false)}
         />
       )}
@@ -94,6 +100,7 @@ export default function ProductionPage() {
               order={order}
               startOrder={startOrder}
               openComplete={openComplete}
+              onReportIncident={handleReportIncident}
             />
           ))}
         </div>

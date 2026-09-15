@@ -1,15 +1,19 @@
 /**
  * @file ProductionOrderCreator.jsx
  * @module operations/production/components
- * @description Panel interactivo para planificar una nueva orden de producción y calcular BOM.
- * @responsibility Renderizar selectores de receta, escala, tabla BOM y alerta de faltantes.
+ * @description Panel interactivo para planificar una nueva orden de producción y calcular BOM en vivo.
+ * @responsibility Renderizar selectores de receta, escala, contexto y delegar sección BOM.
  * @usedBy apps/web/src/app/operations/production/page.jsx
- * @dependencies react, lucide-react, @/components/ui/Button, @/components/ui/Badge
  */
-import React from 'react';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { AlertTriangle } from 'lucide-react';
+import React, { useMemo } from 'react';
+import Link from 'next/link';
+import { AlertCircle } from 'lucide-react';
+import { ProductionBomSection } from './ProductionBomSection';
+import {
+  calculateProductionFinances,
+  calculateRecipeProcessTime,
+  generateSuggestedLotCode
+} from '../utils/productionCosting';
 import styles from '../production.module.css';
 
 export default function ProductionOrderCreator({
@@ -23,87 +27,99 @@ export default function ProductionOrderCreator({
   hasShortage,
   handlePurchaseShortage,
   handleCreateOrder,
+  orphanProducts = [],
   onClose
 }) {
+  const currentRecipe = recipes.find(r => String(r.id) === String(selectedRecipe));
+  const rendimientoBase = Number(currentRecipe?.rendimientoBase) || 0;
+  const unidadRendimiento = currentRecipe?.unidadRendimiento || 'Litros';
+  const scaleFactor = rendimientoBase > 0 && Number(qty) > 0
+    ? (Number(qty) / rendimientoBase).toFixed(2)
+    : null;
+
+  const { costoTotalLote, costoUnitarioPorLitro, costoFaltanteTotal, enrichedBom } = useMemo(
+    () => calculateProductionFinances(bom, qty),
+    [bom, qty]
+  );
+
+  const tiempoProceso = useMemo(() => calculateRecipeProcessTime(currentRecipe), [currentRecipe]);
+  const loteSugerido = useMemo(() => generateSuggestedLotCode(new Date(), 1), []);
+
   return (
     <div className={styles.creatorCard}>
       <div className={styles.creatorHeader}>
         <h3>Planificar Nueva Orden</h3>
-        <Button variant="secondary" size="sm" onClick={onClose}>Cerrar</Button>
       </div>
       
-      <div className={styles.formRow}>
-        <div className={styles.formGroup}>
-          <label>Receta / Producto</label>
-          <select 
-            value={selectedRecipe} 
-            onChange={e => setSelectedRecipe(e.target.value)} 
-            className={styles.input}
-          >
-            <option value="">Seleccione...</option>
-            {recipes.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-            {recipes.length === 0 && <option value="mock-123">Yogur Escolar Fresa 150ml (Simulado)</option>}
-          </select>
+      <div className={styles.controlInputPanel}>
+        <div className={styles.controlInputHeader}>
+          <span className={styles.controlInputTitle}>Parámetros de Entrada</span>
+          <span className={styles.controlInputBadge}>Zona de Configuración Activa</span>
         </div>
-        <div className={styles.formGroup}>
-          <label>Cantidad a Producir</label>
-          <input 
-            type="number" 
-            min="1" 
-            value={qty} 
-            onChange={e => setQty(Number(e.target.value))} 
-            className={styles.input} 
-          />
+        <div className={styles.formRow}>
+          <div className={styles.formGroup}>
+            <label>Receta / Producto</label>
+            <select 
+              value={selectedRecipe} 
+              onChange={e => setSelectedRecipe(e.target.value)} 
+              className={styles.selectProminent}
+            >
+              <option value="">Seleccione una receta activa...</option>
+              {recipes.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+              {recipes.length === 0 && <option value="mock-123">Yogur Escolar Fresa 150ml (Simulado)</option>}
+            </select>
+            {orphanProducts.length > 0 && (
+              <div className={styles.orphanRecipeSelectNotice}>
+                <AlertCircle size={14} />
+                <span>
+                  Hay {orphanProducts.length} producto(s) comercial(es) sin receta. <Link href="/catalog/recipes">Configurar fórmulas</Link>
+                </span>
+              </div>
+            )}
+          </div>
+          <div className={styles.formGroup}>
+            <label>Cantidad a Producir ({unidadRendimiento})</label>
+            <input 
+              type="number" 
+              min="1" 
+              value={qty} 
+              onChange={e => setQty(Number(e.target.value))} 
+              className={styles.inputProminent}
+              placeholder="Ej: 100"
+            />
+          </div>
         </div>
       </div>
 
-      {selectedRecipe && (
-        <div className={styles.bomSection}>
-          <h4>BOM (Lista de Materiales y Fórmula Requerida)</h4>
-          {bomLoading ? <p>Calculando...</p> : (
-            <>
-              {hasShortage && (
-                <div className={styles.alertBanner}>
-                  <AlertTriangle size={20} />
-                  <span>Insumos insuficientes para esta escala de producción.</span>
-                  <Button variant="danger" size="sm" onClick={handlePurchaseShortage}>
-                    + Disparar Lista de Compra
-                  </Button>
-                </div>
-              )}
-              <table className={styles.bomTable}>
-                <thead>
-                  <tr>
-                    <th>Insumo</th>
-                    <th className={styles.thRight}>Req. Teórico</th>
-                    <th className={styles.thRight}>Stock Actual</th>
-                    <th className={styles.thRight}>Faltante</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bom.map((b) => (
-                    <tr key={b.idInsumo}>
-                      <td>{b.nombreInsumo}</td>
-                      <td className={styles.thRight}>{Number(b.requeridoTeorico).toFixed(2)} {b.unidad}</td>
-                      <td className={styles.thRight}>{Number(b.stockActual).toFixed(2)} {b.unidad}</td>
-                      <td className={`${styles.thRight} ${b.faltante > 0 ? styles.missingText : ''}`}>
-                        {Number(b.faltante).toFixed(2)} {b.unidad}
-                      </td>
-                      <td>
-                        {b.faltante > 0 ? <Badge status="inactive">Faltante</Badge> : <Badge status="active">Suficiente</Badge>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className={styles.creatorActions}>
-                <Button variant="secondary" onClick={handleCreateOrder}>Guardar como Planificada / Borrador</Button>
-                <Button variant="primary" disabled={hasShortage} onClick={handleCreateOrder}>Iniciar Producción</Button>
-              </div>
-            </>
+      {currentRecipe && (
+        <div className={styles.recipeContextCard}>
+          <div className={styles.recipeContextDetail}>
+            <span>✦ Receta: <strong className={styles.recipeContextHighlight}>{currentRecipe.nombre}</strong></span>
+            <span>— Rendimiento base: <strong className={styles.recipeContextHighlight}>{rendimientoBase} {unidadRendimiento}</strong></span>
+          </div>
+          {scaleFactor && (
+            <span className={styles.scaleFactorBadge} title="Multiplicador de insumos aplicado al BOM">
+              Proporción: {scaleFactor}x Lote Base
+            </span>
           )}
         </div>
+      )}
+
+      {selectedRecipe && (
+        <ProductionBomSection
+          costoTotalLote={costoTotalLote}
+          costoUnitarioPorLitro={costoUnitarioPorLitro}
+          costoFaltanteTotal={costoFaltanteTotal}
+          unidadRendimiento={unidadRendimiento}
+          tiempoProceso={tiempoProceso}
+          loteSugerido={loteSugerido}
+          bomLoading={bomLoading}
+          hasShortage={hasShortage}
+          enrichedBom={enrichedBom}
+          handlePurchaseShortage={handlePurchaseShortage}
+          handleCreateOrder={handleCreateOrder}
+          onClose={onClose}
+        />
       )}
     </div>
   );

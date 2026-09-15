@@ -1,0 +1,71 @@
+/* apps/web/src/app/operations/production/components/production-financial-summary.module.css */
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.summaryCard {
+  background-color: #FAF8F5; /* Marfil MANNÁ */
+  border: 1px solid #E5DFD5; /* Borde suave pergamino */
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-shadow: 0 1px 3px rgba(24, 38, 34, 0.04);
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716C; /* Stone 500 */
+}
+
+.cardValuePrimary {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #182622; /* Bosque Profundo MANNÁ */
+  font-family: monospace;
+}
+
+.cardValue {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #182622;
+  font-family: monospace;
+}
+
+.unitSpan {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #57534E;
+  font-family: var(--font-inter, sans-serif);
+}
+
+.cardValueTime {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #C58A3E; /* Oro Viejo MANNÁ */
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cardValueLot {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #065F46; /* Verde Esmeralda */
+  font-family: monospace;
+  letter-spacing: 0.03em;
+}
+
+.cardHelper {
+  font-size: 0.75rem;
+  color: #A8A29E;
+  font-style: italic;
+}
