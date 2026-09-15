@@ -18,13 +18,16 @@ export function RecipeBalanceFooter({
   activeStagesCount = 0,
   costPerUnit = 0,
   totalCost = 0,
+  costRawSupplies = 0,
+  costWipBases = 0,
+  hasWipFallback = false,
   selectedProduct,
   isInternoOrBulk = false,
   costoTopePermitido = 0
 }) {
   return (
     <div className={styles.balanceBar}>
-      {/* Lado Izquierdo: Resumen de insumos y rendimiento */}
+      {/* Lado Izquierdo: Resumen de insumos, desglose de costos y rendimiento */}
       <div className={styles.balanceInfoCol}>
         <strong className={styles.balanceTitle}>
           Balance General de Materiales y Costos
@@ -42,6 +45,22 @@ export function RecipeBalanceFooter({
           <span>
             <strong>Etapas activas:</strong> {activeStagesCount}
           </span>
+        </div>
+
+        {/* Desglose Reactivo de Costos: Insumos directos vs Bases WIP */}
+        <div className={styles.balanceCostBreakdownRow}>
+          <span>
+            Materias primas/empaques: <strong className={styles.breakdownBadgeRaw}>{formatCurrency(costRawSupplies)}</strong>
+          </span>
+          <span>•</span>
+          <span>
+            Bases intermedias (WIP): <strong className={styles.breakdownBadgeWip}>{formatCurrency(costWipBases)}</strong>
+          </span>
+          {hasWipFallback && (
+            <span className={styles.balanceWarningBadge} title="Una o más bases WIP no cuentan con receta activa calculada. Se usó costo de referencia o $0.">
+              ⚠️ Base WIP sin receta activa
+            </span>
+          )}
         </div>
       </div>
 
@@ -87,3 +106,4 @@ export function RecipeBalanceFooter({
     </div>
   );
 }
+

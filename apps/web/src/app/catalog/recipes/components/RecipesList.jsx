@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
+import ProductAvatar from '@/components/ui/ProductAvatar';
+import { resolveProductImage } from '@/lib/presetImages';
 import styles from '../recipes.module.css';
 
 export function RecipesList({ 
@@ -57,7 +59,30 @@ export function RecipesList({
         {items.map((item) => (
           <TR key={item.id}>
             <TD>{item.nombre}</TD>
-            <TD>{item.producto ? `${item.producto.nombre} (${item.producto.presentacion?.nombre || ''})` : item.idProducto}</TD>
+            <TD>
+              <div className={styles.productCell}>
+                {item.producto ? (
+                  <>
+                    <div className={styles.productAvatarBox}>
+                      <ProductAvatar
+                        src={resolveProductImage(item.producto)}
+                        alt={item.producto.nombre}
+                        name={item.producto.nombre}
+                        size={40}
+                      />
+                    </div>
+                    <div className={styles.productInfoText}>
+                      <span className={styles.productNameText}>{item.producto.nombre}</span>
+                      <span className={styles.productPresentationText}>
+                        {item.producto.presentacion?.nombre || 'A Granel'}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <span>{item.idProducto}</span>
+                )}
+              </div>
+            </TD>
             <TD>{item.rendimientoBase} {item.unidadRendimiento}</TD>
             <TD>{item.etapas?.filter(e => e.activo !== false).length || 0}</TD>
             <TD>

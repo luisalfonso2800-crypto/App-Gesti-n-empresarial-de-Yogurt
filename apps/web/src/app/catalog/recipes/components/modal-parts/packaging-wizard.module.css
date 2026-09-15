@@ -1,0 +1,329 @@
+.wizardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.introText {
+  font-size: 0.85rem;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #182622;
+  letter-spacing: 0.025em;
+}
+
+.select {
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #182622;
+  background-color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.select:focus {
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.emptyNotice {
+  font-size: 0.8rem;
+  color: #b45309;
+  background-color: #fffbeb;
+  border: 1px solid #fef3c7;
+  padding: 0.65rem 0.75rem;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.emptyNoticeActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btnNoticeAction {
+  background-color: #ffffff;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnNoticeAction:hover {
+  background-color: #fef3c7;
+}
+
+
+.questionsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 0.85rem;
+}
+
+.questionItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  background-color: #f9fafb;
+  border: 1px solid #f3f4f6;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.questionItem:hover {
+  background-color: #f3f4f6;
+}
+
+.questionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  background-color: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+}
+
+.questionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.subOptionRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.35rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.subLabel {
+  font-size: 0.775rem;
+  color: #4b5563;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.subInput {
+  width: 90px;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #182622;
+  background: #ffffff;
+}
+
+.subSelect {
+  flex: 1;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #182622;
+  background: #ffffff;
+}
+
+.questionLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.825rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.questionIcon {
+  font-size: 1.1rem;
+}
+
+.toggleGroup {
+  display: flex;
+  gap: 0.25rem;
+  background-color: #e5e7eb;
+  padding: 2px;
+  border-radius: 6px;
+}
+
+.toggleBtn {
+  border: none;
+  background: transparent;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #4b5563;
+  transition: all 0.15s ease-in-out;
+}
+
+.toggleBtnActiveYes {
+  background-color: #166534;
+  color: #ffffff;
+}
+
+.toggleBtnActiveNo {
+  background-color: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.btnCancel {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.btnCancel:hover {
+  background-color: #f9fafb;
+}
+
+.btnSubmit {
+  background-color: #182622;
+  border: 1px solid #182622;
+  color: #faf8f5;
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.btnSubmit:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btnSubmit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.dependencyContainer {
+  margin-top: 0.25rem;
+}
+
+.guidedBanner {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.guidedBannerContent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.guidedBannerIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.guidedBannerTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e3a8a;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.guidedBannerText {
+  font-size: 0.775rem;
+  color: #1e40af;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.guidedBannerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btnBannerAction {
+  background-color: #ffffff;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnBannerAction:hover {
+  background-color: #dbeafe;
+}
+
+.btnBannerActionPrimary {
+  background-color: #1e40af;
+  border: 1px solid #1e40af;
+  color: #ffffff;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnBannerActionPrimary:hover {
+  background-color: #1e3a8a;
+  border-color: #1e3a8a;
+}
+
+

@@ -11,12 +11,15 @@
 import React from 'react';
 import { RecipeStageTelemetryCard } from './RecipeStageTelemetryCard';
 import { RecipeStageBomTable } from './RecipeStageBomTable';
+import { RecipeStageActionBar } from './RecipeStageActionBar';
+import { formatToleranceRangeHours, formatTemperatureRangeF } from '../recipeHelpers';
 import styles from './recipe-stages.module.css';
 
 export function RecipeStageEditor({
   etapa,
   stageIndex,
   totalStagesCount,
+  etapas = [],
   supplies = [],
   products = [],
   currentRecipeProductId = null,
@@ -28,7 +31,9 @@ export function RecipeStageEditor({
   onDuplicateEtapa,
   onAddDetalle,
   onUpdateDetalle,
-  onRemoveDetalle
+  onRemoveDetalle,
+  onSelectStage,
+  onAddEtapa
 }) {
   if (!etapa) {
     return (
@@ -47,9 +52,11 @@ export function RecipeStageEditor({
         <input className={styles.input} value={etapa.nombre || ''} onChange={e => onUpdateEtapa(stageIndex, 'nombre', e.target.value)} placeholder="Ej: Pasteurización, Enfriamiento, Fermentación..." required />
       </div>
 
-      <div className={styles.formRow}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>TIEMPO ESTÁNDAR</label>
+      <div className={styles.formRow3}>
+        <div className={styles.parameterCard}>
+          <div className={styles.labelRow}>
+            <label className={styles.labelNowrap}>TIEMPO ESTÁNDAR</label>
+          </div>
           <div className={styles.timeInputWrapper}>
             <input className={styles.input} type="number" min="0" value={etapa.tiempoEstandarMin === 0 || etapa.tiempoEstandarMin === '0' ? '' : (etapa.tiempoEstandarMin ?? '')} onChange={e => onUpdateEtapa(stageIndex, 'tiempoEstandarMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} placeholder="0 min" />
             <span className={styles.timeClockPill} title="Equivalencia en reloj">
@@ -58,42 +65,66 @@ export function RecipeStageEditor({
           </div>
         </div>
 
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>RANGO DE TOLERANCIA (MIN - MÁX)</label>
+        <div className={styles.parameterCard}>
+          <div className={styles.labelRow}>
+            <label className={styles.labelNowrap}>RANGO DE TOLERANCIA</label>
+            {formatToleranceRangeHours(etapa.tiempoMinimoMin, etapa.tiempoMaximoMin) && (
+              <span className={styles.telemetryPill} title="Equivalencia en horas">
+                {formatToleranceRangeHours(etapa.tiempoMinimoMin, etapa.tiempoMaximoMin)}
+              </span>
+            )}
+          </div>
           <div className={styles.rangeInputsRow}>
-            <input className={styles.input} type="number" min="0" value={etapa.tiempoMinimoMin === 0 || etapa.tiempoMinimoMin === '0' ? '' : (etapa.tiempoMinimoMin ?? '')} onChange={e => onUpdateEtapa(stageIndex, 'tiempoMinimoMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} placeholder="Mín min" />
-            <input className={styles.input} type="number" min="0" value={etapa.tiempoMaximoMin === 0 || etapa.tiempoMaximoMin === '0' ? '' : (etapa.tiempoMaximoMin ?? '')} onChange={e => onUpdateEtapa(stageIndex, 'tiempoMaximoMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} placeholder="Máx min" />
+            <div className={styles.inputGroupPrefix}>
+              <span className={styles.inputPrefix}>MÍN</span>
+              <input className={styles.inputInner} type="number" min="0" value={etapa.tiempoMinimoMin === 0 || etapa.tiempoMinimoMin === '0' ? '' : (etapa.tiempoMinimoMin ?? '')} onChange={e => onUpdateEtapa(stageIndex, 'tiempoMinimoMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} placeholder="0 min" />
+            </div>
+            <div className={styles.inputGroupPrefix}>
+              <span className={styles.inputPrefix}>MÁX</span>
+              <input className={styles.inputInner} type="number" min="0" value={etapa.tiempoMaximoMin === 0 || etapa.tiempoMaximoMin === '0' ? '' : (etapa.tiempoMaximoMin ?? '')} onChange={e => onUpdateEtapa(stageIndex, 'tiempoMaximoMin', e.target.value === '' ? '' : parseInt(e.target.value, 10) || 0)} placeholder="0 min" />
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.parameterCard}>
+          <div className={styles.labelRow}>
+            <label className={styles.labelNowrap}>TEMPERATURA OPERATIVA (°C)</label>
+            {formatTemperatureRangeF(etapa.tempMinimaGrados, etapa.tempMaximaGrados) && (
+              <span className={styles.telemetryPill} title="Equivalencia en Fahrenheit">
+                {formatTemperatureRangeF(etapa.tempMinimaGrados, etapa.tempMaximaGrados)}
+              </span>
+            )}
+          </div>
+          <div className={styles.rangeInputsRow}>
+            <div className={styles.inputGroupPrefix}>
+              <span className={styles.inputPrefix}>MÍN</span>
+              <input className={styles.inputInner} type="number" step="0.1" value={etapa.tempMinimaGrados ?? ''} onChange={e => onUpdateEtapa(stageIndex, 'tempMinimaGrados', e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="0.0 °C" />
+            </div>
+            <div className={styles.inputGroupPrefix}>
+              <span className={styles.inputPrefix}>MÁX</span>
+              <input className={styles.inputInner} type="number" step="0.1" value={etapa.tempMaximaGrados ?? ''} onChange={e => onUpdateEtapa(stageIndex, 'tempMaximaGrados', e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="0.0 °C" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className={styles.formRow}>
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>TEMPERATURA OPERATIVA (°C)</label>
-          <div className={styles.rangeInputsRow}>
-            <input className={styles.input} type="number" step="0.1" value={etapa.tempMinimaGrados ?? ''} onChange={e => onUpdateEtapa(stageIndex, 'tempMinimaGrados', e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="Mín °C" />
-            <input className={styles.input} type="number" step="0.1" value={etapa.tempMaximaGrados ?? ''} onChange={e => onUpdateEtapa(stageIndex, 'tempMaximaGrados', e.target.value === '' ? '' : parseFloat(e.target.value))} placeholder="Máx °C" />
-          </div>
-        </div>
-
-        <div className={styles.fieldGroup}>
-          <label className={styles.label}>INSTRUCCIONES DE OPERACIÓN</label>
-          <input className={styles.input} value={etapa.instrucciones || ''} onChange={e => onUpdateEtapa(stageIndex, 'instrucciones', e.target.value)} placeholder="Instrucciones para el operario de planta..." />
-        </div>
+      <div className={styles.fieldGroup}>
+        <label className={styles.label}>INSTRUCCIONES DE OPERACIÓN</label>
+        <textarea className={styles.textarea} rows={3} value={etapa.instrucciones || ''} onChange={e => onUpdateEtapa(stageIndex, 'instrucciones', e.target.value)} placeholder="Instrucciones para el operario de planta..." />
       </div>
 
       <RecipeStageBomTable etapa={etapa} stageIndex={stageIndex} supplies={supplies} products={products} currentRecipeProductId={currentRecipeProductId} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
 
-      <div className={styles.actionFooter}>
-        <div className={styles.orderButtonGroup}>
-          <button type="button" className={styles.btnOrder} disabled={stageIndex === 0} onClick={() => onMoveEtapa && onMoveEtapa(stageIndex, 'UP')} title="Mover etapa hacia arriba">▲ Subir</button>
-          <button type="button" className={styles.btnOrder} disabled={stageIndex === totalStagesCount - 1} onClick={() => onMoveEtapa && onMoveEtapa(stageIndex, 'DOWN')} title="Mover etapa hacia abajo">▼ Bajar</button>
-          {onDuplicateEtapa && (
-            <button type="button" className={styles.btnDuplicate} onClick={() => onDuplicateEtapa(stageIndex)} title="Duplicar esta etapa completa con sus insumos">📑 Duplicar Etapa</button>
-          )}
-        </div>
-        <button type="button" className={styles.btnDeleteStage} onClick={() => onRemoveEtapa(stageIndex)} title="Eliminar esta etapa de la receta">✕ Eliminar Etapa</button>
-      </div>
+      <RecipeStageActionBar
+        stageIndex={stageIndex}
+        totalStagesCount={totalStagesCount}
+        etapas={etapas}
+        onMoveEtapa={onMoveEtapa}
+        onDuplicateEtapa={onDuplicateEtapa}
+        onRemoveEtapa={onRemoveEtapa}
+        onSelectStage={onSelectStage}
+        onAddEtapa={onAddEtapa}
+      />
     </div>
   );
 }

@@ -254,6 +254,17 @@
   gap: 0.35rem;
 }
 
+.parameterCard {
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  box-shadow: 0 1px 2px rgba(24, 38, 34, 0.04);
+}
+
 .label {
   font-size: 0.75rem;
   font-weight: 700;
@@ -261,7 +272,15 @@
   letter-spacing: 0.025em;
 }
 
-.input, .select {
+.labelNowrap {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #182622;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.input, .select, .textarea {
   padding: 0.5rem 0.65rem;
   border: 1px solid #D6D3D1;
   border-radius: 6px;
@@ -272,7 +291,14 @@
   box-sizing: border-box;
 }
 
-.input:focus, .select:focus {
+.textarea {
+  min-height: 72px;
+  resize: vertical;
+  line-height: 1.45;
+  font-family: inherit;
+}
+
+.input:focus, .select:focus, .textarea:focus {
   outline: none;
   border-color: #182622;
   box-shadow: 0 0 0 1px #182622;
@@ -302,6 +328,73 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
+}
+
+.inputGroupPrefix {
+  display: flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.inputGroupPrefix:focus-within {
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.inputPrefix {
+  background-color: #F7F4EE;
+  color: #57534E;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0 0.55rem;
+  border-right: 1px solid #D6D0C4;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.inputInner {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.85rem;
+  color: #182622;
+  background-color: transparent;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  min-height: 20px;
+}
+
+.telemetryPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  color: #065F46;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 /* Subtabla BOM */
@@ -458,13 +551,28 @@
   border-radius: 6px;
 }
 
-/* Botonera de Acción de la Fase */
-.actionFooter {
+/* Botonera de Acción y Navegación de la Fase */
+.actionFooter, .actionBar {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
   padding-top: 0.75rem;
   border-top: 1px solid #E5DFD5;
+  flex-wrap: wrap;
+}
+
+.actionGroupLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.actionGroupRight {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
@@ -511,10 +619,10 @@
   background: #F4EFE6;
 }
 
-.btnDeleteStage {
-  background: #FEF2F2;
+.btnDangerDelete, .btnDeleteStage {
+  background-color: #FEF2F2;
+  color: #DC2626;
   border: 1px solid #FCA5A5;
-  color: #991B1B;
   padding: 0.4rem 0.85rem;
   border-radius: 6px;
   font-size: 0.75rem;
@@ -523,8 +631,48 @@
   transition: all 0.15s ease-in-out;
 }
 
-.btnDeleteStage:hover {
-  background: #FEE2E2;
+.btnDangerDelete:hover, .btnDeleteStage:hover {
+  background-color: #FEE2E2;
+}
+
+.btnPrevStage {
+  background-color: #F7F4EE;
+  color: #182622;
+  border: 1px solid #D6D3D1;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnPrevStage:hover:not(:disabled) {
+  background-color: #EFECE4;
+}
+
+.btnPrevStage:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnNextStage {
+  background-color: #182622;
+  color: #FAF8F5;
+  padding: 0.45rem 1rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.btnNextStage:hover {
+  opacity: 0.9;
 }
 
 .emptyTimeline {
@@ -551,3 +699,35 @@
   color: #78716C;
   margin: 0;
 }
+
+.commercialSuggestionBox {
+  margin-top: 0.25rem;
+  padding: 0.5rem;
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.commercialSuggestionBtn {
+  background-color: #182622;
+  color: #FAF8F5;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.commercialSuggestionBtn:hover {
+  opacity: 0.9;
+}
+

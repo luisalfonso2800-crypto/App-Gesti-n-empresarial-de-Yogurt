@@ -31,7 +31,7 @@ export function SummaryTechHeader({
 
       <div>
         <div className={styles.summaryTechFieldLabel}>Rendimiento Esperado</div>
-        <div className={styles.summaryTechFieldValue} style={{ color: '#166534' }}>
+        <div className={styles.summaryTechYieldValue}>
           {formData.rendimientoBase || '0'} {formData.unidadRendimiento || 'Und'}
         </div>
         <span className={styles.inputHelperText}>

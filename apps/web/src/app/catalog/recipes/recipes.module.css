@@ -393,5 +393,169 @@
   color: #6B7280;
 }
 
+/* Banner de Productos Huérfanos estilo MANNÁ */
+.orphanBanner {
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  color: #182622;
+  padding: 0.85rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.orphanContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.orphanTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #182622;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.orphanSubtitle {
+  font-size: 0.8rem;
+  color: #57534E;
+}
+
+.orphanActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.orphanGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.orphanCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(24, 38, 34, 0.04);
+  transition: all 0.15s ease-in-out;
+}
+
+.orphanCard:hover {
+  border-color: #182622;
+  box-shadow: 0 2px 6px rgba(24, 38, 34, 0.08);
+}
+
+.orphanCardAvatar {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  flex-shrink: 0;
+}
+
+.orphanCardInfo {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.orphanCardTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #182622;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orphanCardMeta {
+  font-size: 0.72rem;
+  color: #78716C;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.orphanCardBtn {
+  background-color: #182622;
+  color: #FAF8F5;
+  border: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease-in-out;
+}
+
+.orphanCardBtn:hover {
+  background-color: #2C3E38;
+}
+
+.orphanBtn {
+  background-color: #182622;
+  color: #FFFFFF;
+  border: 1px solid #182622;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.orphanBtn:hover {
+  background-color: #2C3E38;
+  border-color: #2C3E38;
+}
 
 
+/* Celdas con Avatar para la tabla de Recetas */
+.productCell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.productAvatarBox {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  flex-shrink: 0;
+}
+
+.productInfoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.productNameText {
+  font-weight: 600;
+  color: #182622;
+}
+
+.productPresentationText {
+  font-size: 0.75rem;
+  color: #6B7280;
+}

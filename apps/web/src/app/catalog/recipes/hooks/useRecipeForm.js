@@ -9,8 +9,9 @@
 
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { createCommercialBaseStage, isCommercialProduct, PLANTILLA_JALEA_FRUTA, calculateRecipeCosts } from '../components/recipeHelpers';
 
-export function useRecipeForm({ supplies = [], products = [], prices = [], onSaveSuccess }) {
+export function useRecipeForm({ supplies = [], products = [], prices = [], recipes = [], onSaveSuccess }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -22,7 +23,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
     etapas: []
   });
 
-  const handleOpenEditor = async (item) => {
+  const handleOpenEditor = async (item, initialProductId = null) => {
     if (item) {
       try {
         const fullItem = await apiClient.get(`/recipes/${item.id}/bom`);
@@ -36,18 +37,30 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
         return;
       }
     } else {
+      const prodId = initialProductId || '';
+      const selectedProd = prodId ? products.find(p => String(p.id) === String(prodId)) : null;
+      const isGranel = selectedProd ? (
+        selectedProd.presentacion?.tipoEnvase === 'TANQUE_GRANEL' ||
+        selectedProd.presentacion?.nombre?.toUpperCase().includes('GRANEL') ||
+        ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProd.categoria)
+      ) : false;
+
+      const isCommercial = isCommercialProduct(selectedProd);
+      const initialEtapas = isCommercial ? [createCommercialBaseStage(products)] : [];
+
       setFormData({
-        nombre: '',
-        idProducto: '',
+        nombre: selectedProd ? `Fórmula - ${selectedProd.nombre}` : '',
+        idProducto: prodId,
         rendimientoBase: '',
-        unidadRendimiento: 'Litros',
+        unidadRendimiento: isGranel ? 'Litros' : 'Unidades',
         observaciones: '',
         activo: true,
-        etapas: []
+        etapas: initialEtapas
       });
     }
     setIsEditing(true);
   };
+
 
   const handleCloseEditor = () => setIsEditing(false);
 
@@ -66,11 +79,20 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
       setFormData(prev => {
         const autoNombre = selectedProd ? `Fórmula - ${selectedProd.nombre}` : '';
         const shouldUpdateNombre = !prev.nombre || prev.nombre.startsWith('Fórmula - ');
+
+        // Detección de producto comercial e inyección inteligente de etapa base
+        let updatedEtapas = prev.etapas || [];
+        const isCommercial = isCommercialProduct(selectedProd);
+        if (isCommercial && updatedEtapas.length === 0) {
+          updatedEtapas = [createCommercialBaseStage(products)];
+        }
+
         return {
           ...prev,
           idProducto: value,
           nombre: shouldUpdateNombre ? autoNombre : prev.nombre,
-          unidadRendimiento: isGranel ? 'Litros' : 'Unidades'
+          unidadRendimiento: isGranel ? 'Litros' : 'Unidades',
+          etapas: updatedEtapas
         };
       });
       return;
@@ -88,10 +110,12 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
     }));
   };
 
-  // Plantillas rápidas de etapas en 1 clic (Base en Tanque vs Envasado Comercial)
+  // Plantillas rápidas de etapas en 1 clic (Base en Tanque vs Envasado Comercial vs Incorporación Base)
   const applyStageTemplate = (templateType) => {
     let templateEtapas = [];
-    if (templateType === 'BASE_TANQUE') {
+    if (templateType === 'INCORPORACION_BASE') {
+      templateEtapas = [createCommercialBaseStage(products)];
+    } else if (templateType === 'BASE_TANQUE') {
       templateEtapas = [
         {
           nombre: 'Pasteurización y Acondicionamiento',
@@ -145,6 +169,13 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
           detalles: []
         }
       ];
+    } else if (templateType === 'JALEA_FRUTA') {
+      templateEtapas = PLANTILLA_JALEA_FRUTA.map(stg => ({
+        ...stg,
+        detalles: stg.detalles ? stg.detalles.map(d => ({ ...d })) : []
+      }));
+    } else if (Array.isArray(templateType)) {
+      templateEtapas = templateType;
     }
 
     if (templateEtapas.length === 0) return;
@@ -163,6 +194,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
       };
     });
   };
+
 
   const addEtapa = (templateType) => {
     if (templateType && typeof templateType === 'string') {
@@ -337,47 +369,23 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
         await apiClient.post('/recipes', sanitizedPayload);
       }
       handleCloseEditor();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('onboarding:refresh'));
+        window.dispatchEvent(new Event('onboarding-refresh'));
+      }
       if (onSaveSuccess) onSaveSuccess();
     } catch (err) {
       alert(err.message || 'Error al guardar');
     }
   };
 
-  // Cálculo de costos dinámico con soporte dual: Insumos y Productos Intermedios / WIP
+  // Cálculo de costos dinámico con soporte Cost Roll-up (Insumos directos + Bases WIP)
+  const getCostRollup = () => {
+    return calculateRecipeCosts(formData, supplies, products, prices, recipes);
+  };
+
   const calculateCost = () => {
-    let total = 0;
-    // Mapa rápido de precios de insumos
-    const priceMap = prices.reduce((acc, p) => ({ ...acc, [p.idInsumo]: p.costoUnidadBase }), {});
-
-    formData.etapas?.forEach(etapa => {
-      etapa.detalles?.forEach(det => {
-        if (!det.esOpcional && det.activo !== false) {
-          const req = parseFloat(det.cantidadRequerida) || 0;
-          const merma = parseFloat(det.mermaPorcentaje) || 0;
-          const totalReq = req * (1 + (merma / 100));
-
-          let unitCost = 0;
-          if (det.idProductoIntermedio) {
-            // Resolver costo unitario para producto semielaborado (costoBase o costoPromedio del inventario)
-            const prod = products.find(p => p.id === det.idProductoIntermedio);
-            if (prod) {
-              unitCost = Number(prod.costoBase ?? prod.inventario?.costoPromedio ?? prod.inventarioProducto?.costoPromedio ?? 0);
-            }
-          } else if (det.idInsumo) {
-            // Resolver costo unitario para insumo desde precio proveedor o costoBase
-            const insumoRecord = supplies.find(s => s.id === det.idInsumo);
-            const priceFromMap = parseFloat(priceMap[det.idInsumo]);
-            unitCost = !isNaN(priceFromMap) && priceFromMap > 0
-              ? priceFromMap
-              : Number(insumoRecord?.costoBase || 0);
-          }
-
-          total += (totalReq * unitCost);
-        }
-      });
-    });
-
-    return total;
+    return getCostRollup().totalCost;
   };
 
   return {
@@ -395,6 +403,8 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], onSav
     updateDetalle,
     removeDetalle,
     handleSubmit,
-    calculateCost
+    calculateCost,
+    getCostRollup
   };
 }
+

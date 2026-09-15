@@ -21,7 +21,7 @@ export { generateStageSummaryText, formatMinutesToDigitalClock };
 export function RecipeModal({ 
   formData, products = [], supplies = [], onClose, onSubmit, onChange,
   onApplyStageTemplate, onAddEtapa, onUpdateEtapa, onRemoveEtapa, onMoveEtapa,
-  onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost
+  onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost, getCostRollup
 }) {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,9 +41,16 @@ export function RecipeModal({
   const activeStages = formData.etapas?.filter(e => e.activo !== false) || [];
   const activeStagesCount = activeStages.length;
   const totalProductionTimeMins = activeStages.reduce((acc, stg) => acc + (Number(stg.tiempoEstandarMin) || 0), 0);
-  const totalCost = calculateCost ? calculateCost() : 0;
+  const rollup = getCostRollup ? getCostRollup() : {
+    totalCost: calculateCost ? calculateCost() : 0,
+    costRawSupplies: 0,
+    costWipBases: 0,
+    costPerUnit: 0,
+    hasWipFallback: false
+  };
+  const totalCost = rollup.totalCost;
   const rendimientoNum = parseFloat(formData.rendimientoBase) || 0;
-  const costPerUnit = rendimientoNum > 0 ? (totalCost / rendimientoNum) : 0;
+  const costPerUnit = rollup.costPerUnit || (rendimientoNum > 0 ? (totalCost / rendimientoNum) : 0);
 
   // Detección Poka-Yoke de dependencias y empaque
   const hasBulkProduct = products.some(p => p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || p.presentacion?.nombre?.toUpperCase().includes('GRANEL') || ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(p.categoria));
@@ -116,25 +123,17 @@ export function RecipeModal({
         </div>
         <div className={styles.headerActions}>
           <button type="button" className={styles.btnCancelHeader} onClick={handleHeaderCancel}>Cancelar</button>
-          <button 
-            type="button" 
-            className={`${styles.btnSummarizeHeader} ${isButtonReady ? styles.btnSummarizeHeaderEnabled : styles.btnSummarizeHeaderDisabled}`} 
-            onClick={handleOpenSummaryModal} 
-            disabled={!isButtonReady}
-          >
+          <button type="button" className={`${styles.btnSummarizeHeader} ${isButtonReady ? styles.btnSummarizeHeaderEnabled : styles.btnSummarizeHeaderDisabled}`} onClick={handleOpenSummaryModal} disabled={!isButtonReady}>
             <span>📋</span> Finalizar y Resumir
           </button>
         </div>
       </div>
-
       <ContextBanner title="Concepto Técnico" description="Instrucciones paso a paso para fabricar los productos. Permite formular materias primas y bases semielaboradas (WIP)." />
-
       <form onSubmit={onSubmit} className={styles.editorContainer}>
         <RecipeHeaderFields formData={formData} products={products} onChange={onChange} isCommercialWithoutBulk={isCommercialWithoutBulk} isMissingCommercialPackaging={isMissingCommercialPackaging} />
         <RecipeStagesList etapas={formData.etapas || []} supplies={supplies} products={products} currentRecipeProductId={formData.idProducto} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onApplyStageTemplate={onApplyStageTemplate} onAddEtapa={onAddEtapa} onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={onMoveEtapa} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
-        <RecipeBalanceFooter formData={formData} totalMateriasPrimas={totalMateriasPrimas} totalBasesWip={totalBasesWip} activeStagesCount={activeStagesCount} costPerUnit={costPerUnit} totalCost={totalCost} selectedProduct={selectedProduct} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} />
+        <RecipeBalanceFooter formData={formData} totalMateriasPrimas={totalMateriasPrimas} totalBasesWip={totalBasesWip} activeStagesCount={activeStagesCount} costPerUnit={costPerUnit} totalCost={totalCost} costRawSupplies={rollup.costRawSupplies || 0} costWipBases={rollup.costWipBases || 0} hasWipFallback={rollup.hasWipFallback || false} selectedProduct={selectedProduct} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} />
       </form>
-
       <RecipeOperationalSummaryModal isOpen={showSummaryModal} isSubmitting={isSubmitting} formData={formData} selectedProduct={selectedProduct} activeStages={activeStages} totalProductionTimeMins={totalProductionTimeMins} costPerUnit={costPerUnit} totalCost={totalCost} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} canSubmit={canSubmit} supplies={supplies} products={products} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onClose={() => setShowSummaryModal(false)} onDiscard={handleDiscardCompleteRecipe} onPublish={handleConfirmPublish} />
     </div>
   );

@@ -21,8 +21,8 @@ export function useRecipesPageManager() {
     isEditing, formData, handleOpenEditor, handleCloseEditor,
     handleChange, applyStageTemplate, addEtapa, updateEtapa, removeEtapa,
     moveStage, addDetalle, updateDetalle, removeDetalle,
-    handleSubmit, calculateCost
-  } = useRecipeForm({ supplies, products, prices, onSaveSuccess: fetchData });
+    handleSubmit, calculateCost, getCostRollup
+  } = useRecipeForm({ supplies, products, prices, recipes: items, onSaveSuccess: fetchData });
 
   const searchParams = useSearchParams();
   const autoOpenedRef = useRef(false);
@@ -31,14 +31,13 @@ export function useRecipesPageManager() {
   const hasSupplies = supplies.length > 0;
   const canCreate = !loading && hasProducts && hasSupplies;
 
-  const isCreateParam = searchParams.get('crear') === 'receta';
+  const isCreateParam = searchParams.get('crear') === 'receta' || searchParams.get('action') === 'new';
+  const targetProductId = searchParams.get('productId');
 
   useEffect(() => {
-    if (isCreateParam && !autoOpenedRef.current && !loading) {
-      if (canCreate) {
-        autoOpenedRef.current = true;
-        handleOpenEditor(null);
-      }
+    if (isCreateParam && !autoOpenedRef.current && !loading && hasProducts && hasSupplies) {
+      autoOpenedRef.current = true;
+      handleOpenEditor(null, targetProductId || null);
       if (typeof window !== 'undefined') {
         window.history.replaceState({}, '', '/catalog/recipes');
       }
@@ -46,7 +45,7 @@ export function useRecipesPageManager() {
     if (!isCreateParam) {
       autoOpenedRef.current = false;
     }
-  }, [isCreateParam, loading, canCreate, handleOpenEditor]);
+  }, [isCreateParam, targetProductId, loading, hasProducts, hasSupplies, handleOpenEditor]);
 
   useEffect(() => {
     const handleGlobalOpenModal = () => {
@@ -83,7 +82,8 @@ export function useRecipesPageManager() {
     items, products, supplies, loading, error, isEditing, formData,
     handleOpenEditor, handleCloseEditor, handleChange, applyStageTemplate,
     addEtapa, updateEtapa, removeEtapa, moveStage, addDetalle, updateDetalle,
-    removeDetalle, handleSubmit, calculateCost, handleToggleActive,
+    removeDetalle, handleSubmit, calculateCost, getCostRollup, handleToggleActive,
     canCreate, hasProducts, hasSupplies, disabledTooltip
   };
 }
+

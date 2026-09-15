@@ -1,15 +1,20 @@
+'use client';
+
 /**
  * @file RecipeStagesList.jsx
  * @module catalog/recipes/components/modal-parts
- * @description Sección completa de etapas de producción con barra de herramientas, empty state asistido, acordeón y narrativa continua inline.
- * @responsibility Orquestar el listado de etapas de la receta, permitiendo agregar, mover, editar y previsualizar.
+ * @description Orquestador Maestro-Detalle (Split View) para etapas de producción de recetas (< 130 líneas).
+ * @responsibility Conectar RecipeStagesTimeline y RecipeStageEditor con soporte para PackagingWizardModal.
  * @usedBy apps/web/src/app/catalog/recipes/components/RecipeModal.jsx
- * @dependencies react, ./StageCardItem, ../recipe-modal.module.css
+ * @dependencies react, ../parts/RecipeStagesTimeline, ../parts/RecipeStageEditor, ./PackagingWizardModal, ../parts/recipe-stages.module.css
  */
 
-import React, { useState } from 'react';
-import { StageCardItem } from './StageCardItem';
-import styles from '../recipe-modal.module.css';
+import React, { useState, useEffect } from 'react';
+import { RecipeStagesTimeline } from '../parts/RecipeStagesTimeline';
+import { RecipeStageEditor } from '../parts/RecipeStageEditor';
+import { PackagingWizardModal } from './PackagingWizardModal';
+import { usePresentationsData } from '@/app/catalog/presentations/hooks/usePresentationsData';
+import styles from '../parts/recipe-stages.module.css';
 
 export function RecipeStagesList({
   etapas = [],
@@ -27,151 +32,82 @@ export function RecipeStagesList({
   onUpdateDetalle,
   onRemoveDetalle
 }) {
-  const [expandedStageIndex, setExpandedStageIndex] = useState(0);
-  const [showSummaryPanel, setShowSummaryPanel] = useState(false);
+  const [selectedStageIndex, setSelectedStageIndex] = useState(0);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const { presentations } = usePresentationsData();
 
-  const activeStages = etapas.filter(e => e.activo !== false);
-  const activeStagesCount = activeStages.length;
+  useEffect(() => {
+    if (selectedStageIndex >= etapas.length && etapas.length > 0) {
+      setSelectedStageIndex(etapas.length - 1);
+    }
+  }, [etapas.length, selectedStageIndex]);
+
+  const handleAddStage = () => {
+    const nextIdx = etapas.length;
+    if (onAddEtapa) onAddEtapa();
+    setSelectedStageIndex(nextIdx);
+  };
 
   const handleApplyTemplate = (type) => {
-    const currentCount = etapas.length;
-    if (onApplyStageTemplate) {
-      onApplyStageTemplate(type);
-    } else if (onAddEtapa) {
-      onAddEtapa(type);
+    if (type === 'ENVASADO_COMERCIAL') {
+      setIsWizardOpen(true);
+      return;
     }
-    setExpandedStageIndex(currentCount);
-    setShowSummaryPanel(false);
+    const currentLen = etapas.length;
+    if (onApplyStageTemplate) onApplyStageTemplate(type);
+    setSelectedStageIndex(currentLen);
   };
 
-  const handleAddNewStage = () => {
-    const nextIndex = etapas.length;
-    if (onAddEtapa) {
-      onAddEtapa();
-    }
-    setExpandedStageIndex(nextIndex);
-    setShowSummaryPanel(false);
+  const handleWizardGenerateStages = (stages) => {
+    const currentLen = etapas.length;
+    if (onApplyStageTemplate) onApplyStageTemplate(stages);
+    setSelectedStageIndex(currentLen);
   };
 
-  const handleToggleSummarize = () => {
-    if (showSummaryPanel) {
-      setShowSummaryPanel(false);
-      setExpandedStageIndex(0);
-    } else {
-      setShowSummaryPanel(true);
-      setExpandedStageIndex(-1);
-    }
+  const handleMove = (idx, direction) => {
+    if (!onMoveEtapa) return;
+    onMoveEtapa(idx, direction);
+    setSelectedStageIndex(direction === 'UP' && idx > 0 ? idx - 1 : (direction === 'DOWN' && idx < etapas.length - 1 ? idx + 1 : idx));
   };
+
+  const handleDuplicate = (idx) => {
+    const stageToCopy = etapas[idx];
+    if (!stageToCopy || !onAddEtapa) return;
+    onAddEtapa();
+    const newIdx = etapas.length;
+    if (onUpdateEtapa) {
+      ['tiempoEstandarMin', 'tiempoMinimoMin', 'tiempoMaximoMin', 'tempMinimaGrados', 'tempMaximaGrados', 'instrucciones'].forEach(field => {
+        onUpdateEtapa(newIdx, field, stageToCopy[field]);
+      });
+      onUpdateEtapa(newIdx, 'nombre', `${stageToCopy.nombre || 'Etapa'} (Copia)`);
+    }
+    setSelectedStageIndex(newIdx);
+  };
+
+  const currentStage = etapas[selectedStageIndex];
+  const summaryText = currentStage && generateStageSummaryText ? generateStageSummaryText(currentStage, supplies, products) : '';
+  const selectedProduct = products.find(p => String(p.id) === String(currentRecipeProductId));
+  const isGranel = selectedProduct ? (selectedProduct.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || selectedProduct.presentacion?.nombre?.toUpperCase().includes('GRANEL') || ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProduct.categoria)) : false;
+  const isCommercial = Boolean(selectedProduct && !isGranel);
 
   return (
-    <div>
-      <div className={styles.stagesSectionHeader}>
-        <h2 className={styles.stagesTitle}>Etapas de Producción</h2>
-        
-        {activeStagesCount === 0 ? (
-          <button type="button" onClick={handleAddNewStage} className={styles.addStageBtn}>
-            + Agregar Etapa Manual
-          </button>
-        ) : (
-          <div className={styles.stageToolbar}>
-            <button type="button" onClick={() => handleApplyTemplate('BASE_TANQUE')} className={styles.templateBtn} title="Cargar etapas estándar de preparación de base en tanque">
-              🥛 Tanque
-            </button>
-            <button type="button" onClick={() => handleApplyTemplate('ENVASADO_COMERCIAL')} className={styles.templateBtn} title="Cargar etapas estándar de mezcla, dosificación y sellado">
-              🍓 Envasado
-            </button>
-            <button type="button" onClick={handleAddNewStage} className={styles.addStageBtn} title="Inserta una nueva etapa al final del listado">
-              + Agregar Etapa
-            </button>
-            <button type="button" onClick={handleToggleSummarize} className={styles.summarizeBtn} title="Colapsa todas las etapas y activa la vista de Hoja de Ruta de Planta">
-              📋 {showSummaryPanel ? 'Editar Etapas' : 'Hoja de Ruta de Planta'}
-            </button>
-          </div>
-        )}
-      </div>
-      
-      {activeStagesCount === 0 ? (
-        <div className={styles.emptyStateCard}>
-          <span className={styles.emptyStateIcon}>📋</span>
-          <h4 className={styles.emptyStateTitle}>No hay etapas configuradas en esta receta</h4>
-          <p className={styles.emptyStateText}>
-            Usa una de las plantillas rápidas de un solo clic para cargar los tiempos y temperaturas estándar de planta, o agrega una etapa manualmente.
-          </p>
-          <div className={styles.emptyStateButtons}>
-            <button type="button" onClick={() => handleApplyTemplate('BASE_TANQUE')} className={styles.templateBtn}>
-              🥛 Cargar Etapas de Tanque (Pasteurización + Fermentación)
-            </button>
-            <button type="button" onClick={() => handleApplyTemplate('ENVASADO_COMERCIAL')} className={styles.templateBtn}>
-              🍓 Cargar Etapas de Envasado (Mezcla + Dosificación)
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div>
-          {/* Panel de Narrativa Continua Inline */}
-          {showSummaryPanel && (
-            <div className={styles.inlineSummaryPanel}>
-              <div className={styles.inlineSummaryHeader}>
-                <span style={{ fontSize: '1.2rem' }}>📜</span>
-                <div>
-                  <h3 className={styles.inlineSummaryTitle}>Hoja de Ruta Operativa de Planta</h3>
-                  <span className={styles.inlineSummarySubtitle}>
-                    Protocolo paso a paso para la elaboración del lote en piso de producción
-                  </span>
-                </div>
-              </div>
-              <div className={styles.inlineSummaryList}>
-                {etapas.map((etapa, idx) => {
-                  if (etapa.activo === false) return null;
-                  const summary = generateStageSummaryText(etapa, supplies, products);
-                  return (
-                    <div key={idx} className={styles.inlineSummaryItem}>
-                      <strong>Paso {etapa.orden} ({etapa.nombre || 'Etapa sin nombre'}):</strong> {summary}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Acordeón de Etapas */}
-          {etapas.map((etapa, eIdx) => {
-            if (etapa.activo === false) return null;
-            const isExpanded = expandedStageIndex === eIdx;
-            const summaryText = generateStageSummaryText(etapa, supplies, products);
-
-            return (
-              <StageCardItem
-                key={eIdx}
-                etapa={etapa}
-                eIdx={eIdx}
-                isExpanded={isExpanded}
-                summaryText={summaryText}
-                totalStagesCount={etapas.length}
-                supplies={supplies}
-                products={products}
-                currentRecipeProductId={currentRecipeProductId}
-                formatMinutesToDigitalClock={formatMinutesToDigitalClock}
-                onExpand={() => {
-                  setExpandedStageIndex(eIdx);
-                  setShowSummaryPanel(false);
-                }}
-                onCollapse={() => setExpandedStageIndex(-1)}
-                onRemoveEtapa={onRemoveEtapa}
-                onMoveEtapa={onMoveEtapa ? (idx, dir) => {
-                  onMoveEtapa(idx, dir);
-                  if (dir === 'UP' && expandedStageIndex === idx) setExpandedStageIndex(idx - 1);
-                  if (dir === 'DOWN' && expandedStageIndex === idx) setExpandedStageIndex(idx + 1);
-                } : null}
-                onUpdateEtapa={onUpdateEtapa}
-                onAddDetalle={onAddDetalle}
-                onUpdateDetalle={onUpdateDetalle}
-                onRemoveDetalle={onRemoveDetalle}
-              />
-            );
-          })}
-        </div>
-      )}
+    <div className={styles.splitLayout}>
+      <RecipeStagesTimeline
+        etapas={etapas} selectedIndex={selectedStageIndex} isCommercial={isCommercial}
+        onSelectStage={setSelectedStageIndex} onAddEtapa={handleAddStage} onApplyTemplate={handleApplyTemplate}
+      />
+      <RecipeStageEditor
+        etapa={currentStage} stageIndex={selectedStageIndex} totalStagesCount={etapas.length}
+        etapas={etapas} supplies={supplies} products={products} currentRecipeProductId={currentRecipeProductId}
+        summaryText={summaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock}
+        onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={handleMove}
+        onDuplicateEtapa={handleDuplicate} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle}
+        onRemoveDetalle={onRemoveDetalle} onSelectStage={setSelectedStageIndex} onAddEtapa={handleAddStage}
+      />
+      <PackagingWizardModal
+        isOpen={isWizardOpen} presentations={presentations}
+        onClose={() => setIsWizardOpen(false)} onGenerateStages={handleWizardGenerateStages}
+      />
     </div>
   );
 }

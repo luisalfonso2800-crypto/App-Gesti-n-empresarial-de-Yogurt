@@ -14,6 +14,7 @@ import styles from './recipe-stages.module.css';
 export function RecipeStagesTimeline({
   etapas = [],
   selectedIndex = 0,
+  isCommercial = false,
   onSelectStage,
   onAddEtapa,
   onApplyTemplate
@@ -28,37 +29,57 @@ export function RecipeStagesTimeline({
             type="button"
             className={styles.templateBtn}
             onClick={() => onApplyTemplate && onApplyTemplate('BASE_TANQUE')}
-            title="Cargar plantilla estándar de base láctea"
+            title="Ruta de fermentación y cultivo en tanque refrigerado"
           >
-            🥛 Tanque
+            🥛 Base Láctea (WIP)
           </button>
           <button
             type="button"
             className={styles.templateBtn}
             onClick={() => onApplyTemplate && onApplyTemplate('ENVASADO_COMERCIAL')}
-            title="Cargar plantilla estándar de envasado"
+            title="Asistente guiado para dosificación, jalea y sellado en envases"
           >
-            🍓 Envasado
+            📦 Empaque Comercial
+          </button>
+          <button
+            type="button"
+            className={styles.templateBtn}
+            onClick={() => onApplyTemplate && onApplyTemplate('JALEA_FRUTA')}
+            title="Ruta estándar para preparación de fruta y jaleas en marmita"
+          >
+            🍓 Cocción de Fruta / Jalea
           </button>
         </div>
       </div>
 
       {activeStages.length === 0 ? (
         <div className={styles.emptyTimeline}>
-          <p className={styles.emptyTimelineTitle}>Sin etapas aún</p>
-          <p className={styles.emptyTimelineText}>Usa una plantilla o agrega la primera etapa.</p>
+          <p className={styles.emptyTimelineTitle}>
+            {isCommercial ? 'Base requerida' : 'Sin etapas aún'}
+          </p>
+          <p className={styles.emptyTimelineText}>
+            {isCommercial
+              ? 'Inicie con la incorporación de base láctea desde tanque.'
+              : 'Usa una plantilla o agrega la primera etapa.'}
+          </p>
+          {isCommercial && (
+            <div className={styles.commercialSuggestionBox}>
+              <button
+                type="button"
+                className={styles.commercialSuggestionBtn}
+                onClick={() => onApplyTemplate && onApplyTemplate('INCORPORACION_BASE')}
+                title="Inyectar Recepción y Verificación de Yogurt Base"
+              >
+                🥛 + 1° Incorporación Base
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         etapas.map((etapa, idx) => {
           if (etapa.activo === false) return null;
           const isSelected = selectedIndex === idx;
-
-          const isComplete = Boolean(
-            etapa.nombre &&
-            etapa.nombre.trim() &&
-            Number(etapa.tiempoEstandarMin) > 0
-          );
-
+          const isComplete = Boolean(etapa.nombre?.trim() && Number(etapa.tiempoEstandarMin) > 0);
           const timeDisplay = Number(etapa.tiempoEstandarMin) > 0 ? `${etapa.tiempoEstandarMin}m` : null;
           const tempDisplay = (Number(etapa.tempMinimaGrados) > 0 || Number(etapa.tempMaximaGrados) > 0)
             ? `${etapa.tempMinimaGrados || 0}-${etapa.tempMaximaGrados || 0}°C`
