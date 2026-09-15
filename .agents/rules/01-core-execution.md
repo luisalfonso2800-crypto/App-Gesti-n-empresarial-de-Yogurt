@@ -23,6 +23,14 @@
   - Vistas / Componentes / Hooks / Arquitectura Frontend: `03-frontend-architecture.md`
   - Paleta MANNÁ / UX / Empty States / Ergonomía: `04-design-system-manna.md`
   - Formularios / SmartModal / Moneda / Poka-Yoke: `05-forms-and-modals.md`
+  - Prevención de bucles / Circuit Breaker / Frontera hermética: `06-circuit-breaker-and-anti-loop.md`
+
+---
+
+### 0.2. REFERENCIAS CRUZADAS NORMATIVAS (OBLIGATORIEDAD DE CONSULTA)
+
+* **Consulta Previa al Circuit Breaker:** Toda IA colaboradora debe consultar imperativamente [`.agents/rules/06-circuit-breaker-and-anti-loop.md`](file:///.agents/rules/06-circuit-breaker-and-anti-loop.md) antes de iniciar procesos de refactorización, modularización de vistas o resolución de errores de límites SRP.
+* **Prohibición de Bucles de Lectura:** Queda terminantemente prohibido caer en bucles de rastreo recursivo de hooks, exploraciones especulativas en capas ajenas al alcance (ej. explorar `apps/api/` cuando se trabaja en `apps/web/`) o reintentos ciegos de edición.
 
 ---
 
@@ -142,3 +150,21 @@ Una tarea se considera terminada cuando:
 5. Los cambios fueron documentados en el reporte de cierre bajo las categorías `VERIFICADO`, `NO VERIFICADO` o `BLOQUEADO`.
 
 Al cumplir estos cinco puntos, DETENTE inmediatamente. Queda PROHIBIDO continuar explorando o refactorizando tras alcanzar el criterio de finalización.
+
+---
+
+## 4. PROTOCOLO CIRCUIT BREAKER (PREVENCIÓN DE BUCLES INFINITOS)
+
+> **DOCUMENTO NORMATIVO ESPECIALIZADO:** Para la especificación exhaustiva de corte de circuito, umbrales preventivos y aislamiento hermético, ver [`.agents/rules/06-circuit-breaker-and-anti-loop.md`](file:///.agents/rules/06-circuit-breaker-and-anti-loop.md).
+
+### DISYUNTOR DE REINTENTOS DE LÍNEAS (MÁXIMO 2 INTENTOS)
+* **Tope de Intentos:** Si un archivo excede los límites de `verify-srp.js` (>120 en páginas, >150 en componentes), el agente tiene un máximo de **2 intentos de edición** para modularizarlo.
+* **Prohibición de Micro-Ediciones en Bucle:** Prohibido realizar múltiples ediciones consecutivas intentando eliminar saltos de línea o comprimir sintaxis para "encajar" en 149 líneas.
+* **Parada Obligatoria y Consulta:** Al fallar el segundo intento, el agente DEBE DETENERSE inmediatamente, reportar el archivo conflictivo y proponer la extracción de un subcomponente sin continuar ejecutando comandos.
+
+### MARGEN PREVENTIVO DE SEGURIDAD (135 LÍNEAS)
+* **Umbral Seguro:** Todo componente debe apuntar a un rango de 70 a 130 líneas. Si un componente alcanza las **135 líneas**, la directriz obligatoria es extraer un subcomponente atómico (`parts/`) en lugar de apurar el margen hasta 150.
+
+### FRONTERA HERMÉTICA FRONTEND / BACKEND
+* **Aislamiento de Alcance:** Si una tarea tiene alcance en `apps/web/`, queda terminantemente prohibido leer, buscar o analizar archivos en `apps/api/` (controladores, repositorios, Prisma o servicios).
+* **Falta de Contratos o Endpoints:** Si un flujo de frontend requiere un dato, mutación o endpoint que no está documentado en el prompt, el agente NO DEBE salir a explorar el backend para descubrirlo. Debe reportar la duda directamente al desarrollador y detenerse.

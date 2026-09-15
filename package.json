@@ -10,6 +10,7 @@
     "build:api": "pnpm --filter api build",
     "build:web": "pnpm --filter web build --no-lint",
     "build": "pnpm --filter api build && pnpm --filter web build --no-lint",
-    "verify:srp": "node .agents/scripts/verify-srp.js"
+    "verify:srp": "node .agents/scripts/verify-srp.js",
+    "dev": "pnpm --filter api start:dev & pnpm --filter web dev"
   }
 }

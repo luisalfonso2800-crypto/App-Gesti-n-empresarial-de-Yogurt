@@ -1,0 +1,553 @@
+/* recipe-stages.module.css - Estilos modulares para Master-Detail (Split View) de Etapas de Recetas */
+
+.splitLayout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .splitLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Panel Izquierdo: Hoja de Ruta / Pipeline */
+.timelineCol {
+  max-height: 70vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 0.25rem;
+}
+
+.timelineToolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.timelineTemplateGroup {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.templateBtn {
+  flex: 1;
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  color: #182622;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.templateBtn:hover {
+  background-color: #EFECE4;
+  border-color: #D6D0C4;
+}
+
+.timelineCard {
+  background: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+}
+
+.timelineCard:hover {
+  background: #F4EFE6;
+  border-color: #D6D0C4;
+}
+
+.timelineCardActive {
+  background: #FFFFFF;
+  border: 2px solid #182622;
+  box-shadow: 0 2px 6px rgba(24, 38, 34, 0.08);
+}
+
+.timelineCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stageNumberBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #182622;
+  color: #FFFFFF;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.timelineCardTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #182622;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusPillComplete {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background-color: #DCFCE7;
+  color: #166534;
+  white-space: nowrap;
+}
+
+.statusPillIncomplete {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background-color: #FEF3C7;
+  color: #92400E;
+  white-space: nowrap;
+}
+
+.timelineBadgesRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: #57534E;
+}
+
+.microBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: #EFECE4;
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  font-weight: 600;
+}
+
+.addStageBtn {
+  background-color: #FFFFFF;
+  border: 1px dashed #182622;
+  color: #182622;
+  padding: 0.55rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+  margin-top: 0.25rem;
+}
+
+.addStageBtn:hover {
+  background-color: #F7F4EE;
+  border-style: solid;
+}
+
+/* Panel Derecho: Banco de Trabajo */
+.workspaceCol {
+  background: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.emptyWorkspace {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: #78716C;
+  font-size: 0.9rem;
+}
+
+/* Tarjeta de Telemetría Viva */
+.telemetryCard {
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.telemetryIcon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.telemetryContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.telemetryHeading {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716C;
+  font-weight: 800;
+}
+
+.telemetryBody {
+  font-size: 0.85rem;
+  color: #182622;
+  line-height: 1.45;
+}
+
+/* Campos de Formulario en Workspace */
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.formRow3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 680px) {
+  .formRow, .formRow3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #182622;
+  letter-spacing: 0.025em;
+}
+
+.input, .select {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #D6D3D1;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #182622;
+  background-color: #FFFFFF;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus, .select:focus {
+  outline: none;
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.timeInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeClockPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #EFECE4;
+  border: 1px solid #D6D0C4;
+  color: #182622;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.rangeInputsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+/* Subtabla BOM */
+.bomSection {
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bomHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bomTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #182622;
+  margin: 0;
+}
+
+.bomHelpText {
+  font-size: 0.75rem;
+  color: #78716C;
+  font-style: italic;
+  margin: 0;
+}
+
+.bomTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bomTable th {
+  background: #F7F4EE;
+  color: #182622;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid #E5DFD5;
+  text-align: left;
+}
+
+.bomTable td {
+  border: 1px solid #E5DFD5;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.qtyWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.unitBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #57534E;
+  white-space: nowrap;
+}
+
+.itemTypeTagWip {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background-color: #DBEAFE;
+  color: #1E40AF;
+  white-space: nowrap;
+}
+
+.itemTypeTagPkg {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background-color: #FEF3C7;
+  color: #92400E;
+  white-space: nowrap;
+}
+
+.itemTypeTagComplement {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background-color: #F3E8FF;
+  color: #6B21A8;
+  white-space: nowrap;
+}
+
+.itemTypeTagRaw {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background-color: #F3F4F6;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.btnRemoveRow {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnRemoveRow:hover {
+  background: #FEE2E2;
+}
+
+.btnAddBom {
+  background-color: #F7F4EE;
+  border: 1px solid #D6D0C4;
+  color: #182622;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnAddBom:hover {
+  background-color: #EFECE4;
+}
+
+.emptyBomNotice {
+  padding: 1rem;
+  text-align: center;
+  color: #78716C;
+  font-size: 0.8rem;
+  font-style: italic;
+  background: #FAF8F5;
+  border: 1px dashed #E5DFD5;
+  border-radius: 6px;
+}
+
+/* Botonera de Acción de la Fase */
+.actionFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid #E5DFD5;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.orderButtonGroup {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btnOrder {
+  background: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnOrder:hover:not(:disabled) {
+  background: #F4EFE6;
+}
+
+.btnOrder:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnDuplicate {
+  background: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnDuplicate:hover {
+  background: #F4EFE6;
+}
+
+.btnDeleteStage {
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  color: #991B1B;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnDeleteStage:hover {
+  background: #FEE2E2;
+}
+
+.emptyTimeline {
+  border: 2px dashed #D6D3D1;
+  background-color: #FAF8F5;
+  border-radius: 8px;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.emptyTimelineTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #182622;
+  margin: 0;
+}
+
+.emptyTimelineText {
+  font-size: 0.75rem;
+  color: #78716C;
+  margin: 0;
+}

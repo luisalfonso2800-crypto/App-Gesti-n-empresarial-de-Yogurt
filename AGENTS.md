@@ -16,6 +16,7 @@ Antes de intervenir cualquier módulo o ejecutar tareas, consulta el submódulo 
 | **3. Arquitectura Frontend** | [`.agents/rules/03-frontend-architecture.md`](file:///.agents/rules/03-frontend-architecture.md) | 4, 5, 6, 6.1, 6.2, 7, 8, 8.1, 16.3, 16.4, 18, 19 | Arquitectura 3 capas, SRP (< 120 líneas en page, < 150 en modales), JSDoc, CSS Modules, no inline styles. |
 | **4. Design System MANNÁ** | [`.agents/rules/04-design-system-manna.md`](file:///.agents/rules/04-design-system-manna.md) | 16, 16.1, 16.2, 35, 36, 37, 38 (jerga) | Paleta MANNÁ (`#182622`, Pergamino, Oro), Veto Anti-Blue, ergonomía de planta, AssistedEmptyState, no alerts. |
 | **5. Formularios y Modales** | [`.agents/rules/05-forms-and-modals.md`](file:///.agents/rules/05-forms-and-modals.md) | 13, 13.1, 13.2, 17, 31, 32, 33, 34, 35, 36, 37, 38 (modales), 39 | Poka-Yoke, UPPERCASE, máscaras COP/NIT/Tel, SmartModal, número a letras, catálogos. |
+| **6. Circuit Breaker y Anti-Loop** | [`.agents/rules/06-circuit-breaker-and-anti-loop.md`](file:///.agents/rules/06-circuit-breaker-and-anti-loop.md) | Circuit Breaker (1, 2, 3, 4) | Tope 2 reintentos, umbral 135 líneas, aislamiento hermético frontend/backend, bloqueo anti-bucle. |
 
 ---
 

@@ -81,6 +81,14 @@
 * **Contratos Limpios para Prisma:** Antes de enviar el formulario a la API, todo campo opcional numérico, de relación foránea o fecha que contenga cadena vacía `""` debe transformarse a `null` (o removerse del payload).
 * **Prohibición de Envíos Corruptos:** Ningún string vacío `""` debe despacharse hacia columnas de tipo `Int`, `Float` o claves foráneas relacionales en el backend.
 
+### REGLA 13.8. ENTRADAS DE RANGO CON PREFIJO INTEGRADO (MÍN / MÁX)
+* **Optimización de Espacio y Lectura Rápida:** En rangos numéricos bivalentes (ej. mínimo y máximo de tolerancia, rangos térmicos, tolerancias de peso), queda prohibido usar etiquetas individuales flotantes o duplicadas que fracturen la línea visual.
+* **Patrón de Prefijo Integrado con Barra Separadora:**
+  - El input debe conformarse en un contenedor único (`inputGroupPrefix`) que integra un badge lateral izquierdo (`inputPrefix`) con el texto en mayúscula compacta (`MÍN`, `MÁX`) sobre fondo pergamino institucional (`#F7F4EE`), seguido de una barra divisoria vertical (`border-right: 1px solid #D6D0C4`).
+  - El campo de entrada numérico (`inputInner`) va transparente a la derecha, compartiendo el foco exterior del componente en verde MANNÁ (`#182622`).
+* **Ergonomía de Tarjeta:** Siempre que coexistan parámetros métricos múltiples en una grilla de 3 columnas (`formRow3`), agrupar cada parámetro en una tarjeta delimitada (`parameterCard`) con etiquetas en una sola línea (`white-space: nowrap`) para asegurar alturas simétricas e intuitivas en planta.
+
+
 ### REGLA 17. FORMULARIOS COMPLEJOS (1:N)
 * **Colecciones Dinámicas:** Manejo dinámico de colecciones (agregar, editar y eliminar filas) estructurado y organizado por fases lógicas o pestañas temáticas.
 
