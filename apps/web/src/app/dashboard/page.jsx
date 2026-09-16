@@ -15,11 +15,15 @@ import ProductAvatar from '@/components/ui/ProductAvatar';
 import StrictNumberInput from '@/components/ui/inputs/StrictNumberInput';
 import { resolveProductImage } from '@/lib/presetImages';
 import { Activity, ShieldAlert, Database, Clock, Settings, PackageX, MoreVertical, ShoppingCart, Tag, Package, CreditCard, TrendingUp } from 'lucide-react';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { OnboardingHeroState } from '@/components/dashboard/OnboardingHeroState';
 import styles from './Dashboard.module.css';
 
 import { Suspense } from 'react';
 
 function DashboardContent() {
+  const { data: onboardingData, loading: onboardingLoading } = useOnboardingStatus();
+  const [onboardingViewMode, setOnboardingViewMode] = useState('auto'); // 'auto', 'wizard', 'dashboard'
   const searchParams = useSearchParams();
   const router = useRouter();
   const [showAlarmsOverlay, setShowAlarmsOverlay] = useState(false);
@@ -1017,10 +1021,43 @@ function DashboardContent() {
         </div>
       </div>
 
-      {activeChannel === 'ALL' && renderChannelAll()}
-      {activeChannel === 'FINANCE' && renderChannelFinance()}
-      {activeChannel === 'PLANT' && renderChannelPlant()}
-      {activeChannel === 'SUPPLY' && renderChannelSupply()}
+      {/* DECISIÓN ONBOARDING / DASHBOARD */}
+      {(() => {
+        const isOnboardingIncomplete = onboardingData && !onboardingData.isCompleted;
+        const hasZeroActivity = (financial?.salesCurrentMonth === 0 || !financial?.salesCurrentMonth) && 
+                                (plant?.totalInventoryLiters === 0 || !plant?.totalInventoryLiters);
+        const shouldShowHero = onboardingViewMode === 'wizard' || (onboardingViewMode === 'auto' && (isOnboardingIncomplete || hasZeroActivity));
+
+        if (shouldShowHero && onboardingData) {
+          return (
+            <OnboardingHeroState
+              onboardingData={onboardingData}
+              currentMode={onboardingViewMode === 'auto' ? 'wizard' : onboardingViewMode}
+              onSwitchMode={(mode) => setOnboardingViewMode(mode)}
+            />
+          );
+        }
+
+        return (
+          <>
+            {onboardingData && !onboardingData.isCompleted && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setOnboardingViewMode('wizard')}
+                  className={styles.simButton}
+                >
+                  🌱 Ver Centro de Puesta en Marcha
+                </button>
+              </div>
+            )}
+            {activeChannel === 'ALL' && renderChannelAll()}
+            {activeChannel === 'FINANCE' && renderChannelFinance()}
+            {activeChannel === 'PLANT' && renderChannelPlant()}
+            {activeChannel === 'SUPPLY' && renderChannelSupply()}
+          </>
+        );
+      })()}
 
       <SmartModal 
         isOpen={modalState.isOpen} 
