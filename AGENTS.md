@@ -17,6 +17,7 @@ Antes de intervenir cualquier módulo o ejecutar tareas, consulta el submódulo 
 | **4. Design System MANNÁ** | [`.agents/rules/04-design-system-manna.md`](file:///.agents/rules/04-design-system-manna.md) | 16, 16.1, 16.2, 35, 36, 37, 38 (jerga) | Paleta MANNÁ (`#182622`, Pergamino, Oro), Veto Anti-Blue, ergonomía de planta, AssistedEmptyState, no alerts. |
 | **5. Formularios y Modales** | [`.agents/rules/05-forms-and-modals.md`](file:///.agents/rules/05-forms-and-modals.md) | 13, 13.1, 13.2, 17, 31, 32, 33, 34, 35, 36, 37, 38 (modales), 39 | Poka-Yoke, UPPERCASE, máscaras COP/NIT/Tel, SmartModal, número a letras, catálogos. |
 | **6. Circuit Breaker y Anti-Loop** | [`.agents/rules/06-circuit-breaker-and-anti-loop.md`](file:///.agents/rules/06-circuit-breaker-and-anti-loop.md) | Circuit Breaker (1, 2, 3, 4) | Tope 2 reintentos, umbral 135 líneas, aislamiento hermético frontend/backend, bloqueo anti-bucle. |
+| **7. Eficiencia de Tokens y Presupuesto** | [`.agents/rules/07-token-efficiency-and-tool-budget.md`](file:///.agents/rules/07-token-efficiency-and-tool-budget.md) | Regla 07 (1, 2, 3, 4, 5) | Máximo 1 lectura por archivo, restricción de barridos ciegos, presupuesto 4-6 lecturas, ejecución quirúrgica y cierre inmediato. |
 
 ---
 

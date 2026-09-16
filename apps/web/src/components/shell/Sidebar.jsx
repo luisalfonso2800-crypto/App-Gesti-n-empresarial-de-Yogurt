@@ -5,53 +5,54 @@ import {
   Leaf, 
   LayoutDashboard, 
   Bell,
-  Layout, 
-  TestTube, 
+  Box, 
+  Layers, 
   Truck, 
-  Tag, 
+  DollarSign, 
   Package, 
-  FlaskConical,
+  BookOpen,
   ShoppingCart,
-  Database,
-  Factory,
   Boxes,
+  Factory,
+  QrCode,
   Users,
   TrendingUp,
   CreditCard,
   Receipt
 } from 'lucide-react';
+import { SidebarCollapseButton } from './parts/SidebarCollapseButton';
 import styles from './shell.module.css';
 
 const navItems = [
   {
-    group: 'General',
+    group: 'GENERAL',
     items: [
-      { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-      { name: 'Alarmas SCADA', path: '/dashboard/alarms', icon: Bell, badge: '3' },
+      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+      { name: 'Alarmas SCADA', path: '/dashboard?channel=ALARMS', icon: Bell, badge: '3' },
     ]
   },
   {
-    group: 'Catálogos',
+    group: 'CATÁLOGOS',
     items: [
-      { name: 'Presentaciones', path: '/catalog/presentations', icon: Layout },
-      { name: 'Insumos', path: '/catalog/supplies', icon: TestTube },
+      { name: 'Presentaciones', path: '/catalog/presentations', icon: Box },
+      { name: 'Insumos', path: '/catalog/supplies', icon: Layers },
       { name: 'Proveedores', path: '/catalog/suppliers', icon: Truck },
-      { name: 'Precios Prov.', path: '/catalog/supplier-prices', icon: Tag },
+      { name: 'Precios de Prov.', path: '/catalog/supplier-prices', icon: DollarSign },
       { name: 'Productos', path: '/catalog/products', icon: Package },
-      { name: 'Recetas', path: '/catalog/recipes', icon: FlaskConical },
+      { name: 'Recetas', path: '/catalog/recipes', icon: BookOpen },
     ]
   },
   {
-    group: 'Operaciones',
+    group: 'OPERACIONES',
     items: [
       { name: 'Compras', path: '/operations/purchases', icon: ShoppingCart },
-      { name: 'Inventario', path: '/operations/inventory', icon: Database },
+      { name: 'Inventario', path: '/operations/inventory', icon: Boxes },
       { name: 'Producción', path: '/operations/production', icon: Factory },
-      { name: 'Lotes', path: '/operations/lots', icon: Boxes },
+      { name: 'Lotes', path: '/operations/lots', icon: QrCode },
     ]
   },
   {
-    group: 'Comercial',
+    group: 'COMERCIAL',
     items: [
       { name: 'Clientes', path: '/commercial/clients', icon: Users },
       { name: 'Ventas', path: '/commercial/sales', icon: TrendingUp },
@@ -61,12 +62,13 @@ const navItems = [
   }
 ];
 
-export function Sidebar() {
+export function Sidebar({ collapsed = false, onToggle }) {
   const pathname = usePathname();
 
   return (
-    <div className={styles.sidebar}>
-      {/* Wrapper superior para alinear header y listado, dejando footer abajo */}
+    <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`} aria-label="Navegación ERP MANNÁ">
+      <SidebarCollapseButton collapsed={collapsed} onToggle={onToggle} />
+
       <div className={styles.sidebarContentWrapper}>
         <div className={styles.brandWrapper}>
           <Leaf className={styles.brandLogoIcon} size={28} />
@@ -76,11 +78,11 @@ export function Sidebar() {
         
         <nav className={styles.navList}>
           {navItems.map((group) => (
-            <div key={group.group}>
-              <div className={styles.navGroupTitle}>{group.group}</div>
+            <div key={group.group} className={styles.navGroup}>
+              <div className={styles.groupTitle}>{group.group}</div>
               {group.items.map((item) => {
-                const isActive = item.path === '/' 
-                  ? pathname === '/'
+                const isActive = item.path === '/dashboard'
+                  ? (pathname === '/dashboard' || pathname === '/')
                   : (pathname === item.path || pathname.startsWith(item.path + '/'));
                 
                 const Icon = item.icon;
@@ -90,9 +92,10 @@ export function Sidebar() {
                     key={item.path} 
                     href={item.path}
                     className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
+                    title={collapsed ? item.name : undefined}
                   >
-                    <Icon size={16} />
-                    <span>{item.name}</span>
+                    <Icon size={16} strokeWidth={isActive ? 2.2 : 1.75} />
+                    <span className={styles.navItemText}>{item.name}</span>
                     {item.badge && <span className={styles.alarmBadge}>{item.badge}</span>}
                   </Link>
                 );
@@ -107,6 +110,6 @@ export function Sidebar() {
         <span className={styles.footerQuote}>"Procesos que dan vida."</span>
         <span className={styles.footerSubQuote}>La tecnología también puede cuidar lo esencial.</span>
       </div>
-    </div>
+    </aside>
   );
 }

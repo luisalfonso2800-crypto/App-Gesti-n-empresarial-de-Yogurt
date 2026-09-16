@@ -10,6 +10,7 @@
 
 /* Barra lateral MANNÁ */
 .sidebar {
+  position: relative;
   width: 240px;
   min-width: 240px;
   height: 100vh;
@@ -22,6 +23,70 @@
   box-sizing: border-box;
   border-right: 1px solid #233732;
   user-select: none;
+  transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease;
+}
+
+/* Botón toggle estilo panel Gemini */
+.toggleButton {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, right 0.2s ease, top 0.2s ease;
+  z-index: 10;
+}
+
+.toggleButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+/* Modo colapsado */
+.sidebarCollapsed {
+  width: 68px;
+  min-width: 68px;
+  padding: 1.25rem 0.5rem 1.1rem 0.5rem;
+}
+
+.sidebarCollapsed .toggleButton {
+  right: 20px;
+  top: 12px;
+}
+
+.sidebarCollapsed .brandTitle,
+.sidebarCollapsed .brandSubtitle,
+.sidebarCollapsed .groupTitle,
+.sidebarCollapsed .navItemText,
+.sidebarCollapsed .alarmBadge,
+.sidebarCollapsed .footerQuote,
+.sidebarCollapsed .footerSubQuote {
+  display: none;
+}
+
+.sidebarCollapsed .brandWrapper {
+  margin-top: 2rem;
+  margin-bottom: 1.2rem;
+}
+
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding: 8px 0;
+  gap: 0;
+}
+
+.sidebarCollapsed .sidebarFooter {
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.75rem;
 }
 
 .sidebarContentWrapper {
