@@ -67,6 +67,7 @@
 .sidebarCollapsed .groupTitle,
 .sidebarCollapsed .navItemText,
 .sidebarCollapsed .alarmBadge,
+.sidebarCollapsed .lockIcon,
 .sidebarCollapsed .footerQuote,
 .sidebarCollapsed .footerSubQuote {
   display: none;
@@ -224,6 +225,28 @@
 
 .navItemActive svg {
   color: #182622 !important;
+}
+
+/* Estado bloqueado progresivo: Progressive Disclosure */
+.navItemLocked {
+  opacity: 0.38;
+  filter: grayscale(0.6);
+  cursor: not-allowed;
+  pointer-events: auto;
+  user-select: none;
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+.navItemLocked:hover {
+  background-color: transparent !important;
+  color: #A3B5AA !important;
+}
+
+.lockIcon {
+  margin-left: auto;
+  color: #CAD5B5;
+  opacity: 0.85;
+  flex-shrink: 0;
 }
 
 /* Badge de Alarmas */

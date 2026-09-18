@@ -21,6 +21,9 @@ import {
   Receipt
 } from 'lucide-react';
 import { SidebarCollapseButton } from './parts/SidebarCollapseButton';
+import { SidebarNavItem } from './parts/SidebarNavItem';
+import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { isRouteUnlocked } from '@/lib/onboarding-unlock-rules';
 import styles from './shell.module.css';
 
 const navItems = [
@@ -64,6 +67,7 @@ const navItems = [
 
 export function Sidebar({ collapsed = false, onToggle }) {
   const pathname = usePathname();
+  const { data: onboardingData } = useOnboardingStatus();
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`} aria-label="Navegación ERP MANNÁ">
@@ -85,19 +89,17 @@ export function Sidebar({ collapsed = false, onToggle }) {
                   ? (pathname === '/dashboard' || pathname === '/')
                   : (pathname === item.path || pathname.startsWith(item.path + '/'));
                 
-                const Icon = item.icon;
-                
+                const { isUnlocked, requiredStepText } = isRouteUnlocked(item.path, onboardingData);
+
                 return (
-                  <Link 
-                    key={item.path} 
-                    href={item.path}
-                    className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
-                    title={collapsed ? item.name : undefined}
-                  >
-                    <Icon size={16} strokeWidth={isActive ? 2.2 : 1.75} />
-                    <span className={styles.navItemText}>{item.name}</span>
-                    {item.badge && <span className={styles.alarmBadge}>{item.badge}</span>}
-                  </Link>
+                  <SidebarNavItem
+                    key={item.path}
+                    item={item}
+                    isActive={isActive}
+                    isUnlocked={isUnlocked}
+                    requiredStepText={requiredStepText}
+                    collapsed={collapsed}
+                  />
                 );
               })}
             </div>

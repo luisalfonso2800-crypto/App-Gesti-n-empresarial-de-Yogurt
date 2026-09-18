@@ -16,6 +16,7 @@ import { resolveProductImage } from '@/lib/presetImages';
 import { Activity, ShieldAlert, Database, Clock, Settings, PackageX, MoreVertical, ShoppingCart, Tag, Package, CreditCard, TrendingUp } from 'lucide-react';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { OnboardingHeroState } from '@/components/dashboard/OnboardingHeroState';
+import { DashboardQuickAccessStrip } from './components/DashboardQuickAccessStrip';
 import styles from './Dashboard.module.css';
 
 import { Suspense } from 'react';
@@ -943,58 +944,8 @@ function DashboardContent() {
       )}
 
 
-      {/* CINTA TÁCTICA DE ACCESOS RÁPIDOS */}
-      <section className={styles.quickAccessGrid} aria-label="Accesos Rápidos Operativos">
-        <Link className={styles.actionCard} href="/operations/purchases">
-          <div className={styles.cardIconWrapper}>
-            <ShoppingCart className={styles.actionCardIcon} size={18}/>
-          </div>
-          <div className={styles.cardContent}>
-            <span className={styles.actionCardCategory}>MÓDULO</span>
-            <strong className={styles.actionCardTitle}>Compras</strong>
-          </div>
-        </Link>
-
-        <Link className={styles.actionCard} href="/catalog/supplier-prices">
-          <div className={styles.cardIconWrapper}>
-            <Tag className={styles.actionCardIcon} size={18}/>
-          </div>
-          <div className={styles.cardContent}>
-            <span className={styles.actionCardCategory}>INSUMOS</span>
-            <strong className={styles.actionCardTitle}>Precios Proveedor</strong>
-          </div>
-        </Link>
-
-        <Link className={styles.actionCard} href="/catalog/products">
-          <div className={styles.cardIconWrapper}>
-            <Package className={styles.actionCardIcon} size={18}/>
-          </div>
-          <div className={styles.cardContent}>
-            <span className={styles.actionCardCategory}>CATÁLOGO</span>
-            <strong className={styles.actionCardTitle}>Productos</strong>
-          </div>
-        </Link>
-
-        <Link className={styles.actionCard} href="/commercial/payments">
-          <div className={styles.cardIconWrapper}>
-            <CreditCard className={styles.actionCardIcon} size={18}/>
-          </div>
-          <div className={styles.cardContent}>
-            <span className={styles.actionCardCategory}>TESORERÍA</span>
-            <strong className={styles.actionCardTitle}>Pagos y Cobros</strong>
-          </div>
-        </Link>
-
-        <Link className={styles.actionCard} href="/commercial/sales">
-          <div className={styles.cardIconWrapper}>
-            <TrendingUp className={styles.actionCardIcon} size={18}/>
-          </div>
-          <div className={styles.cardContent}>
-            <span className={styles.actionCardCategory}>COMERCIAL</span>
-            <strong className={styles.actionCardTitle}>Ventas</strong>
-          </div>
-        </Link>
-      </section>
+      {/* CINTA TÁCTICA DE ACCESOS RÁPIDOS CON DESBLOQUEO PROGRESIVO */}
+      <DashboardQuickAccessStrip onboardingData={onboardingData} />
 
       <div className={styles.kpiStrip}>
         <div className={styles.kpiCard}>
