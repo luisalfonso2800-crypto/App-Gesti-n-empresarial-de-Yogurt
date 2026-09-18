@@ -1,0 +1,268 @@
+.canvasContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+  padding: 3rem 1.5rem;
+  background: #f7f4ed;
+  border-radius: 12px;
+  border: 1px solid #e8e2d7;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(24, 38, 34, 0.04);
+  transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+}
+
+.fadeOut {
+  opacity: 0;
+  transform: scale(0.99);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  animation: canvasFadeOut 0.4s ease forwards;
+}
+
+.badgeConnected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: #e8f5e9;
+  border: 1px solid #b7e4c7;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #1b4332;
+  margin-bottom: 1.75rem;
+  letter-spacing: 0.02em;
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.checklistFadeIn {
+  animation: messageSlideIn 0.35s ease-out forwards;
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #edf3ed;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 0 8px rgba(28, 63, 53, 0.06);
+  animation: pulseGlow 2.8s ease-in-out infinite;
+}
+
+.iconWrapperSuccess {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #e8f5e9;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 0 0 8px rgba(27, 67, 50, 0.12);
+  animation: checkPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.leafIcon {
+  color: #1c3f35;
+  animation: gentleBreathe 2.8s ease-in-out infinite;
+}
+
+.checkIcon {
+  color: #1b4332;
+}
+
+.title {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #182622;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: -0.01em;
+}
+
+.message {
+  font-size: 0.95rem;
+  color: #57534e;
+  max-width: 480px;
+  line-height: 1.55;
+  margin: 0 0 1.75rem 0;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: #f0ece1;
+  border: 1px solid #ddd5c7;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #44403c;
+  margin-bottom: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d97706;
+  animation: blinkDot 1.4s ease-in-out infinite;
+}
+
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.6rem;
+  background-color: #1c3f35;
+  color: #ffffff;
+  border: 1px solid #142e27;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 6px rgba(24, 38, 34, 0.15);
+}
+
+.retryButton:hover:not(:disabled) {
+  background-color: #245245;
+  box-shadow: 0 4px 12px rgba(24, 38, 34, 0.22);
+}
+
+.retryButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.retryButton:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.spinIcon {
+  animation: spin 1s linear infinite;
+}
+
+/* Handshake Checklist */
+.checklistContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.65rem;
+  background: #ffffff;
+  border: 1px solid #e2ddd3;
+  border-radius: 10px;
+  padding: 1rem 1.4rem;
+  margin-top: 0.5rem;
+  box-shadow: 0 2px 8px rgba(24, 38, 34, 0.05);
+}
+
+.checklistItem {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1b4332;
+  opacity: 0;
+  animation: messageSlideIn 0.35s ease-out forwards;
+}
+
+.checklistItem:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.checklistItem:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.checklistItem:nth-child(3) {
+  animation-delay: 0.55s;
+}
+
+.checkItemIcon {
+  color: #1b4332;
+  flex-shrink: 0;
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 8px rgba(28, 63, 53, 0.06);
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(28, 63, 53, 0.12);
+  }
+}
+
+@keyframes gentleBreathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes blinkDot {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes checkPop {
+  0% {
+    transform: scale(0.65);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes messageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes canvasFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

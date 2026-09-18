@@ -16,7 +16,15 @@ export function useOnboardingBulkCheck(isOpen) {
     let isMounted = true;
     const checkBulk = async () => {
       try {
-        const prods = await apiClient.get('/products');
+        let prods = [];
+        try {
+          const res = await apiClient.get('/products');
+          prods = Array.isArray(res) ? res : [];
+        } catch (fetchErr) {
+          console.warn('[useOnboardingBulkCheck] Servidor no disponible al consultar productos a granel:', fetchErr?.message);
+          prods = [];
+        }
+
         if (isMounted && Array.isArray(prods)) {
           const bulkExists = prods.some(p => 
             p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || 

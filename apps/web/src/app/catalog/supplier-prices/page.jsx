@@ -9,12 +9,11 @@
  */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { ContextBanner } from '@/components/ui/ContextBanner';
 import styles from './supplier-prices.module.css';
-
 import { useSupplierPricesData } from './hooks/useSupplierPricesData';
 import { useCartManager } from './hooks/useCartManager';
 import { PricesFilterBar } from './components/PricesFilterBar';
@@ -22,8 +21,6 @@ import { PricesComparisonTable } from './components/PricesComparisonTable';
 import { CartSidebar } from './components/CartSidebar';
 import { SupplierPriceModal } from './components/SupplierPriceModal';
 import { SummaryCard } from './components/SummaryCard';
-
-import { Suspense } from 'react';
 
 function SupplierPricesContent() {
   const searchParams = useSearchParams();
@@ -50,12 +47,22 @@ function SupplierPricesContent() {
   }, [searchParams, setFilterSearch]);
   
   useEffect(() => {
-    import('@/lib/api-client').then(({ apiClient }) => {
-      Promise.all([apiClient.get('/supplies'), apiClient.get('/suppliers')]).then(([ins, provs]) => {
-        setAllInsumos(ins);
-        setAllProveedores(provs);
-      }).catch(err => console.error("Error loading catalogs:", err));
+    let isMounted = true;
+    import('@/lib/api-client').then(async ({ apiClient }) => {
+      try {
+        const [ins, provs] = await Promise.all([
+          apiClient.get('/supplies').catch(() => []),
+          apiClient.get('/suppliers').catch(() => [])
+        ]);
+        if (isMounted) {
+          setAllInsumos(Array.isArray(ins) ? ins : []);
+          setAllProveedores(Array.isArray(provs) ? provs : []);
+        }
+      } catch (err) {
+        console.warn('[SupplierPrices] Error cargando catálogos auxiliares:', err);
+      }
     });
+    return () => { isMounted = false; };
   }, []);
 
   const handleOpenModal = (item = null) => { setEditingItem(item); setIsModalOpen(true); };
@@ -76,34 +83,25 @@ function SupplierPricesContent() {
       />
 
       <PricesFilterBar 
-        filterInsumo={filterInsumo} setFilterInsumo={setFilterInsumo}
-        filterProveedor={filterProveedor} setFilterProveedor={setFilterProveedor}
-        filterEstado={filterEstado} setFilterEstado={setFilterEstado}
-        filterSort={filterSort} setFilterSort={setFilterSort}
-        filterSearch={filterSearch} setFilterSearch={setFilterSearch}
-        hasFilters={hasFilters} clearFilters={clearFilters}
+        filterInsumo={filterInsumo} setFilterInsumo={setFilterInsumo} filterProveedor={filterProveedor} setFilterProveedor={setFilterProveedor}
+        filterEstado={filterEstado} setFilterEstado={setFilterEstado} filterSort={filterSort} setFilterSort={setFilterSort}
+        filterSearch={filterSearch} setFilterSearch={setFilterSearch} hasFilters={hasFilters} clearFilters={clearFilters}
         uniqueInsumos={uniqueInsumos} uniqueProveedores={uniqueProveedores}
       />
-
       <SummaryCard summaryCard={summaryCard} />
-
       <PricesComparisonTable 
         items={items} filteredItems={filteredItems} loading={loading} error={error}
         bestPricesMap={bestPricesMap} selectedForPurchase={selectedForPurchase}
         handleOpenModal={handleOpenModal} handleToggleActive={handleToggleActive}
-        togglePurchaseItem={togglePurchaseItem}
-        onNewTarifa={() => handleOpenModal(null)}
+        togglePurchaseItem={togglePurchaseItem} onNewTarifa={() => handleOpenModal(null)}
       />
-
       <CartSidebar 
         selectedForPurchase={selectedForPurchase}
         clearPurchaseList={clearPurchaseList} proceedToPurchase={proceedToPurchase}
       />
-
       <SupplierPriceModal 
-        isOpen={isModalOpen} onClose={handleCloseModal}
-        editingItem={editingItem} onSubmit={handleSubmitForm}
-        allInsumos={allInsumos} allProveedores={allProveedores}
+        isOpen={isModalOpen} onClose={handleCloseModal} editingItem={editingItem}
+        onSubmit={handleSubmitForm} allInsumos={allInsumos} allProveedores={allProveedores}
       />
       {MoveListModal}
     </div>

@@ -14,10 +14,11 @@ export function useOnboardingStatus() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isOffline, setIsOffline] = useState(false);
 
   /**
    * Consulta el endpoint de estado de onboarding en el backend.
-   * Manejo defensivo con try/catch para evitar pantallas rotas si el backend no responde.
+   * Manejo defensivo con try/catch para evitar caídas si el backend está fuera de línea.
    */
   const fetchStatus = useCallback(async () => {
     try {
@@ -25,9 +26,18 @@ export function useOnboardingStatus() {
       setError(null);
       const res = await apiClient.get('/system/onboarding-status');
       setData(res);
+      setIsOffline(false);
     } catch (err) {
-      console.error('Error fetching onboarding status:', err);
-      setError(err?.message || 'Error al cargar estado de onboarding');
+      console.warn('[useOnboardingStatus] No se pudo consultar el estado de onboarding:', err?.message);
+      const msg = err?.message || '';
+      const isConnectionIssue =
+        msg.toLowerCase().includes('failed to fetch') ||
+        msg.toLowerCase().includes('network') ||
+        msg.toLowerCase().includes('conexión') ||
+        err?.status === 0;
+
+      setIsOffline(Boolean(isConnectionIssue));
+      setError(msg || 'Error al cargar estado de onboarding');
     } finally {
       setLoading(false);
     }
@@ -56,6 +66,8 @@ export function useOnboardingStatus() {
     data,
     loading,
     error,
+    isOffline,
+    retry: fetchStatus,
     refreshOnboarding: fetchStatus,
   };
 }

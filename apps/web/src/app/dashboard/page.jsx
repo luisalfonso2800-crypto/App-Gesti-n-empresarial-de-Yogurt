@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
-import { formatScada } from '@/lib/formatters';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import SmartModal from '@/components/ui/SmartModal';
 import AnalogGauge from './components/AnalogGauge';
@@ -135,25 +134,22 @@ function DashboardContent() {
     (a) => !acknowledgedIds.includes(a.id)
   ).length;
 
-  useEffect(() => {
-    let mounted = true;
-    const fetchTelemetry = async () => {
-      try {
-        setLoading(true);
-        const data = await apiClient.get('/dashboard/full-telemetry');
-        if (mounted) {
-          setTelemetry(data);
-          setError(null);
-        }
-      } catch (err) {
-        if (mounted) setError(err.message || 'Error de conexión SCADA multiplexor');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchTelemetry();
-    return () => { mounted = false; };
+  const fetchTelemetry = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await apiClient.get('/dashboard/full-telemetry');
+      setTelemetry(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Error de conexión SCADA multiplexor');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTelemetry();
+  }, [fetchTelemetry]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -235,7 +231,7 @@ function DashboardContent() {
   };
 
   if (loading) return <LoadingState />;
-  if (error) return <ErrorState error={error} />;
+  if (error) return <ErrorState error={error} onRetry={fetchTelemetry} />;
   if (!telemetry) return null;
 
   const { financial, plant, supply } = telemetry;

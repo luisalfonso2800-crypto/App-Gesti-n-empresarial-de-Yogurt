@@ -24,7 +24,36 @@ export const apiClient = {
       }
     }
 
-    const response = await fetch(url, { ...options, headers });
+    let response;
+    const isGet = !options.method || options.method.toUpperCase() === 'GET';
+    try {
+      response = await fetch(url, { ...options, headers });
+    } catch (networkError) {
+      this._isOffline = true;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('manna:network-offline'));
+      }
+      if (options?.silentOffline) {
+        return null;
+      }
+      if (isGet) {
+        console.warn('[API Client] Servidor no accesible:', url);
+        return [];
+      }
+      const isTypeError = networkError.name === 'TypeError' || networkError.message?.includes('fetch');
+      throw new ApiError(
+        0,
+        isTypeError ? 'Failed to fetch' : (networkError.message || 'Error de conexión'),
+        { originalError: networkError.message }
+      );
+    }
+
+    if (this._isOffline) {
+      this._isOffline = false;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('manna:network-online'));
+      }
+    }
     
     if (!response.ok) {
       let errorData;
@@ -47,8 +76,17 @@ export const apiClient = {
     return response.json();
   },
 
-  get(endpoint, options= {}) {
+  get(endpoint, options = {}) {
     return this.fetch(endpoint, { ...options, method: 'GET' });
+  },
+
+  async safeGet(endpoint, defaultValue = null, options = {}) {
+    try {
+      const data = await this.get(endpoint, { ...options, silentOffline: true });
+      return { data: data !== null ? data : defaultValue, isOffline: data === null };
+    } catch (e) {
+      return { data: defaultValue, isOffline: true };
+    }
   },
 
   post(endpoint, data, options= {}) {
