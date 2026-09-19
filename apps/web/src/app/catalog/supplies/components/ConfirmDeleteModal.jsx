@@ -3,10 +3,10 @@
  * @module catalog/supplies/components
  * @description Diálogo de confirmación para eliminación física segura de insumos desactivados.
  * @responsibility Informar advertencia y confirmar ejecución de hard delete condicional.
- * @dependencies @/components/ui/Modal, @/components/ui/Button
+ * @dependencies @/components/ui/SmartModal, @/components/ui/Button
  */
 import React from 'react';
-import { Modal } from '@/components/ui/Modal';
+import SmartModal from '@/components/ui/SmartModal';
 import { Button } from '@/components/ui/Button';
 import styles from '../supplies.module.css';
 
@@ -21,7 +21,12 @@ export function ConfirmDeleteModal({
   if (!isOpen || !item) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Eliminar Insumo Definitivamente">
+    <SmartModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Eliminar Insumo Definitivamente"
+      isSubmitting={isDeleting}
+    >
       <div className={styles.container}>
         <p className={styles.confirmText}>
           ¿Está seguro de eliminar definitivamente el insumo <strong>{item.nombre}</strong>?
@@ -46,6 +51,7 @@ export function ConfirmDeleteModal({
           </Button>
         </div>
       </div>
-    </Modal>
+    </SmartModal>
   );
 }
+

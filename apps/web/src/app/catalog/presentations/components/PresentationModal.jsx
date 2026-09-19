@@ -9,23 +9,11 @@
 
 import React from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
-import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from './presentation-modal.module.css';
 import { PresentationImageUploader } from './modal-parts/PresentationImageUploader';
+import { PresentationCapacityFields } from './modal-parts/PresentationCapacityFields';
 import { usePresentationUploader } from './modal-parts/usePresentationUploader';
-
-const TIPO_ENVASE_OPTIONS = [
-  { id: 'UNIDAD', label: 'UNIDAD' },
-  { id: 'ENVASE', label: 'ENVASE' },
-  { id: 'BOLSA', label: 'BOLSA' },
-  { id: 'CAJA', label: 'CAJA' },
-  { id: 'BULTO', label: 'BULTO' },
-  { id: 'BOTELLA', label: 'BOTELLA' },
-  { id: 'BIDÓN', label: 'BIDÓN' },
-  { id: 'CANASTILLA', label: 'CANASTILLA' },
-  { id: 'OTRO', label: 'OTRO' }
-];
 
 function resolveImageUrl(url) {
   if (!url) return '';
@@ -39,6 +27,11 @@ export function PresentationModal({
   isSubmitting, errorMsg 
 }) {
   const activeIsEditing = isEditing !== undefined ? Boolean(isEditing) : Boolean(editingItem);
+  const [hasSubmitted, setHasSubmitted] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isOpen) setHasSubmitted(false);
+  }, [isOpen]);
 
   const { isUploading, uploadError, localBlobUrl, handleFileChange, handleClearImage } = usePresentationUploader({
     isOpen,
@@ -51,9 +44,25 @@ export function PresentationModal({
     handleChange(name === 'nombre' || name === 'observaciones' ? { target: { name, value: (value ?? '').toUpperCase() } } : e);
   };
 
+  const isNombreInvalid = !formData.nombre?.trim();
+  const isCantidadOzInvalid = formData.cantidadOz === '' || formData.cantidadOz === null || formData.cantidadOz === undefined;
+  const isCantidadMlInvalid = formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined;
+  const isTipoEnvaseInvalid = !formData.tipoEnvase;
+
+  const missingFields = [];
+  if (isNombreInvalid) missingFields.push('Nombre de la presentación');
+  if (isCantidadOzInvalid) missingFields.push('Cantidad en Oz');
+  if (isCantidadMlInvalid) missingFields.push('Cantidad en Ml');
+  if (isTipoEnvaseInvalid) missingFields.push('Tipo de envase');
+
+  const hasErrors = missingFields.length > 0;
+  const isSubmitDisabled = isSubmitting || isUploading;
+  const submitTitle = isUploading ? 'Espere mientras se completa la subida...' : hasSubmitted && hasErrors ? `Complete: ${missingFields.join(', ')}` : 'Guardar cambios de la presentación';
+
   const onSubmit = (e) => {
     e.preventDefault();
-    if (isSubmitDisabled) return;
+    setHasSubmitted(true);
+    if (hasErrors || isSubmitDisabled) return;
     handleSubmit(e, {
       ...formData,
       nombre: (formData.nombre || '').trim().toUpperCase(),
@@ -66,39 +75,36 @@ export function PresentationModal({
     });
   };
 
-  const missingFields = [];
-  if (!formData.nombre?.trim()) missingFields.push('Nombre de la presentación');
-  if (formData.cantidadOz === '' || formData.cantidadOz === null || formData.cantidadOz === undefined) missingFields.push('Cantidad en Oz');
-  if (formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined) missingFields.push('Cantidad en Ml');
-  if (!formData.tipoEnvase) missingFields.push('Tipo de envase');
-
-  const isSubmitDisabled = missingFields.length > 0 || isSubmitting || isUploading;
-  const submitTitle = isUploading ? 'Espere mientras se completa la subida...' : missingFields.length > 0 ? `Complete: ${missingFields.join(', ')}` : 'Guardar cambios de la presentación';
   const activeError = uploadError || (typeof errorMsg === 'string' ? errorMsg : (errorMsg?.message || ''));
   const activeDisplayImage = localBlobUrl || resolveImageUrl(formData.imagenUrl);
 
   return (
-    <SmartModal isOpen={isOpen} onClose={onClose} title={activeIsEditing ? 'Editar Presentación' : 'Nueva Presentación'} isDirty={Boolean(formData.nombre || formData.tipoEnvase !== 'ENVASE')} isSubmitting={isSubmitting || isUploading}>
+    <SmartModal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title={activeIsEditing ? 'Editar Presentación Comercial' : 'Nueva Presentación Comercial'}
+      subtitle="Define el recipiente físico y capacidad para el costeo y envasado en planta."
+      isDirty={Boolean(formData.nombre || formData.tipoEnvase !== 'ENVASE')} 
+      isSubmitting={isSubmitting || isUploading}
+    >
       {activeError && <div className={styles.errorMessage}><span>⚠️</span><span>{activeError}</span></div>}
 
       <form onSubmit={onSubmit} className={styles.formContainer}>
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>Nombre de la Presentación <span className={styles.requiredAsterisk}>*</span></label>
-          <input name="nombre" value={formData.nombre ?? ''} onChange={handleInputChange} placeholder="Ej: BOTELLA VIDRIO 250ML" className={`${modalStyles.input} ${styles.uppercaseInput}`} required />
+          <input name="nombre" value={formData.nombre ?? ''} onChange={handleInputChange} placeholder="Ej: BOTELLA VIDRIO 250ML" className={`${modalStyles.input} ${styles.uppercaseInput} ${hasSubmitted && isNombreInvalid ? styles.inputErrorBorder : ''}`} required />
+          {hasSubmitted && isNombreInvalid && <span className={styles.fieldErrorText}>Este campo es requerido</span>}
         </div>
 
-        <div className={modalStyles.twoColumns}>
-          <div className={modalStyles.inputGroup}>
-            <label className={modalStyles.label}>Cantidad (Oz) <span className={styles.requiredAsterisk}>*</span></label>
-            <input name="cantidadOz" type="text" inputMode="decimal" value={formData.cantidadOz ? String(formData.cantidadOz).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''} onChange={e => handleChange({ target: { name: 'cantidadOz', value: e.target.value.replace(/\D/g, '') } })} onKeyDown={e => e.key === '-' && e.preventDefault()} placeholder="0" className={modalStyles.input} required />
-          </div>
-          <div className={modalStyles.inputGroup}>
-            <label className={modalStyles.label}>Cantidad (Ml) <span className={styles.requiredAsterisk}>*</span></label>
-            <input name="cantidadMl" type="text" inputMode="decimal" value={formData.cantidadMl ? String(formData.cantidadMl).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''} onChange={e => handleChange({ target: { name: 'cantidadMl', value: e.target.value.replace(/\D/g, '') } })} onKeyDown={e => e.key === '-' && e.preventDefault()} placeholder="0" className={modalStyles.input} required />
-          </div>
-        </div>
+        <PresentationCapacityFields 
+          formData={formData} 
+          handleChange={handleChange} 
+          hasSubmitted={hasSubmitted} 
+          isCantidadOzInvalid={isCantidadOzInvalid} 
+          isCantidadMlInvalid={isCantidadMlInvalid} 
+          isTipoEnvaseInvalid={isTipoEnvaseInvalid} 
+        />
 
-        <SmartSelect label="Tipo de Envase" name="tipoEnvase" value={formData.tipoEnvase ?? 'ENVASE'} onChange={handleChange} options={TIPO_ENVASE_OPTIONS} required placeholder="Seleccione envase" />
         <PresentationImageUploader activeDisplayImage={activeDisplayImage} isUploading={isUploading} onFileChange={handleFileChange} onClearImage={handleClearImage} />
 
         <div className={modalStyles.inputGroup}>
@@ -113,7 +119,7 @@ export function PresentationModal({
 
         {formData.nombre && (
           <div className={styles.presentationSummaryBanner}>
-            <strong>Resumen:</strong> Se {activeIsEditing ? 'actualizará' : 'registrará'} la presentación <strong>{formData.nombre}</strong>{formData.tipoEnvase ? <> (envase de <strong>{formData.tipoEnvase.replace('_', ' ').toLowerCase()}</strong>)</> : null}, con capacidad de <strong>{formData.cantidadOz || 0} Oz</strong> ({formData.cantidadMl || 0} Ml).
+            <strong>Resumen:</strong> Se {activeIsEditing ? 'actualizará' : 'creará'} la presentación <strong>{formData.nombre}</strong> en formato <strong>{formData.tipoEnvase || 'ENVASE'}</strong> de <strong>{formData.cantidadMl || 0}</strong> ml. Cada lote descontará 1 recipiente por unidad terminada.
           </div>
         )}
 

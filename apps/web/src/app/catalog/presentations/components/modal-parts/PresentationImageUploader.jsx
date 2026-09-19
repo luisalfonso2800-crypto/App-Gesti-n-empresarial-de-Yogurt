@@ -37,7 +37,7 @@ export function PresentationImageUploader({
             ref={fileInputRef}
             onChange={onFileChange}
             accept="image/*"
-            style={{ display: 'none' }}
+            className={styles.hiddenFileInput}
           />
 
           <button

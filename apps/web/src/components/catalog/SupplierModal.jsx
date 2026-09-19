@@ -20,6 +20,7 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
     isSubmitting,
     errorMessage,
     isDirty,
+    isEditing,
     isNitError,
     isTelefonoError,
     isEmailError,
@@ -33,7 +34,7 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
     <SmartModal 
       isOpen={isOpen} 
       onClose={onClose} 
-      title={editingItem ? 'Editar Proveedor' : 'Nuevo Proveedor'}
+      title={isEditing ? 'Editar Proveedor' : 'Nuevo Proveedor'}
       isDirty={isDirty}
       isSubmitting={isSubmitting}
     >
@@ -70,7 +71,7 @@ export function SupplierModal({ isOpen, onClose, editingItem, onSuccess, initial
           </button>
           <SubmitButton 
             isSubmitting={isSubmitting} 
-            text="Guardar Proveedor"
+            text={isEditing ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
             disabled={isSubmitDisabled}
             title={submitTitle}
             className={isSubmitDisabled ? styles.btnSubmitDisabled : ''}

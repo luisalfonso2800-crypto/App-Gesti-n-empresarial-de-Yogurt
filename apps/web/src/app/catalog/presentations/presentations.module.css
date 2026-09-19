@@ -6,3 +6,29 @@
 
 .headerTitle { display: flex; flex-direction: column; }
 .subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+
+/* Thumbnail preview in table - Replicando visualización de productos */
+.thumbnailHeader {
+  width: 78px;
+  vertical-align: middle;
+  padding: 0.625rem 0.75rem;
+}
+
+.thumbnailCell {
+  width: 78px;
+  vertical-align: middle;
+  padding: 0.625rem 0.75rem;
+}
+
+.avatarWrapper {
+  width: fit-content;
+  height: fit-content;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #F7F4EE;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E8E2D7;
+}
+

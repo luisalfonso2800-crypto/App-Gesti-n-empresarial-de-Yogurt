@@ -50,9 +50,13 @@ export function useSuppliesData() {
       return { success: true };
     } catch (err) {
       const msg = err.message || 'No se pudo eliminar el insumo.';
-      setActionNotice(msg);
+      setActionNotice({ type: 'error', message: msg });
       return { success: false, message: msg };
     }
+  };
+
+  const notifyUser = (message, type = 'success') => {
+    setActionNotice({ type, message });
   };
 
   return {
@@ -63,6 +67,7 @@ export function useSuppliesData() {
     clearActionNotice: () => setActionNotice(null),
     fetchItems,
     handleToggleActive,
-    handleDeleteSupply
+    handleDeleteSupply,
+    notifyUser
   };
 }

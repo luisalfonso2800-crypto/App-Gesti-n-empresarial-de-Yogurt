@@ -25,6 +25,11 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
     minStockNum,
     isSubmitDisabled,
     submitTitle,
+    isNombreError,
+    isCategoriaError,
+    isMarcaError,
+    isUnidadBaseError,
+    isStockMinimoError,
     handleChange,
     handleSubmit
   } = useSupplyForm({ isOpen, editingItem, initialData, onSuccess, onClose });
@@ -52,6 +57,11 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
           handleChange={handleChange}
           rawCostoBase={rawCostoBase}
           minStockNum={minStockNum}
+          isNombreError={isNombreError}
+          isCategoriaError={isCategoriaError}
+          isMarcaError={isMarcaError}
+          isUnidadBaseError={isUnidadBaseError}
+          isStockMinimoError={isStockMinimoError}
         />
 
         {formData.nombre && (

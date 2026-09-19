@@ -86,21 +86,31 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
   const rawCostoBase = formData.costoBase ? Number(String(formData.costoBase).replace(/\./g, '')) : 0;
   const minStockNum = formData.stockMinimo ? Number(String(formData.stockMinimo).replace(/\./g, '')) : 0;
 
-  const missingFields = [];
-  if (!formData.nombre?.trim()) missingFields.push('Nombre del insumo');
-  if (!formData.categoria) missingFields.push('Categoría');
-  if (!formData.marca?.trim()) missingFields.push('Marca');
-  if (!formData.unidadBase) missingFields.push('Unidad base');
-  if (!formData.stockMinimo) missingFields.push('Stock mínimo');
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
-  const submitTitle = missingFields.length > 0
+  const isNombreInvalid = !formData.nombre?.trim();
+  const isCategoriaInvalid = !formData.categoria;
+  const isMarcaInvalid = !formData.marca?.trim();
+  const isUnidadBaseInvalid = !formData.unidadBase;
+  const isStockMinimoInvalid = !formData.stockMinimo;
+
+  const missingFields = [];
+  if (isNombreInvalid) missingFields.push('Nombre del insumo');
+  if (isCategoriaInvalid) missingFields.push('Categoría');
+  if (isMarcaInvalid) missingFields.push('Marca');
+  if (isUnidadBaseInvalid) missingFields.push('Unidad base');
+  if (isStockMinimoInvalid) missingFields.push('Stock mínimo');
+
+  const hasErrors = missingFields.length > 0;
+  const isSubmitDisabled = isSubmitting;
+  const submitTitle = hasSubmitted && hasErrors
     ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
     : '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitDisabled) return;
+    setHasSubmitted(true);
+    if (hasErrors || isSubmitting) return;
     setIsSubmitting(true);
     setErrorMsg('');
     try {
@@ -136,6 +146,12 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
     minStockNum,
     isSubmitDisabled,
     submitTitle,
+    hasSubmitted,
+    isNombreError: hasSubmitted && isNombreInvalid,
+    isCategoriaError: hasSubmitted && isCategoriaInvalid,
+    isMarcaError: hasSubmitted && isMarcaInvalid,
+    isUnidadBaseError: hasSubmitted && isUnidadBaseInvalid,
+    isStockMinimoError: hasSubmitted && isStockMinimoInvalid,
     handleChange,
     handleSubmit
   };

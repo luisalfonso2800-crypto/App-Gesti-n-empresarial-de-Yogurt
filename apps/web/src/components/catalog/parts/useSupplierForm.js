@@ -24,6 +24,7 @@ export function useSupplierForm({ isOpen, editingItem, initialData = {}, onSucce
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const formatNitCedula = (value) => {
     if (!value) return '';
@@ -44,34 +45,40 @@ export function useSupplierForm({ isOpen, editingItem, initialData = {}, onSucce
     return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
   };
 
+  const entityId = editingItem?.idProveedor ?? editingItem?.id ?? initialData?.idProveedor ?? initialData?.id ?? null;
+  const isEditing = Boolean(entityId);
+  const initialRazonSocial = initialData?.razonSocial || initialData?.nombre || '';
+  const initialNit = initialData?.nit || initialData?.nitCedula || '';
+  const initialTelefono = initialData?.telefono || '';
+
   useEffect(() => {
-    if (isOpen) {
-      if (editingItem) {
-        setFormData({
-          razonSocial: editingItem.razonSocial || editingItem.nombre || '',
-          nit: formatNitCedula(editingItem.nit || editingItem.nitCedula || ''),
-          nombreContacto: editingItem.nombreContacto || '',
-          telefono: formatPhone(editingItem.telefono || ''),
-          email: editingItem.email || '',
-          direccion: editingItem.direccion || '',
-          observaciones: editingItem.observaciones || '',
-          activo: editingItem.activo ?? true
-        });
-      } else {
-        setFormData({
-          razonSocial: initialData.razonSocial || initialData.nombre || '', 
-          nit: formatNitCedula(initialData.nit || initialData.nitCedula || ''),
-          nombreContacto: '',
-          telefono: formatPhone(initialData.telefono || ''),
-          email: '',
-          direccion: '',
-          observaciones: '',
-          activo: true
-        });
-      }
-      setErrorMessage('');
+    if (!isOpen) return;
+    setHasSubmitted(false);
+    if (isEditing && editingItem) {
+      setFormData({
+        razonSocial: editingItem.razonSocial || editingItem.nombre || '',
+        nit: formatNitCedula(editingItem.nit || editingItem.nitCedula || ''),
+        nombreContacto: editingItem.nombreContacto || '',
+        telefono: formatPhone(editingItem.telefono || ''),
+        email: editingItem.email || '',
+        direccion: editingItem.direccion || '',
+        observaciones: editingItem.observaciones || '',
+        activo: editingItem.activo ?? true
+      });
+    } else {
+      setFormData({
+        razonSocial: initialRazonSocial, 
+        nit: formatNitCedula(initialNit),
+        nombreContacto: '',
+        telefono: formatPhone(initialTelefono),
+        email: '',
+        direccion: '',
+        observaciones: '',
+        activo: true
+      });
     }
-  }, [isOpen, editingItem, initialData]);
+    setErrorMessage('');
+  }, [isOpen, entityId, editingItem, initialRazonSocial, initialNit, initialTelefono]);
 
   const handleChange = (e) => {
     setErrorMessage('');
@@ -98,28 +105,33 @@ export function useSupplierForm({ isOpen, editingItem, initialData = {}, onSucce
   const isDirty = !!formData.razonSocial || !!formData.nit;
 
   const rawNit = (formData.nit || '').trim();
-  const isNitError = !rawNit || /[^0-9.\- ]/.test(rawNit) || rawNit.replace(/\D/g, '').length === 0;
+  const rawNitDigits = rawNit.replace(/\D/g, '');
+  const isNitInvalid = !rawNit || /[^0-9.\- ]/.test(rawNit) || rawNitDigits.length === 0;
 
   const telefonoDigits = (formData.telefono || '').replace(/\D/g, '');
-  const isTelefonoError = telefonoDigits.length < 10;
+  const isTelefonoInvalid = !formData.telefono?.trim() || (telefonoDigits.length > 0 && telefonoDigits.length < 10);
 
-  const emailVal = (formData.email || '').trim();
-  const isEmailError = Boolean(emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal));
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const hasEmailText = Boolean(formData.email && formData.email.trim().length > 0);
+  const isEmailValid = !hasEmailText || emailRegex.test(formData.email.trim());
+  const isEmailInvalid = !isEmailValid;
 
   const errorList = [];
   if (!formData.razonSocial?.trim()) errorList.push('Razón Social (*) requerida');
-  if (isNitError) errorList.push('NIT o Cédula requerido');
-  if (isTelefonoError) errorList.push('El celular debe tener 10 dígitos');
+  if (isNitInvalid) errorList.push('NIT o Cédula requerido');
+  if (isTelefonoInvalid) errorList.push('El celular debe tener 10 dígitos');
   if (!formData.direccion?.trim()) errorList.push('Dirección (*) requerida');
-  if (isEmailError) errorList.push('Ingrese un correo electrónico válido');
+  if (isEmailInvalid) errorList.push('Ingrese un correo electrónico válido');
 
   const hasErrors = errorList.length > 0;
-  const isSubmitDisabled = hasErrors || isSubmitting;
-  const submitTitle = hasErrors ? `Campos faltantes o inválidos: ${errorList.join(', ')}` : '';
+  const isSubmitDisabled = isSubmitting;
+  const submitTitle = hasSubmitted && hasErrors ? `Campos faltantes o inválidos: ${errorList.join(', ')}` : '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitDisabled) return;
+    setHasSubmitted(true);
+    if (hasErrors || isSubmitting) return;
+
     setIsSubmitting(true);
     setErrorMessage('');
     try {
@@ -134,8 +146,9 @@ export function useSupplierForm({ isOpen, editingItem, initialData = {}, onSucce
         activo: formData.activo
       };
       let result;
-      if (editingItem) {
-        result = await apiClient.patch(`/suppliers/${editingItem.id}`, payload);
+      if (isEditing) {
+        if (!entityId) throw new Error('ID de proveedor no identificado para actualización');
+        result = await apiClient.patch(`/suppliers/${entityId}`, payload);
       } else {
         result = await apiClient.post('/suppliers', payload);
       }
@@ -157,9 +170,11 @@ export function useSupplierForm({ isOpen, editingItem, initialData = {}, onSucce
     isSubmitting,
     errorMessage,
     isDirty,
-    isNitError,
-    isTelefonoError,
-    isEmailError,
+    isEditing,
+    entityId,
+    isNitError: hasSubmitted && isNitInvalid,
+    isTelefonoError: hasSubmitted && isTelefonoInvalid,
+    isEmailError: hasSubmitted && isEmailInvalid,
     isSubmitDisabled,
     submitTitle,
     handleChange,

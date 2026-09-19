@@ -8,6 +8,7 @@
  */
 'use client';
 import React, { useState } from 'react';
+import { useNotification } from '@/context/NotificationContext';
 import { useSuppliesData } from './hooks/useSuppliesData';
 import { useSupplyForm } from './hooks/useSupplyForm';
 import { SuppliesHeader } from './components/SuppliesHeader';
@@ -17,6 +18,7 @@ import { SupplyModal } from '@/components/catalog/SupplyModal';
 import styles from './supplies.module.css';
 
 export default function SuppliesPage() {
+  const { showNotification } = useNotification();
   const {
     items,
     loading,
@@ -27,7 +29,19 @@ export default function SuppliesPage() {
     handleToggleActive,
     handleDeleteSupply
   } = useSuppliesData();
-  const form = useSupplyForm({ onSuccess: fetchItems });
+
+  const handleFormSuccess = (savedData) => {
+    fetchItems();
+    if (savedData?.customMessage) {
+      showNotification(savedData.customMessage, 'success');
+    } else {
+      const actionText = form.editingItem ? 'actualizado correctamente' : 'registrado exitosamente';
+      const name = savedData?.nombre ? ` "${savedData.nombre}"` : '';
+      showNotification(`Insumo${name} ${actionText}.`, 'success');
+    }
+  };
+
+  const form = useSupplyForm({ onSuccess: handleFormSuccess });
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -37,16 +51,8 @@ export default function SuppliesPage() {
 
   const categories = [...new Set(items.map(i => i.categoria))].filter(Boolean);
 
-  const handleOpenDelete = (item) => {
-    setDeleteError(null);
-    setDeletingItem(item);
-  };
-
-  const handleCloseDelete = () => {
-    if (isDeleting) return;
-    setDeletingItem(null);
-    setDeleteError(null);
-  };
+  const handleOpenDelete = (item) => { setDeleteError(null); setDeletingItem(item); };
+  const handleCloseDelete = () => { if (!isDeleting) { setDeletingItem(null); setDeleteError(null); } };
 
   const handleConfirmDelete = async () => {
     if (!deletingItem) return;
@@ -54,11 +60,8 @@ export default function SuppliesPage() {
     setDeleteError(null);
     const result = await handleDeleteSupply(deletingItem.id);
     setIsDeleting(false);
-    if (result.success) {
-      setDeletingItem(null);
-    } else {
-      setDeleteError(result.message);
-    }
+    if (result.success) setDeletingItem(null);
+    else setDeleteError(result.message);
   };
 
   return (
@@ -72,7 +75,7 @@ export default function SuppliesPage() {
 
       {actionNotice && (
         <div className={styles.toastAlert}>
-          <span>⚠️ {actionNotice}</span>
+          <span>⚠️ {actionNotice?.message || actionNotice}</span>
           <button className={styles.toastClose} onClick={clearActionNotice} aria-label="Cerrar aviso">
             &times;
           </button>
@@ -89,7 +92,7 @@ export default function SuppliesPage() {
 
       <SupplyModal 
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
-        editingItem={form.editingItem} onSuccess={fetchItems}
+        editingItem={form.editingItem} onSuccess={handleFormSuccess}
       />
 
       <ConfirmDeleteModal
