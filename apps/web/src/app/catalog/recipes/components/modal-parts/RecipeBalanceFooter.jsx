@@ -23,7 +23,10 @@ export function RecipeBalanceFooter({
   hasWipFallback = false,
   selectedProduct,
   isInternoOrBulk = false,
-  costoTopePermitido = 0
+  costoTopePermitido = 0,
+  onCancel,
+  onSummarize,
+  isButtonReady = false
 }) {
   return (
     <div className={styles.balanceBar}>
@@ -88,18 +91,29 @@ export function RecipeBalanceFooter({
         {selectedProduct && (
           <div>
             {isInternoOrBulk ? (
-              <span className={styles.profitBadgeInternal}>
-                ⚙️ Costo Interno
-              </span>
+              <span className={styles.profitBadgeInternal}>⚙️ Costo Interno</span>
             ) : costoTopePermitido > 0 && costPerUnit <= costoTopePermitido ? (
-              <span className={styles.profitBadgeProfitable}>
-                🟢 Rentable (Tope: {formatCurrency(costoTopePermitido)})
-              </span>
+              <span className={styles.profitBadgeProfitable}>🟢 Rentable (Tope: {formatCurrency(costoTopePermitido)})</span>
             ) : costoTopePermitido > 0 && costPerUnit > costoTopePermitido ? (
-              <span className={styles.profitBadgeOvercost}>
-                🔴 Sobrecosto (+{formatCurrency(costPerUnit - costoTopePermitido)})
-              </span>
+              <span className={styles.profitBadgeOvercost}>🔴 Sobrecosto (+{formatCurrency(costPerUnit - costoTopePermitido)})</span>
             ) : null}
+          </div>
+        )}
+
+        {/* Botones de acción alineados a la derecha */}
+        {(onCancel || onSummarize) && (
+          <div className={styles.headerActions}>
+            {onCancel && (<button type="button" className={styles.btnCancelHeader} onClick={onCancel}>Cancelar</button>)}
+            {onSummarize && (
+              <button
+                type="button"
+                className={`${styles.btnSummarizeHeader} ${isButtonReady ? styles.btnSummarizeHeaderEnabled : styles.btnSummarizeHeaderDisabled}`}
+                onClick={onSummarize}
+                disabled={!isButtonReady}
+              >
+                <span>📋</span> Finalizar y Resumir
+              </button>
+            )}
           </div>
         )}
       </div>

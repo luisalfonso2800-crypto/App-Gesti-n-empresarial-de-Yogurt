@@ -32,9 +32,6 @@ export function RecipeStageBomTable({
           + Agregar Insumo / Base
         </button>
       </div>
-      <p className={styles.bomHelpText}>
-        💡 Mezcla materias primas de bodega con bases pre-cocinadas (WIP) o empaques.
-      </p>
 
       {activeDetalles.length === 0 ? (
         <div className={styles.emptyBomNotice}>
@@ -62,71 +59,30 @@ export function RecipeStageBomTable({
               return (
                 <tr key={dIdx}>
                   <td>
-                    <select
-                      className={styles.select}
-                      value={selectedValue}
-                      onChange={e => onUpdateDetalle(stageIndex, dIdx, 'resourceSelector', e.target.value)}
-                      required
-                    >
+                    <select className={styles.select} value={selectedValue} onChange={e => onUpdateDetalle(stageIndex, dIdx, 'resourceSelector', e.target.value)} required>
                       <option value="">Seleccione ingrediente o base...</option>
                       <optgroup label="Materias Primas y Empaques (Insumos)">
-                        {supplies.map(s => (
-                          <option key={s.id} value={`INS:${s.id}`}>
-                            {s.nombre} ({s.unidadBase})
-                          </option>
-                        ))}
+                        {supplies.map(s => (<option key={s.id} value={`INS:${s.id}`}>{s.nombre} ({s.unidadBase})</option>))}
                       </optgroup>
                       <optgroup label="Bases y Semielaborados (WIP)">
-                        {availableWipProducts.map(p => (
-                          <option key={p.id} value={`PROD:${p.id}`}>
-                            {p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})
-                          </option>
-                        ))}
+                        {availableWipProducts.map(p => (<option key={p.id} value={`PROD:${p.id}`}>{p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})</option>))}
                       </optgroup>
                     </select>
                   </td>
                   <td>
                     <div className={styles.qtyWrapper}>
-                      <input
-                        className={styles.input}
-                        type="number"
-                        step="0.0001"
-                        min="0"
-                        value={det.cantidadRequerida === '' ? '' : det.cantidadRequerida}
-                        placeholder="0"
-                        onChange={e => onUpdateDetalle(stageIndex, dIdx, 'cantidadRequerida', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                        required
-                      />
+                      <input className={styles.input} type="number" step="0.0001" min="0" value={det.cantidadRequerida === '' ? '' : det.cantidadRequerida} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'cantidadRequerida', e.target.value === '' ? '' : parseFloat(e.target.value))} required />
                       <span className={styles.unitBadge}>{det.unidad || '-'}</span>
                     </div>
                   </td>
                   <td>
-                    <input
-                      className={styles.input}
-                      type="number"
-                      step="0.1"
-                      min="0"
-                      max="100"
-                      value={det.mermaPorcentaje === '' ? '' : det.mermaPorcentaje}
-                      placeholder="0"
-                      onChange={e => onUpdateDetalle(stageIndex, dIdx, 'mermaPorcentaje', e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    />
+                    <input className={styles.input} type="number" step="0.1" min="0" max="100" value={det.mermaPorcentaje === '' ? '' : det.mermaPorcentaje} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'mermaPorcentaje', e.target.value === '' ? '' : parseFloat(e.target.value))} />
                   </td>
                   <td>
-                    {isWip ? (
-                      <span className={styles.itemTypeTagWip}>Base WIP</span>
-                    ) : isPackaging ? (
-                      <span className={styles.itemTypeTagPkg}>📦 Empaque</span>
-                    ) : isComplement ? (
-                      <span className={styles.itemTypeTagComplement}>Complemento</span>
-                    ) : (
-                      <span className={styles.itemTypeTagRaw}>Materia Prima</span>
-                    )}
+                    {isWip ? (<span className={styles.itemTypeTagWip}>Base WIP</span>) : isPackaging ? (<span className={styles.itemTypeTagPkg}>📦 Empaque</span>) : isComplement ? (<span className={styles.itemTypeTagComplement}>Complemento</span>) : (<span className={styles.itemTypeTagRaw}>Materia Prima</span>)}
                   </td>
                   <td>
-                    <button type="button" className={styles.btnRemoveRow} onClick={() => onRemoveDetalle(stageIndex, dIdx)} title="Quitar insumo">
-                      ✕
-                    </button>
+                    <button type="button" className={styles.btnRemoveRow} onClick={() => onRemoveDetalle(stageIndex, dIdx)} title="Quitar insumo">✕</button>
                   </td>
                 </tr>
               );

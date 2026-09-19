@@ -46,29 +46,22 @@ export function RecipeStageActionBar({
     }
   };
 
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+
+  const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    setConfirmDelete(false);
+    if (onRemoveEtapa) onRemoveEtapa(stageIndex);
+  };
+
   return (
     <div className={styles.actionBar}>
       {/* Zona izquierda: Gestión y Riesgo */}
       <div className={styles.actionGroupLeft}>
         <div className={styles.orderButtonGroup}>
-          <button
-            type="button"
-            className={styles.btnOrder}
-            disabled={stageIndex === 0}
-            onClick={() => onMoveEtapa && onMoveEtapa(stageIndex, 'UP')}
-            title="Mover etapa hacia arriba"
-          >
-            ▲ Subir
-          </button>
-          <button
-            type="button"
-            className={styles.btnOrder}
-            disabled={stageIndex === totalStagesCount - 1}
-            onClick={() => onMoveEtapa && onMoveEtapa(stageIndex, 'DOWN')}
-            title="Mover etapa hacia abajo"
-          >
-            ▼ Bajar
-          </button>
           {onDuplicateEtapa && (
             <button
               type="button"
@@ -83,11 +76,12 @@ export function RecipeStageActionBar({
 
         <button
           type="button"
-          className={styles.btnDangerDelete}
-          onClick={() => onRemoveEtapa && onRemoveEtapa(stageIndex)}
-          title="Eliminar esta etapa de la receta"
+          className={confirmDelete ? styles.btnDangerDeleteConfirm : styles.btnDangerDelete}
+          onClick={handleDelete}
+          onBlur={() => setConfirmDelete(false)}
+          title={confirmDelete ? "Haga clic de nuevo para confirmar eliminación" : "Eliminar esta etapa de la receta"}
         >
-          ✕ Eliminar Etapa
+          {confirmDelete ? "⚠️ ¿Confirmar?" : "✕ Eliminar Etapa"}
         </button>
       </div>
 

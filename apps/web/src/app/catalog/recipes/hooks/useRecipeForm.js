@@ -33,7 +33,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
           rendimientoBase: fullItem.rendimientoBase ?? ''
         });
       } catch (err) {
-        alert('Error al cargar la receta: ' + err.message);
+        console.error('Error al cargar la receta:', err);
         return;
       }
     } else {
@@ -421,7 +421,8 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
       }
       if (onSaveSuccess) onSaveSuccess();
     } catch (err) {
-      alert(err.message || 'Error al guardar');
+      console.error('Error al guardar la receta:', err);
+      throw err;
     }
   };
 

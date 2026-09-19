@@ -581,7 +581,31 @@ export function validateRecipeSubmission(formData, isCommercialWithoutBulk, isMi
   if (!formData.rendimientoBase || Number(formData.rendimientoBase) <= 0) return 'Debe ingresar un rendimiento base mayor a cero.';
   if (isCommercialWithoutBulk) return 'Debe existir al menos un producto base a granel en el catálogo.';
   if (isMissingCommercialPackaging) return 'Debe agregar al menos un insumo de empaque primario a la receta.';
+
+  // Validación de coherencia en rangos de etapas
+  if (formData.etapas && Array.isArray(formData.etapas)) {
+    for (const [idx, etapa] of formData.etapas.entries()) {
+      if (etapa.activo === false) continue;
+      const minT = etapa.tiempoMinimoMin === '' || etapa.tiempoMinimoMin === null || etapa.tiempoMinimoMin === undefined ? null : Number(etapa.tiempoMinimoMin);
+      const objT = etapa.tiempoEstandarMin === '' || etapa.tiempoEstandarMin === null || etapa.tiempoEstandarMin === undefined ? null : Number(etapa.tiempoEstandarMin);
+      const maxT = etapa.tiempoMaximoMin === '' || etapa.tiempoMaximoMin === null || etapa.tiempoMaximoMin === undefined ? null : Number(etapa.tiempoMaximoMin);
+
+      if ((minT !== null && objT !== null && minT > objT) || (objT !== null && maxT !== null && objT > maxT) || (minT !== null && maxT !== null && minT > maxT)) {
+        return `La etapa ${idx + 1} (${etapa.nombre || 'sin nombre'}) tiene un rango de tiempo incoherente (mínimo > objetivo o máximo).`;
+      }
+
+      const minTemp = etapa.tempMinimaGrados === '' || etapa.tempMinimaGrados === null || etapa.tempMinimaGrados === undefined ? null : Number(etapa.tempMinimaGrados);
+      const objTemp = etapa.tempObjetivoGrados === '' || etapa.tempObjetivoGrados === null || etapa.tempObjetivoGrados === undefined ? null : Number(etapa.tempObjetivoGrados);
+      const maxTemp = etapa.tempMaximaGrados === '' || etapa.tempMaximaGrados === null || etapa.tempMaximaGrados === undefined ? null : Number(etapa.tempMaximaGrados);
+
+      if ((minTemp !== null && objTemp !== null && minTemp > objTemp) || (objTemp !== null && maxTemp !== null && objTemp > maxTemp) || (minTemp !== null && maxTemp !== null && minTemp > maxTemp)) {
+        return `La etapa ${idx + 1} (${etapa.nombre || 'sin nombre'}) tiene un rango de temperatura incoherente (mínimo > objetivo o máximo).`;
+      }
+    }
+  }
+
   return null;
 }
+
 
 

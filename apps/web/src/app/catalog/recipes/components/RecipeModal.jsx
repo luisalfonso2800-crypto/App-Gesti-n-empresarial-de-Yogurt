@@ -2,13 +2,8 @@
  * @file RecipeModal.jsx
  * @module catalog/recipes/components
  * @description Orquestador modular del editor de recetas técnicas (SRP < 150 líneas, cero inline styles).
- * @responsibility Orquestar cabecera, etapas, balance y modal de auditoría técnica "Hoja de Ruta Operativa de Planta".
- * @usedBy apps/web/src/app/catalog/recipes/page.jsx
- * @dependencies @/components/ui/ContextBanner, modal-parts/*, ./recipeHelpers, ./recipe-modal.module.css
  */
-
 import React, { useState } from 'react';
-import { ContextBanner } from '@/components/ui/ContextBanner';
 import { RecipeHeaderFields } from './modal-parts/RecipeHeaderFields';
 import { RecipeStagesList } from './modal-parts/RecipeStagesList';
 import { RecipeBalanceFooter } from './modal-parts/RecipeBalanceFooter';
@@ -24,95 +19,65 @@ export function RecipeModal({
   onApplyStageTemplate, onAddEtapa, onUpdateEtapa, onRemoveEtapa, onMoveEtapa,
   onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost, getCostRollup
 }) {
-  const [showSummaryModal, setShowSummaryModal] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [validationError, setValidationError] = useState('');
-  // Conteo de insumos y bases intermedias
-  let totalMateriasPrimas = 0;
-  let totalBasesWip = 0;
-  formData.etapas?.forEach(etapa => {
-    etapa.detalles?.forEach(det => {
-      if (det.activo !== false) {
-        if (det.idProductoIntermedio) totalBasesWip += 1;
-        else if (det.idInsumo) totalMateriasPrimas += 1;
-      }
-    });
-  });
+  const [isHeaderCollapsed, setIsHeaderCollapsed] = useState(false), [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false), [isSubmitting, setIsSubmitting] = useState(false), [validationError, setValidationError] = useState('');
+  let totalMateriasPrimas = 0, totalBasesWip = 0;
+  formData.etapas?.forEach(e => e.detalles?.forEach(d => {
+    if (d.activo !== false) { if (d.idProductoIntermedio) totalBasesWip++; else if (d.idInsumo) totalMateriasPrimas++; }
+  }));
 
-  const activeStages = formData.etapas?.filter(e => e.activo !== false) || [];
-  const activeStagesCount = activeStages.length;
+  const activeStages = formData.etapas?.filter(e => e.activo !== false) || [], activeStagesCount = activeStages.length;
   const totalProductionTimeMins = activeStages.reduce((acc, stg) => acc + (Number(stg.tiempoEstandarMin) || 0), 0);
-  const rollup = getCostRollup ? getCostRollup() : {
-    totalCost: calculateCost ? calculateCost() : 0,
-    costRawSupplies: 0,
-    costWipBases: 0,
-    costPerUnit: 0,
-    hasWipFallback: false
-  };
-  const totalCost = rollup.totalCost;
-  const rendimientoNum = parseFloat(formData.rendimientoBase) || 0;
+  const rollup = getCostRollup ? getCostRollup() : { totalCost: calculateCost ? calculateCost() : 0, costRawSupplies: 0, costWipBases: 0, costPerUnit: 0, hasWipFallback: false };
+  const totalCost = rollup.totalCost, rendimientoNum = parseFloat(formData.rendimientoBase) || 0;
   const costPerUnit = rollup.costPerUnit || (rendimientoNum > 0 ? (totalCost / rendimientoNum) : 0);
 
-  // Detección Poka-Yoke de dependencias y empaque
-  const hasBulkProduct = products.some(p => p.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || p.presentacion?.nombre?.toUpperCase().includes('GRANEL') || ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(p.categoria));
+  const isBulkType = p => p?.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || p?.presentacion?.nombre?.toUpperCase().includes('GRANEL') || ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(p?.categoria);
+  const hasBulkProduct = products.some(isBulkType);
   const selectedProduct = products.find(p => String(p.id) === String(formData.idProducto));
-  const isSelectedProductBulk = selectedProduct ? (selectedProduct.presentacion?.tipoEnvase === 'TANQUE_GRANEL' || selectedProduct.presentacion?.nombre?.toUpperCase().includes('GRANEL') || ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProduct.categoria)) : false;
+  const isSelectedProductBulk = isBulkType(selectedProduct);
   const isCommercialWithoutBulk = Boolean(selectedProduct && !isSelectedProductBulk && !hasBulkProduct);
   const isCommercialProduct = Boolean(selectedProduct && !isSelectedProductBulk);
 
-  const hasPackagingItem = formData.etapas?.some(etapa => etapa.activo !== false && etapa.detalles?.some(det => {
-    if (det.activo === false) return false;
-    if (det.tipoInsumo === 'EMPAQUE_BASE' || det.tipoInsumo === 'EMPAQUE_COMPLEMENTO') return true;
-    if (det.idInsumo) {
-      const ins = supplies.find(s => s.id === det.idInsumo);
-      if (ins) {
-        const nom = `${ins.categoria || ''} ${ins.subcategoria || ''} ${ins.nombre || ''}`.toUpperCase();
-        return nom.includes('EMPAQUE') || nom.includes('ENVASE') || nom.includes('TAPA') || nom.includes('VASO') || nom.includes('BOTELLA');
-      }
-    }
-    return false;
+  const hasPackagingItem = formData.etapas?.some(e => e.activo !== false && e.detalles?.some(d => {
+    if (d.activo === false) return false;
+    if (d.tipoInsumo === 'EMPAQUE_BASE' || d.tipoInsumo === 'EMPAQUE_COMPLEMENTO') return true;
+    const ins = d.idInsumo ? supplies.find(s => s.id === d.idInsumo) : null;
+    const nom = ins ? `${ins.categoria || ''} ${ins.subcategoria || ''} ${ins.nombre || ''}`.toUpperCase() : '';
+    return ['EMPAQUE', 'ENVASE', 'TAPA', 'VASO', 'BOTELLA'].some(k => nom.includes(k));
   }));
   const isMissingCommercialPackaging = Boolean(isCommercialProduct && !hasPackagingItem);
 
-  const precioVentaNum = Number(selectedProduct?.precioVenta) || 0;
-  const margenObjetivoNum = Number(selectedProduct?.margenObjetivo) || 0;
+  const precioVentaNum = Number(selectedProduct?.precioVenta) || 0, margenObjetivoNum = Number(selectedProduct?.margenObjetivo) || 0;
   const costoTopePermitido = precioVentaNum > 0 && margenObjetivoNum > 0 ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100))) : 0;
   const isInternoOrBulk = precioVentaNum === 0 || isSelectedProductBulk;
   const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging;
 
   const handleOpenSummaryModal = () => {
     const err = validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging);
-    if (err) {
-      setValidationError(err);
-      return;
-    }
+    if (err) return setValidationError(err);
     setValidationError('');
     setShowSummaryModal(true);
   };
 
   const handleHeaderCancel = () => {
-    const dirty = Boolean(formData.idProducto || formData.nombre || formData.rendimientoBase || (formData.etapas && formData.etapas.length > 0));
-    if (dirty) {
-      setShowExitConfirm(true);
-      return;
-    }
-    onClose();
+    if (formData.idProducto || formData.nombre || formData.rendimientoBase || (formData.etapas && formData.etapas.length > 0)) setShowExitConfirm(true);
+    else onClose();
   };
 
   const handleConfirmPublish = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (isSubmitting) return;
-    try {
-      setIsSubmitting(true);
-      await onSubmit(e);
-      setShowSummaryModal(false);
-    } finally {
-      setIsSubmitting(false);
-    }
+    try { setIsSubmitting(true); await onSubmit(e); setShowSummaryModal(false); } finally { setIsSubmitting(false); }
   };
 
   const isButtonReady = canSubmit && formData.idProducto && Number(formData.rendimientoBase) > 0;
+  const isHeaderComplete = Boolean(
+    (formData.idProducto || formData.productoId) &&
+    formData.nombre?.trim() &&
+    Number(formData.cantidadBase || formData.rendimientoBase) > 0 &&
+    (formData.unidadMedida || formData.unidadRendimiento)?.trim()
+  );
 
   return (
     <div>
@@ -121,29 +86,48 @@ export function RecipeModal({
           <h1 className={styles.title}>{formData.id ? 'Editar Receta Técnica' : 'Nueva Receta Técnica'}</h1>
           <span className={styles.subtitle}>Formulación estandarizada y hoja de ruta de fabricación</span>
         </div>
-        <div className={styles.headerActions}>
-          <button type="button" className={styles.btnCancelHeader} onClick={handleHeaderCancel}>Cancelar</button>
-          <button type="button" className={`${styles.btnSummarizeHeader} ${isButtonReady ? styles.btnSummarizeHeaderEnabled : styles.btnSummarizeHeaderDisabled}`} onClick={handleOpenSummaryModal} disabled={!isButtonReady}>
-            <span>📋</span> Finalizar y Resumir
-          </button>
-        </div>
       </div>
-      <ContextBanner title="Concepto Técnico" description="Instrucciones paso a paso para fabricar los productos. Permite formular materias primas y bases semielaboradas (WIP)." />
-
       {validationError && (
-        <div className={styles.recipeErrorBanner}>
-          <span>⚠️</span>
-          <span>{validationError}</span>
-        </div>
+        <div className={styles.recipeErrorBanner}><span>⚠️</span><span>{validationError}</span></div>
       )}
 
       <form onSubmit={onSubmit} className={styles.editorContainer}>
-        <RecipeHeaderFields formData={formData} products={products} onChange={onChange} isCommercialWithoutBulk={isCommercialWithoutBulk} isMissingCommercialPackaging={isMissingCommercialPackaging} />
-        <RecipeStagesList etapas={formData.etapas || []} supplies={supplies} products={products} currentRecipeProductId={formData.idProducto} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onApplyStageTemplate={onApplyStageTemplate} onAddEtapa={onAddEtapa} onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={onMoveEtapa} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
-        <RecipeBalanceFooter formData={formData} totalMateriasPrimas={totalMateriasPrimas} totalBasesWip={totalBasesWip} activeStagesCount={activeStagesCount} costPerUnit={costPerUnit} totalCost={totalCost} costRawSupplies={rollup.costRawSupplies || 0} costWipBases={rollup.costWipBases || 0} hasWipFallback={rollup.hasWipFallback || false} selectedProduct={selectedProduct} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} />
+        <RecipeHeaderFields
+          formData={formData} products={products} onChange={onChange}
+          onApplyStageTemplate={onApplyStageTemplate} isCommercialWithoutBulk={isCommercialWithoutBulk}
+          isMissingCommercialPackaging={isMissingCommercialPackaging} isCollapsed={isHeaderCollapsed}
+          onToggleCollapse={() => setIsHeaderCollapsed(prev => !prev)}
+        />
+        {!isHeaderComplete ? (
+          <div className={styles.headerGatePlaceholder}>
+            <div className={styles.headerGateIcon}>🔒</div>
+            <h4 className={styles.headerGateTitle}>Paso 1: Completa la información básica</h4>
+            <p className={styles.headerGateText}>Ingresa el producto, nombre técnico, cantidad base y unidad de medida para habilitar las etapas y el costeo.</p>
+          </div>
+        ) : (
+          <>
+            <div onClickCapture={() => { if (!isHeaderCollapsed && formData.nombre) setIsHeaderCollapsed(true); }}>
+              <RecipeStagesList etapas={formData.etapas || []} supplies={supplies} products={products} currentRecipeProductId={formData.idProducto} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onApplyStageTemplate={onApplyStageTemplate} onAddEtapa={onAddEtapa} onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={onMoveEtapa} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
+            </div>
+            <RecipeBalanceFooter
+              formData={formData} totalMateriasPrimas={totalMateriasPrimas} totalBasesWip={totalBasesWip}
+              activeStagesCount={activeStagesCount} costPerUnit={costPerUnit} totalCost={totalCost}
+              costRawSupplies={rollup.costRawSupplies || 0} costWipBases={rollup.costWipBases || 0}
+              hasWipFallback={rollup.hasWipFallback || false} selectedProduct={selectedProduct} isInternoOrBulk={isInternoOrBulk}
+              costoTopePermitido={costoTopePermitido} onCancel={handleHeaderCancel} onSummarize={handleOpenSummaryModal} isButtonReady={isButtonReady}
+            />
+          </>
+        )}
       </form>
-      <RecipeOperationalSummaryModal isOpen={showSummaryModal} isSubmitting={isSubmitting} formData={formData} selectedProduct={selectedProduct} activeStages={activeStages} totalProductionTimeMins={totalProductionTimeMins} costPerUnit={costPerUnit} totalCost={totalCost} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} canSubmit={canSubmit} supplies={supplies} products={products} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onClose={() => setShowSummaryModal(false)} onDiscard={() => { setShowSummaryModal(false); onClose(); }} onPublish={handleConfirmPublish} />
+      <RecipeOperationalSummaryModal
+        isOpen={showSummaryModal} isSubmitting={isSubmitting} formData={formData} selectedProduct={selectedProduct}
+        activeStages={activeStages} totalProductionTimeMins={totalProductionTimeMins} costPerUnit={costPerUnit} totalCost={totalCost}
+        isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} canSubmit={canSubmit} supplies={supplies} products={products}
+        generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock}
+        onClose={() => setShowSummaryModal(false)} onDiscard={() => { setShowSummaryModal(false); onClose(); }} onPublish={handleConfirmPublish}
+      />
       <RecipeExitConfirmModal isOpen={showExitConfirm} onClose={() => setShowExitConfirm(false)} onConfirmExit={() => { setShowExitConfirm(false); onClose(); }} />
     </div>
   );
 }
+

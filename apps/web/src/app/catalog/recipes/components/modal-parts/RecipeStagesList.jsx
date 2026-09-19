@@ -95,6 +95,7 @@ export function RecipeStagesList({
       <RecipeStagesTimeline
         etapas={etapas} selectedIndex={selectedStageIndex} isCommercial={isCommercial}
         onSelectStage={setSelectedStageIndex} onAddEtapa={handleAddStage} onApplyTemplate={handleApplyTemplate}
+        onMoveEtapa={handleMove} onRemoveEtapa={onRemoveEtapa}
       />
       <RecipeStageEditor
         etapa={currentStage} stageIndex={selectedStageIndex} totalStagesCount={etapas.length}

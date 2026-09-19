@@ -177,6 +177,104 @@
 }
 
 /* Campos de cabecera y notas */
+.headerCollapsedBar {
+  background: #FAF8F5;
+  border: 1px solid #E8E5DE;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 2px rgba(24, 38, 34, 0.04);
+}
+
+.headerCollapsedLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.headerCollapsedAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  border: 1px solid #E8E5DE;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.headerCollapsedMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.headerCollapsedTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #182622;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerCollapsedSubtitle {
+  font-size: 0.75rem;
+  color: #78716C;
+  white-space: nowrap;
+}
+
+.headerCollapsedToggleBtn {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.headerCollapsedToggleBtn:hover {
+  background-color: #F7F4EE;
+  border-color: #A8A29E;
+}
+
+.headerFoldBtn {
+  background: none;
+  border: none;
+  color: #78716C;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease;
+}
+
+.headerFoldBtn:hover {
+  color: #182622;
+  background-color: #F7F4EE;
+}
+
+.headerTopActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: -0.5rem;
+}
+
 .headerCard {
   background: #FFFFFF;
   border: 1px solid #E8E5DE;
@@ -190,71 +288,102 @@
 
 .headerMainLayout {
   display: grid;
-  grid-template-columns: 5fr 1fr;
-  gap: 1.5rem;
-  align-items: stretch;
+  grid-template-columns: 1fr 190px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .headerMainLayout {
+    grid-template-columns: 1fr;
+  }
 }
 
 .headerFieldsArea {
   display: flex;
   flex-direction: column;
+  gap: 0.85rem;
+}
+
+.grid2Row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
   gap: 1rem;
 }
 
-.headerFieldsColumn {
+@media (max-width: 640px) {
+  .grid2Row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.templateSelect {
+  padding: 0.5rem;
+  border: 1px solid #CAD5B5;
+  border-radius: 0.375rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  width: 100%;
+  color: #182622;
+  background-color: #F7F4EE;
+  box-sizing: border-box;
+}
+
+.templateSelect:focus {
+  outline: none;
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.productSideCard {
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  background-color: #FAF8F5;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-.productSidePreview {
-  display: flex;
   align-items: center;
-  justify-content: center;
-  background-color: #FAF8F5;
-  border: 1px solid #E8E5DE;
-  border-radius: 10px;
-  overflow: hidden;
-  height: 100%;
-  min-height: 140px;
-  width: 100%;
-  box-shadow: 0 1px 2px rgba(24, 38, 34, 0.04);
-  position: relative;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.productSidePreview:hover {
-  border-color: #CAD5B5;
-  box-shadow: 0 2px 6px rgba(24, 38, 34, 0.08);
+  gap: 0.4rem;
+  box-shadow: 0 1px 3px rgba(24, 38, 34, 0.04);
 }
 
 .productSideAvatar {
   width: 100%;
-  height: 100%;
-  max-width: none;
-  border: none;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #E8E5DE;
+  background: #FFFFFF;
 }
 
-.productSideAvatar:hover {
-  transform: none;
-  box-shadow: none;
+.productSideCodeLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #57534E;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  letter-spacing: 0.02em;
 }
 
 .productPreviewPlaceholder {
+  width: 100%;
+  height: 130px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #A8A29E;
   gap: 0.5rem;
-  padding: 1rem;
+  background-color: #F7F4EE;
+  border-radius: 8px;
+  border: 1px dashed #D6D3D1;
 }
 
 .productPreviewPlaceholderText {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -818,19 +947,23 @@
   margin-top: 0.15rem;
 }
 
-/* Balance General Horizontal */
+/* Balance General Horizontal - Dock Flotante Sticky */
 .balanceBar {
-  background-color: #F7F4EE;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  background-color: #FAF8F5;
   border: 1px solid #E5DFD5;
   border-radius: 8px;
-  padding: 1rem 1.25rem;
-  margin-top: 1.5rem;
+  padding: 0.85rem 1.25rem;
+  margin-top: 1.25rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1.25rem;
   box-sizing: border-box;
+  box-shadow: 0 -4px 12px rgba(24, 38, 34, 0.08);
 }
 
 .balanceInfoCol {
@@ -1332,4 +1465,32 @@
   gap: 0.65rem;
   margin-top: 0.5rem;
 }
+
+.headerGatePlaceholder {
+  background: #FDFBF7;
+  border: 1px dashed #D1D5DB;
+  border-radius: 12px;
+  padding: 48px 24px;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.headerGateIcon {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.headerGateTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 4px 0;
+}
+
+.headerGateText {
+  font-size: 13px;
+  color: #6B7280;
+  margin: 0;
+}
+
 

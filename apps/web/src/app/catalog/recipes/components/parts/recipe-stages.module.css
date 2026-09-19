@@ -23,17 +23,43 @@
   padding-right: 0.25rem;
 }
 
+.sidebarTemplatesCard, .sidebarStagesCard {
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarSectionTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: #182622;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.sidebarSectionSubtitle {
+  font-size: 11px;
+  color: #78716C;
+  margin: 0 0 8px 0;
+}
+
 .timelineToolbar {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin-bottom: 0.25rem;
 }
 
 .timelineTemplateGroup {
   display: flex;
   gap: 0.4rem;
 }
+
 
 .templateBtn {
   flex: 1;
@@ -635,6 +661,19 @@
   background-color: #FEE2E2;
 }
 
+.btnDangerDeleteConfirm {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border: 1px solid #B91C1C;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  animation: pulse 1s infinite;
+  transition: all 0.15s ease-in-out;
+}
+
 .btnPrevStage {
   background-color: #F7F4EE;
   color: #182622;
@@ -730,4 +769,138 @@
 .commercialSuggestionBtn:hover {
   opacity: 0.9;
 }
+
+/* Reordenamiento compacto en tarjeta de etapa (Sidebar) */
+.stageCardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btnCardOrder {
+  background: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #182622;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnCardOrder:hover:not(:disabled) {
+  background: #EFECE4;
+  border-color: #182622;
+}
+
+.btnCardOrder:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stageDeleteCardBtn {
+  background: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #9CA3AF;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.stageDeleteCardBtn:hover:not(:disabled) {
+  background-color: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #EF4444;
+}
+
+.stageDeleteCardBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Tarjetas Gemelas de Parámetros Críticos */
+.twinInputsRow {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: 0.45rem;
+  align-items: stretch;
+}
+
+.inputGroupCompact {
+  background-color: #F8FAFC;
+}
+
+.inputPrimaryTarget {
+  border-color: #1B4332;
+  box-shadow: 0 0 0 1px #1B4332;
+  background-color: #FFFFFF;
+}
+
+.inputPrefixTarget {
+  background-color: #E8F5E9 !important;
+  color: #1B4332 !important;
+  font-weight: 800 !important;
+  border-right-color: #C8E6C9 !important;
+}
+
+.inputSuffix {
+  color: #78716C;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0 0.45rem 0 0.1rem;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.microEquivText {
+  font-size: 0.72rem;
+  color: #78716C;
+  font-weight: 600;
+  font-style: italic;
+  background-color: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.paramErrorText {
+  font-size: 0.7rem;
+  color: #EF4444;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* Validación Poka-Yoke en vivo */
+.inputErrorBorder {
+  border: 1px solid #EF4444 !important;
+  background-color: #FEF2F2 !important;
+  box-shadow: 0 0 0 1px #EF4444 !important;
+}
+
+.fieldErrorText {
+  color: #EF4444;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+
 

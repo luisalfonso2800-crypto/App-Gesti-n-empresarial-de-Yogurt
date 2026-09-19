@@ -47,7 +47,8 @@ export function useRecipesData() {
       await apiClient.patch(`/recipes/${item.id}`, { activo: !item.activo });
       fetchData();
     } catch (err) {
-      alert(err.message || 'Error al cambiar estado');
+      console.error('Error al cambiar estado de receta:', err);
+      setError(err.message || 'Error al cambiar estado');
     }
   };
 
