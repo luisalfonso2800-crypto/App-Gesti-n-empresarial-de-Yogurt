@@ -21,6 +21,8 @@ import {
   CATEGORIAS_COMERCIALES, CANALES_VENTA, HINTS_CANAL_VENTA
 } from './productConstants';
 
+import { ProductModalActions } from './modal-parts/ProductModalActions';
+
 export function ProductModal({ 
   isOpen, onClose, editingItem, formData, handleChange, handleSubmit, 
   presentations = [], isSubmitting, errorMsg, isBaseIntermedia = false 
@@ -54,14 +56,42 @@ export function ProductModal({
     }
   }, [isGranel, isOpen]);
 
+  const [hasSubmitted, setHasSubmitted] = React.useState(false);
+
+  useEffect(() => {
+    if (!isOpen) setHasSubmitted(false);
+  }, [isOpen]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     handleChange(name === 'nombre' || name === 'descripcion' || name === 'observaciones' ? { target: { name, value: value.toUpperCase() } } : e);
   };
 
+  const isNombreInvalid = !formData.nombre?.trim();
+  const isPresentacionInvalid = !formData.idPresentacion;
+  const isCategoriaInvalid = !formData.categoria;
+  const isCanalVentaInvalid = !formData.canalVenta;
+  const isDescripcionInvalid = !formData.descripcion?.trim();
+  const isPrecioVentaInvalid = !isGranel && (!formData.precioVenta && formData.precioVenta !== 0);
+  const isMargenObjetivoInvalid = !isGranel && (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined);
+
+  const missingFields = [];
+  if (isNombreInvalid) missingFields.push('Nombre');
+  if (isPresentacionInvalid) missingFields.push('Presentación');
+  if (isCategoriaInvalid) missingFields.push('Categoría');
+  if (isCanalVentaInvalid) missingFields.push('Canal de venta');
+  if (isDescripcionInvalid) missingFields.push('Descripción');
+  if (isPrecioVentaInvalid) missingFields.push('Precio de venta');
+  if (isMargenObjetivoInvalid) missingFields.push('Margen objetivo');
+
+  const hasErrors = missingFields.length > 0;
+  const isSubmitDisabled = isSubmitting;
+  const submitTitle = hasSubmitted && hasErrors ? `Complete los campos obligatorios: ${missingFields.join(', ')}` : '';
+
   const onSubmit = (e) => {
     e.preventDefault();
-    if (isSubmitDisabled) return;
+    setHasSubmitted(true);
+    if (hasErrors || isSubmitDisabled) return;
     const { presentacion, ...restFormData } = formData;
     handleSubmit(e, {
       ...restFormData,
@@ -75,20 +105,6 @@ export function ProductModal({
     });
   };
 
-  const missingFields = [];
-  if (!formData.nombre?.trim()) missingFields.push('Nombre');
-  if (!formData.idPresentacion) missingFields.push('Presentación');
-  if (!formData.categoria) missingFields.push('Categoría');
-  if (!formData.canalVenta) missingFields.push('Canal de venta');
-  if (!formData.descripcion?.trim()) missingFields.push('Descripción');
-  if (!isGranel) {
-    if (!formData.precioVenta && formData.precioVenta !== 0) missingFields.push('Precio de venta');
-    if (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined) missingFields.push('Margen objetivo');
-  }
-
-  const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
-  const submitTitle = missingFields.length > 0 ? `Complete los campos obligatorios: ${missingFields.join(', ')}` : '';
-
   const precioVentaNum = Number(String(formData.precioVenta || '').replace(/\D/g, '')) || 0;
   const margenObjetivoNum = Number(formData.margenObjetivo) || 0;
   const costoMaximoPermitido = precioVentaNum > 0 && margenObjetivoNum > 0 ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100))) : 0;
@@ -99,30 +115,22 @@ export function ProductModal({
       {errorMsg && <div className={styles.errorMessage}><span>⚠️</span><span>{errorMsg}</span></div>}
 
       <form onSubmit={onSubmit} className={styles.formContainer}>
-        <ProductBasicFields formData={formData} handleInputChange={handleInputChange} handleChange={handleChange} presentations={presentations} availableCategories={availableCategories} canalesVenta={CANALES_VENTA} hintsCategoriaWip={HINTS_CATEGORIA_WIP} hintsCanalVenta={HINTS_CANAL_VENTA} isGranel={isGranel} isBaseIntermedia={isBaseIntermedia} />
-        <ProductImageAndDescriptionFields formData={formData} handleChange={handleChange} handleInputChange={handleInputChange} presets={PRESETS} />
-        <ProductPricingAndMarginFields isGranel={isGranel} formData={formData} handleChange={handleChange} precioVentaNum={precioVentaNum} margenObjetivoNum={margenObjetivoNum} costoMaximoPermitido={costoMaximoPermitido} gananciaEsperada={gananciaEsperada} />
-
-        <div className={modalStyles.inputGroup}>
-          <label className={modalStyles.label}>Observaciones</label>
-          <input name="observaciones" value={formData.observaciones ?? ''} onChange={handleInputChange} className={`${modalStyles.input} ${styles.uppercaseInput}`} />
-        </div>
-
-        <label className={styles.activeCheckboxLabel}>
-          <input type="checkbox" name="activo" checked={formData.activo} onChange={handleChange} />
-          <span className={styles.activeCheckboxText}>Producto Activo</span>
-        </label>
-
-        {formData.nombre && (
-          <div className={styles.productSummaryBanner}>
-            <strong>Resumen:</strong> Se {editingItem ? 'actualizará' : 'creará'} el producto <strong>{formData.nombre}</strong>{formData.idPresentacion ? <> (en presentación <strong>{presentations.find(p => String(p.id) === String(formData.idPresentacion))?.nombre || 'desconocida'}</strong>)</> : null}{formData.canalVenta ? <>, destinado al canal <strong>{formData.canalVenta}</strong></> : null}{precioVentaNum > 0 ? <>, con precio sugerido de <strong>{formatCurrency(formData.precioVenta)}</strong></> : null}.
-          </div>
-        )}
-
-        <div className={modalStyles.actions}>
-          <button type="button" onClick={onClose} className={modalStyles.btnCancel}>Cancelar</button>
-          <SubmitButton isSubmitting={isSubmitting} text="Guardar Producto" disabled={isSubmitDisabled} title={submitTitle} className={isSubmitDisabled ? styles.btnSubmitDisabled : ''} />
-        </div>
+        <ProductBasicFields 
+          formData={formData} handleInputChange={handleInputChange} handleChange={handleChange} 
+          presentations={presentations} availableCategories={availableCategories} canalesVenta={CANALES_VENTA} 
+          hintsCategoriaWip={HINTS_CATEGORIA_WIP} hintsCanalVenta={HINTS_CANAL_VENTA} isGranel={isGranel} isBaseIntermedia={isBaseIntermedia}
+          isNombreError={hasSubmitted && isNombreInvalid} isPresentacionError={hasSubmitted && isPresentacionInvalid}
+        />
+        <ProductImageAndDescriptionFields formData={formData} handleChange={handleChange} handleInputChange={handleInputChange} presets={PRESETS} isDescripcionError={hasSubmitted && isDescripcionInvalid} />
+        <ProductPricingAndMarginFields 
+          isGranel={isGranel} formData={formData} handleChange={handleChange} precioVentaNum={precioVentaNum} margenObjetivoNum={margenObjetivoNum} 
+          costoMaximoPermitido={costoMaximoPermitido} gananciaEsperada={gananciaEsperada}
+          isPrecioVentaError={hasSubmitted && isPrecioVentaInvalid} isMargenObjetivoError={hasSubmitted && isMargenObjetivoInvalid}
+        />
+        <ProductModalActions 
+          editingItem={editingItem} formData={formData} presentations={presentations} precioVentaNum={precioVentaNum} 
+          isSubmitDisabled={isSubmitDisabled} submitTitle={submitTitle} isSubmitting={isSubmitting} onClose={onClose} 
+        />
       </form>
     </SmartModal>
   );

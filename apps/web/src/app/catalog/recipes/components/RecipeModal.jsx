@@ -13,7 +13,8 @@ import { RecipeHeaderFields } from './modal-parts/RecipeHeaderFields';
 import { RecipeStagesList } from './modal-parts/RecipeStagesList';
 import { RecipeBalanceFooter } from './modal-parts/RecipeBalanceFooter';
 import { RecipeOperationalSummaryModal } from './modal-parts/RecipeOperationalSummaryModal';
-import { generateStageSummaryText, formatMinutesToDigitalClock } from './recipeHelpers';
+import { RecipeExitConfirmModal } from './modal-parts/RecipeExitConfirmModal';
+import { generateStageSummaryText, formatMinutesToDigitalClock, validateRecipeSubmission } from './recipeHelpers';
 import styles from './recipe-modal.module.css';
 
 export { generateStageSummaryText, formatMinutesToDigitalClock };
@@ -24,8 +25,9 @@ export function RecipeModal({
   onAddDetalle, onUpdateDetalle, onRemoveDetalle, calculateCost, getCostRollup
 }) {
   const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [validationError, setValidationError] = useState('');
   // Conteo de insumos y bases intermedias
   let totalMateriasPrimas = 0;
   let totalBasesWip = 0;
@@ -80,24 +82,22 @@ export function RecipeModal({
   const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging;
 
   const handleOpenSummaryModal = () => {
-    if (!formData.idProducto) return alert('Debe seleccionar el producto a fabricar.');
-    if (!formData.rendimientoBase || Number(formData.rendimientoBase) <= 0) return alert('Debe ingresar un rendimiento base mayor a cero.');
-    if (isCommercialWithoutBulk) return alert('Debe existir al menos un producto base a granel en el catálogo.');
-    if (isMissingCommercialPackaging) return alert('Debe agregar al menos un insumo de empaque primario a la receta.');
+    const err = validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging);
+    if (err) {
+      setValidationError(err);
+      return;
+    }
+    setValidationError('');
     setShowSummaryModal(true);
   };
 
   const handleHeaderCancel = () => {
     const dirty = Boolean(formData.idProducto || formData.nombre || formData.rendimientoBase || (formData.etapas && formData.etapas.length > 0));
-    if (dirty && !window.confirm('¿Deseas salir del editor de recetas? Se perderán los cambios no guardados.')) return;
-    onClose();
-  };
-
-  const handleDiscardCompleteRecipe = () => {
-    if (window.confirm('⚠️ Atención: Si cancelas se descartará todo el proceso formulado y se perderán los datos ingresados.\n\n¿Deseas descartar la receta completa?')) {
-      setShowSummaryModal(false);
-      onClose();
+    if (dirty) {
+      setShowExitConfirm(true);
+      return;
     }
+    onClose();
   };
 
   const handleConfirmPublish = async (e) => {
@@ -129,12 +129,21 @@ export function RecipeModal({
         </div>
       </div>
       <ContextBanner title="Concepto Técnico" description="Instrucciones paso a paso para fabricar los productos. Permite formular materias primas y bases semielaboradas (WIP)." />
+
+      {validationError && (
+        <div className={styles.recipeErrorBanner}>
+          <span>⚠️</span>
+          <span>{validationError}</span>
+        </div>
+      )}
+
       <form onSubmit={onSubmit} className={styles.editorContainer}>
         <RecipeHeaderFields formData={formData} products={products} onChange={onChange} isCommercialWithoutBulk={isCommercialWithoutBulk} isMissingCommercialPackaging={isMissingCommercialPackaging} />
         <RecipeStagesList etapas={formData.etapas || []} supplies={supplies} products={products} currentRecipeProductId={formData.idProducto} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onApplyStageTemplate={onApplyStageTemplate} onAddEtapa={onAddEtapa} onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={onMoveEtapa} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
         <RecipeBalanceFooter formData={formData} totalMateriasPrimas={totalMateriasPrimas} totalBasesWip={totalBasesWip} activeStagesCount={activeStagesCount} costPerUnit={costPerUnit} totalCost={totalCost} costRawSupplies={rollup.costRawSupplies || 0} costWipBases={rollup.costWipBases || 0} hasWipFallback={rollup.hasWipFallback || false} selectedProduct={selectedProduct} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} />
       </form>
-      <RecipeOperationalSummaryModal isOpen={showSummaryModal} isSubmitting={isSubmitting} formData={formData} selectedProduct={selectedProduct} activeStages={activeStages} totalProductionTimeMins={totalProductionTimeMins} costPerUnit={costPerUnit} totalCost={totalCost} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} canSubmit={canSubmit} supplies={supplies} products={products} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onClose={() => setShowSummaryModal(false)} onDiscard={handleDiscardCompleteRecipe} onPublish={handleConfirmPublish} />
+      <RecipeOperationalSummaryModal isOpen={showSummaryModal} isSubmitting={isSubmitting} formData={formData} selectedProduct={selectedProduct} activeStages={activeStages} totalProductionTimeMins={totalProductionTimeMins} costPerUnit={costPerUnit} totalCost={totalCost} isInternoOrBulk={isInternoOrBulk} costoTopePermitido={costoTopePermitido} canSubmit={canSubmit} supplies={supplies} products={products} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onClose={() => setShowSummaryModal(false)} onDiscard={() => { setShowSummaryModal(false); onClose(); }} onPublish={handleConfirmPublish} />
+      <RecipeExitConfirmModal isOpen={showExitConfirm} onClose={() => setShowExitConfirm(false)} onConfirmExit={() => { setShowExitConfirm(false); onClose(); }} />
     </div>
   );
 }

@@ -22,7 +22,9 @@ export function ProductBasicFields({
   hintsCategoriaWip = {},
   hintsCanalVenta = {},
   isGranel = false,
-  isBaseIntermedia = false
+  isBaseIntermedia = false,
+  isNombreError = false,
+  isPresentacionError = false
 }) {
   return (
     <>
@@ -36,9 +38,12 @@ export function ProductBasicFields({
             value={formData.nombre ?? ''} 
             onChange={handleInputChange} 
             placeholder="Ej: YOGURT FRESA"
-            className={`${modalStyles.input} ${styles.uppercaseInput}`} 
+            className={`${modalStyles.input} ${styles.uppercaseInput} ${isNombreError ? styles.inputErrorBorder : ''}`} 
             required 
           />
+          {isNombreError && (
+            <span className={styles.fieldErrorText}>Este campo es requerido</span>
+          )}
         </div>
         
         <div>
@@ -50,7 +55,11 @@ export function ProductBasicFields({
             options={presentations.map(p => ({ id: p.id, label: p.nombre }))}
             required
             placeholder="Seleccione presentación"
+            className={isPresentacionError ? styles.inputErrorBorder : ''}
           />
+          {isPresentacionError && (
+            <span className={styles.fieldErrorText}>Este campo es requerido</span>
+          )}
         </div>
 
         {/* Tarjeta Informativa WIP / A Granel */}

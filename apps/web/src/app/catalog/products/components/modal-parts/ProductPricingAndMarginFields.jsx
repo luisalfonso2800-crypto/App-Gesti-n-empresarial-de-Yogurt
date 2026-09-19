@@ -1,12 +1,3 @@
-/**
- * @file ProductPricingAndMarginFields.jsx
- * @module catalog/products/components/modal-parts
- * @description Sección financiera condicional: costeo interno a granel vs precio de venta y semáforo de margen comercial.
- * @responsibility Calcular y proyectar el costo máximo admisible, ganancia esperada y números en letras.
- * @usedBy apps/web/src/app/catalog/products/components/ProductModal.jsx
- * @dependencies react, @/utils/numberToWords, ../../SmartModal.module.css, ../product-modal.module.css
- */
-
 import React from 'react';
 import { montoATextoPesos } from '@/utils/numberToWords';
 import modalStyles from '@/components/ui/SmartModal.module.css';
@@ -19,7 +10,9 @@ export function ProductPricingAndMarginFields({
   precioVentaNum = 0,
   margenObjetivoNum = 0,
   costoMaximoPermitido = 0,
-  gananciaEsperada = 0
+  gananciaEsperada = 0,
+  isPrecioVentaError = false,
+  isMargenObjetivoError = false
 }) {
   if (isGranel) {
     return (
@@ -64,9 +57,12 @@ export function ProductPricingAndMarginFields({
           onKeyDown={(e) => {
             if (e.key === '-') e.preventDefault();
           }}
-          className={modalStyles.input}
+          className={`${modalStyles.input} ${isPrecioVentaError ? styles.inputErrorBorder : ''}`}
           required
         />
+        {isPrecioVentaError && (
+          <span className={styles.fieldErrorText}>Este campo es requerido</span>
+        )}
         {Boolean(formData.precioVenta && parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10) > 0) && (
           <span className={styles.currencyInWordsText}>
             ✦ {montoATextoPesos(parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10))}
@@ -91,19 +87,20 @@ export function ProductPricingAndMarginFields({
             if (e.key === 'ArrowUp') {
               e.preventDefault();
               const current = Number(formData.margenObjetivo) || 0;
-              const next = Math.min(100, Math.floor(current / 5) * 5 + 5);
-              handleChange({ target: { name: 'margenObjetivo', value: next } });
+              handleChange({ target: { name: 'margenObjetivo', value: Math.min(100, Math.floor(current / 5) * 5 + 5) } });
             } else if (e.key === 'ArrowDown') {
               e.preventDefault();
               const current = Number(formData.margenObjetivo) || 0;
-              const next = Math.max(0, Math.ceil(current / 5) * 5 - 5);
-              handleChange({ target: { name: 'margenObjetivo', value: next } });
+              handleChange({ target: { name: 'margenObjetivo', value: Math.max(0, Math.ceil(current / 5) * 5 - 5) } });
             }
           }}
           placeholder="Ej: 30"
-          className={modalStyles.input} 
+          className={`${modalStyles.input} ${isMargenObjetivoError ? styles.inputErrorBorder : ''}`} 
           required 
         />
+        {isMargenObjetivoError && (
+          <span className={styles.fieldErrorText}>Este campo es requerido</span>
+        )}
       </div>
 
       {/* Tarjeta de Proyección Financiera */}

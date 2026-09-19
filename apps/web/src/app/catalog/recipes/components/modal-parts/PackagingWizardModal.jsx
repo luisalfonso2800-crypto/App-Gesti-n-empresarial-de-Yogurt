@@ -6,11 +6,11 @@
  * @description Configurador modal interactivo para etapas de envasado comercial (< 100 líneas).
  * @responsibility Orquestar la selección de envase y delegar el cuestionario a PackagingWizardQuestions.
  * @usedBy RecipeStagesList
- * @dependencies react, @/components/ui/Modal, ./PackagingWizardQuestions, ../recipeHelpers, ./packaging-wizard.module.css
+ * @dependencies react, @/components/ui/SmartModal, ./PackagingWizardQuestions, ../recipeHelpers, ./packaging-wizard.module.css
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import SmartModal from '@/components/ui/SmartModal';
 import { PackagingPresentationSelect } from './PackagingPresentationSelect';
 import { PackagingWizardQuestions } from './PackagingWizardQuestions';
 import { generatePackagingStagesFromWizard } from '../recipeHelpers';
@@ -84,7 +84,7 @@ export function PackagingWizardModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="🍓 Configurador de Envasado Comercial">
+    <SmartModal isOpen={isOpen} onClose={onClose} title="Configurador de Envasado Comercial">
       <div className={styles.wizardContainer}>
         <p className={styles.introText}>
           Configure el flujo de planta para dosificación, jalea, endulzado y sellado del producto comercial.
@@ -115,6 +115,7 @@ export function PackagingWizardModal({
           </button>
         </div>
       </div>
-    </Modal>
+    </SmartModal>
   );
 }
+

@@ -573,3 +573,15 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
   };
 }
 
+/**
+ * Valida los prerrequisitos Poka-Yoke antes de abrir el modal resumen o enviar la receta.
+ */
+export function validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging) {
+  if (!formData.idProducto) return 'Debe seleccionar el producto a fabricar.';
+  if (!formData.rendimientoBase || Number(formData.rendimientoBase) <= 0) return 'Debe ingresar un rendimiento base mayor a cero.';
+  if (isCommercialWithoutBulk) return 'Debe existir al menos un producto base a granel en el catálogo.';
+  if (isMissingCommercialPackaging) return 'Debe agregar al menos un insumo de empaque primario a la receta.';
+  return null;
+}
+
+
