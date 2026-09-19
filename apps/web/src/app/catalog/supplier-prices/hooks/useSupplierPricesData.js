@@ -91,9 +91,10 @@ export function useSupplierPricesData() {
     const map = new Map();
     items.forEach(item => {
       if (item.activo) {
+        const itemCosto = Number(item.costoUnidadBase || 0);
         const currentMin = map.get(item.idInsumo);
-        if (currentMin === undefined || item.costoUnidadBase < currentMin) {
-          map.set(item.idInsumo, item.costoUnidadBase);
+        if (currentMin === undefined || itemCosto < currentMin) {
+          map.set(item.idInsumo, itemCosto);
         }
       }
     });
@@ -109,14 +110,19 @@ export function useSupplierPricesData() {
     let maxItem = activeItemsForInsumo[0];
 
     activeItemsForInsumo.forEach(i => {
-      if (i.costoUnidadBase < minItem.costoUnidadBase) minItem = i;
-      if (i.costoUnidadBase > maxItem.costoUnidadBase) maxItem = i;
+      const iCosto = Number(i.costoUnidadBase || 0);
+      const minCosto = Number(minItem.costoUnidadBase || 0);
+      const maxCosto = Number(maxItem.costoUnidadBase || 0);
+      if (iCosto < minCosto) minItem = i;
+      if (iCosto > maxCosto) maxItem = i;
     });
 
     const optionsCount = activeItemsForInsumo.length;
     let savingsPercent = 0;
-    if (maxItem.costoUnidadBase > 0 && maxItem.costoUnidadBase !== minItem.costoUnidadBase) {
-      savingsPercent = ((maxItem.costoUnidadBase - minItem.costoUnidadBase) / maxItem.costoUnidadBase) * 100;
+    const minFinal = Number(minItem.costoUnidadBase || 0);
+    const maxFinal = Number(maxItem.costoUnidadBase || 0);
+    if (maxFinal > 0 && maxFinal !== minFinal) {
+      savingsPercent = ((maxFinal - minFinal) / maxFinal) * 100;
     }
 
     return {

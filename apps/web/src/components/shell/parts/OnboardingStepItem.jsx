@@ -88,9 +88,9 @@ export default function OnboardingStepItem({
             <>
               <span
                 className={styles.stepDetail}
-                title="Secuencia obligatoria: 1° Base en Tanque (WIP a granel) ➔ 2° Ensamble comercial para venta"
+                title="Secuencia recomendada: Si elaboras tu propio yogurt desde la leche cruda, registra primero la Base a Granel. Si compras la base ya hecha, pasa directo al Producto Comercial."
               >
-                1° Semielaborado a granel en tanque (WIP)
+                Secuencia: 1° Base a Granel si fabricas en planta, 2° Producto Comercial
               </span>
               {productsCount > 0 && !hasBulkProduct && (
                 <span className={styles.warningPendingText}>

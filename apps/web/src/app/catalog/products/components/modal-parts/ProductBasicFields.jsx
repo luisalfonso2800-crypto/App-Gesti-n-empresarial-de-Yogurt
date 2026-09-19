@@ -8,9 +8,11 @@
  */
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from '../product-modal.module.css';
+import { ProductPresentationSelector } from './ProductPresentationSelector';
 
 export function ProductBasicFields({
   formData,
@@ -24,8 +26,18 @@ export function ProductBasicFields({
   isGranel = false,
   isBaseIntermedia = false,
   isNombreError = false,
-  isPresentacionError = false
+  isPresentacionError = false,
+  isWipMode = false,
+  onClose
 }) {
+  const router = useRouter();
+
+  const handleIrACrearPresentacion = () => {
+    const tipoUso = isWipMode ? 'SEMIELABORADO' : 'COMERCIAL';
+    if (onClose) onClose();
+    router.push(`/catalog/presentations?crear=true&tipoUso=${tipoUso}`);
+  };
+
   return (
     <>
       <div className={modalStyles.twoColumns}>
@@ -46,21 +58,13 @@ export function ProductBasicFields({
           )}
         </div>
         
-        <div>
-          <SmartSelect
-            label="Presentación"
-            name="idPresentacion"
-            value={formData.idPresentacion ?? ''}
-            onChange={handleChange}
-            options={presentations.map(p => ({ id: p.id, label: p.nombre }))}
-            required
-            placeholder="Seleccione presentación"
-            className={isPresentacionError ? styles.inputErrorBorder : ''}
-          />
-          {isPresentacionError && (
-            <span className={styles.fieldErrorText}>Este campo es requerido</span>
-          )}
-        </div>
+        <ProductPresentationSelector
+          presentations={presentations}
+          formData={formData}
+          handleChange={handleChange}
+          isPresentacionError={isPresentacionError}
+          onQuickCreate={handleIrACrearPresentacion}
+        />
 
         {/* Tarjeta Informativa WIP / A Granel */}
         {isGranel && (

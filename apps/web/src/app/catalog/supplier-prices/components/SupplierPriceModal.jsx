@@ -14,6 +14,7 @@ import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from './supplier-price-modal.module.css';
 import SupplierPricePresentationFields from './modal-parts/SupplierPricePresentationFields';
 import SupplierPriceEquivalenceFields from './modal-parts/SupplierPriceEquivalenceFields';
+import SupplierPriceTaxFields from './modal-parts/SupplierPriceTaxFields';
 import { useSupplierPriceForm } from './modal-parts/useSupplierPriceForm';
 
 export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, allInsumos = [], allProveedores = [] }) {
@@ -29,6 +30,9 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
     handleChange,
     handleSubmit
   } = useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, allInsumos, allProveedores });
+
+  const selectedInsumo = allInsumos.find(i => String(i.id) === String(formData.idInsumo));
+  const insumoUnidadBase = selectedInsumo?.unidadBase || selectedInsumo?.Unidad_Base || '';
 
   return (
     <SmartModal 
@@ -71,6 +75,12 @@ export function SupplierPriceModal({ isOpen, onClose, editingItem, onSubmit, all
         <SupplierPricePresentationFields formData={formData} handleChange={handleChange} />
 
         <SupplierPriceEquivalenceFields formData={formData} handleChange={handleChange} />
+
+        <SupplierPriceTaxFields 
+          formData={formData} 
+          handleChange={handleChange} 
+          insumoUnidadBase={insumoUnidadBase} 
+        />
 
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>Observaciones</label>

@@ -6,7 +6,7 @@
  * @usedBy apps/web/src/app/operations/purchases/new/page.jsx
  * @dependencies React, SupplierModal, SupplyModal, ../new-purchase.module.css, ./parts/*, ../hooks/useFormPhaseData
  */
-import React from 'react';
+import React, { useState } from 'react';
 import styles from '../new-purchase.module.css';
 import { SupplierModal } from '@/components/catalog/SupplierModal';
 import { SupplyModal } from '@/components/catalog/SupplyModal';
@@ -15,6 +15,7 @@ import FormPhaseStickyBar from './parts/FormPhaseStickyBar';
 import FormPhaseFleteSection from './parts/FormPhaseFleteSection';
 import FormPhaseRowItem from './parts/FormPhaseRowItem';
 import FormPhaseSummaryCard from './parts/FormPhaseSummaryCard';
+import StockLookupDrawer from './parts/StockLookupDrawer';
 
 export function FormPhase({
   proveedoresDB: proveedoresDBProp,
@@ -26,9 +27,12 @@ export function FormPhase({
   refreshOrder,
   router
 }) {
+  const [isStockDrawerOpen, setIsStockDrawerOpen] = useState(false);
+
   const {
     isDirectPurchase, detalles, flete, setFlete, isSubmitting, containerRef,
-    totalConFlete, totalSinIvaCompra, totalIvaCompra, addRow, removeRow, updateDetalle, clearInsumo, activeDropdown,
+    totalConFlete, totalSinIvaCompra, totalIvaCompra, addRow, addRowFromStock,
+    clearDraft, removeRow, updateDetalle, clearInsumo, activeDropdown,
     setActiveDropdown, openDropdown, dropdownSearch, setDropdownSearch,
     filteredProveedores, filteredInsumosByRow, showNewProvModal, setShowNewProvModal,
     setNewProvTargetRow, initialProvData, setInitialProvData, showNewInsumoModal,
@@ -57,6 +61,14 @@ export function FormPhase({
         initialData={initialSupplyData}
       />
 
+      <StockLookupDrawer
+        isOpen={isStockDrawerOpen}
+        onClose={() => setIsStockDrawerOpen(false)}
+        onAddSupply={addRowFromStock}
+        currentItems={detalles}
+        onRemoveItem={removeRow}
+      />
+
       <FormPhaseStickyBar
         isDirectPurchase={isDirectPurchase}
         router={router}
@@ -64,6 +76,8 @@ export function FormPhase({
         generatedId={generatedId}
         totalConFlete={totalConFlete}
         addRow={addRow}
+        onOpenStockDrawer={() => setIsStockDrawerOpen(true)}
+        onClearDraft={clearDraft}
         handleConfirmar={handleConfirmar}
         isSubmitting={isSubmitting}
         detallesCount={detalles.length}

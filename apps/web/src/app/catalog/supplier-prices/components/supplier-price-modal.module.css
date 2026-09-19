@@ -99,3 +99,69 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.taxSection {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.taxHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.taxInputsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.taxBreakdownCard {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+}
+
+.taxBreakdownRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #475569;
+}
+
+.taxBreakdownFinal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  color: #0F172A;
+  border-top: 1px dashed #CBD5E1;
+  padding-top: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.costSuccessText {
+  color: #047857;
+}
+
+.taxNoteExempt {
+  font-size: 0.75rem;
+  color: #64748B;
+  background-color: #F1F5F9;
+  border-radius: 4px;
+  padding: 0.35rem 0.5rem;
+  margin-top: 0.25rem;
+}

@@ -17,6 +17,8 @@ export default function FormPhaseStickyBar({
   generatedId,
   totalConFlete,
   addRow,
+  onOpenStockDrawer,
+  onClearDraft,
   handleConfirmar,
   isSubmitting,
   detallesCount
@@ -30,9 +32,22 @@ export default function FormPhaseStickyBar({
       >
         {isDirectPurchase ? '← Volver a Compras' : '← Volver a Checklist'}
       </button>
+
+      {isDirectPurchase && (
+        <button
+          type="button"
+          onClick={onClearDraft}
+          className={styles.clearDraftBtn}
+          title="Vaciar borrador local guardado"
+        >
+          🗑️ Limpiar Borrador
+        </button>
+      )}
+
       <h2 className={styles.stickyTitle}>
         {isDirectPurchase ? 'Nueva Compra Directa' : `Registro de Compras Adicionales (En Ruta) — ${generatedId}`}
       </h2>
+
       <div className={styles.stickyTotalBox}>
         <div className={styles.stickyTotalAmount}>
           Total: ${totalConFlete.toLocaleString('es-CO')}
@@ -43,6 +58,16 @@ export default function FormPhaseStickyBar({
           </div>
         )}
       </div>
+
+      <button
+        type="button"
+        className={styles.stockLookupTriggerBtn}
+        onClick={onOpenStockDrawer}
+        title="Consultar existencias en almacén"
+      >
+        📦 Consultar Stock
+      </button>
+
       <button 
         type="button" 
         className={`${styles.addBtn} ${styles.stickyAddBtn}`} 

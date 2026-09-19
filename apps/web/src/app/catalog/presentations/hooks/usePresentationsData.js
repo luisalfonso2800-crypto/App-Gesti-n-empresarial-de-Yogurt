@@ -45,5 +45,16 @@ export function usePresentationsData() {
     }
   };
 
-  return { presentations, loading, error, fetchPresentations, handleToggleActive };
+  const deletePresentation = async (id) => {
+    try {
+      await apiClient.delete(`/presentations/${id}`);
+      fetchPresentations();
+      return { success: true };
+    } catch (err) {
+      const errorText = err?.response?.data?.message || err?.message || 'Error al eliminar la presentación';
+      return { success: false, error: errorText };
+    }
+  };
+
+  return { presentations, loading, error, fetchPresentations, handleToggleActive, deletePresentation };
 }

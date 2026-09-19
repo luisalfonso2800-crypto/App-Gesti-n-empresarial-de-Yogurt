@@ -76,7 +76,20 @@ export function SuppliesTable({
             <TD>{item.categoria}</TD>
             <TD>{item.marca || 'N/A'}</TD>
             <TD>{item.unidadBase}</TD>
-            <TD>{item.stockMinimo}</TD>
+            <TD>
+              <div className={styles.stockMinContainer}>
+                {(() => {
+                  const stockActual = Number(item.stockActual !== undefined ? item.stockActual : (item.inventario?.cantidadActual ?? item.stock ?? 0));
+                  const stockMinimo = Number(item.stockMinimo || 0);
+                  const isOut = stockActual <= 0;
+                  const isLow = stockActual > 0 && stockActual <= stockMinimo;
+                  const dotClass = isOut ? styles.dotDanger : isLow ? styles.dotWarning : styles.dotSuccess;
+                  const title = isOut ? 'Agotado (0)' : isLow ? `Bajo Mínimo (Stock: ${stockActual})` : `En Rango (Stock: ${stockActual})`;
+                  return <span className={`${styles.stockStatusDot} ${dotClass}`} title={title} />;
+                })()}
+                <span>{item.stockMinimo}</span>
+              </div>
+            </TD>
             <TD>$ {Number(item.costoBase || 0).toLocaleString('es-CO')}</TD>
             <TD>
               <Badge status={item.activo ? 'active' : 'inactive'}>{item.activo ? 'Activo' : 'Inactivo'}</Badge>

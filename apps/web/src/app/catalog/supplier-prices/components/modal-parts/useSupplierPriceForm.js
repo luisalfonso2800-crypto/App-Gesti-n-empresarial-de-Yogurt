@@ -18,6 +18,11 @@ const INITIAL_STATE = {
   cantidadEquivalenteBase: '',
   precioCompra: '',
   costoUnidadBase: '',
+  costoBaseSinIva: '',
+  tieneIva: true,
+  porcentajeIva: '19',
+  precioIncluyeIva: true,
+  montoIvaCalculado: 0,
   observaciones: '',
   activo: true
 };
@@ -31,6 +36,9 @@ export function useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, a
     if (editingItem) {
       setFormData({
         ...editingItem,
+        tieneIva: editingItem.tieneIva !== undefined ? Boolean(editingItem.tieneIva) : true,
+        porcentajeIva: editingItem.porcentajeIva !== undefined ? String(editingItem.porcentajeIva) : '19',
+        precioIncluyeIva: editingItem.precioIncluyeIva !== undefined ? Boolean(editingItem.precioIncluyeIva) : true,
         precioCompra: editingItem.precioCompra || '',
         cantidadPresentacion: editingItem.cantidadPresentacion || '',
         cantidadEquivalenteBase: editingItem.cantidadEquivalenteBase || ''
@@ -48,20 +56,61 @@ export function useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, a
     if (['presentacionCompra', 'unidadPresentacion', 'observaciones'].includes(name)) {
       parsedValue = value.toUpperCase();
     }
+    if (name === 'tieneIva' && !checked) {
+      setFormData(prev => ({
+        ...prev,
+        tieneIva: false,
+        porcentajeIva: 0,
+        precioIncluyeIva: true
+      }));
+      return;
+    }
     setFormData(prev => ({ ...prev, [name]: parsedValue }));
   };
 
-  // Cálculo inverso automático del costo base
+  // Cálculo inverso y fiscal automático del costo base
   useEffect(() => {
     const pc = cleanCurrency(formData.precioCompra);
     const cb = Number(formData.cantidadEquivalenteBase);
-    
-    if (pc > 0 && cb > 0) {
-      setFormData(prev => ({ ...prev, costoUnidadBase: pc / cb }));
+    const tieneIva = Boolean(formData.tieneIva);
+    const pct = Number(formData.porcentajeIva || 0);
+    const incluye = Boolean(formData.precioIncluyeIva);
+
+    if (pc > 0) {
+      let baseSinIva = pc;
+      let totalConIva = pc;
+      let ivaMonto = 0;
+
+      if (tieneIva && pct > 0) {
+        const factor = 1 + (pct / 100);
+        if (incluye) {
+          baseSinIva = pc / factor;
+          totalConIva = pc;
+          ivaMonto = totalConIva - baseSinIva;
+        } else {
+          baseSinIva = pc;
+          ivaMonto = pc * (pct / 100);
+          totalConIva = baseSinIva + ivaMonto;
+        }
+      }
+
+      const costoUnd = cb > 0 ? totalConIva / cb : 0;
+
+      setFormData(prev => ({
+        ...prev,
+        costoBaseSinIva: baseSinIva,
+        montoIvaCalculado: ivaMonto,
+        costoUnidadBase: costoUnd
+      }));
     } else {
-      setFormData(prev => ({ ...prev, costoUnidadBase: '' }));
+      setFormData(prev => ({
+        ...prev,
+        costoBaseSinIva: 0,
+        montoIvaCalculado: 0,
+        costoUnidadBase: ''
+      }));
     }
-  }, [formData.precioCompra, formData.cantidadEquivalenteBase]);
+  }, [formData.precioCompra, formData.cantidadEquivalenteBase, formData.tieneIva, formData.porcentajeIva, formData.precioIncluyeIva]);
 
   const isDirty = !!formData.idInsumo || !!formData.idProveedor || !!formData.precioCompra;
 

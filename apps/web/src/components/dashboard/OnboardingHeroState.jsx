@@ -112,6 +112,7 @@ export function OnboardingHeroState({
               step={step}
               isCurrent={!isCompleted && step.step === currentStep}
               isDone={step.completed}
+              onboardingStatus={onboardingData}
             />
           ))}
         </div>

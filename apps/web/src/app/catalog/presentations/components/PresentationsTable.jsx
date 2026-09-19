@@ -22,7 +22,7 @@ function resolveImageUrl(url) {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-export function PresentationsTable({ presentations, loading, error, onEdit, onToggleActive, onNew }) {
+export function PresentationsTable({ presentations, loading, error, onEdit, onToggleActive, onDelete, onNew }) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
   if (presentations.length === 0) {
@@ -68,7 +68,13 @@ export function PresentationsTable({ presentations, loading, error, onEdit, onTo
                 </div>
               </TD>
               <TD>{item.nombre}</TD>
-              <TD>{item.cantidadOz} oz / {item.cantidadMl} ml</TD>
+              <TD>
+                {item.tipoEnvase === 'BALDE' || item.tipoEnvase === 'TANQUE_GRANEL' || item.nombre?.toUpperCase().includes('GRANEL') ? (
+                  <span className={styles.granelBadge}>A Granel / Tanque (WIP)</span>
+                ) : (
+                  `${item.cantidadOz} oz / ${item.cantidadMl} ml`
+                )}
+              </TD>
               <TD>{item.tipoEnvase}</TD>
               <TD>
                 <Badge status={item.activo ? 'active' : 'inactive'}>
@@ -84,6 +90,15 @@ export function PresentationsTable({ presentations, loading, error, onEdit, onTo
                   >
                     {item.activo ? 'Desactivar' : 'Activar'}
                   </Button>
+                  {!item.activo && onDelete && (
+                    <Button 
+                      variant="danger" 
+                      onClick={() => onDelete(item)}
+                      title="Eliminar definitivamente esta presentación"
+                    >
+                      🗑 Eliminar
+                    </Button>
+                  )}
                 </div>
               </TD>
             </TR>

@@ -1,8 +1,8 @@
 /**
  * @file ProductImageAndDescriptionFields.jsx
  * @module catalog/products/components/modal-parts
- * @description Campos de carga de imagen (presets o archivo local) y descripción del producto.
- * @responsibility Gestionar presets de imagen, canvas de compresión y entrada de descripción/observaciones.
+ * @description Campos de carga de imagen comercial y descripción del producto.
+ * @responsibility Gestionar carga de imagen local/URL y entrada de descripción/observaciones.
  * @usedBy apps/web/src/app/catalog/products/components/ProductModal.jsx
  * @dependencies react, ../../SmartModal.module.css, ../product-modal.module.css
  */
@@ -14,8 +14,7 @@ import styles from '../product-modal.module.css';
 export function ProductImageAndDescriptionFields({
   formData,
   handleChange,
-  handleInputChange,
-  presets = []
+  handleInputChange
 }) {
   const fileInputRef = useRef(null);
 
@@ -48,21 +47,18 @@ export function ProductImageAndDescriptionFields({
     reader.readAsDataURL(file);
   };
 
+  const handleRemoveImage = () => {
+    handleChange({ target: { name: 'imagenUrl', value: '' } });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <>
-      <div className={modalStyles.inputGroup}>
-        <label className={modalStyles.label}>Imagen del Producto (URL o Preset)</label>
-        <div className={styles.imagePresetsRow}>
-          {presets.map(preset => (
-            <img 
-              key={preset.id} 
-              src={preset.url} 
-              alt={preset.name}
-              title={preset.name}
-              onClick={() => handleChange({ target: { name: 'imagenUrl', value: preset.url } })}
-              className={`${styles.presetThumb} ${formData.imagenUrl === preset.url ? styles.presetThumbSelected : styles.presetThumbUnselected}`}
-            />
-          ))}
+      <div className={styles.imageSectionContainer}>
+        <div className={styles.imageActionsCol}>
+          <label className={styles.imageLabel}>FOTO COMERCIAL DEL PRODUCTO</label>
           <button 
             type="button" 
             onClick={() => fileInputRef.current?.click()}
@@ -70,24 +66,39 @@ export function ProductImageAndDescriptionFields({
           >
             📁 Subir Imagen desde el Equipo
           </button>
+          {formData.imagenUrl && (
+            <button
+              type="button"
+              onClick={handleRemoveImage}
+              className={styles.btnRemoveImage}
+            >
+              🗑 Quitar Imagen
+            </button>
+          )}
+          <p className={styles.imageHelpText}>
+            Formatos: PNG, JPG, WebP. Resolución óptima recomendada: 400x400 o superior.
+          </p>
           <input 
             type="file" 
             accept="image/*" 
             ref={fileInputRef} 
-            style={{ display: 'none' }} 
+            className={styles.hiddenFileInput} 
             onChange={handleImageUpload} 
           />
         </div>
-        <div className={styles.imagePreviewRow}>
-          <input 
-            name="imagenUrl" 
-            value={formData.imagenUrl ?? ''} 
-            onChange={handleChange} 
-            placeholder="https://... o clic en preset/subir"
-            className={`${modalStyles.input} ${styles.imageInputFlex}`}
-          />
-          {formData.imagenUrl && (
-            <img src={formData.imagenUrl} alt="Preview" className={styles.imagePreviewThumb} />
+
+        <div className={styles.imagePreviewBox}>
+          {formData.imagenUrl ? (
+            <img 
+              src={formData.imagenUrl} 
+              alt="Previsualización del producto" 
+              className={styles.productImageLarge} 
+            />
+          ) : (
+            <div className={styles.imagePlaceholder}>
+              <span className={styles.placeholderIcon}>🥛</span>
+              <span className={styles.placeholderText}>Sin imagen comercial asignada</span>
+            </div>
           )}
         </div>
       </div>

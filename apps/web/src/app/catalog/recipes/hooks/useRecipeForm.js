@@ -48,11 +48,34 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
       const isCommercial = isCommercialProduct(selectedProd);
       const initialEtapas = isCommercial ? [createCommercialBaseStage(products)] : [];
 
+      let suggestedUnit = 'Unidades';
+      if (selectedProd) {
+        const pres = selectedProd.presentacion;
+        const presUnit = (pres?.unidadMedida || '').toLowerCase();
+        const presName = (pres?.nombre || '').toUpperCase();
+        const presEnvase = (pres?.tipoEnvase || '').toUpperCase();
+        const prodCat = (selectedProd.categoria || '').toUpperCase();
+
+        if (presUnit === 'kg' || presName.includes('KG') || prodCat === 'DULCES_JALEAS' || selectedProd.nombre?.toUpperCase().includes('JALEA')) {
+          suggestedUnit = 'Kilogramos';
+        } else if (presUnit === 'g' || presName.includes(' G') || presEnvase === 'PORCIONADO_WIP') {
+          suggestedUnit = 'Gramos';
+        } else if (presUnit === 'ml' || presName.includes('ML')) {
+          suggestedUnit = isCommercial ? 'Unidades' : 'Mililitros';
+        } else if (presUnit === 'und') {
+          suggestedUnit = 'Unidades';
+        } else if (presUnit === 'l' || isGranel || presName.includes('L') || prodCat === 'BASES_LACTEAS' || prodCat === 'INSUMO_BASE_WIP') {
+          suggestedUnit = 'Litros';
+        } else {
+          suggestedUnit = isCommercial ? 'Unidades' : 'Litros';
+        }
+      }
+
       setFormData({
         nombre: selectedProd ? `Fórmula - ${selectedProd.nombre}` : '',
         idProducto: prodId,
         rendimientoBase: '',
-        unidadRendimiento: isGranel ? 'Litros' : 'Unidades',
+        unidadRendimiento: suggestedUnit,
         observaciones: '',
         activo: true,
         etapas: initialEtapas
@@ -76,13 +99,36 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
         ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProd.categoria)
       ) : false;
 
+      const isCommercial = isCommercialProduct(selectedProd);
+      let suggestedUnit = 'Unidades';
+      if (selectedProd) {
+        const pres = selectedProd.presentacion;
+        const presUnit = (pres?.unidadMedida || '').toLowerCase();
+        const presName = (pres?.nombre || '').toUpperCase();
+        const presEnvase = (pres?.tipoEnvase || '').toUpperCase();
+        const prodCat = (selectedProd.categoria || '').toUpperCase();
+
+        if (presUnit === 'kg' || presName.includes('KG') || prodCat === 'DULCES_JALEAS' || selectedProd.nombre?.toUpperCase().includes('JALEA')) {
+          suggestedUnit = 'Kilogramos';
+        } else if (presUnit === 'g' || presName.includes(' G') || presEnvase === 'PORCIONADO_WIP') {
+          suggestedUnit = 'Gramos';
+        } else if (presUnit === 'ml' || presName.includes('ML')) {
+          suggestedUnit = isCommercial ? 'Unidades' : 'Mililitros';
+        } else if (presUnit === 'und') {
+          suggestedUnit = 'Unidades';
+        } else if (presUnit === 'l' || isGranel || presName.includes('L') || prodCat === 'BASES_LACTEAS' || prodCat === 'INSUMO_BASE_WIP') {
+          suggestedUnit = 'Litros';
+        } else {
+          suggestedUnit = isCommercial ? 'Unidades' : 'Litros';
+        }
+      }
+
       setFormData(prev => {
         const autoNombre = selectedProd ? `Fórmula - ${selectedProd.nombre}` : '';
         const shouldUpdateNombre = !prev.nombre || prev.nombre.startsWith('Fórmula - ');
 
         // Detección de producto comercial e inyección inteligente de etapa base
         let updatedEtapas = prev.etapas || [];
-        const isCommercial = isCommercialProduct(selectedProd);
         if (isCommercial && updatedEtapas.length === 0) {
           updatedEtapas = [createCommercialBaseStage(products)];
         }
@@ -91,7 +137,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
           ...prev,
           idProducto: value,
           nombre: shouldUpdateNombre ? autoNombre : prev.nombre,
-          unidadRendimiento: isGranel ? 'Litros' : 'Unidades',
+          unidadRendimiento: suggestedUnit,
           etapas: updatedEtapas
         };
       });

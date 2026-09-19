@@ -1,4 +1,4 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, ConflictException } from '@nestjs/common';
 import { PresentationsRepository } from './presentations.repository';
 import { UploadsService } from '../uploads/uploads.service';
 
@@ -27,7 +27,13 @@ export class PresentationsService {
   }
 
   async create(createDto) {
-    return this.repository.create(createDto);
+    const isGranel = createDto.tipoEnvase === 'BALDE' || createDto.tipoEnvase === 'TANQUE_GRANEL';
+    const payload = { ...createDto };
+    if (isGranel && (payload.cantidadMl === undefined || payload.cantidadMl === null || payload.cantidadMl === 0)) {
+      payload.cantidadMl = 1000;
+      payload.cantidadOz = payload.cantidadOz || 33.81;
+    }
+    return this.repository.create(payload);
   }
 
   async update(id, updateDto) {
@@ -43,7 +49,18 @@ export class PresentationsService {
   }
 
   async remove(id) {
-    await this.findOne(id);
-    return this.repository.remove(id);
+    const current = await this.findOne(id);
+    const count = await this.repository.countProductsByPresentation(id);
+    if (count > 0) {
+      throw new ConflictException(
+        'No se puede eliminar la presentación porque está asociada a productos en el catálogo. Manténgala desactivada.'
+      );
+    }
+
+    if (current.imagenUrl) {
+      this.uploadsService.deletePhysicalFile(current.imagenUrl);
+    }
+
+    return this.repository.deletePermanent(id);
   }
 }

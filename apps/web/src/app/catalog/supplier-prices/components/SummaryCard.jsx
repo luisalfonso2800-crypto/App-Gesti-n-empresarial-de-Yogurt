@@ -21,8 +21,10 @@ export function SummaryCard({ summaryCard }) {
           <span className={styles.summaryValue}>{summaryCard.optionsCount}</span>
         </div>
         <div className={styles.summaryItem}>
-          <span className={styles.summaryLabel}>Mejor Tarifa (Costo Base)</span>
-          <span className={styles.summaryValueSuccess}>${summaryCard.minItem.costoUnidadBase} - {summaryCard.minItem.proveedor?.Nombre_Proveedor || summaryCard.minItem.proveedor?.nombre || 'Proveedor'}</span>
+          <span className={styles.summaryLabel}>Mejor Tarifa (Costo Base Final)</span>
+          <span className={styles.summaryValueSuccess}>
+            ${Number(summaryCard.minItem.costoUnidadBase || 0).toLocaleString('es-CO', { minimumFractionDigits: Number(summaryCard.minItem.costoUnidadBase) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })} - {summaryCard.minItem.proveedor?.Nombre_Proveedor || summaryCard.minItem.proveedor?.nombre || 'Proveedor'} ({summaryCard.minItem.tieneIva ? `IVA ${Number(summaryCard.minItem.porcentajeIva || 19)}%` : 'Exento'})
+          </span>
         </div>
         <div className={styles.summaryItem}>
           <span className={styles.summaryLabel}>Ahorro vs Tarifa Alta</span>

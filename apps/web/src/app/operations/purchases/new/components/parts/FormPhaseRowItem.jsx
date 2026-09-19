@@ -48,11 +48,27 @@ export default function FormPhaseRowItem(props) {
   const baseRow = Math.round(subtotalSinIva);
   const ivaRow = Math.round(montoIva);
 
+  const isUnconfigured = Boolean(
+    row.isUnconfigured ||
+    !row.proveedor?.id ||
+    empaquesNum <= 0 ||
+    precioUnitarioNum <= 0
+  );
+
+  const cardBorderClass = isUnconfigured
+    ? styles.formRowCardUnconfigured
+    : (idx === 0 ? styles.formRowCardFirst : styles.formRowCardNormal);
+
   return (
-    <div className={`${styles.formRowCard} ${idx === 0 ? styles.formRowCardFirst : styles.formRowCardNormal}`}>
+    <div className={`${styles.formRowCard} ${cardBorderClass}`}>
       <div className={styles.rowCardTopBar}>
         <div className={styles.rowCardTagGroup}>
-          {idx === 0 && <span className={styles.lastAddedBadge}>✦ ÚLTIMA ADICIÓN</span>}
+          {idx === 0 && !isUnconfigured && <span className={styles.lastAddedBadge}>✦ ÚLTIMA ADICIÓN</span>}
+          {isUnconfigured && (
+            <span className={styles.unconfiguredPill}>
+              ⚠️ Insumo añadido desde stock — Complete proveedor, empaque y precio
+            </span>
+          )}
           <span className={styles.rowItemNumber}>ÍTEM #{idx + 1}</span>
         </div>
         <button

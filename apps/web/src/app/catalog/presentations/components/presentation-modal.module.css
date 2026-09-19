@@ -42,6 +42,28 @@
   line-height: 1.4;
 }
 
+.bulkInfoCard {
+  background-color: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.bulkInfoIcon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.bulkInfoContent {
+  font-size: 0.76rem;
+  color: #1E40AF;
+  line-height: 1.4;
+}
+
 
 /* Image Upload Section */
 .imageSectionRow {

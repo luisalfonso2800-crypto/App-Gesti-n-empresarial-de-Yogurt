@@ -23,6 +23,10 @@ export function buildCartItem(item) {
     stockMinimo: item.insumo?.Stock_Minimo || item.insumo?.stockMinimo || 0,
     precioCompra: item.precioCompra,
     costoUnidadBase: item.costoUnidadBase,
+    tieneIva: item.tieneIva !== undefined ? item.tieneIva : true,
+    porcentajeIva: item.porcentajeIva !== undefined ? item.porcentajeIva : 19.0,
+    precioIncluyeIva: item.precioIncluyeIva !== undefined ? item.precioIncluyeIva : true,
+    costoBaseSinIva: item.costoBaseSinIva !== undefined ? item.costoBaseSinIva : 0,
   };
 }
 

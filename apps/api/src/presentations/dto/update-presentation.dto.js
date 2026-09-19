@@ -25,6 +25,10 @@ export class UpdatePresentationDto {
 
   @IsOptional()
   @IsString()
+  unidadMedida;
+
+  @IsOptional()
+  @IsString()
   imagenUrl;
 
   @IsOptional()

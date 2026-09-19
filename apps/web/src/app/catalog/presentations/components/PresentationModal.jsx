@@ -44,9 +44,10 @@ export function PresentationModal({
     handleChange(name === 'nombre' || name === 'observaciones' ? { target: { name, value: (value ?? '').toUpperCase() } } : e);
   };
 
+  const isGranel = formData.tipoEnvase === 'BALDE' || formData.tipoEnvase === 'TANQUE_GRANEL';
   const isNombreInvalid = !formData.nombre?.trim();
-  const isCantidadOzInvalid = formData.cantidadOz === '' || formData.cantidadOz === null || formData.cantidadOz === undefined;
-  const isCantidadMlInvalid = formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined;
+  const isCantidadOzInvalid = !isGranel && (formData.cantidadOz === '' || formData.cantidadOz === null || formData.cantidadOz === undefined);
+  const isCantidadMlInvalid = !isGranel && (formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined);
   const isTipoEnvaseInvalid = !formData.tipoEnvase;
 
   const missingFields = [];
@@ -62,14 +63,15 @@ export function PresentationModal({
   const onSubmit = (e) => {
     e.preventDefault();
     setHasSubmitted(true);
-    if (hasErrors || isSubmitDisabled) return;
+
     handleSubmit(e, {
       ...formData,
       nombre: (formData.nombre || '').trim().toUpperCase(),
       observaciones: (formData.observaciones || '').trim().toUpperCase(),
+      unidadMedida: formData.unidadMedida || (isGranel ? 'L' : 'ml'),
       tipoEnvase: (formData.tipoEnvase || 'ENVASE').trim().toUpperCase(),
-      cantidadOz: Math.max(0, Number(formData.cantidadOz) || 0),
-      cantidadMl: Math.max(0, Number(formData.cantidadMl) || 0),
+      cantidadOz: isGranel ? (Number(formData.cantidadOz) || 33.8) : Math.max(0, Number(formData.cantidadOz) || 0),
+      cantidadMl: isGranel ? (Number(formData.cantidadMl) || 1000) : Math.max(0, Number(formData.cantidadMl) || 0),
       imagenUrl: (formData.imagenUrl || '').trim() || null,
       activo: Boolean(formData.activo)
     });
@@ -125,7 +127,15 @@ export function PresentationModal({
 
         <div className={modalStyles.actions}>
           <button type="button" onClick={onClose} className={modalStyles.btnCancel}>Cancelar</button>
-          <SubmitButton isSubmitting={isSubmitting || isUploading} text={activeIsEditing ? 'Guardar Cambios' : 'Crear Presentación'} disabled={isSubmitDisabled} title={submitTitle} className={isSubmitDisabled ? styles.btnSubmitDisabled : ''} />
+          <SubmitButton 
+            type="submit"
+            isSubmitting={isSubmitting || isUploading} 
+            text={activeIsEditing ? 'Guardar Cambios' : 'Crear Presentación'} 
+            processingText={isUploading ? 'Subiendo imagen...' : 'Guardando...'}
+            disabled={isSubmitDisabled} 
+            title={submitTitle} 
+            className={isSubmitDisabled ? styles.btnSubmitDisabled : ''} 
+          />
         </div>
       </form>
     </SmartModal>

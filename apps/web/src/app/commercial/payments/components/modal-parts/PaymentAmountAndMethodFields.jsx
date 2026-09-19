@@ -10,7 +10,7 @@ import React from 'react';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import { montoATextoPesos } from '@/utils/numberToWords';
 import modalStyles from '@/components/ui/SmartModal.module.css';
-import styles from '../payments.module.css';
+import styles from '../../payments.module.css';
 
 const METODOS_PAGO = [
   { id: 'EFECTIVO', label: 'Efectivo' },

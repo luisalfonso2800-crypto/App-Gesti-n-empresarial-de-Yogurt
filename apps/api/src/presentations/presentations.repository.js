@@ -40,10 +40,22 @@ export class PresentationsRepository {
     });
   }
 
+  async countProductsByPresentation(id) {
+    return this.prisma.producto.count({
+      where: { idPresentacion: id },
+    });
+  }
+
   async remove(id) {
     return this.prisma.presentacion.update({
       where: { id },
       data: { activo: false },
+    });
+  }
+
+  async deletePermanent(id) {
+    return this.prisma.presentacion.delete({
+      where: { id },
     });
   }
 }

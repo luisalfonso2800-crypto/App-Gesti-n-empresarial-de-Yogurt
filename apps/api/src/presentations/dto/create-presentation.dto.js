@@ -4,10 +4,12 @@ export class CreatePresentationDto {
   @IsString()
   nombre;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
   cantidadOz;
 
+  @IsOptional()
   @IsNumber()
   @Min(0)
   cantidadMl;
@@ -18,6 +20,10 @@ export class CreatePresentationDto {
   @IsOptional()
   @IsString()
   tapilla;
+
+  @IsOptional()
+  @IsString()
+  unidadMedida;
 
   @IsOptional()
   @IsString()

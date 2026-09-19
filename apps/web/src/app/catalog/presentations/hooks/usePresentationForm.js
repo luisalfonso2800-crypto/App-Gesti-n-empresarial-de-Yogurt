@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { useNotification } from '@/context/NotificationContext';
 
 const initialFormData = {
   id: '',
@@ -17,12 +18,14 @@ const initialFormData = {
   cantidadOz: '',
   cantidadMl: '',
   tipoEnvase: 'ENVASE',
+  unidadMedida: 'L',
   imagenUrl: '',
   observaciones: '',
   activo: true
 };
 
 export function usePresentationForm({ onSuccess }) {
+  const { showNotification } = useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -73,6 +76,9 @@ export function usePresentationForm({ onSuccess }) {
       setSelectedPresentation(normalizedPresentation);
       setEditingItem(normalizedPresentation);
 
+      const rawObs = presentation.observaciones || '';
+      const cleanObs = rawObs.replace(/\[UNIDAD_MEDIDA:[^\]]+\]/gi, '').trim();
+
       setFormData({
         id: targetId,
         idPresentacion: targetId,
@@ -80,7 +86,8 @@ export function usePresentationForm({ onSuccess }) {
         cantidadOz: presentation.cantidadOz != null ? String(presentation.cantidadOz) : '',
         cantidadMl: presentation.cantidadMl != null ? String(presentation.cantidadMl) : '',
         tipoEnvase: presentation.tipoEnvase ?? 'ENVASE',
-        observaciones: presentation.observaciones ?? '',
+        unidadMedida: presentation.unidadMedida || 'ml',
+        observaciones: cleanObs,
         imagenUrl: presentation.imagenUrl ?? '',
         activo: presentation.activo ?? true
       });
@@ -89,7 +96,10 @@ export function usePresentationForm({ onSuccess }) {
       setSelectedId(null);
       setSelectedPresentation(null);
       setEditingItem(null);
-      setFormData(initialFormData);
+      setFormData({
+        ...initialFormData,
+        ...(isPlainObject ? presentation : {})
+      });
     }
 
     setErrorMsg('');
@@ -115,25 +125,28 @@ export function usePresentationForm({ onSuccess }) {
   };
 
   const handleSubmit = async (e, customData) => {
-    if (e && e.preventDefault) {
+    if (e && typeof e.preventDefault === 'function') {
       e.preventDefault();
     }
     setIsSubmitting(true);
     setErrorMsg('');
+
     try {
       const dataToSave = customData || formData;
+      const isGranel = dataToSave.tipoEnvase === 'BALDE' || dataToSave.tipoEnvase === 'TANQUE_GRANEL';
       const cantOz = Math.max(0, Number(dataToSave.cantidadOz) || 0);
       const cantMl = Math.max(0, Number(dataToSave.cantidadMl) || 0);
       const imgClean = (dataToSave.imagenUrl || '').trim();
 
       const payload = {
         nombre: (dataToSave.nombre || '').trim().toUpperCase(),
-        cantidadOz: cantOz,
-        cantidadMl: cantMl,
+        cantidadOz: isGranel ? (Number(dataToSave.cantidadOz) || 33.8) : cantOz,
+        cantidadMl: isGranel ? (Number(dataToSave.cantidadMl) || 1000) : cantMl,
         tipoEnvase: (dataToSave.tipoEnvase || 'ENVASE').trim().toUpperCase(),
+        unidadMedida: dataToSave.unidadMedida || (isGranel ? 'L' : 'ml'),
         imagenUrl: imgClean || null,
-        observaciones: (dataToSave.observaciones || '').trim().toUpperCase(),
-        activo: Boolean(dataToSave.activo)
+        observaciones: (dataToSave.observaciones || '').trim().toUpperCase() || null,
+        activo: Boolean(dataToSave.activo ?? true)
       };
 
       if (isEditing) {
@@ -156,14 +169,19 @@ export function usePresentationForm({ onSuccess }) {
           setIsSubmitting(false);
           return;
         }
+
         await apiClient.patch(`/presentations/${id}`, payload);
+        showNotification(`Presentación "${payload.nombre}" actualizada correctamente.`, 'success');
       } else {
         await apiClient.post('/presentations', payload);
+        showNotification(`Presentación "${payload.nombre}" creada correctamente.`, 'success');
       }
+
       handleCloseModal();
-      if (onSuccess) onSuccess();
+      if (typeof onSuccess === 'function') onSuccess();
     } catch (err) {
-      const safeMsg = err.response?.data?.message || err.message || 'Error al procesar';
+      console.error('Error al guardar presentación:', err);
+      const safeMsg = err.response?.data?.message || err.message || 'Ocurrió un error al procesar la presentación.';
       setErrorMsg(typeof safeMsg === 'object' ? JSON.stringify(safeMsg) : String(safeMsg));
     } finally {
       setIsSubmitting(false);

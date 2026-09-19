@@ -7,7 +7,7 @@ import styles from './onboarding-hero.module.css';
  * @file OnboardingHeroCard.jsx
  * @description Tarjeta individual de paso para el centro de onboarding en el Dashboard.
  */
-export function OnboardingHeroCard({ step, isCurrent, isDone, onOpenRecipeModal }) {
+export function OnboardingHeroCard({ step, isCurrent, isDone, onboardingStatus, onOpenRecipeModal }) {
   const getBadgeClass = () => {
     if (isDone) return styles.stepBadgeDone;
     if (isCurrent) return styles.stepBadgeActive;
@@ -20,8 +20,18 @@ export function OnboardingHeroCard({ step, isCurrent, isDone, onOpenRecipeModal 
     return <span className={`${styles.stepStatusTag} ${styles.statusPending}`}>Pendiente</span>;
   };
 
+  const totalProducts = Number(
+    step?.productsCount ??
+    onboardingStatus?.counts?.products ??
+    onboardingStatus?.metrics?.products ??
+    0
+  );
+  const targetRoute = step.step === 4
+    ? (totalProducts > 0 ? '/catalog/recipes' : '/catalog/products')
+    : step.route;
+
   const handleClick = () => {
-    if (step.step === 4 && typeof window !== 'undefined') {
+    if (step.step === 4 && totalProducts > 0 && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('open-recipe-modal'));
     }
     if (onOpenRecipeModal) onOpenRecipeModal();
@@ -35,15 +45,19 @@ export function OnboardingHeroCard({ step, isCurrent, isDone, onOpenRecipeModal 
         </div>
         <div className={styles.stepTexts}>
           <h4 className={styles.stepCardTitle}>{step.title}</h4>
-          <span className={styles.stepCardDetail}>{step.detail}</span>
+          <span className={styles.stepCardDetail}>
+            {step.step === 4 
+              ? 'Secuencia recomendada: Si elaboras tu propio yogurt desde la leche cruda, registra primero la Base a Granel. Si compras la base ya hecha, pasa directo al Producto Comercial.' 
+              : step.detail}
+          </span>
         </div>
       </div>
 
       <div className={styles.stepCardFooter}>
         {getStatusTag()}
-        {step.route && (
-          <Link href={step.route} onClick={handleClick} className={styles.stepLinkBtn}>
-            <span>{step.step === 2 && step.route === '/catalog/suppliers' ? 'Registrar Proveedor →' : (isCurrent ? 'Completar' : 'Ir')}</span>
+        {targetRoute && (
+          <Link href={targetRoute} onClick={handleClick} className={styles.stepLinkBtn}>
+            <span>{step.step === 2 && targetRoute === '/catalog/suppliers' ? 'Registrar Proveedor →' : (isCurrent ? 'Completar' : 'Ir')}</span>
             <ArrowRight size={12} />
           </Link>
         )}

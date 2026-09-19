@@ -62,7 +62,13 @@ export default function InventoryStockTable({
                   </TD>
                   {activeTab === 'INSUMOS' && (
                     <TD className={styles.tdCenter}>
-                      {status === 'CRITICO' ? <Badge status="inactive">Agotado</Badge> : status === 'BAJO' ? <Badge status="warning">Bajo Mínimo</Badge> : <Badge status="active">Óptimo</Badge>}
+                      {status === 'CRITICO' ? (
+                        <span className={styles.badgeDanger}>Agotado</span>
+                      ) : status === 'BAJO' ? (
+                        <span className={styles.badgeWarning}>Bajo Mínimo</span>
+                      ) : (
+                        <span className={styles.badgeSuccess}>Óptimo</span>
+                      )}
                     </TD>
                   )}
                   <TD className={styles.tdValorization}>${Number(valor || 0).toLocaleString('es-CO')}</TD>

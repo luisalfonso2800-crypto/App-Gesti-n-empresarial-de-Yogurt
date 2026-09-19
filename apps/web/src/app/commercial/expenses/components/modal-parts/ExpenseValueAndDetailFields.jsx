@@ -9,7 +9,7 @@
 import React from 'react';
 import { montoATextoPesos } from '@/utils/numberToWords';
 import modalStyles from '@/components/ui/SmartModal.module.css';
-import styles from '../expenses.module.css';
+import styles from '../../expenses.module.css';
 
 export default function ExpenseValueAndDetailFields({
   formData,

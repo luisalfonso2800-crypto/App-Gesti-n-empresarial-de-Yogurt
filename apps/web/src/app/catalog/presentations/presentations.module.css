@@ -32,3 +32,14 @@
   border: 1px solid #E8E2D7;
 }
 
+.granelBadge {
+  display: inline-block;
+  background-color: #F1F5F9;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  border: 1px solid #CBD5E1;
+}
+

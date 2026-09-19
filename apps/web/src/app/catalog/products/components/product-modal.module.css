@@ -27,6 +27,41 @@
   text-transform: uppercase;
 }
 
+/* Selector de tipo de producto (Comercial vs WIP) */
+.productTypeToggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  background-color: #F1F5F9;
+  padding: 0.35rem;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #475569;
+  transition: all 0.15s ease;
+}
+
+.toggleBtnActive {
+  background-color: #FFFFFF;
+  color: #182622;
+  font-weight: 700;
+  border-color: #CBD5E1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 /* Tarjeta WIP granel */
 .wipNoticeCard {
   grid-column: 1 / -1;
@@ -105,58 +140,127 @@
   margin-top: 0.15rem;
 }
 
-/* Image upload row */
-.imagePresetsRow {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+/* Image section and preview */
+.imageSectionContainer {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 1.25rem;
   align-items: center;
+  margin: 0.25rem 0;
+  padding: 0.85rem;
+  background-color: #FAF8F5;
+  border: 1px solid #E5DFD5;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
-.presetThumb {
-  width: 40px;
-  height: 40px;
-  cursor: pointer;
-  border-radius: 4px;
+.imageActionsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.presetThumbSelected {
-  border: 2px solid #1C3F35;
-}
-
-.presetThumbUnselected {
-  border: 1px solid #CCCCCC;
+.imageLabel {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #182622;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .btnUploadLocalImage {
-  margin-left: 1rem;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.85rem;
   background: #F7F4EE;
   border: 1px solid #D97706;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   color: #1C3F35;
-  font-weight: 500;
-}
-
-.imagePreviewRow {
-  display: flex;
-  gap: 1rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: background-color 0.15s ease;
 }
 
-.imageInputFlex {
-  flex: 1;
+.btnUploadLocalImage:hover {
+  background: #EFE9DE;
 }
 
-.imagePreviewThumb {
-  width: 70px;
-  height: 70px;
-  border-radius: 8px;
-  object-fit: cover;
-  background-color: #FBF9F5;
-  border: 2px solid #D97706;
+.btnRemoveImage {
+  padding: 0.45rem 0.85rem;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #B91C1C;
+  font-weight: 600;
+  font-size: 0.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: background-color 0.15s ease;
+}
+
+.btnRemoveImage:hover {
+  background: #FEE2E2;
+}
+
+.imageHelpText {
+  font-size: 0.71rem;
+  color: #64748B;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.imagePreviewBox {
+  height: 180px;
+  width: 100%;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E4E1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.productImageLarge {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05));
+}
+
+.imagePlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: #94A3B8;
+  padding: 1rem;
+  text-align: center;
+}
+
+.placeholderIcon {
+  font-size: 2.2rem;
+  opacity: 0.7;
+}
+
+.placeholderText {
+  font-size: 0.78rem;
+  font-weight: 500;
 }
 
 /* Costing and financial */
@@ -339,5 +443,36 @@
   font-weight: 500;
   margin-top: 0.25rem;
   display: block;
+}
+
+/* Quick create presentation button & empty presentation container */
+.emptyPresContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.25rem;
+}
+
+.emptyPresText {
+  font-size: 0.78rem;
+  color: #64748B;
+  font-style: italic;
+}
+
+.btnQuickCreatePres {
+  background-color: #1C454C;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.btnQuickCreatePres:hover {
+  background-color: #275C66;
 }
 

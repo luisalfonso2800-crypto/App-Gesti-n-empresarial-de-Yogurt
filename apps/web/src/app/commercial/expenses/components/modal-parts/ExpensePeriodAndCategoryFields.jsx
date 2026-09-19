@@ -9,7 +9,7 @@
 import React from 'react';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import modalStyles from '@/components/ui/SmartModal.module.css';
-import styles from '../expenses.module.css';
+import styles from '../../expenses.module.css';
 
 const CATEGORIAS_GASTOS = [
   { id: 'SERVICIOS_PUBLICOS', label: 'Servicios Públicos' },

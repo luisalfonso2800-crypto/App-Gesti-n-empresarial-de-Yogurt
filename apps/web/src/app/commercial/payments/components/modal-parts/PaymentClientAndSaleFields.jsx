@@ -10,7 +10,7 @@ import React from 'react';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import { formatCurrency } from '@/lib/formatters';
 import modalStyles from '@/components/ui/SmartModal.module.css';
-import styles from '../payments.module.css';
+import styles from '../../payments.module.css';
 
 export default function PaymentClientAndSaleFields({
   formData,

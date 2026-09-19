@@ -28,6 +28,7 @@ export function useFormPhaseData({
   const [detalles, setDetalles] = useState([]);
   const [flete, setFlete] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   const [activeDropdown, setActiveDropdown] = useState({ rowId: null, type: null });
   const [dropdownSearch, setDropdownSearch] = useState('');
@@ -44,6 +45,59 @@ export function useFormPhaseData({
 
   useEffect(() => { setProveedoresDB(proveedoresDBProp || []); }, [proveedoresDBProp]);
   useEffect(() => { setInsumosDB(insumosDBProp || []); }, [insumosDBProp]);
+
+  // Carga inicial del borrador local
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const savedDraft = localStorage.getItem('manna_direct_purchase_draft');
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed?.detalles && Array.isArray(parsed.detalles)) {
+          setDetalles(parsed.detalles);
+        }
+        if (parsed?.flete !== undefined) {
+          setFlete(parsed.flete);
+        }
+      }
+    } catch (err) {
+      console.warn('No se pudo restaurar el borrador local de compra directa:', err);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, []);
+
+  // Persistencia automática con debounce cuando cambian detalles o flete
+  useEffect(() => {
+    if (!draftLoaded || typeof window === 'undefined') return;
+    const timeoutId = setTimeout(() => {
+      try {
+        if (detalles.length === 0 && !flete) {
+          localStorage.removeItem('manna_direct_purchase_draft');
+        } else {
+          localStorage.setItem(
+            'manna_direct_purchase_draft',
+            JSON.stringify({ detalles, flete, updatedAt: new Date().toISOString() })
+          );
+        }
+      } catch (err) {
+        console.warn('Error al persistir borrador local:', err);
+      }
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [detalles, flete, draftLoaded]);
+
+  const clearDraft = () => {
+    if (typeof window !== 'undefined') {
+      const confirmClear = window.confirm('¿Está seguro de limpiar el borrador actual? Se vaciarán todos los ítems.');
+      if (!confirmClear) return;
+      localStorage.removeItem('manna_direct_purchase_draft');
+    }
+    setDetalles([]);
+    setFlete('');
+    showNotification('Borrador de compra limpiado correctamente.', 'info');
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -113,9 +167,33 @@ export function useFormPhaseData({
       precioUnitario: '',
       tieneIva: true,
       porcentajeIva: 19,
-      precioIncluyeIva: true
+      precioIncluyeIva: true,
+      isUnconfigured: false
     };
     setDetalles(prev => [newRow, ...prev]);
+  };
+
+  const addRowFromStock = (supply) => {
+    const newRow = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      proveedor: null,
+      provSearch: '',
+      insumo: supply,
+      insumoSearch: supply?.nombre || '',
+      empaque: 'UNIDAD',
+      empaqueTipo: 'UNIDAD',
+      contenidoNeto: '1',
+      unidadMedida: supply?.unidadBase || supply?.unidadMedida || 'kg',
+      marca: (supply?.marca && supply.marca !== 'N/A') ? supply.marca : '',
+      empaques: '',
+      precioUnitario: supply?.costoBase ? String(supply.costoBase) : '',
+      tieneIva: true,
+      porcentajeIva: 19,
+      precioIncluyeIva: true,
+      isUnconfigured: true
+    };
+    setDetalles(prev => [newRow, ...prev]);
+    showNotification(`Insumo "${supply?.nombre}" agregado. Complete proveedor, empaque y precio.`, 'info');
   };
 
   const removeRow = (id) => {
@@ -123,7 +201,17 @@ export function useFormPhaseData({
   };
 
   const updateDetalle = (id, field, value) => {
-    setDetalles(prev => prev.map(d => d.id === id ? { ...d, [field]: value } : d));
+    setDetalles(prev => prev.map(d => {
+      if (d.id !== id) return d;
+      const updated = { ...d, [field]: value };
+      const hasProv = Boolean(updated.proveedor?.id);
+      const hasQty = (parseInt(updated.empaques, 10) || 0) > 0;
+      const hasPrice = (parseInt(updated.precioUnitario, 10) || 0) > 0;
+      if (hasProv && hasQty && hasPrice) {
+        updated.isUnconfigured = false;
+      }
+      return updated;
+    }));
   };
 
   const clearInsumo = (rowId) => {
@@ -208,6 +296,12 @@ export function useFormPhaseData({
   };
 
   const handleConfirmar = async () => {
+    const unconfiguredRows = detalles.filter(d => d.isUnconfigured);
+    if (unconfiguredRows.length > 0) {
+      showNotification('Hay insumos agregados desde stock que aún están pendientes de completar (proveedor, empaque o precio).', 'error');
+      return;
+    }
+
     const filasIncompletas = detalles.filter(d => !d.insumo?.id || parseInt(d.empaques, 10) <= 0 || parseInt(d.precioUnitario, 10) <= 0 || isNaN(parseInt(d.empaques, 10)) || isNaN(parseInt(d.precioUnitario, 10)));
     if (filasIncompletas.length > 0) {
       const ejemplos = filasIncompletas.map((d, idx) => {
@@ -282,6 +376,10 @@ export function useFormPhaseData({
           })
         });
 
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('manna_direct_purchase_draft');
+        }
+
         showNotification('Compra registrada exitosamente.', 'success');
         router.push('/operations/purchases');
       } else {
@@ -296,6 +394,11 @@ export function useFormPhaseData({
         );
 
         await Promise.all(promesas);
+
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('manna_direct_purchase_draft');
+        }
+
         showNotification('Ítems incorporados a la orden exitosamente.', 'success');
         
         if (typeof refreshOrder === 'function') {
@@ -325,6 +428,8 @@ export function useFormPhaseData({
     totalIvaCompra,
     totalCompra,
     addRow,
+    addRowFromStock,
+    clearDraft,
     removeRow,
     updateDetalle,
     clearInsumo,

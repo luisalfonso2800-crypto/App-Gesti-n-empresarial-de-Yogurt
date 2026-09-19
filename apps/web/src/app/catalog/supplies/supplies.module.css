@@ -46,3 +46,33 @@
   padding: 0;
   line-height: 1;
 }
+
+.stockMinContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.stockStatusDot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotDanger {
+  background-color: #DC2626;
+  box-shadow: 0 0 0 2px #FEE2E2;
+}
+
+.dotWarning {
+  background-color: #D97706;
+  box-shadow: 0 0 0 2px #FEF3C7;
+}
+
+.dotSuccess {
+  background-color: #059669;
+  box-shadow: 0 0 0 2px #D1FAE5;
+}
+

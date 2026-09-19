@@ -64,11 +64,21 @@ export function RecipeHeaderFields({ formData, products = [], onChange, isCommer
                 placeholder="Ej: 100" onChange={onChange} required 
               />
             </div>
-            <div className={styles.unitChipGroup}>
-              <label className={styles.label}>UNIDAD DE MEDIDA</label>
-              <div className={styles.unitBadgeChip}>{formData.unidadRendimiento || 'Litros'}</div>
-              <input type="hidden" name="unidadRendimiento" value={formData.unidadRendimiento || 'Litros'} />
-              <span className={styles.inputHelperText}>Definida por la presentación del producto</span>
+            <div>
+              <label className={styles.label}>UNIDAD DE MEDIDA *</label>
+              <select 
+                className={styles.select} 
+                name="unidadRendimiento" 
+                value={formData.unidadRendimiento || 'Litros'} 
+                onChange={onChange}
+              >
+                <option value="Litros">Litros (L)</option>
+                <option value="Kilogramos">Kilogramos (kg)</option>
+                <option value="Gramos">Gramos (g)</option>
+                <option value="Mililitros">Mililitros (ml)</option>
+                <option value="Unidades">Unidades (und)</option>
+              </select>
+              <span className={styles.inputHelperText}>Sugerida según el producto; editable según necesidad de planta</span>
             </div>
           </div>
 
