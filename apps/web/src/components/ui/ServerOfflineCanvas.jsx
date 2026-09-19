@@ -21,16 +21,27 @@ export default function ServerOfflineCanvas({
   const [isChecking, setIsChecking] = useState(false);
   const timersRef = useRef([]);
 
+  const checkApiConnection = async () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+    const urls = [`${baseUrl}/system/onboarding-status`, `${baseUrl}/system`, '/api/v1/system/onboarding-status', '/api/v1/system'];
+    for (const url of urls) {
+      try {
+        const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+        if (res.ok) return true;
+      } catch { /* Fallback silencioso */ }
+    }
+    return false;
+  };
+
   useEffect(() => {
     if (phase !== 'offline') return;
     const timer = setInterval(async () => {
-      try {
-        const res = await fetch('/api/v1/system', { method: 'GET', cache: 'no-store' });
-        if (res.ok) {
-          clearInterval(timer);
-          triggerHandshakeSequence();
-        }
-      } catch { /* Continúa en espera sin lanzar excepciones */ }
+      if (isChecking) return;
+      const isOnline = await checkApiConnection();
+      if (isOnline) {
+        clearInterval(timer);
+        triggerHandshakeSequence();
+      }
     }, 2500);
 
     const handleOnline = () => {
@@ -45,10 +56,11 @@ export default function ServerOfflineCanvas({
       if (typeof window !== 'undefined') window.removeEventListener('manna:network-online', handleOnline);
       timersRef.current.forEach(clearTimeout);
     };
-  }, [phase]);
+  }, [phase, isChecking]);
 
   const triggerHandshakeSequence = () => {
     setPhase('handshake');
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('manna:network-online'));
     const handshakeTimer = setTimeout(() => {
       setPhase('closing');
       const closingTimer = setTimeout(() => {
@@ -64,14 +76,14 @@ export default function ServerOfflineCanvas({
   const handleRetry = async () => {
     if (isChecking || phase !== 'offline') return;
     setIsChecking(true);
-
     try {
       if (typeof onRetry === 'function') {
         await onRetry();
-      } else {
-        const res = await fetch('/api/health').catch(() => null);
-        if (!res || !res.ok) throw new Error('Servidor no disponible');
+        triggerHandshakeSequence();
+        return;
       }
+      const isOnline = await checkApiConnection();
+      if (!isOnline) throw new Error('Servidor no disponible');
       triggerHandshakeSequence();
     } catch {
       setIsChecking(false);
@@ -81,26 +93,12 @@ export default function ServerOfflineCanvas({
   const isHandshake = phase === 'handshake' || phase === 'closing';
 
   return (
-    <div
-      className={`${styles.canvasContainer} ${phase === 'closing' ? styles.fadeOut : ''}`}
-      role="status"
-      aria-live="polite"
-    >
-      <div
-        className={isHandshake ? styles.iconWrapperSuccess : styles.iconWrapper}
-        aria-hidden="true"
-      >
-        {isHandshake ? (
-          <CheckCircle2 size={42} className={styles.checkIcon} />
-        ) : (
-          <Leaf size={42} className={styles.leafIcon} />
-        )}
+    <div className={`${styles.canvasContainer} ${phase === 'closing' ? styles.fadeOut : ''}`} role="status" aria-live="polite">
+      <div className={isHandshake ? styles.iconWrapperSuccess : styles.iconWrapper} aria-hidden="true">
+        {isHandshake ? <CheckCircle2 size={42} className={styles.checkIcon} /> : <Leaf size={42} className={styles.leafIcon} />}
       </div>
 
-      <h2 className={styles.title}>
-        {isHandshake ? 'Enlace Operativo Confirmado' : title}
-      </h2>
-
+      <h2 className={styles.title}>{isHandshake ? 'Enlace Operativo Confirmado' : title}</h2>
       {!isHandshake && <p className={styles.message}>{message}</p>}
 
       {!isHandshake && (
@@ -113,12 +111,7 @@ export default function ServerOfflineCanvas({
       {isHandshake ? (
         <ReconnectionChecklist />
       ) : (
-        <button
-          type="button"
-          onClick={handleRetry}
-          disabled={isChecking}
-          className={styles.retryButton}
-        >
+        <button type="button" onClick={handleRetry} disabled={isChecking} className={styles.retryButton}>
           <RefreshCw size={15} className={isChecking ? styles.spinIcon : ''} />
           <span>{isChecking ? 'Comprobando Enlace...' : 'Reintentar Conexión'}</span>
         </button>

@@ -8,16 +8,18 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Leaf } from 'lucide-react';
 import styles from './SmartModal.module.css';
 
 export default function SmartModal({
   isOpen,
   onClose,
   title,
+  subtitle,
   children,
   isDirty = false,
-  isSubmitting = false
+  isSubmitting = false,
+  icon: Icon = Leaf
 }) {
   const [showConfirmClose, setShowConfirmClose] = useState(false);
 
@@ -59,16 +61,26 @@ export default function SmartModal({
   return (
     <div className={styles.backdrop} onClick={handleBackdropClick}>
       <div className={styles.modalCard}>
-        {/* Header */}
+        {/* Header Institucional Botánico MANNÁ */}
         <div className={styles.header}>
-          <h2 className={styles.headerTitle}>{title}</h2>
+          <div className={styles.headerContent}>
+            {Icon && (
+              <div className={styles.headerIconBadge}>
+                <Icon size={18} className={styles.headerLeafIcon} />
+              </div>
+            )}
+            <div className={styles.headerTitles}>
+              <h2 className={styles.headerTitle}>{title}</h2>
+              {subtitle && <p className={styles.headerSubtitle}>{subtitle}</p>}
+            </div>
+          </div>
           <button 
             onClick={handleSafeClose}
             disabled={isSubmitting}
             className={styles.closeButton}
             aria-label="Cerrar modal"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
         </div>
 
@@ -106,16 +118,16 @@ export default function SmartModal({
 /**
  * @description Botón de envío estándar para modales inteligentes
  */
-export function SubmitButton({ isSubmitting, text = 'Guardar', processingText = 'Procesando...', ...props }) {
+export function SubmitButton({ isSubmitting, text = 'Guardar', processingText = 'Procesando...', className, ...props }) {
   return (
     <button
       disabled={isSubmitting}
-      className={styles.btnSubmit}
+      className={`${styles.btnSubmit} ${className || ''}`}
       {...props}
     >
       {isSubmitting ? (
         <>
-          <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={18} />
+          <Loader2 className={styles.spinIcon} size={18} />
           {processingText}
         </>
       ) : text}

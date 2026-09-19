@@ -33,7 +33,11 @@ export default function OnboardingStepItem({
   const isDone = stepItem.completed;
 
   let targetRoute = stepItem.route;
-  if (stepItem.step === 4) {
+  let actionButtonText = isCurrent ? 'Completar' : 'Ver';
+
+  if (stepItem.step === 2 && stepItem.route === '/catalog/suppliers') {
+    actionButtonText = 'Registrar Proveedor →';
+  } else if (stepItem.step === 4) {
     targetRoute = !hasBulkProduct 
       ? '/catalog/products?crear=base-intermedia' 
       : '/catalog/recipes?crear=receta';
@@ -116,7 +120,7 @@ export default function OnboardingStepItem({
           onClick={handleActionClick}
           title={`Ir a ${stepItem.title}`}
         >
-          <span>{isCurrent ? 'Completar' : 'Ver'}</span>
+          <span>{actionButtonText}</span>
           <ArrowRight size={12} />
         </Link>
       )}

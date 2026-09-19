@@ -43,7 +43,7 @@ export function OnboardingHeroCard({ step, isCurrent, isDone, onOpenRecipeModal 
         {getStatusTag()}
         {step.route && (
           <Link href={step.route} onClick={handleClick} className={styles.stepLinkBtn}>
-            <span>{isCurrent ? 'Completar' : 'Ir'}</span>
+            <span>{step.step === 2 && step.route === '/catalog/suppliers' ? 'Registrar Proveedor →' : (isCurrent ? 'Completar' : 'Ir')}</span>
             <ArrowRight size={12} />
           </Link>
         )}
