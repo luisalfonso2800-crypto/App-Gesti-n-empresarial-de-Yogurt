@@ -28,7 +28,7 @@ export function FormPhase({
 }) {
   const {
     isDirectPurchase, detalles, flete, setFlete, isSubmitting, containerRef,
-    totalConFlete, addRow, removeRow, updateDetalle, clearInsumo, activeDropdown,
+    totalConFlete, totalSinIvaCompra, totalIvaCompra, addRow, removeRow, updateDetalle, clearInsumo, activeDropdown,
     setActiveDropdown, openDropdown, dropdownSearch, setDropdownSearch,
     filteredProveedores, filteredInsumosByRow, showNewProvModal, setShowNewProvModal,
     setNewProvTargetRow, initialProvData, setInitialProvData, showNewInsumoModal,
@@ -108,6 +108,8 @@ export function FormPhase({
         <FormPhaseSummaryCard
           detallesCount={detalles.length}
           flete={flete}
+          totalSinIvaCompra={totalSinIvaCompra}
+          totalIvaCompra={totalIvaCompra}
           totalConFlete={totalConFlete}
         />
       </div>

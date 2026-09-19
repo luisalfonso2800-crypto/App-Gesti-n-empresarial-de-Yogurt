@@ -22,7 +22,14 @@ const TIPO_PAGO_OPTIONS = [
   { id: 'CREDITO', label: 'Crédito' },
 ];
 
-export default function SaleGeneralFields({ formData, handleChange, clients }) {
+export default function SaleGeneralFields({
+  formData,
+  handleChange,
+  clients,
+  hasSubmitted = false,
+  isClienteMissing = false,
+  isFechaMissing = false
+}) {
   return (
     <div className={modalStyles.twoColumns}>
       <SmartSelect
@@ -32,6 +39,7 @@ export default function SaleGeneralFields({ formData, handleChange, clients }) {
         onChange={handleChange}
         required
         options={clients.map(c => ({ id: c.id, label: c.nombre, subtext: c.documento }))}
+        error={hasSubmitted && isClienteMissing ? 'Seleccione un cliente para la venta' : undefined}
       />
       
       <div className={modalStyles.inputGroup}>
@@ -43,9 +51,12 @@ export default function SaleGeneralFields({ formData, handleChange, clients }) {
           type="date" 
           value={formData.fechaVenta ?? ''} 
           onChange={handleChange} 
-          className={modalStyles.input} 
+          className={`${modalStyles.input} ${hasSubmitted && isFechaMissing ? styles.inputErrorBorder : ''}`} 
           required 
         />
+        {hasSubmitted && isFechaMissing && (
+          <span className={styles.fieldErrorText}>La fecha de venta es obligatoria</span>
+        )}
       </div>
 
       <SmartSelect

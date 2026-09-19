@@ -14,13 +14,13 @@ import { Button } from '@/components/ui/Button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import styles from '../purchases.module.css';
 
+import PurchasesAccordionDetails from './PurchasesAccordionDetails';
+
 export default function PurchasesHistoryTable({
   groupedPurchases,
   expandedId,
   toggleRow
 }) {
-  const router = useRouter();
-
   return (
     <Table>
       <THead>
@@ -80,67 +80,7 @@ export default function PurchasesHistoryTable({
               {expandedId === group.id && (
                 <TR>
                   <TD colSpan="5" className={styles.detailsCellWrapper}>
-                    <div className={styles.detailsContainer}>
-                      {!isCompleted && (
-                        <div className={styles.incompleteBanner}>
-                          <span className={styles.incompleteBannerText}>
-                            ⚠️ Esta lista de compra aún tiene insumos pendientes por conseguir o comprar. Puedes continuar el checklist para completarlos o descartarlos.
-                          </span>
-                          <Button variant="secondary" onClick={() => router.push(`/operations/purchases/new?orderId=${group.id}`)}>
-                            Completar Lista
-                          </Button>
-                        </div>
-                      )}
-                      <h4 className={styles.detailsSectionTitle}>Detalle de la Compra</h4>
-                      <table className={styles.detailsTable}>
-                        <thead>
-                          <tr className={styles.detailsTableHeadRow}>
-                            <th className={styles.detailsTableCell}>Insumo</th>
-                            <th className={styles.detailsTableCell}>Presentación / Marca</th>
-                            <th className={styles.detailsTableCell}>Proveedor</th>
-                            <th className={styles.detailsTableCell}>Cant. Neta</th>
-                            <th className={styles.detailsTableCell}>Costo Unit.</th>
-                            <th className={styles.detailsTableCell}>Subtotal</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {group.detalles && group.detalles.length > 0 ? (
-                            group.detalles.map((d, idx) => (
-                              <tr key={d.id || idx} className={styles.detailsTableBodyRow}>
-                                <td className={styles.detailsTableCell}>{d.insumo?.nombre || d.idInsumo}</td>
-                                <td className={styles.detailsTableCell}>{d.presentacion || d.insumo?.marca || 'Empaque'}</td>
-                                <td className={styles.detailsTableCell}>{d.proveedor?.nombre || d.idProveedor}</td>
-                                <td className={styles.detailsTableCell}>{Number(d.cantidad)}</td>
-                                <td className={styles.detailsTableCell}>${Number(d.precioUnitario).toLocaleString('es-CO')}</td>
-                                <td className={styles.detailsTableCell}>${Number(d.subtotal).toLocaleString('es-CO')}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="6" className={styles.detailsEmptyCell}>
-                                No hay detalles disponibles para esta compra.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      
-                      <div className={styles.detailsTotalsContainer}>
-                        <div className={styles.totalsRow}>
-                          <span className={styles.totalsMutedLabel}>Subtotal Ítems:</span>
-                          <span>${Number(group.detalles.reduce((acc, d) => acc + Number(d.subtotal), 0)).toLocaleString('es-CO')}</span>
-                        </div>
-                        <div className={styles.totalsRow}>
-                          <span className={styles.totalsMutedLabel}>Flete Global:</span>
-                          <span>${Number(group.total - group.detalles.reduce((acc, d) => acc + Number(d.subtotal), 0)).toLocaleString('es-CO')}</span>
-                        </div>
-                        <div className={styles.totalsRowFinal}>
-                          <span>Total Compra:</span>
-                          <span>${Number(group.total).toLocaleString('es-CO')}</span>
-                        </div>
-                      </div>
-
-                    </div>
+                    <PurchasesAccordionDetails group={group} isCompleted={isCompleted} />
                   </TD>
                 </TR>
               )}

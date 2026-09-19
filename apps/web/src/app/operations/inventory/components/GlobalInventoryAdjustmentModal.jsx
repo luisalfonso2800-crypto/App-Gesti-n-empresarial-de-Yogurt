@@ -47,7 +47,12 @@ export function GlobalInventoryAdjustmentModal({ isOpen, onClose, onSuccess }) {
     isDirty,
     isSubmitDisabled,
     submitTitle,
-    handleSubmit
+    handleSubmit,
+    hasSubmitted,
+    isInsumoMissing,
+    isCantidadMissing,
+    isCostoMissing,
+    isMotivoMissing
   } = useInventoryAdjustmentForm({ isOpen, onClose, onSuccess });
 
   return (
@@ -78,6 +83,7 @@ export function GlobalInventoryAdjustmentModal({ isOpen, onClose, onSuccess }) {
           }))}
           required
           placeholder={loadingSupplies ? 'Cargando insumos...' : 'Seleccione un insumo del catálogo'}
+          error={hasSubmitted && isInsumoMissing ? 'Seleccione un insumo del catálogo' : undefined}
         />
 
         <InventoryAdjustmentFields
@@ -92,6 +98,10 @@ export function GlobalInventoryAdjustmentModal({ isOpen, onClose, onSuccess }) {
           selectedInsumo={selectedInsumo}
           unidadBase={unidadBase}
           isCostRequired={isCostRequired}
+          hasSubmitted={hasSubmitted}
+          isCantidadMissing={isCantidadMissing}
+          isCostoMissing={isCostoMissing}
+          isMotivoMissing={isMotivoMissing}
         />
 
         {selectedInsumo && numericQty > 0 && (

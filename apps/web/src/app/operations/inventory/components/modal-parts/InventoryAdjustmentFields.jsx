@@ -22,7 +22,11 @@ export default function InventoryAdjustmentFields({
   setMotivo,
   selectedInsumo,
   unidadBase,
-  isCostRequired
+  isCostRequired,
+  hasSubmitted = false,
+  isCantidadMissing = false,
+  isCostoMissing = false,
+  isMotivoMissing = false
 }) {
   return (
     <>
@@ -59,9 +63,12 @@ export default function InventoryAdjustmentFields({
             }
           }}
           placeholder="0"
-          className={modalStyles.input}
+          className={`${modalStyles.input} ${hasSubmitted && isCantidadMissing ? styles.inputErrorBorder : ''}`}
           required
         />
+        {hasSubmitted && isCantidadMissing && (
+          <span className={styles.fieldErrorText}>La cantidad debe ser mayor a 0</span>
+        )}
         {selectedInsumo && (
           <span className={styles.unitHelperText}>
             Unidad técnica de medida del insumo: <strong>{unidadBase}</strong>
@@ -77,6 +84,7 @@ export default function InventoryAdjustmentFields({
           placeholder="Ej: 25.000"
           required={isCostRequired}
           name="costoUnitario"
+          error={hasSubmitted && isCostoMissing ? 'El costo unitario debe ser mayor a $ 0' : undefined}
         />
       )}
 
@@ -91,9 +99,12 @@ export default function InventoryAdjustmentFields({
           value={motivo}
           onChange={(e) => setMotivo((e.target.value ?? '').toUpperCase())}
           placeholder={tipo === 'CARGA_INICIAL' ? 'EJ: INVENTARIO FÍSICO INICIAL' : 'EJ: CONTEO FÍSICO, ENVASE DAÑADO'}
-          className={`${modalStyles.input} ${styles.uppercaseInput}`}
+          className={`${modalStyles.input} ${styles.uppercaseInput} ${hasSubmitted && isMotivoMissing ? styles.inputErrorBorder : ''}`}
           required={['AJUSTE_NEGATIVO', 'MERMA_DESPERDICIO'].includes(tipo)}
         />
+        {hasSubmitted && isMotivoMissing && (
+          <span className={styles.fieldErrorText}>El motivo es obligatorio para salidas y mermas</span>
+        )}
       </div>
     </>
   );

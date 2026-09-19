@@ -22,44 +22,46 @@ export function SaleModal({
   isSubmitting, errorMsg
 }) {
   const [stockError, setStockError] = useState('');
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  const handleAddDetail = (newDetail) => {
-    handleDetailsChange([...formData.detalles, newDetail]);
-  };
+  const handleAddDetail = (newDetail) => handleDetailsChange([...formData.detalles, newDetail]);
+  const handleRemoveDetail = (index) => handleDetailsChange(formData.detalles.filter((_, i) => i !== index));
 
-  const handleRemoveDetail = (index) => {
-    handleDetailsChange(formData.detalles.filter((_, i) => i !== index));
-  };
-
-  const utilidadTotal = formData.detalles.reduce(
-    (sum, d) => sum + ((d.precioUnitario - d.costoUnitario) * d.cantidad),
-    0
-  );
+  const utilidadTotal = formData.detalles.reduce((sum, d) => sum + ((d.precioUnitario - d.costoUnitario) * d.cantidad), 0);
   const isDirty = formData.detalles.length > 0 || !!formData.idCliente;
   const clientName = clients.find(x => String(x.id) === String(formData.idCliente))?.nombre || 'Cliente no seleccionado';
 
+  const isClienteMissing = !formData.idCliente;
+  const isFechaMissing = !formData.fechaVenta;
+  const isDetallesMissing = formData.detalles.length === 0;
+  const isFechaLimiteMissing = formData.tipoPago === 'CREDITO' && !formData.fechaLimitePago;
+
   const missingFields = [];
-  if (!formData.idCliente) missingFields.push('Cliente');
-  if (!formData.fechaVenta) missingFields.push('Fecha de venta');
-  if (formData.detalles.length === 0) missingFields.push('Al menos 1 producto en la orden');
+  if (isClienteMissing) missingFields.push('Cliente');
+  if (isFechaMissing) missingFields.push('Fecha de venta');
+  if (isDetallesMissing) missingFields.push('Al menos 1 producto en la orden');
   if (stockError) missingFields.push('Resolver stock insuficiente');
-  if (formData.tipoPago === 'CREDITO' && !formData.fechaLimitePago) missingFields.push('Fecha límite de pago');
+  if (isFechaLimiteMissing) missingFields.push('Fecha límite de pago');
 
   const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
-  const submitTitle = missingFields.length > 0
-    ? `Complete los campos obligatorios: ${missingFields.join(', ')}`
-    : '';
+  const submitTitle = missingFields.length > 0 ? `Complete los campos obligatorios: ${missingFields.join(', ')}` : '';
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    setHasSubmitted(true);
     if (isSubmitDisabled) return;
     handleSubmit(e);
+  };
+
+  const handleClose = () => {
+    setHasSubmitted(false);
+    onClose();
   };
 
   return (
     <SmartModal 
       isOpen={isOpen} 
-      onClose={onClose} 
+      onClose={handleClose} 
       title="Nueva Venta (Despacho desde Cava)"
       isDirty={isDirty}
       isSubmitting={isSubmitting}
@@ -76,6 +78,9 @@ export function SaleModal({
           formData={formData}
           handleChange={handleChange}
           clients={clients}
+          hasSubmitted={hasSubmitted}
+          isClienteMissing={isClienteMissing}
+          isFechaMissing={isFechaMissing}
         />
 
         <SaleProductsDispatchSection
@@ -84,6 +89,8 @@ export function SaleModal({
           onAddDetail={handleAddDetail}
           onRemoveDetail={handleRemoveDetail}
           onStockErrorChange={setStockError}
+          hasSubmitted={hasSubmitted}
+          isDetallesMissing={isDetallesMissing}
         />
 
         <SaleBalanceReceiptCard
@@ -92,7 +99,12 @@ export function SaleModal({
           utilidadTotal={utilidadTotal}
         />
 
-        <SaleCreditFields formData={formData} handleChange={handleChange} />
+        <SaleCreditFields
+          formData={formData}
+          handleChange={handleChange}
+          hasSubmitted={hasSubmitted}
+          isFechaLimiteMissing={isFechaLimiteMissing}
+        />
 
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>Observaciones</label>
@@ -113,7 +125,7 @@ export function SaleModal({
         <div className={modalStyles.actions}>
           <button 
             type="button" 
-            onClick={onClose}
+            onClick={handleClose}
             className={modalStyles.btnCancel}
           >
             Cancelar

@@ -97,3 +97,17 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.inputErrorBorder {
+  border-color: #EF4444 !important;
+  background-color: #FEF2F2 !important;
+}
+
+.fieldErrorText {
+  font-size: 0.75rem;
+  color: #DC2626;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
+}
+

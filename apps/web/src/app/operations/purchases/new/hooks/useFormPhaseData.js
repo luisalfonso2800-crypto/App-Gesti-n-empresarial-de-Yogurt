@@ -55,7 +55,45 @@ export function useFormPhaseData({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const totalCompra = detalles.reduce((acc, d) => acc + ((parseInt(d.empaques, 10) || 0) * (parseInt(d.precioUnitario, 10) || 0)), 0);
+  const calculateRowFinancials = (d) => {
+    const empaquesNum = parseInt(d.empaques, 10) || 0;
+    const precioUnitarioNum = parseInt(d.precioUnitario, 10) || 0;
+    const tieneIva = d.tieneIva !== undefined ? Boolean(d.tieneIva) : true;
+    const pctIva = tieneIva ? (Number(d.porcentajeIva !== undefined ? d.porcentajeIva : 19) || 0) : 0;
+    const precioIncluyeIva = d.precioIncluyeIva !== undefined ? Boolean(d.precioIncluyeIva) : true;
+
+    let subtotalSinIva = 0;
+    let montoIva = 0;
+    let subtotalConIva = 0;
+
+    if (!tieneIva) {
+      subtotalSinIva = precioUnitarioNum * empaquesNum;
+      montoIva = 0;
+      subtotalConIva = subtotalSinIva;
+    } else if (tieneIva && precioIncluyeIva) {
+      subtotalConIva = precioUnitarioNum * empaquesNum;
+      subtotalSinIva = pctIva > 0 ? (subtotalConIva / (1 + (pctIva / 100))) : subtotalConIva;
+      montoIva = subtotalConIva - subtotalSinIva;
+    } else {
+      subtotalSinIva = precioUnitarioNum * empaquesNum;
+      montoIva = subtotalSinIva * (pctIva / 100);
+      subtotalConIva = subtotalSinIva + montoIva;
+    }
+
+    return {
+      subtotalSinIva,
+      montoIva,
+      subtotalConIva,
+      subtotal: Math.round(subtotalConIva),
+      tieneIva,
+      porcentajeIva: pctIva,
+      precioIncluyeIva
+    };
+  };
+
+  const totalSinIvaCompra = Math.round(detalles.reduce((acc, d) => acc + calculateRowFinancials(d).subtotalSinIva, 0));
+  const totalIvaCompra = Math.round(detalles.reduce((acc, d) => acc + calculateRowFinancials(d).montoIva, 0));
+  const totalCompra = Math.round(detalles.reduce((acc, d) => acc + calculateRowFinancials(d).subtotalConIva, 0));
   const rawFlete = String(flete).replace(/\D/g, '');
   const totalConFlete = totalCompra + (parseInt(rawFlete, 10) || 0);
 
@@ -72,7 +110,10 @@ export function useFormPhaseData({
       unidadMedida: 'kg',
       marca: '',
       empaques: '',
-      precioUnitario: ''
+      precioUnitario: '',
+      tieneIva: true,
+      porcentajeIva: 19,
+      precioIncluyeIva: true
     };
     setDetalles(prev => [newRow, ...prev]);
   };
@@ -195,15 +236,17 @@ export function useFormPhaseData({
     setIsSubmitting(true);
     try {
       if (isDirectPurchase) {
-        const totalDetalles = detalles.reduce((sum, d) => sum + (parseInt(d.empaques, 10) * parseInt(d.precioUnitario, 10)), 0);
         const rawF = String(flete).replace(/\D/g, '');
+        const fleteNum = parseInt(rawF, 10) || 0;
         
         await apiClient.post('/purchases', {
           esDirecta: true,
           idOrden: activeOrder?.id || null,
           fechaCompra: new Date().toISOString(),
-          total: totalDetalles,
-          fleteGlobal: parseInt(rawF, 10) || 0,
+          total: totalCompra,
+          totalSinIva: totalSinIvaCompra,
+          totalIva: totalIvaCompra,
+          fleteGlobal: fleteNum,
           observaciones: 'Compra Directa',
           condicion: 'CONTADO',
           detalles: detalles.map(d => {
@@ -214,13 +257,19 @@ export function useFormPhaseData({
             const contNeto = parseFloat(d.contenidoNeto) || 1;
             const uMed = d.unidadMedida || 'Unidad';
             const presComercial = `${String(empaqueNom).trim().toUpperCase()} x ${contNeto.toLocaleString('es-CO')} ${uMed}`;
+            const fin = calculateRowFinancials(d);
 
             return {
               idInsumo: d.insumo.id,
               idProveedor: d.proveedor?.id || null,
               cantidad: parseInt(d.empaques, 10),
               precioUnitario: parseInt(d.precioUnitario, 10),
-              subtotal: parseInt(d.empaques, 10) * parseInt(d.precioUnitario, 10),
+              subtotal: fin.subtotal,
+              subtotalSinIva: Number(fin.subtotalSinIva.toFixed(2)),
+              montoIva: Number(fin.montoIva.toFixed(2)),
+              tieneIva: fin.tieneIva,
+              porcentajeIva: fin.porcentajeIva,
+              precioIncluyeIva: fin.precioIncluyeIva,
               empaque: String(empaqueNom).trim().toUpperCase(),
               presentacion: presComercial,
               empaques: parseInt(d.empaques, 10),
@@ -272,6 +321,9 @@ export function useFormPhaseData({
     isSubmitting,
     containerRef,
     totalConFlete,
+    totalSinIvaCompra,
+    totalIvaCompra,
+    totalCompra,
     addRow,
     removeRow,
     updateDetalle,

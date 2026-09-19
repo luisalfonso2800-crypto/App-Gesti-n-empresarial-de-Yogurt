@@ -11,7 +11,12 @@ import { montoATextoPesos } from '@/utils/numberToWords';
 import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from '../sale-modal.module.css';
 
-export default function SaleCreditFields({ formData, handleChange }) {
+export default function SaleCreditFields({
+  formData,
+  handleChange,
+  hasSubmitted = false,
+  isFechaLimiteMissing = false
+}) {
   if (formData.tipoPago !== 'CREDITO') return null;
 
   const rawClean = formData.valorPagado ? String(formData.valorPagado).replace(/\D/g, '') : '';
@@ -53,9 +58,12 @@ export default function SaleCreditFields({ formData, handleChange }) {
           type="date" 
           value={formData.fechaLimitePago ?? ''} 
           onChange={handleChange} 
-          className={modalStyles.input} 
+          className={`${modalStyles.input} ${hasSubmitted && isFechaLimiteMissing ? styles.inputErrorBorder : ''}`} 
           required 
         />
+        {hasSubmitted && isFechaLimiteMissing && (
+          <span className={styles.fieldErrorText}>La fecha límite de pago es obligatoria</span>
+        )}
       </div>
     </div>
   );

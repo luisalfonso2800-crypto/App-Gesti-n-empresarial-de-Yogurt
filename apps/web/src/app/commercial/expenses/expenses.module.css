@@ -60,22 +60,40 @@
 .amountWordsBadge {
   font-size: 0.75rem;
   color: #065F46;
-  margin-top: 0.25rem;
-  display: block;
-  font-weight: 600;
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  align-self: flex-start;
+  margin-top: 0.35rem;
 }
 
 .summaryBanner {
   margin-top: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background-color: #F0FDF4;
-  border: 1px solid #BBF7D0;
+  padding: 0.75rem 1rem;
+  background-color: #f0fdf4;
+  border: 1px solid #86efac;
+  border-left: 4px solid #166534;
   border-radius: 6px;
-  font-size: 0.76rem;
-  color: #166534;
+  font-size: 0.8rem;
+  color: #14532d;
+  line-height: 1.4;
 }
 
 .btnSubmitDisabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.inputErrorBorder {
+  border-color: #EF4444 !important;
+  background-color: #FEF2F2 !important;
+}
+
+.fieldErrorText {
+  font-size: 0.75rem;
+  color: #DC2626;
+  font-weight: 500;
+  margin-top: 0.25rem;
+  display: block;
 }

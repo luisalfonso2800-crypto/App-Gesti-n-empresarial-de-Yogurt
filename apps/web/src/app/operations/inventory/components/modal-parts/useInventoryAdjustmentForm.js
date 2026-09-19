@@ -47,6 +47,7 @@ export function useInventoryAdjustmentForm({ isOpen, onClose, onSuccess }) {
       setMotivo('');
       setErrorMessage('');
       setIsSubmitting(false);
+      setHasSubmitted(false);
     }
   }, [isOpen]);
 
@@ -64,11 +65,18 @@ export function useInventoryAdjustmentForm({ isOpen, onClose, onSuccess }) {
   const numericQty = Number(cantidad) || 0;
   const numericCost = cleanCurrency(costoUnitario);
 
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
+  const isInsumoMissing = !idInsumo;
+  const isCantidadMissing = numericQty <= 0;
+  const isCostoMissing = isCostRequired && numericCost <= 0;
+  const isMotivoMissing = ['AJUSTE_NEGATIVO', 'MERMA_DESPERDICIO'].includes(tipo) && !motivo.trim();
+
   const missingFields = [];
-  if (!idInsumo) missingFields.push('Insumo');
-  if (numericQty <= 0) missingFields.push('Cantidad mayor a 0');
-  if (isCostRequired && numericCost <= 0) missingFields.push('Costo unitario mayor a $ 0');
-  if (['AJUSTE_NEGATIVO', 'MERMA_DESPERDICIO'].includes(tipo) && !motivo.trim()) {
+  if (isInsumoMissing) missingFields.push('Insumo');
+  if (isCantidadMissing) missingFields.push('Cantidad mayor a 0');
+  if (isCostoMissing) missingFields.push('Costo unitario mayor a $ 0');
+  if (isMotivoMissing) {
     missingFields.push('Motivo obligatorio');
   }
 
@@ -83,6 +91,7 @@ export function useInventoryAdjustmentForm({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setHasSubmitted(true);
     if (isSubmitDisabled) return;
 
     setIsSubmitting(true);
@@ -103,6 +112,7 @@ export function useInventoryAdjustmentForm({ isOpen, onClose, onSuccess }) {
 
     try {
       await apiClient.post('/inventory/adjustments', payload);
+      setHasSubmitted(false);
       onClose();
       if (onSuccess) onSuccess();
     } catch (err) {
@@ -136,6 +146,12 @@ export function useInventoryAdjustmentForm({ isOpen, onClose, onSuccess }) {
     isDirty,
     isSubmitDisabled,
     submitTitle,
-    handleSubmit
+    handleSubmit,
+    hasSubmitted,
+    setHasSubmitted,
+    isInsumoMissing,
+    isCantidadMissing,
+    isCostoMissing,
+    isMotivoMissing
   };
 }
