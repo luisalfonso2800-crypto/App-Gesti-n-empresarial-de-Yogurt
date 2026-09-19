@@ -64,8 +64,64 @@ export class PurchasesRepository {
         if (data.esDirecta) observacionesExtra += ' [Compra Directa Consolidada]';
 
         const obsFinal = `${consecutive} - Condición: ${paymentConditionStr}${observacionesExtra}`;
-        const total = Number(data.total) || 0;
         const flete = Number(data.fleteGlobal) || 0;
+
+        // 3. Liquidación granular de IVA por detalle y consolidación de cabecera
+        let totalSinIvaAcum = 0;
+        let totalIvaAcum = 0;
+        let totalConIvaAcum = 0;
+
+        const detallesCalculados = (data.detalles || []).map(d => {
+          const cantidad = Number(d.cantidad) || 0;
+          const precioUnitario = Number(d.precioUnitario) || 0;
+          const tieneIva = d.tieneIva !== undefined ? Boolean(d.tieneIva) : true;
+          const porcentajeIva = tieneIva ? (Number(d.porcentajeIva !== undefined ? d.porcentajeIva : 19.0) || 0) : 0;
+          const precioIncluyeIva = d.precioIncluyeIva !== undefined ? Boolean(d.precioIncluyeIva) : true;
+
+          let subtotalSinIva = 0;
+          let montoIva = 0;
+          let subtotalConIva = 0;
+
+          if (!tieneIva) {
+            subtotalSinIva = precioUnitario * cantidad;
+            montoIva = 0;
+            subtotalConIva = subtotalSinIva;
+          } else if (tieneIva && precioIncluyeIva) {
+            subtotalConIva = precioUnitario * cantidad;
+            subtotalSinIva = porcentajeIva > 0 ? (subtotalConIva / (1 + (porcentajeIva / 100))) : subtotalConIva;
+            montoIva = subtotalConIva - subtotalSinIva;
+          } else {
+            // tieneIva && !precioIncluyeIva
+            subtotalSinIva = precioUnitario * cantidad;
+            montoIva = subtotalSinIva * (porcentajeIva / 100);
+            subtotalConIva = subtotalSinIva + montoIva;
+          }
+
+          // Redondeo a 2 decimales para consistencia contable
+          const subtotalSinIvaRound = Number(subtotalSinIva.toFixed(2));
+          const montoIvaRound = Number(montoIva.toFixed(2));
+          const subtotalConIvaRound = Number(subtotalConIva.toFixed(2));
+
+          totalSinIvaAcum += subtotalSinIvaRound;
+          totalIvaAcum += montoIvaRound;
+          totalConIvaAcum += subtotalConIvaRound;
+
+          return {
+            ...d,
+            cantidad,
+            precioUnitario,
+            tieneIva,
+            porcentajeIva,
+            precioIncluyeIva,
+            montoIva: montoIvaRound,
+            subtotalSinIva: subtotalSinIvaRound,
+            subtotal: subtotalConIvaRound
+          };
+        });
+
+        const totalNetoCompra = Number(totalConIvaAcum.toFixed(2));
+        const totalSinIvaFinal = Number(totalSinIvaAcum.toFixed(2));
+        const totalIvaFinal = Number(totalIvaAcum.toFixed(2));
 
         // 3. Crear Compra con Detalles (Consolidado)
         const newCompra = await prisma.compra.create({
@@ -73,16 +129,23 @@ export class PurchasesRepository {
             idProveedor: idProveedorFinal,
             idOrden: data.idOrden || null,
             fechaCompra: data.fechaCompra ? new Date(data.fechaCompra) : new Date(),
-            total: total + flete,
+            total: Number((totalNetoCompra + flete).toFixed(2)),
+            totalSinIva: totalSinIvaFinal,
+            totalIva: totalIvaFinal,
             observaciones: obsFinal,
             estado: 'COMPLETADO',
             detalles: {
-              create: data.detalles.map(d => ({
+              create: detallesCalculados.map(d => ({
                 idInsumo: d.idInsumo,
                 idProveedor: d.idProveedor || idProveedorFinal,
-                cantidad: Number(d.cantidad) || 0,
-                precioUnitario: Number(d.precioUnitario) || 0,
-                subtotal: Number(d.subtotal) || 0
+                cantidad: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                subtotal: d.subtotal,
+                tieneIva: d.tieneIva,
+                porcentajeIva: d.porcentajeIva,
+                precioIncluyeIva: d.precioIncluyeIva,
+                montoIva: d.montoIva,
+                subtotalSinIva: d.subtotalSinIva
               }))
             }
           },
@@ -189,16 +252,17 @@ export class PurchasesRepository {
         }
 
         // 5. Registrar Egreso Financiero Consolidado
-        if (total + flete > 0) {
+        const totalEgreso = Number((totalNetoCompra + flete).toFixed(2));
+        if (totalEgreso > 0) {
           await prisma.gasto.create({
             data: {
               fecha: new Date(),
               categoria: 'COMPRAS',
               descripcion: `Pago Compra ${consecutive}`,
-              valor: total + flete,
+              valor: totalEgreso,
               tipoGasto: 'OPERATIVO',
               periodo: `${year}-${String(new Date().getMonth() + 1).padStart(2, '0')}`,
-              observaciones: `Consolidado de Compra Directa. Total: $${total} + Flete: $${flete}`
+              observaciones: `Consolidado de Compra Directa. Subtotal Sin IVA: $${totalSinIvaFinal} + IVA: $${totalIvaFinal} + Flete: $${flete}`
             }
           });
         }
@@ -214,6 +278,8 @@ export class PurchasesRepository {
   async simulate(data) {
     const itemsLiquidados = [];
     let subtotalGlobal = 0;
+    let totalSinIvaGlobal = 0;
+    let totalIvaGlobal = 0;
 
     for (const item of data.items) {
       let factorReal = item.factorReal ? parseFloat(item.factorReal) : 1;
@@ -231,15 +297,45 @@ export class PurchasesRepository {
         }
       }
 
-      const ingresoNetoBodega = item.cantidadEmpaques * factorReal;
-      const subtotal = item.cantidadEmpaques * item.precioEmpaque;
-      const costoBaseUnitario = item.precioEmpaque / factorReal;
+      const cantidad = Number(item.cantidadEmpaques) || 0;
+      const precioUnitario = Number(item.precioEmpaque) || 0;
+      const tieneIva = item.tieneIva !== undefined ? Boolean(item.tieneIva) : true;
+      const porcentajeIva = tieneIva ? (Number(item.porcentajeIva !== undefined ? item.porcentajeIva : 19.0) || 0) : 0;
+      const precioIncluyeIva = item.precioIncluyeIva !== undefined ? Boolean(item.precioIncluyeIva) : true;
 
-      subtotalGlobal += subtotal;
+      let subtotalSinIva = 0;
+      let montoIva = 0;
+      let subtotalConIva = 0;
+
+      if (!tieneIva) {
+        subtotalSinIva = precioUnitario * cantidad;
+        montoIva = 0;
+        subtotalConIva = subtotalSinIva;
+      } else if (tieneIva && precioIncluyeIva) {
+        subtotalConIva = precioUnitario * cantidad;
+        subtotalSinIva = porcentajeIva > 0 ? (subtotalConIva / (1 + (porcentajeIva / 100))) : subtotalConIva;
+        montoIva = subtotalConIva - subtotalSinIva;
+      } else {
+        subtotalSinIva = precioUnitario * cantidad;
+        montoIva = subtotalSinIva * (porcentajeIva / 100);
+        subtotalConIva = subtotalSinIva + montoIva;
+      }
+
+      const ingresoNetoBodega = cantidad * factorReal;
+      const costoBaseUnitario = factorReal > 0 ? (precioUnitario / factorReal) : precioUnitario;
+
+      subtotalGlobal += Number(subtotalConIva.toFixed(2));
+      totalSinIvaGlobal += Number(subtotalSinIva.toFixed(2));
+      totalIvaGlobal += Number(montoIva.toFixed(2));
 
       itemsLiquidados.push({
         idPrecioProveedor: item.idPrecioProveedor,
-        subtotal,
+        subtotal: Number(subtotalConIva.toFixed(2)),
+        subtotalSinIva: Number(subtotalSinIva.toFixed(2)),
+        montoIva: Number(montoIva.toFixed(2)),
+        porcentajeIva,
+        tieneIva,
+        precioIncluyeIva,
         ingresoNetoBodega,
         costoBaseUnitario,
         unidadBase
@@ -247,7 +343,9 @@ export class PurchasesRepository {
     }
 
     return {
-      subtotalGlobal,
+      subtotalGlobal: Number(subtotalGlobal.toFixed(2)),
+      totalSinIvaGlobal: Number(totalSinIvaGlobal.toFixed(2)),
+      totalIvaGlobal: Number(totalIvaGlobal.toFixed(2)),
       itemsLiquidados
     };
   }

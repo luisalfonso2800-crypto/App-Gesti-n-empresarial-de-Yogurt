@@ -54,9 +54,11 @@ export class SystemService {
         step: 2,
         id: 'supplies_suppliers',
         title: 'Registrar Insumos y Proveedores',
-        route: '/catalog/supplies',
+        route: (counts.supplies > 0 && counts.suppliers === 0) ? '/catalog/suppliers' : '/catalog/supplies',
         completed: step2Done,
-        detail: `${counts.supplies} insumo(s), ${counts.suppliers} proveedor(es)`
+        detail: (counts.supplies > 0 && counts.suppliers === 0)
+          ? `${counts.supplies} insumo(s). Falta registrar al menos 1 proveedor`
+          : `${counts.supplies} insumo(s), ${counts.suppliers} proveedor(es)`
       },
       {
         step: 3,

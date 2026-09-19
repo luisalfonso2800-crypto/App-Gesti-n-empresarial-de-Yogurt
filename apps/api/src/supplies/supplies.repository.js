@@ -48,9 +48,10 @@ export class SuppliesRepository {
   }
 
   async update(id, data) {
+    const { id: _id, precios, createdAt, updatedAt, ...cleanData } = data;
     return this.prisma.insumo.update({
       where: { id },
-      data,
+      data: cleanData,
     });
   }
 
