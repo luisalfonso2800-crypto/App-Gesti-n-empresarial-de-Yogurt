@@ -1968,3 +1968,274 @@
   pointer-events: none;
 }
 
+/* Pestañas de Flujo de Planta (Filtro Superior de Bitácora) */
+.plantTabsContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem;
+  background-color: #F7F4EE;
+  border: 1px solid #CAD5B5;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.plantTabButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #57534E;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.plantTabButton:hover {
+  background-color: #EFEBE1;
+  color: #182622;
+}
+
+.plantTabActive {
+  background-color: #182622;
+  color: #FFFFFF;
+  border-color: #182622;
+}
+
+.plantTabActive:hover {
+  background-color: #2C3E38;
+  color: #FFFFFF;
+}
+
+.plantTabBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.725rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  background-color: #E8E2D7;
+  color: #182622;
+}
+
+.plantTabBadgeActive {
+  background-color: #C58A3E;
+  color: #FFFFFF;
+}
+
+/* Tabla de Histórico Liquidado (Prompt 463) */
+.historyTableContainer {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.historyTableHeaderBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background-color: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.historySearchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  min-width: 260px;
+}
+
+.historySearchIcon {
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.historySearchInput {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.825rem;
+  color: #1E293B;
+  width: 100%;
+}
+
+.historyFiltersGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.historyFilterSelect {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #334155;
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+}
+
+.historyFilterSelect:focus {
+  border-color: #059669;
+}
+
+.historyCountBadge {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+.historyTableResponsive {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.historyTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.historyTable thead th {
+  background-color: #F1F5F9;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.725rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid #CBD5E1;
+  white-space: nowrap;
+}
+
+.historyTableRow {
+  border-bottom: 1px solid #E2E8F0;
+  transition: background-color 0.12s ease;
+}
+
+.historyTableRow:nth-child(even) {
+  background-color: #F8FAFC;
+}
+
+.historyTableRow:hover {
+  background-color: #ECFDF5;
+}
+
+.historyTable td {
+  padding: 0.65rem 0.85rem;
+  color: #1E293B;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.historyCellMono {
+  font-family: monospace;
+  font-size: 0.775rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.historyCellMuted {
+  color: #64748B;
+  font-size: 0.775rem;
+}
+
+.historyCellStrong {
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.historyCellCava {
+  font-weight: 700;
+  color: #065F46;
+}
+
+.historyCellWip {
+  color: #0369A1;
+  font-weight: 600;
+}
+
+.historyBadgeInoculo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: #166534;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.725rem;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.historyBadgeComercial {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background-color: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.725rem;
+  font-weight: 600;
+}
+
+
+.historyBadgeLiquidado {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #DCFCE7;
+  color: #166534;
+  border: 1px solid #86EFAC;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.historyBtnLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: #FFFFFF;
+  border: 1px solid #CAD5B5;
+  color: #182622;
+  font-size: 0.725rem;
+  font-weight: 600;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.historyBtnLink:hover {
+  background-color: #182622;
+  color: #FFFFFF;
+  border-color: #182622;
+}
+
