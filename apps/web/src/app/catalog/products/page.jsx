@@ -23,48 +23,24 @@ import { useBulkProductsActions } from './hooks/useBulkProductsActions';
 
 function ProductsContent() {
   const {
-    items, presentations, recipes, loading, loadingPresentations, error, form, isBaseIntermediaMode,
+    filteredItems, channelFilter, handleFilterChange, presentations, recipes, loading, loadingPresentations, error, form, isBaseIntermediaMode,
     currentPage, paginatedProducts, totalPages, ITEMS_PER_PAGE,
-    handlePageChange, fetchItems, handleToggleActive, deleteProduct, actionNotice, clearActionNotice, notifyUser,
+    handlePageChange, fetchItems, deleteProduct, actionNotice, clearActionNotice, notifyUser,
     selectedIds, handleToggleSelect, handleToggleSelectAll, handleClearSelection,
     hasPresentations, canCreate, autoOpenedRef, hoveredProduct, setHoveredProduct
   } = useProductsPageManager();
 
-  const {
-    deletingItem, isDeleting, deleteError,
-    handleOpenDelete, handleCloseDelete, handleConfirmDelete
-  } = useProductDeleteManager({ onDeleteProduct: deleteProduct });
+  const { deletingItem, isDeleting, deleteError, handleOpenDelete, handleCloseDelete, handleConfirmDelete } = useProductDeleteManager({ onDeleteProduct: deleteProduct });
 
-  const {
-    handleBulkActivate, handleBulkDeactivate, handleBulkDelete
-  } = useBulkProductsActions({
-    onRefresh: fetchItems,
-    onNotify: notifyUser,
-    onClearSelection: handleClearSelection
+  const { handleBulkActivate, handleBulkDeactivate } = useBulkProductsActions({
+    onRefresh: fetchItems, onNotify: notifyUser, onClearSelection: handleClearSelection
   });
 
   return (
     <div>
-      <ProductsHeader onNew={form.handleOpenModal} canCreate={canCreate} />
-
-      <ProductPageNotices
-        loadingPresentations={loadingPresentations}
-        hasPresentations={hasPresentations}
-        actionNotice={actionNotice}
-        clearActionNotice={clearActionNotice}
-        error={error}
-      />
-
-      <ProductBulkActionBar
-        selectedIds={selectedIds}
-        items={items}
-        recipes={recipes}
-        onClearSelection={handleClearSelection}
-        onNotify={notifyUser}
-        onBulkActivate={handleBulkActivate}
-        onBulkDeactivate={handleBulkDeactivate}
-        onBulkDelete={(ids) => handleOpenDelete({ ids, count: ids.length })}
-      />
+      <ProductsHeader onNew={form.handleOpenModal} canCreate={canCreate} channelFilter={channelFilter} onFilterChange={handleFilterChange} />
+      <ProductPageNotices loadingPresentations={loadingPresentations} hasPresentations={hasPresentations} actionNotice={actionNotice} clearActionNotice={clearActionNotice} error={error} />
+      <ProductBulkActionBar selectedIds={selectedIds} items={filteredItems} recipes={recipes} onClearSelection={handleClearSelection} onNotify={notifyUser} onBulkActivate={handleBulkActivate} onBulkDeactivate={handleBulkDeactivate} onBulkDelete={(ids) => handleOpenDelete({ ids, count: ids.length })} />
 
       <div className={styles.productsLayout}>
         <div className={styles.tableColumn}>
@@ -75,11 +51,10 @@ function ProductsContent() {
             hoveredProductId={hoveredProduct?.id} onHoverProduct={setHoveredProduct}
             onEdit={form.handleOpenModal} onNew={() => form.handleOpenModal(null)}
           />
-          
           {!loading && !error && (
             <ProductsPagination
               currentPage={currentPage} totalPages={totalPages}
-              totalItems={items.length} itemsPerPage={ITEMS_PER_PAGE}
+              totalItems={filteredItems.length} itemsPerPage={ITEMS_PER_PAGE}
               onPageChange={handlePageChange}
             />
           )}
@@ -87,23 +62,15 @@ function ProductsContent() {
 
         {!loading && paginatedProducts.length > 0 && (
           <div className={styles.previewColumn}>
-            <ProductPreviewCard
-              product={hoveredProduct || paginatedProducts[0]}
-              recipes={recipes}
-            />
+            <ProductPreviewCard product={hoveredProduct || paginatedProducts[0]} recipes={recipes} />
           </div>
         )}
       </div>
 
       <ProductsModalsContainer
-        form={form}
-        autoOpenedRef={autoOpenedRef}
-        isBaseIntermediaMode={isBaseIntermediaMode}
-        deletingItem={deletingItem}
-        isDeleting={isDeleting}
-        deleteError={deleteError}
-        handleConfirmDelete={handleConfirmDelete}
-        handleCloseDelete={handleCloseDelete}
+        form={form} autoOpenedRef={autoOpenedRef} isBaseIntermediaMode={isBaseIntermediaMode}
+        deletingItem={deletingItem} isDeleting={isDeleting} deleteError={deleteError}
+        handleConfirmDelete={handleConfirmDelete} handleCloseDelete={handleCloseDelete}
       />
     </div>
   );

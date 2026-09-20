@@ -34,9 +34,52 @@ export class InventoryRepository {
   }
 
   async findFinishedProducts() {
-    return this.prisma.inventarioProducto.findMany({
-      include: { producto: { include: { presentacion: true } } },
+    const records = await this.prisma.inventarioProducto.findMany({
+      include: {
+        producto: {
+          include: {
+            presentacion: true,
+            lotes: {
+              where: {
+                tipoLote: 'PRODUCTO_TERMINADO',
+                cantidadDisponible: { gt: 0 }
+              }
+            }
+          }
+        }
+      },
       orderBy: { fechaActualizacion: 'desc' }
+    });
+
+    return records.map((item) => {
+      const lotesActivos = item.producto?.lotes || [];
+      const stockRealLotes = lotesActivos.length > 0
+        ? lotesActivos.reduce((acc, l) => acc + Number(l.cantidadDisponible || 0), 0)
+        : Number(item.cantidadActual || 0);
+
+      const costoRef = Number(item.costoPromedio || item.producto?.costoEstandar || 0);
+      const unidadMedida = item.producto?.unidadMedida || (item.producto?.categoria === 'INTERMEDIO_WIP' ? 'Litros' : (item.producto?.nombre?.toUpperCase().includes('BASE') ? 'Litros' : 'und'));
+
+      return {
+        ...item,
+        cantidadActual: stockRealLotes,
+        unidadMedida: unidadMedida,
+        valorizacionTotal: stockRealLotes * costoRef
+      };
+    });
+  }
+
+  async findWipLots() {
+    return this.prisma.lote.findMany({
+      where: {
+        tipoLote: 'SEMIELABORADO_WIP',
+        cantidadDisponible: { gt: 0 }
+      },
+      include: {
+        producto: true,
+        lotePadre: true
+      },
+      orderBy: { fechaVencimiento: 'asc' }
     });
   }
 

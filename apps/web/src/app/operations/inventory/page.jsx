@@ -18,17 +18,18 @@ import styles from './inventory.module.css';
 import { useInventoryPageData } from './hooks/useInventoryPageData';
 import InventoryKpiGrid from './components/InventoryKpiGrid';
 import InventoryStockTable from './components/InventoryStockTable';
+import InventoryWipTable from './components/InventoryWipTable';
 import InventoryItemAdjustmentModal from './components/InventoryItemAdjustmentModal';
 
 export default function InventoryPage() {
   const {
-    activeTab, setActiveTab, inventory, finishedProducts, metadata,
+    activeTab, setActiveTab, inventory, finishedProducts, wipLots, metadata,
     loading, error, expandedId, movements, loadingMovements,
     isGlobalAdjustmentOpen, setIsGlobalAdjustmentOpen, adjustmentModal,
     setAdjustmentModal, handleToggleRow, submitAdjustment, fetchData
   } = useInventoryPageData();
 
-  const currentItems = activeTab === 'INSUMOS' ? inventory : finishedProducts;
+  const currentItems = activeTab === 'INSUMOS' ? inventory : activeTab === 'PRODUCTOS' ? finishedProducts : wipLots;
 
   return (
     <div className={styles.container}>
@@ -59,6 +60,12 @@ export default function InventoryPage() {
           >
             Cava (Prod. Terminado)
           </button>
+          <button 
+            className={`${styles.tabBtn} ${activeTab === 'WIP' ? styles.tabActiveWip : ''}`} 
+            onClick={() => setActiveTab('WIP')}
+          >
+            🧫 Semielaborados & Cepas (WIP)
+          </button>
         </div>
       </header>
 
@@ -73,12 +80,14 @@ export default function InventoryPage() {
       ) : currentItems.length === 0 ? (
         <AssistedEmptyState
           icon="📦"
-          title={activeTab === 'INSUMOS' ? 'Comienza registrando existencias en Bodega' : 'No hay existencias de Producto Terminado en Cava'}
+          title={activeTab === 'INSUMOS' ? 'Comienza registrando existencias en Bodega' : activeTab === 'PRODUCTOS' ? 'No hay existencias de Producto Terminado en Cava' : 'No hay reservas de Semielaborados o Inóculos activos'}
           description="Controla el stock disponible en bodega valorizado al costo promedio y registra entradas desde compras o producción."
           actionLabel={activeTab === 'INSUMOS' ? '+ Registrar Compra de Insumos' : '+ Programar Producción'}
           onAction={() => window.location.href = (activeTab === 'INSUMOS' ? '/operations/purchases/new?mode=direct' : '/operations/production')}
           topButtonLabel="Ajuste Global / Saldo Inicial"
         />
+      ) : activeTab === 'WIP' ? (
+        <InventoryWipTable wipLots={wipLots} />
       ) : (
         <InventoryStockTable
           activeTab={activeTab}

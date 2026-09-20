@@ -2,25 +2,24 @@
  * @file page.jsx
  * @module operations/production
  * @description Orquestador de la vista de Bitácora de Fabricación y Producción (SRP + CSS Modules).
- * @responsibility Presentar cabecera, listado de órdenes de producción y delegar modales de planificación y cierre.
+ * @responsibility Presentar cabecera, delegar launchpad, modal de planificación, órdenes y cierre.
  * @usedBy Next.js router (/operations/production)
- * @dependencies react, @/components/ui/States, @/components/ui/AssistedEmptyState, @/components/ui/Button, lucide-react
  */
 'use client';
 
 import React from 'react';
 import { LoadingState, ErrorState } from '@/components/ui/States';
-import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { Button } from '@/components/ui/Button';
 import { ClipboardList } from 'lucide-react';
 import styles from './production.module.css';
 import { useProductionPageData } from './hooks/useProductionPageData';
-import ProductionOrderCreator from './components/ProductionOrderCreator';
-import ProductionOrderCard from './components/ProductionOrderCard';
+import ProductionPlanningModal from './components/ProductionPlanningModal';
+import ProductionOrdersGrid from './components/ProductionOrdersGrid';
 import ProductionOrderCompleteModal from './components/ProductionOrderCompleteModal';
 import ProductionRecipeWarningBanner from './components/ProductionRecipeWarningBanner';
+import ProductionProductLaunchpad from './components/ProductionProductLaunchpad';
 
-export default function ProductionPage() {
+function ProductionPageContent() {
   const {
     orders,
     loading,
@@ -45,6 +44,9 @@ export default function ProductionPage() {
     openComplete,
     submitComplete,
     handleReportIncident,
+    handleProduceProduct,
+    handleClosePlanning,
+    products,
     orphanProducts
   } = useProductionPageData();
 
@@ -66,45 +68,35 @@ export default function ProductionPage() {
 
       <ProductionRecipeWarningBanner orphanProducts={orphanProducts} />
 
-      {creating && (
-        <ProductionOrderCreator
-          recipes={recipes}
-          selectedRecipe={selectedRecipe}
-          setSelectedRecipe={setSelectedRecipe}
-          qty={qty}
-          setQty={setQty}
-          bom={bom}
-          bomLoading={bomLoading}
-          hasShortage={hasShortage}
-          handlePurchaseShortage={handlePurchaseShortage}
-          handleCreateOrder={handleCreateOrder}
-          orphanProducts={orphanProducts}
-          onClose={() => setCreating(false)}
-        />
-      )}
+      <ProductionProductLaunchpad
+        products={products}
+        recipes={recipes}
+        onProduceProduct={handleProduceProduct}
+      />
 
-      {orders.length === 0 ? (
-        <AssistedEmptyState
-          icon="⚙️"
-          title="Comienza programando tu primera Orden de Producción"
-          description="Programa órdenes de transformación por lote a partir de las recetas activas."
-          actionLabel="+ Programar Producción"
-          onAction={() => setCreating(true)}
-          topButtonLabel="+ Nueva Producción"
-        />
-      ) : (
-        <div className={styles.grid}>
-          {orders.map((order) => (
-            <ProductionOrderCard
-              key={order.id}
-              order={order}
-              startOrder={startOrder}
-              openComplete={openComplete}
-              onReportIncident={handleReportIncident}
-            />
-          ))}
-        </div>
-      )}
+      <ProductionPlanningModal
+        isOpen={creating}
+        onClose={handleClosePlanning}
+        recipes={recipes}
+        selectedRecipe={selectedRecipe}
+        setSelectedRecipe={setSelectedRecipe}
+        qty={qty}
+        setQty={setQty}
+        bom={bom}
+        bomLoading={bomLoading}
+        hasShortage={hasShortage}
+        handlePurchaseShortage={handlePurchaseShortage}
+        handleCreateOrder={handleCreateOrder}
+        orphanProducts={orphanProducts}
+      />
+
+      <ProductionOrdersGrid
+        orders={orders}
+        onOpenCreate={() => setCreating(true)}
+        startOrder={startOrder}
+        openComplete={openComplete}
+        handleReportIncident={handleReportIncident}
+      />
 
       <ProductionOrderCompleteModal
         completeModal={completeModal}
@@ -114,5 +106,13 @@ export default function ProductionPage() {
         submitComplete={submitComplete}
       />
     </div>
+  );
+}
+
+export default function ProductionPage() {
+  return (
+    <React.Suspense fallback={<LoadingState />}>
+      <ProductionPageContent />
+    </React.Suspense>
   );
 }

@@ -7,7 +7,7 @@
  */
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ClipboardList, X } from 'lucide-react';
 import { ProductionBomSection } from './ProductionBomSection';
 import {
   calculateProductionFinances,
@@ -17,76 +17,89 @@ import {
 import styles from '../production.module.css';
 
 export default function ProductionOrderCreator({
-  recipes,
-  selectedRecipe,
-  setSelectedRecipe,
-  qty,
-  setQty,
-  bom,
-  bomLoading,
-  hasShortage,
-  handlePurchaseShortage,
-  handleCreateOrder,
-  orphanProducts = [],
-  onClose
+  recipes, selectedRecipe, setSelectedRecipe, qty, setQty, bom, bomLoading,
+  hasShortage, handlePurchaseShortage, handleCreateOrder, orphanProducts = [], onClose
 }) {
   const currentRecipe = recipes.find(r => String(r.id) === String(selectedRecipe));
   const rendimientoBase = Number(currentRecipe?.rendimientoBase) || 0;
   const unidadRendimiento = currentRecipe?.unidadRendimiento || 'Litros';
-  const scaleFactor = rendimientoBase > 0 && Number(qty) > 0
-    ? (Number(qty) / rendimientoBase).toFixed(2)
-    : null;
-
+  const scaleFactor = rendimientoBase > 0 && Number(qty) > 0 ? (Number(qty) / rendimientoBase).toFixed(2) : null;
   const { costoTotalLote, costoUnitarioPorLitro, costoFaltanteTotal, enrichedBom } = useMemo(
-    () => calculateProductionFinances(bom, qty),
-    [bom, qty]
+    () => calculateProductionFinances(bom, qty), [bom, qty]
   );
-
   const tiempoProceso = useMemo(() => calculateRecipeProcessTime(currentRecipe), [currentRecipe]);
   const loteSugerido = useMemo(() => generateSuggestedLotCode(new Date(), 1), []);
 
   return (
     <div className={styles.creatorCard}>
-      <div className={styles.creatorHeader}>
-        <h3>Planificar Nueva Orden</h3>
+      <div className={styles.smartModalHeader}>
+        <div className={styles.headerTitleGroup}>
+          <div className={styles.headerIconBadge}>
+            <ClipboardList color="#4ADE80" size={20} />
+          </div>
+          <div>
+            <h3 className={styles.smartModalTitle}>Planificar Orden de Fabricación</h3>
+            <p className={styles.smartModalSubtitle}>
+              Configura el bache a producir, verifica el BOM en bodega y genera la trazabilidad del lote.
+            </p>
+          </div>
+        </div>
+        {onClose && (
+          <button type="button" className={styles.smartModalCloseBtn} onClick={onClose} aria-label="Cerrar modal" title="Cerrar">
+            <X size={18} />
+          </button>
+        )}
       </div>
       
       <div className={styles.controlInputPanel}>
-        <div className={styles.controlInputHeader}>
+        <div className={styles.parametersHeaderRow}>
           <span className={styles.controlInputTitle}>Parámetros de Entrada</span>
           <span className={styles.controlInputBadge}>Zona de Configuración Activa</span>
         </div>
-        <div className={styles.formRow}>
-          <div className={styles.formGroup}>
-            <label>Receta / Producto</label>
-            <select 
-              value={selectedRecipe} 
-              onChange={e => setSelectedRecipe(e.target.value)} 
-              className={styles.selectProminent}
-            >
-              <option value="">Seleccione una receta activa...</option>
-              {recipes.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-              {recipes.length === 0 && <option value="mock-123">Yogur Escolar Fresa 150ml (Simulado)</option>}
-            </select>
-            {orphanProducts.length > 0 && (
-              <div className={styles.orphanRecipeSelectNotice}>
-                <AlertCircle size={14} />
-                <span>
-                  Hay {orphanProducts.length} producto(s) comercial(es) sin receta. <Link href="/catalog/recipes">Configurar fórmulas</Link>
-                </span>
-              </div>
-            )}
+        <div className={styles.parametersBodyGrid}>
+          <div className={styles.inputsRow}>
+            <div className={styles.formGroup}>
+              <label>Receta / Producto</label>
+              <select 
+                value={selectedRecipe} 
+                onChange={e => setSelectedRecipe(e.target.value)} 
+                className={styles.selectProminent}
+              >
+                <option value="">Seleccione una receta activa...</option>
+                {recipes.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+                {recipes.length === 0 && <option value="mock-123">Yogur Escolar Fresa 150ml (Simulado)</option>}
+              </select>
+              {orphanProducts.length > 0 && (
+                <div className={styles.orphanRecipeSelectNotice}>
+                  <AlertCircle size={14} />
+                  <span>
+                    Hay {orphanProducts.length} producto(s) sin receta. <Link href="/catalog/recipes">Configurar</Link>
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className={styles.formGroup}>
+              <label>Cantidad ({unidadRendimiento})</label>
+              <input 
+                type="number" 
+                min="1" 
+                value={qty} 
+                onChange={e => setQty(Number(e.target.value))} 
+                className={styles.inputProminent}
+                placeholder="Ej: 100"
+              />
+            </div>
           </div>
-          <div className={styles.formGroup}>
-            <label>Cantidad a Producir ({unidadRendimiento})</label>
-            <input 
-              type="number" 
-              min="1" 
-              value={qty} 
-              onChange={e => setQty(Number(e.target.value))} 
-              className={styles.inputProminent}
-              placeholder="Ej: 100"
-            />
+          <div className={styles.imageColumn}>
+            {currentRecipe?.producto?.imagenUrl || currentRecipe?.imagenUrl ? (
+              <img 
+                src={currentRecipe?.producto?.imagenUrl || currentRecipe?.imagenUrl} 
+                alt={currentRecipe?.nombre || 'Producto'} 
+                className={styles.productImagePreviewLarge} 
+              />
+            ) : (
+              <div className={styles.productImagePlaceholderLarge}>🥛</div>
+            )}
           </div>
         </div>
       </div>

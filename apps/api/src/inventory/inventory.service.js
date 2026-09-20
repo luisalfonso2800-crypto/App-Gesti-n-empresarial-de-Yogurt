@@ -43,6 +43,10 @@ export class InventoryService {
     return this.repository.findFinishedProducts();
   }
 
+  async findWipLots() {
+    return this.repository.findWipLots();
+  }
+
   async findByInsumo(idInsumo) {
     const item = await this.repository.findByInsumo(idInsumo);
     if (!item) throw new NotFoundException('Inventory not found');

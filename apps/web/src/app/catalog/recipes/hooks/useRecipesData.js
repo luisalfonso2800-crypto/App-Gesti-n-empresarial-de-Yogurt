@@ -20,14 +20,25 @@ export function useRecipesData() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [recipesData, productsData, suppliesData, pricesData] = await Promise.all([
+      const [recipesData, productsData, intermediatesData, suppliesData, pricesData] = await Promise.all([
         apiClient.get('/recipes'),
         apiClient.get('/products'),
+        apiClient.get('/products/intermediates').catch(() => []),
         apiClient.get('/supplies'),
         apiClient.get('/supplier-prices/active')
       ]);
       setItems(recipesData);
-      setProducts(productsData);
+      // Preservar productos maestros limpios con su id intacto y agregar semielaborados/inóculos
+      const combined = [...(productsData || [])];
+      const seenItemKeys = new Set(combined.map(p => p.id));
+      for (const item of (intermediatesData || [])) {
+        const key = item.idItem || item.id;
+        if (!seenItemKeys.has(key)) {
+          seenItemKeys.add(key);
+          combined.push(item);
+        }
+      }
+      setProducts(combined);
       setSupplies(suppliesData);
       setPrices(pricesData);
       setError(null);

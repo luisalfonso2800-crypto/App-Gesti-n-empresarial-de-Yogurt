@@ -527,18 +527,35 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           ? recipes.find(r => r.activo !== false && String(r.idProducto) === String(det.idProductoIntermedio))
           : null;
 
+        const isInoculo = det.unidad === 'g' || det.unidad === 'GRAMOS' || det.unidad === 'ml';
+
         if (baseRecipe && Number(baseRecipe.rendimientoBase) > 0) {
           // 2. Costo unitario proyectado de la receta base (Costo Total Receta Base / Rendimiento Base)
           const baseRollup = calculateRecipeCosts(baseRecipe, supplies, products, prices, recipes, nextVisited);
           unitCostWip = baseRollup.costPerUnit;
+          if (isInoculo && unitCostWip > 0) {
+            unitCostWip = unitCostWip / 1000;
+          }
         }
 
         // 4. Fallback preventivo si la receta no existe o no tiene costo
         if (unitCostWip <= 0) {
-          const prod = products.find(p => String(p.id) === String(det.idProductoIntermedio));
-          const prodFallback = Number(prod?.costoBase ?? prod?.inventario?.costoPromedio ?? prod?.inventarioProducto?.costoPromedio ?? 0);
-          if (prodFallback > 0) {
-            unitCostWip = prodFallback;
+          const prod = products.find(p =>
+            String(p.id) === String(det.idProductoIntermedio) ||
+            p.idItem === `INOCULO:${det.idProductoIntermedio}` ||
+            p.idItem === `BASE:${det.idProductoIntermedio}`
+          );
+          const prodCost = Number(
+            prod?.costoUnitario ??
+            prod?.costoEstandar ??
+            prod?.costoBase ??
+            prod?.inventario?.costoPromedio ??
+            prod?.inventarioProducto?.costoPromedio ??
+            0
+          );
+
+          if (prodCost > 0) {
+            unitCostWip = (isInoculo && prod?.tipoItem !== 'INOCULO_WIP') ? (prodCost / 1000) : prodCost;
           } else {
             unitCostWip = 0;
             hasWipFallback = true;

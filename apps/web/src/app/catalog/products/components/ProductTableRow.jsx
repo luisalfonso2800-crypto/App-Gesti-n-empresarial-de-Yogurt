@@ -24,6 +24,15 @@ const CATEGORY_MAP = {
   BEBIDAS: { label: 'Bebidas', className: styles.catBebidas }
 };
 
+const CHANNEL_MAP = {
+  SOLO_PLANTA: { label: 'Solo Planta', className: styles.chanSoloPlanta },
+  USO_INTERNO: { label: 'Solo Planta', className: styles.chanSoloPlanta },
+  MIXTO: { label: 'Mixto', className: styles.chanMixto },
+  B2B: { label: 'B2B', className: styles.chanB2B },
+  B2C: { label: 'B2C', className: styles.chanB2C },
+  AMBOS: { label: 'Mixto', className: styles.chanAmbos }
+};
+
 export function ProductTableRow({
   item,
   isSelected = false,
@@ -35,6 +44,12 @@ export function ProductTableRow({
   const categoryConfig = CATEGORY_MAP[item.categoria] || {
     label: item.categoria || 'Sin Categoría',
     className: styles.catDefault
+  };
+
+  const channelKey = item.canalVenta || (item.categoria?.includes('WIP') ? 'SOLO_PLANTA' : 'AMBOS');
+  const channelConfig = CHANNEL_MAP[channelKey] || {
+    label: item.canalVenta || 'Comercial',
+    className: styles.chanDefault
   };
 
   const presentationText = item.presentacion?.nombre || (item.categoria?.includes('WIP') ? 'A Granel' : null);
@@ -81,6 +96,11 @@ export function ProductTableRow({
       <TD className={styles.categoryCell}>
         <span className={`${styles.categoryChip} ${categoryConfig.className}`}>
           {categoryConfig.label}
+        </span>
+      </TD>
+      <TD className={styles.categoryCell}>
+        <span className={`${styles.channelChip} ${channelConfig.className}`}>
+          {channelConfig.label}
         </span>
       </TD>
       <TD className={styles.priceCell}>

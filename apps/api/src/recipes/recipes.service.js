@@ -211,10 +211,23 @@ export class RecipesService {
     const presentacion = producto.presentacion;
     const tipoEnvase = (presentacion?.tipoEnvase || '').toUpperCase();
     const nombrePres = (presentacion?.nombre || '').toUpperCase();
+    const categoriaProd = (producto.categoria || '').toUpperCase();
+    const precioVentaNum = Number(producto.precioVenta) || 0;
+
+    const isBulkOrWip = (
+      tipoEnvase === 'TANQUE_GRANEL' ||
+      nombrePres.includes('GRANEL') ||
+      nombrePres.includes('WIP') ||
+      categoriaProd === 'BASES_LACTEAS' ||
+      categoriaProd === 'INSUMO_BASE_WIP' ||
+      categoriaProd === 'INTERMEDIO_WIP' ||
+      categoriaProd === 'DULCES_JALEAS' ||
+      precioVentaNum === 0
+    );
+
     const isComercial = Boolean(
       presentacion &&
-      tipoEnvase !== 'TANQUE_GRANEL' &&
-      !nombrePres.includes('GRANEL')
+      !isBulkOrWip
     );
 
     if (isComercial) {
@@ -275,11 +288,11 @@ export class RecipesService {
           expectedUnits.push(wip.presentacion.nombre);
         }
 
-        // Si es producto a granel o tanque, aceptar unidades de volumen y masa estándar
+        // Si es producto a granel o tanque, aceptar unidades de volumen y masa estándar (incluyendo siembra/inóculo en g/ml)
         const presTipo = (wip.presentacion?.tipoEnvase || '').toUpperCase();
         const presNom = (wip.presentacion?.nombre || '').toUpperCase();
-        if (presTipo === 'TANQUE_GRANEL' || presNom.includes('GRANEL') || wip.categoria === 'INTERMEDIO_WIP') {
-          expectedUnits.push('Litros', 'Kilogramos', 'Unidades');
+        if (presTipo === 'TANQUE_GRANEL' || presNom.includes('GRANEL') || wip.categoria === 'INTERMEDIO_WIP' || wip.categoria === 'BASES_LACTEAS') {
+          expectedUnits.push('Litros', 'Kilogramos', 'Gramos', 'Mililitros', 'g', 'ml', 'Unidades');
         }
 
         const isUnitValid = expectedUnits.length === 0 || expectedUnits.some(eu => areUnitsCompatible(det.unidad, eu));

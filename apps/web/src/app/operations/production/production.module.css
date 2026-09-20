@@ -44,19 +44,73 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
 
-.creatorHeader {
+.smartModalHeader {
+  background-color: #1B4332;
+  border-bottom: 1px solid #234b38;
+  padding: 1.1rem 1.5rem;
+  margin: -24px -24px 1.5rem -24px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e7e5e4;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.creatorHeader h3 {
+.headerTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.headerIconBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.smartModalTitle {
+  font-family: serif, 'Playfair Display', Georgia, Cambria, 'Times New Roman', Times;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #F7F4ED;
   margin: 0;
-  color: #292524;
-  font-size: 1.125rem;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+.smartModalSubtitle {
+  font-size: 0.8rem;
+  color: #D1D5DB;
+  margin: 0.2rem 0 0 0;
+  line-height: 1.3;
+}
+
+.smartModalCloseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  color: #F7F4ED;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.smartModalCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
 }
 
 .formRow {
@@ -571,6 +625,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 0.55rem 1.1rem;
   background-color: #F7F4EE;
   color: #182622;
@@ -591,6 +646,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 0.55rem 1.1rem;
   background-color: #FFFFFF;
   color: #182622;
@@ -611,6 +667,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   padding: 0.55rem 1.25rem;
   background-color: #182622;
   color: #FFFFFF;
@@ -996,4 +1053,784 @@
   gap: 0.4rem;
 }
 
+/* Modal de Planificación de Nueva Orden (Backdrop y Ventana) */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
+.modalContent {
+  background: #FFFFFF;
+  border-radius: 12px;
+  width: 92%;
+  max-width: 980px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modalContent .creatorCard {
+  border: none;
+  padding: 0;
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.modalCloseBtn {
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: #78716C;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.modalCloseBtn:hover {
+  background-color: #F5F5F4;
+  color: #182622;
+}
+
+/* Modal Parameters Card Body & Product Preview Large (Prompt 374 & 376) */
+.parametersHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.parametersBodyGrid {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  gap: 18px;
+  align-items: center;
+}
+
+.inputsRow {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.imageColumn {
+  width: 140px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.productImagePreviewLarge {
+  width: 140px;
+  height: 120px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid #E5E7EB;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.productImagePlaceholderLarge {
+  width: 140px;
+  height: 120px;
+  border-radius: 10px;
+  border: 1px solid #E5E7EB;
+  background: #FAF9F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.costInWords {
+  font-size: 11px;
+  color: #64748B;
+  font-style: italic;
+  margin-top: 2px;
+  text-transform: capitalize;
+}
+
+.shortageWarningNotice {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #DC2626;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Production Product Launchpad (Prompt 375) */
+.launchpadSection {
+  margin-bottom: 24px;
+  background: #FDFBF7;
+  border: 1px solid #EFECE6;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.launchpadHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #EFECE6;
+}
+
+.launchpadTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.launchpadIcon {
+  color: #182622;
+}
+
+.launchpadHeaderTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #182622;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.launchpadBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #57534E;
+  background: #EAE5DA;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.launchpadGrid {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.launchpadCard {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 280px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.launchpadImg {
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+
+.launchpadImgPlaceholder {
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  background: #F5F5F4;
+  border: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A8A29E;
+  flex-shrink: 0;
+}
+
+.launchpadContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.launchpadTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badgeStock {
+  font-size: 11px;
+  color: #57534E;
+  font-weight: 500;
+}
+
+.btnLaunch {
+  background: #1B4332;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  transition: background-color 0.15s ease;
+}
+
+.btnLaunch:hover {
+  background: #2D6A4F;
+}
+
+/* Modal Liquidación y Cierre de Lote (Prompt 389) */
+.liquidationBanner {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: #166534;
+  font-size: 0.825rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.volumeFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.volumeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #44403C;
+  letter-spacing: 0.03em;
+}
+
+.volumeInputWrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  padding: 0 10px;
+  height: 42px;
+  gap: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volumeInputWrapper:focus-within {
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.volumeIcon {
+  display: flex;
+  align-items: center;
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.volumeInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #182622;
+  outline: none;
+  width: 100%;
+}
+
+.volumeSuffix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  background-color: #F1F5F9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.liquidationTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.825rem;
+}
+
+.liquidationTable th {
+  background-color: #F8FAFC;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.liquidationTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #E2E8F0;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.inputTableQty {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  text-align: right;
+  outline: none;
+  font-family: inherit;
+}
+
+.inputTableQty:focus {
+  border-color: #182622;
+}
+
+.badgeExact {
+  display: inline-flex;
+  align-items: center;
+  background-color: #DCFCE7;
+  color: #166534;
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 12px;
+  min-width: 280px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  flex-shrink: 0;
+}
+
+.launchpadImg {
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #E5E7EB;
+  flex-shrink: 0;
+}
+
+.launchpadImgPlaceholder {
+  width: 68px;
+  height: 68px;
+  border-radius: 8px;
+  background: #F5F5F4;
+  border: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #A8A29E;
+  flex-shrink: 0;
+}
+
+.launchpadContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.launchpadTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badgeStock {
+  font-size: 11px;
+  color: #57534E;
+  font-weight: 500;
+}
+
+.btnLaunch {
+  background: #1B4332;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  transition: background-color 0.15s ease;
+}
+
+.btnLaunch:hover {
+  background: #2D6A4F;
+}
+
+/* Modal Liquidación y Cierre de Lote (Prompt 389) */
+.liquidationBanner {
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  color: #166534;
+  font-size: 0.825rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.volumeFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.volumeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #44403C;
+  letter-spacing: 0.03em;
+}
+
+.volumeInputWrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  padding: 0 10px;
+  height: 42px;
+  gap: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.volumeInputWrapper:focus-within {
+  border-color: #182622;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.volumeIcon {
+  display: flex;
+  align-items: center;
+  color: #64748B;
+  flex-shrink: 0;
+}
+
+.volumeInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #182622;
+  outline: none;
+  width: 100%;
+}
+
+.volumeSuffix {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  background-color: #F1F5F9;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.liquidationTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.825rem;
+}
+
+.liquidationTable th {
+  background-color: #F8FAFC;
+  padding: 10px 12px;
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.liquidationTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #E2E8F0;
+  color: #1E293B;
+  vertical-align: middle;
+}
+
+.inputTableQty {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  text-align: right;
+  outline: none;
+  font-family: inherit;
+}
+
+.inputTableQty:focus {
+  border-color: #182622;
+}
+
+.badgeExact {
+  display: inline-flex;
+  align-items: center;
+  background-color: #DCFCE7;
+  color: #166534;
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+
+.badgeExceso {
+  display: inline-flex;
+  align-items: center;
+  background-color: #FEF3C7;
+  color: #92400E;
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+
+.badgeAhorro {
+  display: inline-flex;
+  align-items: center;
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 12px;
+  padding: 2px 8px;
+}
+
+/* Inoculum Split Reservation (Prompt 391) */
+.inoculumCard {
+  background-color: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 1.25rem;
+}
+
+.inoculumHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.inoculumToggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #1E293B;
+  cursor: pointer;
+}
+
+.inoculumInputRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.splitBalanceGrid {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.splitBalanceBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background-color: #E2E8F0;
+  color: #334155;
+}
+
+.splitBalanceHighlight {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+
+.pokaYokeAlert {
+  color: #DC2626;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* Production Order Card Split Volume Display (Prompt 392) */
+.splitVolumeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  background: #FAF9F6;
+  border: 1px solid #EFECE6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 0.75rem 0;
+}
+
+.volumeBlockHeader {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #64748B;
+  letter-spacing: 0.03em;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+}
+
+.volumeBlockValue {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1B4332;
+}
+
+.inoculumHighlight {
+  color: #047857;
+  background: #ECFDF5;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+.inoculumLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.inoculumLink:hover {
+  background-color: #D1FAE5;
+}
+
+.expiryInputGroup {
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.expiryLabel, .expiryLabelSub {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #374151;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.expiryDateInput {
+  height: 38px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 13px;
+  color: #1F2937;
+  background: #FFFFFF;
+  max-width: 220px;
+}
+
+.expiryDateInputCompact {
+  height: 32px;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: #1F2937;
+  background: #FFFFFF;
+  max-width: 180px;
+  margin-top: 4px;
+}
+
+.expiryRowContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.daysBadge {
+  background: #F1F5F9;
+  color: #1E293B;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.daysBadgeInoculum {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.wipStrainBadge {
+  font-size: 0.75rem;
+  color: #10B981;
+  margin-top: 2px;
+}

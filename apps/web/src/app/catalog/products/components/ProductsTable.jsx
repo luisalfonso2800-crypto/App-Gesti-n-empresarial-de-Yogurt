@@ -63,6 +63,7 @@ export function ProductsTable({
           <TH>Imagen</TH>
           <TH>Nombre</TH>
           <TH>Categoría</TH>
+          <TH>Canal</TH>
           <TH>Precio Venta</TH>
           <TH>Estado</TH>
           <TH className={styles.actionsHeader}>Acciones</TH>

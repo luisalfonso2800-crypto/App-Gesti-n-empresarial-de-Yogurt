@@ -17,13 +17,13 @@ export function ProductionBomTable({ items = [] }) {
     <table className={styles.bomTable}>
       <thead>
         <tr>
-          <th className={styles.thInsumo}>Insumo</th>
-          <th className={styles.thReq}>Req. Teórico</th>
-          <th className={styles.thStock}>Stock Actual</th>
+          <th className={styles.thInsumo}>📦 Insumo</th>
+          <th className={styles.thReq}>📐 Req. Teórico</th>
+          <th className={styles.thStock}>🏢 Stock Actual</th>
           <th className={styles.thCostUnit}>Costo Unit.</th>
-          <th className={styles.thSubtotal}>Subtotal</th>
+          <th className={styles.thSubtotal}>💲 Subtotal</th>
           <th className={styles.thFaltante}>Faltante</th>
-          <th className={styles.thStatus}>Estado</th>
+          <th className={styles.thStatus}>🚦 Estado</th>
         </tr>
       </thead>
       <tbody>
@@ -32,7 +32,14 @@ export function ProductionBomTable({ items = [] }) {
           const key = b.idInsumo || b.idProductoIntermedio || b.nombreInsumo;
           return (
             <tr key={key} className={isInsufficient ? styles.missingRow : undefined}>
-              <td className={styles.colText}>{b.nombreInsumo}</td>
+              <td className={styles.colText}>
+                <div>{b.nombreInsumo}</div>
+                {b.esProductoIntermedio && (
+                  <div className={styles.wipStrainBadge}>
+                    🧫 Cepa disponible en cava: {Number(b.stockActual).toFixed(1)} {b.unidad} ({b.codigoLoteSugerido || (b.idLoteSugerido ? String(b.idLoteSugerido).slice(0, 8) : 'FIFO')})
+                  </div>
+                )}
+              </td>
               <td className={styles.colNumber}>
                 {Number(b.requeridoTeorico).toFixed(2)} {b.unidad}
               </td>

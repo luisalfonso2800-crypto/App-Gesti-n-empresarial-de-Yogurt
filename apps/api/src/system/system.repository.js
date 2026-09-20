@@ -61,14 +61,30 @@ export class SystemRepository {
           cantidadActual: { gt: 0 }
         }
       }),
-      // Lotes con saldo disponible > 0
+      // Lotes comerciales terminados con saldo disponible > 0 (excluyendo solo planta / base intermedia)
       this.prisma.lote.count({
         where: {
-          cantidadDisponible: { gt: 0 }
+          cantidadDisponible: { gt: 0 },
+          producto: {
+            canalVenta: { notIn: ['SOLO_PLANTA', 'USO_INTERNO'] },
+            categoria: { notIn: ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'TOPPING_CEREAL'] }
+          }
         }
       }),
-      // Ventas registradas
-      this.prisma.venta.count(),
+      // Ventas de productos comerciales terminados con precio > 0
+      this.prisma.venta.count({
+        where: {
+          totalVenta: { gt: 0 },
+          detalles: {
+            some: {
+              precioUnitario: { gt: 0 },
+              producto: {
+                canalVenta: { notIn: ['SOLO_PLANTA', 'USO_INTERNO'] }
+              }
+            }
+          }
+        }
+      }),
       // Clientes registrados
       this.prisma.cliente.count({
         where: { activo: true }

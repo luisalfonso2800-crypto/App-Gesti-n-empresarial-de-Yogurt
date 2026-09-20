@@ -68,7 +68,17 @@ export function RecipeModal({
   const handleConfirmPublish = async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (isSubmitting) return;
-    try { setIsSubmitting(true); await onSubmit(e); setShowSummaryModal(false); } finally { setIsSubmitting(false); }
+    try {
+      setIsSubmitting(true);
+      await onSubmit(e);
+      setShowSummaryModal(false);
+    } catch (err) {
+      const userMsg = err?.message || 'Error al guardar la receta técnica';
+      setValidationError(userMsg);
+      setShowSummaryModal(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isButtonReady = canSubmit && formData.idProducto && Number(formData.rendimientoBase) > 0;

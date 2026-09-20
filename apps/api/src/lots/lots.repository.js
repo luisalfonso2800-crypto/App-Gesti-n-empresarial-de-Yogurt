@@ -9,16 +9,60 @@ export class LotsRepository {
   }
 
   async findAll() {
-    return this.prisma.lote.findMany({
-      include: { produccion: true, producto: true }
+    const lotes = await this.prisma.lote.findMany({
+      where: {
+        tipoLote: { in: ['PRODUCTO_TERMINADO', 'SEMIELABORADO_WIP'] }
+      },
+      include: {
+        produccion: true,
+        producto: {
+          include: {
+            presentacion: true
+          }
+        },
+        lotePadre: true,
+        lotesHijos: true
+      },
+      orderBy: { fechaProduccion: 'desc' }
+    });
+
+    return lotes.map(lote => {
+      let unidadReal = lote.unidad;
+      if (!unidadReal || unidadReal === 'UNIDAD' || unidadReal === 'UND') {
+        unidadReal = lote.producto?.presentacion?.unidadMedida || (lote.tipoLote === 'SEMIELABORADO_WIP' ? 'Litros' : 'Litros');
+      }
+      return {
+        ...lote,
+        unidad: unidadReal
+      };
     });
   }
 
   async findById(id) {
-    return this.prisma.lote.findUnique({
+    const lote = await this.prisma.lote.findUnique({
       where: { id },
-      include: { produccion: true, producto: true }
+      include: {
+        produccion: true,
+        producto: {
+          include: {
+            presentacion: true
+          }
+        },
+        lotePadre: true,
+        lotesHijos: true
+      }
     });
+
+    if (!lote) return null;
+
+    let unidadReal = lote.unidad;
+    if (!unidadReal || unidadReal === 'UNIDAD' || unidadReal === 'UND') {
+      unidadReal = lote.producto?.presentacion?.unidadMedida || (lote.tipoLote === 'SEMIELABORADO_WIP' ? 'Litros' : 'Litros');
+    }
+    return {
+      ...lote,
+      unidad: unidadReal
+    };
   }
 
   async discardLot(id, cantidadMotivo) {

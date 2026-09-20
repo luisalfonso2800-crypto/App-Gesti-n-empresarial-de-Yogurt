@@ -16,6 +16,10 @@ export class ProductsService {
     return this.repository.findActive();
   }
 
+  async findIntermediates() {
+    return this.repository.findIntermediates();
+  }
+
   async findOne(id) {
     const item = await this.repository.findById(id);
     if (!item) {

@@ -451,6 +451,17 @@
   color: #64748b;
 }
 
+.subtotalInWords {
+  font-size: 11px;
+  color: #64748B;
+  font-style: italic;
+  margin-top: 2px;
+  text-align: right;
+  text-transform: capitalize;
+  max-width: 240px;
+  margin-left: auto;
+}
+
 .summaryValue {
   font-weight: 600;
   color: #0f172a;
@@ -829,48 +840,88 @@
 }
 
 /* ChecklistPhase Styles */
-.checklistTopHeader {
+.headerContainer {
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 12px;
 }
 
 .backLinkBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
   background: none;
   border: none;
-  color: #4f46e5;
+  color: #182622;
   cursor: pointer;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   padding: 0;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.backLinkBtn:hover {
+  color: #2D6A4F;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .phaseTitle {
-  margin: 0.5rem 0 0 0;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #182622;
+  letter-spacing: -0.01em;
 }
 
-.activeOrderMeta {
+.phaseSubtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6B7280;
+  line-height: 1.4;
+}
+
+.orderMetaBar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.25rem;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: #FAF9F6;
+  border: 1px solid #EFECE6;
+  border-radius: 8px;
+  font-size: 0.8125rem;
 }
 
-.orderCodeBadge {
-  font-weight: 600;
-  color: #1f2937;
-  background: #f3f4f6;
-  padding: 0.125rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.875rem;
+.codeBadge {
+  font-weight: 700;
+  font-family: monospace;
+  color: #1F2937;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.orderNameText {
-  color: #4b5563;
-  font-size: 0.875rem;
+.metaDivider {
+  color: #D1D5DB;
+}
+
+.metaOrigin {
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.metaDate {
+  color: #4B5563;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .orderStatusBadge {
@@ -895,28 +946,57 @@
   color: #92400e;
 }
 
-.checklistActionsBar {
+.actionsRow {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  gap: 10px;
   flex-wrap: wrap;
+  margin-top: 8px;
 }
 
-.btnActionAuto {
-  margin-top: 0 !important;
-  width: auto !important;
-}
-
-.btnAddPending {
-  margin-top: 0;
-  width: auto;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #f59e0b;
-  color: #b45309;
-  background: #fffbeb;
-  cursor: pointer;
+.btnAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
   font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.btnActionPrint {
+  background: #FFFFFF;
+  color: #374151;
+  border-color: #D1D5DB;
+}
+
+.btnActionPrint:hover {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+.btnActionPending {
+  background: #FFFBEB;
+  color: #B45309;
+  border-color: #FCD34D;
+}
+
+.btnActionPending:hover {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+}
+
+.btnActionRegister {
+  background: #1B4332;
+  color: #FFFFFF;
+  border-color: #1B4332;
+}
+
+.btnActionRegister:hover {
+  background: #143527;
+  border-color: #143527;
 }
 
 .addPendingModalSub {
@@ -2023,4 +2103,350 @@
   background-color: #FEE2E2;
 }
 
+/* Operational Row Table Styles (Prompt 383) */
+.operationalRowWrapper {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  transition: border-color 0.2s ease;
+}
 
+.operationalRowWrapperConseguido {
+  border-color: #86efac;
+}
+
+.operationalRowWrapperNoConseguido {
+  border-color: #fca5a5;
+}
+
+.operationalRow {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1.1fr 1.2fr 1.5fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #FFFFFF;
+  transition: background 0.15s ease;
+}
+
+.operationalRow:hover {
+  background: #F8FAFC;
+}
+
+.productTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.productSubtext {
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 2px;
+}
+
+.inputCompact {
+  width: 70px;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.inputPriceCompact {
+  width: 90px;
+  padding: 4px 6px;
+  font-size: 12px;
+}
+
+.columnMicroLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.inputWithUnit, .inputWithCurrency {
+  display: inline-flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 0 6px;
+  height: 32px;
+  gap: 4px;
+}
+
+.inputBare {
+  border: none !important;
+  outline: none !important;
+  padding: 2px 4px !important;
+  background: transparent !important;
+}
+
+.inputUnitBadge, .pricePerUnit {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+.currencyPrefix {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.netReceiptLabel {
+  font-size: 12px;
+  color: #1F2937;
+  display: block;
+}
+
+.unitCostLabel {
+  font-size: 11px;
+  color: #059669;
+  display: block;
+  margin-top: 2px;
+}
+
+.priceCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.bodegaCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.subtotalBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 140px;
+  margin-right: 8px;
+}
+
+.subtotalAmount {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0F172A;
+  line-height: 1.1;
+}
+
+.subtotalTextWords {
+  font-size: 10px;
+  color: #64748B;
+  font-style: italic;
+  text-align: right;
+  text-transform: capitalize;
+}
+
+.rowActionsCol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btnCheckCompact {
+  background: #1B4332;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.btnCheckCompact:hover {
+  background: #143527;
+}
+
+.btnCheckCompactActive {
+  background: #059669;
+}
+
+.btnIconCompact {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 5px;
+  color: #4B5563;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btnIconCompact:hover {
+  background: #F3F4F6;
+  color: #111827;
+}
+
+.btnIconCompactActive {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.expandedDetailBox {
+  background: #F8FAFC;
+  border-top: 1px dashed #CBD5E1;
+  padding: 10px 16px;
+  font-size: 12px;
+}
+
+.expandedDetailGrid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.expandedWords {
+  font-size: 11px;
+  color: #475569;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.expandedSecondaryActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #E2E8F0;
+  flex-wrap: wrap;
+}
+
+.btnNoConseguidoSecondary {
+  color: #DC2626 !important;
+  border-color: #FECACA !important;
+}
+
+.duplicateAlertExpanded {
+  margin-bottom: 8px;
+}
+
+.btnEdit {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btnEdit:hover {
+  background: #F3F4F6;
+}
+
+.btnEditActive {
+  background: #E0E7FF;
+  border-color: #A5B4FC;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #3730A3;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.editConditionsPanel {
+  background: #FAF9F6;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.editConditionsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.editConditionsTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1F2937;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.editConditionsSubtext {
+  font-size: 11.5px;
+  color: #64748B;
+  margin: 0 0 12px 0;
+}
+
+.editConditionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.netContentRow {
+  display: flex;
+  gap: 6px;
+}
+
+.selectUnitCompact {
+  width: 90px;
+}
+
+.editActionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.btnApplyEdit {
+  background: #1B4332;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnCancelEdit {
+  background: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: #4B5563;
+  cursor: pointer;
+}

@@ -41,11 +41,15 @@ export default function InventoryStockTable({
         <TBody>
           {items.map((item) => {
             const id = activeTab === 'INSUMOS' ? item.idInsumo : item.idProducto;
-            const name = activeTab === 'INSUMOS' ? item.insumo?.nombre : `${item.producto?.nombre} - ${item.producto?.presentacion?.nombre}`;
+            const pNom = item.producto?.nombre || item.nombre || 'Producto';
+            const prNom = item.producto?.presentacion?.nombre || item.presentacion?.nombre;
+            const name = activeTab === 'INSUMOS'
+              ? item.insumo?.nombre
+              : (prNom && prNom.trim().toLowerCase() !== pNom.trim().toLowerCase() ? `${pNom} - ${prNom}` : pNom);
             const cat = activeTab === 'INSUMOS' ? item.insumo?.categoria : item.producto?.categoria;
-            const unit = activeTab === 'INSUMOS' ? item.insumo?.unidadBase : 'und';
+            const unit = activeTab === 'INSUMOS' ? (item.insumo?.unidadBase || 'kg') : (item.producto?.unidadMedida || item.unidadMedida || 'Litros');
             const status = item.estado || 'OPTIMO';
-            const valor = activeTab === 'INSUMOS' ? item.valorTotal : (Number(item.cantidadActual) * Number(item.costoPromedio || 0));
+            const valor = activeTab === 'INSUMOS' ? item.valorTotal : (item.valorizacionTotal ?? (Number(item.cantidadActual) * Number(item.costoPromedio || 0)));
 
             return (
               <React.Fragment key={id}>

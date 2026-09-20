@@ -13,6 +13,7 @@ export function useInventoryPageData() {
   const [activeTab, setActiveTab] = useState('INSUMOS');
   const [inventory, setInventory] = useState([]);
   const [finishedProducts, setFinishedProducts] = useState([]);
+  const [wipLots, setWipLots] = useState([]);
   const [metadata, setMetadata] = useState({ valorTotalBodega: 0, totalCriticos: 0, totalBajoMinimo: 0, totalReferencias: 0 });
   
   const [loading, setLoading] = useState(true);
@@ -35,6 +36,9 @@ export function useInventoryPageData() {
       } else if (activeTab === 'PRODUCTOS') {
         const data = await apiClient.get('/inventory/finished-products');
         setFinishedProducts(data || []);
+      } else if (activeTab === 'WIP') {
+        const data = await apiClient.get('/inventory/wip');
+        setWipLots(data || []);
       }
       setError(null);
     } catch (err) {
@@ -105,6 +109,7 @@ export function useInventoryPageData() {
     setActiveTab,
     inventory,
     finishedProducts,
+    wipLots,
     metadata,
     loading,
     error,

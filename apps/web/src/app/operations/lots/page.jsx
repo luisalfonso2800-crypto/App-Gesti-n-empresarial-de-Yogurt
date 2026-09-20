@@ -49,7 +49,7 @@ export default function LotsPage() {
           <THead>
             <TR>
               <TH>Lote / ID</TH>
-              <TH>Producto</TH>
+              <TH>Producto / Tipo</TH>
               <TH>Fabricación</TH>
               <TH>Vencimiento</TH>
               <TH className={styles.textRight}>Unidades Restantes</TH>
@@ -62,10 +62,22 @@ export default function LotsPage() {
             {lots.map(lote => {
               const status = getStatus(lote.fechaVencimiento);
               const isVencido = status.days <= 0;
+              const isInoculo = lote.tipoLote === 'SEMIELABORADO_WIP' || Boolean(lote.idLotePadre);
+              const codPadre = lote.lotePadre?.id ? lote.lotePadre.id.split('-')[0].toUpperCase() : null;
+              const uMed = lote.unidad || (isInoculo ? 'Litros' : 'UND');
+              const costoFormateado = `$ ${Math.round(Number(lote.costoUnitario) || 0).toLocaleString('es-CO')}`;
+
               return (
                 <TR key={lote.id}>
                   <TD><span className={styles.monoStrong}>{lote.id.split('-')[0].toUpperCase()}</span></TD>
-                  <TD>{lote.producto ? lote.producto.nombre : 'Insumo'}</TD>
+                  <TD>
+                    <div>{lote.producto ? lote.producto.nombre : 'Insumo Interno'}</div>
+                    {isInoculo && (
+                      <span className={styles.badgeInoculum}>
+                        🧫 INICIADOR {codPadre ? <span className={styles.badgePadreTag}>(Hijo de {codPadre})</span> : null}
+                      </span>
+                    )}
+                  </TD>
                   <TD>{new Date(lote.fechaProduccion).toLocaleDateString()}</TD>
                   <TD>
                     <span className={isVencido ? styles.textDanger : ''}>
@@ -73,9 +85,9 @@ export default function LotsPage() {
                     </span>
                   </TD>
                   <TD className={styles.textRight}>
-                    <strong>{Number(lote.cantidadDisponible)}</strong> / {Number(lote.cantidadInicial)}
+                    <strong>{Number(lote.cantidadDisponible)}</strong> / {Number(lote.cantidadInicial)} {uMed}
                   </TD>
-                  <TD className={styles.textRight}>${Number(lote.costoUnitario || 0).toLocaleString()}</TD>
+                  <TD className={styles.textRight}>{costoFormateado}</TD>
                   <TD>
                     <Badge status={status.color}>{status.text} {status.days !== undefined ? `(${status.days}d)` : ''}</Badge>
                   </TD>
@@ -95,3 +107,4 @@ export default function LotsPage() {
     </div>
   );
 }
+

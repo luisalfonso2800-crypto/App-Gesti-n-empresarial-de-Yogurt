@@ -13,6 +13,7 @@ import ChecklistAddPendingModal from './parts/ChecklistAddPendingModal';
 import ChecklistPendingItemsTable from './parts/ChecklistPendingItemsTable';
 import ChecklistSettledPurchasesTable from './parts/ChecklistSettledPurchasesTable';
 import ChecklistPrintTable from './parts/ChecklistPrintTable';
+import ShoppingChecklistHeader from './ShoppingChecklistHeader';
 
 export function ChecklistPhase({ checklistMgr, setPhase, proveedoresDB, activeOrder }) {
   const [pendingItems, setPendingItems] = useState([]);
@@ -65,48 +66,12 @@ export function ChecklistPhase({ checklistMgr, setPhase, proveedoresDB, activeOr
         handleAddPending={handleAddPending}
       />
 
-      <div className={styles.header}>
-        <div className={styles.checklistTopHeader}>
-          <button
-            type="button"
-            onClick={() => window.location.href = '/operations/purchases'}
-            className={styles.backLinkBtn}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-            Volver a Compras
-          </button>
-          <h1 className={styles.phaseTitle}>Checklist de Compras</h1>
-
-          {activeOrder && (
-            <div className={styles.activeOrderMeta}>
-              <span className={styles.orderCodeBadge}>{activeOrder.codigo}</span>
-              <span className={styles.orderNameText}>{activeOrder.nombre}</span>
-              <span className={`${styles.orderStatusBadge} ${
-                activeOrder.estado === 'COMPLETADA' ? styles.statusCompleted :
-                activeOrder.estado === 'EN_PROCESO' ? styles.statusInProgress : styles.statusPending
-              }`}>
-                {activeOrder.estado}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className={`${styles.noPrint} ${styles.checklistActionsBar}`}>
-          <button className={`${styles.submitBtn} ${styles.btnActionAuto}`} onClick={() => window.print()}>
-            Imprimir Checklist
-          </button>
-          <button
-            type="button"
-            className={styles.btnAddPending}
-            onClick={() => setShowAddPendingModal(true)}
-          >
-            + Añadir Pendiente a la Lista
-          </button>
-          <button className={`${styles.saveBtn} ${styles.btnActionAuto}`} onClick={proceedToForm}>
-            + Registrar Compras Adicionales / Imprevistos
-          </button>
-        </div>
-      </div>
+      <ShoppingChecklistHeader
+        activeOrder={activeOrder}
+        onPrint={() => window.print()}
+        onAddPending={() => setShowAddPendingModal(true)}
+        onProceedToForm={proceedToForm}
+      />
 
       <ChecklistPrintTable checklistGrouped={checklistGrouped} />
 

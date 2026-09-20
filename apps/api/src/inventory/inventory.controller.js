@@ -18,6 +18,11 @@ export class InventoryController {
     return this.service.findFinishedProducts();
   }
 
+  @Get('wip')
+  findWipLots() {
+    return this.service.findWipLots();
+  }
+
   @Get(':idInsumo')
   @Bind(Param('idInsumo'))
   findByInsumo(idInsumo) {

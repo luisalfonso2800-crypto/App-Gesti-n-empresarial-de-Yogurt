@@ -41,6 +41,8 @@ export default function OnboardingStepItem({
     targetRoute = !hasBulkProduct 
       ? '/catalog/products?crear=base-intermedia' 
       : '/catalog/recipes?crear=receta';
+  } else if (stepItem.step === 5) {
+    targetRoute = '/operations/production?action=new';
   }
 
   const handleActionClick = () => {

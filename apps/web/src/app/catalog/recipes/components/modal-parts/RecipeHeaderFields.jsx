@@ -55,7 +55,20 @@ export function RecipeHeaderFields({
               <label className={styles.label}>PRODUCTO A FABRICAR *</label>
               <select className={styles.select} name="idProducto" value={formData.idProducto} onChange={onChange} required>
                 <option value="">Seleccione el producto a fabricar...</option>
-                {products.map(p => (<option key={p.id} value={p.id}>{p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})</option>))}
+                {Array.from(
+                  new Map(
+                    products
+                      .filter(p => !p.idItem && p.tipoItem !== 'INOCULO_WIP' && p.tipoItem !== 'BASE_GRANEL')
+                      .map(p => [p.id, p])
+                  ).values()
+                ).map((p) => {
+                  const presLabel = p.presentacion?.nombre ? ` (${p.presentacion.nombre})` : '';
+                  return (
+                    <option key={`header-prod-${p.id}`} value={p.id}>
+                      {p.nombre}{presLabel}
+                    </option>
+                  );
+                })}
               </select>
             </div>
             <div>

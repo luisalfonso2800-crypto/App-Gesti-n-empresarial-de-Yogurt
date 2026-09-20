@@ -6,10 +6,13 @@
  * @usedBy apps/web/src/app/operations/production/page.jsx
  * @dependencies react, @/lib/api-client
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 
 export function useProductionPageData() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,6 +55,29 @@ export function useProductionPageData() {
     fetchOrders();
     fetchRecipesAndProducts();
   }, []);
+
+  useEffect(() => {
+    const action = searchParams?.get('action');
+    const productId = searchParams?.get('productId');
+    if (action === 'new' || productId) {
+      setCreating(true);
+    }
+  }, [searchParams]);
+
+  const handleProduceProduct = useCallback((recipeId, baseYield) => {
+    setSelectedRecipe(recipeId);
+    if (baseYield && Number(baseYield) > 0) {
+      setQty(Number(baseYield));
+    }
+    setCreating(true);
+  }, []);
+
+  const handleClosePlanning = useCallback(() => {
+    setCreating(false);
+    if (searchParams?.get('action') || searchParams?.get('productId')) {
+      router.replace('/operations/production');
+    }
+  }, [router, searchParams]);
 
   const loadBom = async () => {
     if (!selectedRecipe || !qty) return;
@@ -107,8 +133,13 @@ export function useProductionPageData() {
   const handlePurchaseShortage = async () => {
     try {
       const faltantes = bom.filter(b => b.faltante > 0).map(b => ({ idInsumo: b.idInsumo, faltante: b.faltante }));
-      await apiClient.post('/production/create-purchase-order-from-shortage', { itemsFaltantes: faltantes });
-      alert('Orden de Compra generada automáticamente. Revisa el módulo de compras.');
+      const res = await apiClient.post('/production/create-purchase-order-from-shortage', { itemsFaltantes: faltantes });
+      setCreating(false);
+      if (res?.id) {
+        router.push(`/operations/purchases/new?orderId=${res.id}`);
+      } else {
+        router.push('/operations/purchases');
+      }
     } catch (e) {
       alert(e.message);
     }
@@ -121,16 +152,18 @@ export function useProductionPageData() {
     setCompleteModal({ open: true, order, realQty: order.cantidadPlanificada });
   };
 
-  const submitComplete = async () => {
+  const submitComplete = async (reservaOverride = null, fechaVencimientoOverride = null) => {
     try {
       await apiClient.patch(`/production/${completeModal.order.id}/complete`, {
         cantidadProducidaReal: completeModal.realQty,
+        fechaVencimiento: fechaVencimientoOverride || completeModal.fechaVencimiento || null,
+        reservaInoculo: reservaOverride !== null ? reservaOverride : (completeModal.reservaInoculo || null),
         detalles: Object.keys(realDetails).map(id => ({
           id,
           cantidadRealUtilizada: realDetails[id]
         }))
       });
-      setCompleteModal({ open: false, order: null, realQty: '' });
+      setCompleteModal({ open: false, order: null, realQty: '', reservaInoculo: null });
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('onboarding:refresh'));
         window.dispatchEvent(new Event('onboarding-refresh'));
@@ -183,6 +216,8 @@ export function useProductionPageData() {
     openComplete,
     submitComplete,
     handleReportIncident,
+    handleProduceProduct,
+    handleClosePlanning,
     products,
     orphanProducts: (products || []).filter(
       (p) => (p.activo ?? true) && !recipes.some((r) => String(r.idProducto) === String(p.id))

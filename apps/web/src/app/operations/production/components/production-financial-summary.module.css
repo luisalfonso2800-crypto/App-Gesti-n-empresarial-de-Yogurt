@@ -69,3 +69,11 @@
   color: #A8A29E;
   font-style: italic;
 }
+
+.costInWords {
+  font-size: 11px;
+  color: #64748B;
+  font-style: italic;
+  margin-top: 2px;
+  text-transform: capitalize;
+}

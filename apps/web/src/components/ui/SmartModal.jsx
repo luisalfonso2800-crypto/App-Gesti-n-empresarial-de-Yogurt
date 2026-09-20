@@ -118,19 +118,30 @@ export default function SmartModal({
 /**
  * @description Botón de envío estándar para modales inteligentes
  */
-export function SubmitButton({ isSubmitting, text = 'Guardar', processingText = 'Procesando...', className, ...props }) {
+export function SubmitButton({ 
+  isSubmitting, 
+  loading, 
+  text = 'Guardar', 
+  processingText = 'Procesando...', 
+  className, 
+  children,
+  disabled,
+  missingFields,
+  ...props 
+}) {
+  const isLoading = Boolean(isSubmitting || loading);
   return (
     <button
-      disabled={isSubmitting}
+      disabled={disabled || isLoading}
       className={`${styles.btnSubmit} ${className || ''}`}
       {...props}
     >
-      {isSubmitting ? (
+      {isLoading ? (
         <>
           <Loader2 className={styles.spinIcon} size={18} />
           {processingText}
         </>
-      ) : text}
+      ) : (children || text)}
     </button>
   );
 }

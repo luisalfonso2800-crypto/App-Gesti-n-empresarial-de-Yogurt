@@ -59,11 +59,24 @@ export function useProductsPageManager() {
     }
   }, [isBaseIntermediaMode, isActionNew, suggestedCategory, presentations, form]);
 
+  const [channelFilter, setChannelFilter] = useState('TODOS');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
+
+  const filteredItems = items.filter((prod) => {
+    const isSoloPlanta = prod.canalVenta === 'SOLO_PLANTA' || prod.canalVenta === 'USO_INTERNO' || prod.categoria?.includes('WIP');
+    if (channelFilter === 'COMERCIAL') return !isSoloPlanta;
+    if (channelFilter === 'WIP') return isSoloPlanta;
+    return true;
+  });
+
+  const handleFilterChange = (filter) => {
+    setChannelFilter(filter);
+    setCurrentPage(1);
+  };
   
-  const paginatedProducts = items.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE) || 1;
 
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -106,6 +119,9 @@ export function useProductsPageManager() {
 
   return {
     items,
+    filteredItems,
+    channelFilter,
+    handleFilterChange,
     presentations,
     recipes,
     loading,

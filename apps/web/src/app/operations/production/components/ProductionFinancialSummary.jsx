@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { formatCurrency } from '@/lib/formatters';
+import { formatCurrency, numberToWordsSpanish } from '@/lib/formatters';
 import styles from './production-financial-summary.module.css';
 
 export function ProductionFinancialSummary({
@@ -18,32 +18,41 @@ export function ProductionFinancialSummary({
   tiempoProceso = '⏱ Sin estimar',
   loteSugerido = 'LOT-PENDIENTE'
 }) {
+  const costoTotalEnLetras = numberToWordsSpanish(costoTotal);
+  const costoUnitarioEnLetras = numberToWordsSpanish(costoUnitario);
+
   return (
     <div className={styles.summaryGrid}>
       <div className={styles.summaryCard}>
-        <span className={styles.cardLabel}>Costo Total Estimado</span>
+        <span className={styles.cardLabel}>💰 Costo Total Estimado</span>
         <strong className={styles.cardValuePrimary}>
           {formatCurrency(costoTotal) || '$ 0'}
         </strong>
+        {costoTotalEnLetras && (
+          <span className={styles.costInWords}>{costoTotalEnLetras}</span>
+        )}
         <span className={styles.cardHelper}>Valor proyectado del lote</span>
       </div>
 
       <div className={styles.summaryCard}>
-        <span className={styles.cardLabel}>Costo Unitario Proyectado</span>
+        <span className={styles.cardLabel}>🏷️ Costo Unitario Proyectado</span>
         <strong className={styles.cardValue}>
           {formatCurrency(costoUnitario) || '$ 0'} <span className={styles.unitSpan}>COP / {unidad}</span>
         </strong>
+        {costoUnitarioEnLetras && (
+          <span className={styles.costInWords}>{costoUnitarioEnLetras}</span>
+        )}
         <span className={styles.cardHelper}>Por unidad fabricada</span>
       </div>
 
       <div className={styles.summaryCard}>
-        <span className={styles.cardLabel}>Tiempo de Proceso</span>
+        <span className={styles.cardLabel}>⏱️ Tiempo de Proceso</span>
         <strong className={styles.cardValueTime}>{tiempoProceso}</strong>
         <span className={styles.cardHelper}>Sumatoria etapas estándar</span>
       </div>
 
       <div className={styles.summaryCard}>
-        <span className={styles.cardLabel}>Lote Sugerido</span>
+        <span className={styles.cardLabel}>🔖 Lote Sugerido</span>
         <strong className={styles.cardValueLot}>{loteSugerido}</strong>
         <span className={styles.cardHelper}>Trazabilidad correlativa</span>
       </div>

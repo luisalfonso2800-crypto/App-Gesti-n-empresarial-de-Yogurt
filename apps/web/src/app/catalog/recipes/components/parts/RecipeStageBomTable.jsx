@@ -22,7 +22,9 @@ export function RecipeStageBomTable({
   onRemoveDetalle
 }) {
   const activeDetalles = etapa?.detalles?.filter(d => d.activo !== false) || [];
-  const availableWipProducts = products.filter(p => p.id !== currentRecipeProductId);
+  const availableWipProducts = products.filter(p => 
+    p.tipoItem === 'INOCULO_WIP' || p.idItem?.startsWith('INOCULO:') || p.id !== currentRecipeProductId
+  );
 
   return (
     <div className={styles.bomSection}>
@@ -51,7 +53,10 @@ export function RecipeStageBomTable({
           <tbody>
             {etapa.detalles.map((det, dIdx) => {
               if (det.activo === false) return null;
-              const selectedValue = det.idProductoIntermedio ? `PROD:${det.idProductoIntermedio}` : (det.idInsumo ? `INS:${det.idInsumo}` : '');
+              const isInoculoDet = det.idProductoIntermedio && (det.unidad === 'g' || det.unidad === 'GRAMOS' || det.unidad === 'ml');
+              const selectedValue = det.idProductoIntermedio 
+                ? (isInoculoDet ? `INOCULO:${det.idProductoIntermedio}` : `BASE:${det.idProductoIntermedio}`) 
+                : (det.idInsumo ? `INS:${det.idInsumo}` : '');
               const isWip = Boolean(det.idProductoIntermedio);
               const isPackaging = det.tipoInsumo === 'EMPAQUE_BASE' || det.tipoInsumo === 'EMPAQUE_COMPLEMENTO';
               const isComplement = det.tipoInsumo === 'COMPLEMENTO';
@@ -62,10 +67,21 @@ export function RecipeStageBomTable({
                     <select className={styles.select} value={selectedValue} onChange={e => onUpdateDetalle(stageIndex, dIdx, 'resourceSelector', e.target.value)} required>
                       <option value="">Seleccione ingrediente o base...</option>
                       <optgroup label="Materias Primas y Empaques (Insumos)">
-                        {supplies.map(s => (<option key={s.id} value={`INS:${s.id}`}>{s.nombre} ({s.unidadBase})</option>))}
+                        {supplies.map(s => (<option key={`insumo-opt-${s.id}`} value={`INS:${s.id}`}>{s.nombre} ({s.unidadBase})</option>))}
                       </optgroup>
-                      <optgroup label="Bases y Semielaborados (WIP)">
-                        {availableWipProducts.map(p => (<option key={p.id} value={`PROD:${p.id}`}>{p.nombre} ({p.presentacion?.nombre || 'A GRANEL'})</option>))}
+                      <optgroup label="🧫 Iniciadores y Cepas (Inóculo WIP)">
+                        {availableWipProducts.filter(p => p.tipoItem === 'INOCULO_WIP' || p.displayLabel?.includes('INÓCULO') || p.idItem?.startsWith('INOCULO:')).map(p => (
+                          <option key={`inoculo-opt-${p.idItem || p.id}`} value={p.idItem || `INOCULO:${p.id}`}>
+                            {p.displayLabel || p.nombre}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="🥛 Bases Lácteas a Granel (WIP)">
+                        {availableWipProducts.filter(p => p.tipoItem !== 'INOCULO_WIP' && !p.displayLabel?.includes('INÓCULO')).map(p => (
+                          <option key={`base-opt-${p.idItem || p.id}`} value={p.idItem || `BASE:${p.id}`}>
+                            {p.displayLabel || p.nombre}
+                          </option>
+                        ))}
                       </optgroup>
                     </select>
                   </td>

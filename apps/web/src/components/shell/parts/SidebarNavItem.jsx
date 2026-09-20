@@ -28,9 +28,16 @@ export function SidebarNavItem({ item, isActive, isUnlocked, requiredStepText, c
     );
   }
 
+  const handleClick = () => {
+    if (item.path === '/catalog/recipes' && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('reset-recipe-modal'));
+    }
+  };
+
   return (
     <Link
       href={item.path}
+      onClick={handleClick}
       className={`${styles.navItem} ${isActive ? styles.navItemActive : ''}`}
       title={collapsed ? item.name : undefined}
     >

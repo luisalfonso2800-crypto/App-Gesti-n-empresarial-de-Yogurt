@@ -361,11 +361,13 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
         } else if (det.tipoInsumo === 'INTERMEDIO_WIP' || det.tipoInsumo === 'EMPAQUE_BASE') {
           det.tipoInsumo = 'BASE';
         }
-      } else if (value.startsWith('PROD:')) {
-        const prodId = value.replace('PROD:', '');
+      } else if (value.startsWith('PROD:') || value.startsWith('INOCULO:') || value.startsWith('BASE:')) {
+        const isInoculo = value.startsWith('INOCULO:') || value.includes(':INOCULO');
+        const prodId = value.replace('PROD:', '').replace('INOCULO:', '').replace('BASE:', '').replace(':INOCULO', '').replace(':BASE', '');
+        const chosenProd = products.find(p => (isInoculo ? p.tipoItem === 'INOCULO_WIP' && String(p.id) === String(prodId) : String(p.id) === String(prodId)));
         det.idProductoIntermedio = prodId;
         det.idInsumo = null;
-        det.unidad = 'Litros';
+        det.unidad = isInoculo ? 'g' : (chosenProd?.unidadMedida || 'Litros');
         det.tipoInsumo = 'INTERMEDIO_WIP';
       }
     } else {

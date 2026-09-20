@@ -8,7 +8,7 @@
  */
 import React from 'react';
 import { Button } from '@/components/ui/Button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, X, CalendarClock, Play } from 'lucide-react';
 import { formatCurrency } from '@/lib/formatters';
 import { ProductionFinancialSummary } from './ProductionFinancialSummary';
 import { ProductionBomTable } from './ProductionBomTable';
@@ -60,15 +60,29 @@ export function ProductionBomSection({
           <ProductionBomTable items={enrichedBom} />
           <div className={styles.formFooterActions}>
             <button type="button" onClick={onClose} className={styles.btnSecondaryNeutral}>
+              <X size={15} />
               Cancelar Formulario
             </button>
             <button type="button" onClick={() => handleCreateOrder('PLANIFICADA')} className={styles.btnSecondary}>
+              <CalendarClock size={15} />
               Guardar como Planificada
             </button>
-            <button type="button" disabled={hasShortage} onClick={() => handleCreateOrder('EN_PROCESO')} className={styles.btnPrimaryCorp}>
+            <button 
+              type="button" 
+              disabled={hasShortage} 
+              onClick={() => handleCreateOrder('EN_PROCESO')} 
+              className={styles.btnPrimaryCorp}
+              title={hasShortage ? '⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente' : 'Iniciar Fabricación'}
+            >
+              <Play size={15} fill="currentColor" />
               Iniciar Fabricación Inmediata
             </button>
           </div>
+          {hasShortage && (
+            <p className={styles.shortageWarningNotice}>
+              ⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente
+            </p>
+          )}
         </>
       )}
     </div>

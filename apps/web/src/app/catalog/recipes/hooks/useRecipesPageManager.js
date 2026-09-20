@@ -59,13 +59,15 @@ export function useRecipesPageManager() {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('open-recipe-modal', handleGlobalOpenModal);
+      window.addEventListener('reset-recipe-modal', handleCloseEditor);
     }
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('open-recipe-modal', handleGlobalOpenModal);
+        window.removeEventListener('reset-recipe-modal', handleCloseEditor);
       }
     };
-  }, [canCreate, handleOpenEditor]);
+  }, [canCreate, handleOpenEditor, handleCloseEditor]);
 
   let disabledTooltip = '';
   if (!canCreate) {
