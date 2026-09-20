@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+import { getPackagingPhysicalLimit } from '../recipeHelpers';
 import styles from './recipe-stages.module.css';
 
 export function RecipeStageBomTable({
@@ -17,6 +18,7 @@ export function RecipeStageBomTable({
   supplies = [],
   products = [],
   currentRecipeProductId = null,
+  rendimientoBase = 0,
   onAddDetalle,
   onUpdateDetalle,
   onRemoveDetalle
@@ -25,6 +27,8 @@ export function RecipeStageBomTable({
   const availableWipProducts = products.filter(p => 
     p.tipoItem === 'INOCULO_WIP' || p.idItem?.startsWith('INOCULO:') || p.id !== currentRecipeProductId
   );
+  const currentProduct = products.find(p => String(p.id) === String(currentRecipeProductId));
+  const limitInfo = getPackagingPhysicalLimit(currentProduct, rendimientoBase);
 
   return (
     <div className={styles.bomSection}>
@@ -61,6 +65,11 @@ export function RecipeStageBomTable({
               const isPackaging = det.tipoInsumo === 'EMPAQUE_BASE' || det.tipoInsumo === 'EMPAQUE_COMPLEMENTO';
               const isComplement = det.tipoInsumo === 'COMPLEMENTO';
 
+              const unidadDet = String(det.unidad || '').toLowerCase();
+              const isLiquid = unidadDet === 'l' || unidadDet === 'litros' || Boolean(det.idProductoIntermedio);
+              const valNum = Number(det.cantidadRequerida) || 0;
+              const isOverCapacity = Boolean(limitInfo?.maxLitrosPermitidos && isLiquid && valNum > limitInfo.maxLitrosPermitidos);
+
               return (
                 <tr key={dIdx}>
                   <td>
@@ -87,9 +96,14 @@ export function RecipeStageBomTable({
                   </td>
                   <td>
                     <div className={styles.qtyWrapper}>
-                      <input className={styles.input} type="number" step="0.0001" min="0" value={det.cantidadRequerida === '' ? '' : det.cantidadRequerida} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'cantidadRequerida', e.target.value === '' ? '' : parseFloat(e.target.value))} required />
+                      <input className={`${styles.input} ${isOverCapacity ? styles.inputErrorBorder : ''}`} type="number" step="0.0001" min="0" value={det.cantidadRequerida === '' ? '' : det.cantidadRequerida} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'cantidadRequerida', e.target.value === '' ? '' : parseFloat(e.target.value))} required />
                       <span className={styles.unitBadge}>{det.unidad || '-'}</span>
                     </div>
+                    {isOverCapacity && (
+                      <span className={styles.packagingOverflowError}>
+                        ❌ Excede la capacidad física: El contenedor admite máx {(limitInfo.capacidadUnitariaLts * 1000).toFixed(0)} ml por envase (máx {limitInfo.maxLitrosPermitidos.toFixed(2)} L para {limitInfo.rendimientoUnidades} unds). Revisa si quisiste ingresar {(valNum / 10).toFixed(1)} L.
+                      </span>
+                    )}
                   </td>
                   <td>
                     <input className={styles.input} type="number" step="0.1" min="0" max="100" value={det.mermaPorcentaje === '' ? '' : det.mermaPorcentaje} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'mermaPorcentaje', e.target.value === '' ? '' : parseFloat(e.target.value))} />

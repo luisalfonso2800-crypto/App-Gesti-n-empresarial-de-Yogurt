@@ -46,8 +46,22 @@ export default function InventoryStockTable({
             const name = activeTab === 'INSUMOS'
               ? item.insumo?.nombre
               : (prNom && prNom.trim().toLowerCase() !== pNom.trim().toLowerCase() ? `${pNom} - ${prNom}` : pNom);
-            const cat = activeTab === 'INSUMOS' ? item.insumo?.categoria : item.producto?.categoria;
-            const unit = activeTab === 'INSUMOS' ? (item.insumo?.unidadBase || 'kg') : (item.producto?.unidadMedida || item.unidadMedida || 'Litros');
+            const cat = activeTab === 'INSUMOS' ? item.insumo?.categoria : (item.producto?.categoria || item.categoria);
+            const rawUnit = activeTab === 'INSUMOS' ? (item.insumo?.unidadBase || 'kg') : (item.unidadMedida || item.unidad || item.recetas?.[0]?.unidadRendimiento || item.producto?.unidadMedida || '');
+            const u = String(rawUnit).toLowerCase();
+            const esEnvasado = u.includes('und') || u.includes('unidad') || cat === 'LACTEOS' || Boolean(item.presentacionId || item.producto?.presentacionId);
+            let unit = 'Litros';
+            if (activeTab === 'INSUMOS') {
+              unit = rawUnit || 'kg';
+            } else if (esEnvasado) {
+              unit = 'Unidades';
+            } else if (u.includes('kg') || u.includes('kilo')) {
+              unit = 'Kg';
+            } else if (u.includes('g') || u.includes('gramo')) {
+              unit = 'g';
+            } else if (u.includes('ml')) {
+              unit = 'ml';
+            }
             const status = item.estado || 'OPTIMO';
             const valor = activeTab === 'INSUMOS' ? item.valorTotal : (item.valorizacionTotal ?? (Number(item.cantidadActual) * Number(item.costoPromedio || 0)));
 
@@ -61,30 +75,17 @@ export default function InventoryStockTable({
                     </div>
                   </TD>
                   <TD><span className={styles.categoryBadge}>{cat || '-'}</span></TD>
-                  <TD className={styles.tdRight}>
-                    <span className={styles.stockValue}>{Number(item.cantidadActual)}</span> {unit}
-                  </TD>
+                  <TD className={styles.tdRight}><span className={styles.stockValue}>{Number(item.cantidadActual).toLocaleString()}</span> {unit}</TD>
                   {activeTab === 'INSUMOS' && (
                     <TD className={styles.tdCenter}>
-                      {status === 'CRITICO' ? (
-                        <span className={styles.badgeDanger}>Agotado</span>
-                      ) : status === 'BAJO' ? (
-                        <span className={styles.badgeWarning}>Bajo Mínimo</span>
-                      ) : (
-                        <span className={styles.badgeSuccess}>Óptimo</span>
-                      )}
+                      <span className={status === 'CRITICO' ? styles.badgeDanger : status === 'BAJO' ? styles.badgeWarning : styles.badgeSuccess}>
+                        {status === 'CRITICO' ? 'Agotado' : status === 'BAJO' ? 'Bajo Mínimo' : 'Óptimo'}
+                      </span>
                     </TD>
                   )}
                   <TD className={styles.tdValorization}>${Number(valor || 0).toLocaleString('es-CO')}</TD>
                   <TD className={styles.tdCenter}>
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        setAdjustmentModal({ open: true, item, tipo: 'AJUSTE_POSITIVO', cantidad: '', motivo: '' }); 
-                      }}
-                    >
+                    <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); setAdjustmentModal({ open: true, item, tipo: 'AJUSTE_POSITIVO', cantidad: '', motivo: '' }); }}>
                       Ajustar
                     </Button>
                   </TD>

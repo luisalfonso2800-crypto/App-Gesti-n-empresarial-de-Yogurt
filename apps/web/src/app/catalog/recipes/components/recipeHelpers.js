@@ -542,13 +542,14 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           det.unidadMedida === 'g' ||
           matchedWip?.tipoItem === 'INOCULO_WIP';
 
+        const unidadDet = String(det.unidad || det.unidadMedida || '').toLowerCase().trim();
+        const isSmallUnit = unidadDet === 'g' || unidadDet === 'gramos' || unidadDet === 'ml' || unidadDet === 'mililitros';
+        const factorUnidad = isSmallUnit ? 0.001 : 1;
+
         if (baseRecipe && Number(baseRecipe.rendimientoBase) > 0) {
           // 2. Costo unitario proyectado de la receta base (Costo Total Receta Base / Rendimiento Base)
           const baseRollup = calculateRecipeCosts(baseRecipe, supplies, products, prices, recipes, nextVisited);
           unitCostWip = baseRollup.costPerUnit;
-          if (isInoculo && unitCostWip > 10) {
-            unitCostWip = unitCostWip / 1000;
-          }
         }
 
         // 3. Fallback preventivo si la receta no existe o no tiene costo
@@ -563,25 +564,25 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           );
 
           if (prodCost > 0) {
-            if (isInoculo && prodCost > 10) {
-              unitCostWip = prodCost / 1000;
+            // Si el producto ya está valorizado por gramo (ej. <= 10 COP/g) y la unidad requerida es g/ml
+            if (isSmallUnit && prodCost <= 10) {
+              unitCostWip = prodCost * 1000; // Normalizar a costo por Litro/Kg
             } else {
               unitCostWip = prodCost;
             }
           } else {
-            unitCostWip = isInoculo ? 4.39 : 4390;
+            unitCostWip = 4390; // Costo referencial estándar por Litro de base láctea
           }
         }
 
         if (unitCostWip > 0) {
-          // Si obtuvimos costo real o unitario, no es fallback fallido
           hasWipFallback = false;
         } else {
           hasWipFallback = true;
         }
 
-        // 4. Multiplicar cantidadRequerida * costoUnitarioWip * (1 + merma/100)
-        costWipBases += (totalReq * unitCostWip);
+        // 4. Multiplicar cantidadRequerida * factorUnidad * costoUnitarioWip * (1 + merma/100)
+        costWipBases += (totalReq * factorUnidad * unitCostWip);
       } else if (det.idInsumo) {
         // Ítem es un insumo directo de bodega
         const insumoRecord = supplies.find(s => String(s.id) === String(det.idInsumo));
@@ -590,7 +591,13 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           ? priceFromMap
           : Number(insumoRecord?.costoBase || 0);
 
-        costRawSupplies += (totalReq * unitCostRaw);
+        const unidadDet = String(det.unidad || det.unidadMedida || '').toLowerCase().trim();
+        const isSmallUnit = unidadDet === 'g' || unidadDet === 'gramos' || unidadDet === 'ml' || unidadDet === 'mililitros';
+        const insumoUnidadBase = String(insumoRecord?.unidadBase || '').toLowerCase().trim();
+        const isBaseBig = insumoUnidadBase === 'kg' || insumoUnidadBase === 'kilogramos' || insumoUnidadBase === 'l' || insumoUnidadBase === 'litros';
+        const factorUnidad = (isSmallUnit && isBaseBig) ? 0.001 : 1;
+
+        costRawSupplies += (totalReq * factorUnidad * unitCostRaw);
       }
     });
   });
@@ -609,13 +616,61 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
 }
 
 /**
+ * Calcula la capacidad física unitaria (Lts) y máxima del lote para productos comerciales.
+ */
+export function getPackagingPhysicalLimit(selectedProduct, rendimientoBase) {
+  if (!selectedProduct || !selectedProduct.presentacion) return null;
+  const pres = selectedProduct.presentacion;
+  const isGranel = pres.tipoEnvase === 'TANQUE_GRANEL' ||
+    pres.nombre?.toUpperCase().includes('GRANEL') ||
+    ['BASES_LACTEAS', 'INSUMO_BASE_WIP', 'DULCES_JALEAS'].includes(selectedProduct.categoria);
+  if (isGranel) return null;
+
+  let capacidadUnitariaLts = 0;
+  if (Number(pres.cantidadMl) > 0) {
+    capacidadUnitariaLts = Number(pres.cantidadMl) / 1000;
+  } else if (Number(pres.cantidadOz) > 0) {
+    capacidadUnitariaLts = Number(pres.cantidadOz) === 16 ? 0.50 : (Number(pres.cantidadOz) * 29.5735) / 1000;
+  } else if (pres.nombre?.toUpperCase().includes('16 OZ')) {
+    capacidadUnitariaLts = 0.50;
+  }
+
+  if (capacidadUnitariaLts <= 0) return null;
+  const rendimientoUnidades = Number(rendimientoBase) || 0;
+  const maxLitrosPermitidos = rendimientoUnidades > 0 ? Number((rendimientoUnidades * capacidadUnitariaLts).toFixed(4)) : null;
+
+  return {
+    capacidadUnitariaLts,
+    rendimientoUnidades,
+    maxLitrosPermitidos
+  };
+}
+
+/**
  * Valida los prerrequisitos Poka-Yoke antes de abrir el modal resumen o enviar la receta.
  */
-export function validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging) {
+export function validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging, selectedProduct) {
   if (!formData.idProducto) return 'Debe seleccionar el producto a fabricar.';
   if (!formData.rendimientoBase || Number(formData.rendimientoBase) <= 0) return 'Debe ingresar un rendimiento base mayor a cero.';
   if (isCommercialWithoutBulk) return 'Debe existir al menos un producto base a granel en el catálogo.';
   if (isMissingCommercialPackaging) return 'Debe agregar al menos un insumo de empaque primario a la receta.';
+
+  // Validación Poka-Yoke de capacidad física geométrica de envases
+  const limitInfo = getPackagingPhysicalLimit(selectedProduct, formData.rendimientoBase);
+  if (limitInfo && limitInfo.maxLitrosPermitidos > 0 && formData.etapas && Array.isArray(formData.etapas)) {
+    for (const etapa of formData.etapas) {
+      if (etapa.activo === false) continue;
+      for (const det of etapa.detalles || []) {
+        if (det.activo === false) continue;
+        const unidadDet = String(det.unidad || '').toLowerCase();
+        const isLiquid = unidadDet === 'l' || unidadDet === 'litros' || det.idProductoIntermedio;
+        const cantVal = Number(det.cantidadRequerida) || 0;
+        if (isLiquid && cantVal > limitInfo.maxLitrosPermitidos) {
+          return `Excede la capacidad física: El contenedor admite máx ${(limitInfo.capacidadUnitariaLts * 1000).toFixed(0)} ml por envase (máx ${limitInfo.maxLitrosPermitidos.toFixed(2)} L para ${limitInfo.rendimientoUnidades} unds). Revisa el insumo en la etapa "${etapa.nombre || 'de proceso'}".`;
+        }
+      }
+    }
+  }
 
   // Validación de coherencia en rangos de etapas
   if (formData.etapas && Array.isArray(formData.etapas)) {

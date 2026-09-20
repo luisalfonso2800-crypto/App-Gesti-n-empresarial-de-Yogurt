@@ -30,8 +30,11 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const diasVida = order?.producto?.diasVidaUtil || order?.receta?.diasVidaUtil || 21;
   const [fechaVenc, setFechaVenc] = useState(() => calcDef(diasVida));
   const [fechaVencInoc, setFechaVencInoc] = useState(() => calcDef(14));
-  const isInvalidReserve = reserveActive && (inoculoNum <= 0 || inoculoNum >= volTotal);
-  const volPrincipal = Math.max(0, volTotal - (reserveActive ? inoculoNum : 0));
+  const cat = (order?.producto?.categoria || order?.receta?.producto?.categoria || '').toUpperCase();
+  const isWipBase = cat === 'BASES_LACTEAS' || cat === 'INTERMEDIO_WIP';
+  const isInvalidReserve = isWipBase && reserveActive && (inoculoNum <= 0 || inoculoNum > volTotal);
+  const isFullInoculum = isWipBase && reserveActive && volTotal > 0 && inoculoNum === volTotal;
+  const volPrincipal = Math.max(0, volTotal - (isWipBase && reserveActive ? inoculoNum : 0));
 
   const handleClose = () => {
     setReserveActive(false); setInoculoQty('');
@@ -41,7 +44,7 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const handleConfirm = () => {
     const orderId = order?.id || completeModal?.order?.id;
     if (!orderId) return;
-    const reservaPayload = reserveActive && inoculoNum > 0 ? { activo: true, cantidad: inoculoNum, codigoLoteHijo: loteHijoCode, fechaVencimiento: fechaVencInoc } : null;
+    const reservaPayload = isWipBase && reserveActive && inoculoNum > 0 ? { activo: true, cantidad: inoculoNum, codigoLoteHijo: loteHijoCode, fechaVencimiento: fechaVencInoc } : null;
     setCompleteModal(prev => ({ ...prev, reservaInoculo: reservaPayload }));
     submitComplete(reservaPayload, fechaVenc, orderId);
   };
@@ -55,51 +58,51 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
 
       <div className={styles.volumeFieldGroup}>
         <label className={styles.volumeLabel}>Volumen Real Obtenido ({uMed})</label>
-        <div className={styles.volumeInputWrapper}>
-          <span className={styles.volumeIcon}><Scale size={16} /></span>
-          <input type="number" min="0" step="0.1" value={completeModal.realQty ?? ''} onChange={(e) => setCompleteModal({ ...completeModal, realQty: e.target.value })} className={styles.volumeInput} placeholder="0.0" />
-          <span className={styles.volumeSuffix}>{uMed} Obtenidos</span>
-        </div>
-        <div className={styles.expiryInputGroup}>
-          <label className={styles.expiryLabel}><Calendar size={14} /> Fecha de Vencimiento (Lote Comercial):</label>
-          <div className={styles.expiryRowContainer}>
-            <input type="date" className={styles.expiryDateInput} value={fechaVenc} min={hoyStr} onChange={(e) => setFechaVenc(e.target.value)} />
-            <span className={styles.daysBadge}>⏱️ {calcDiff(fechaVenc)} días de vida útil</span>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.inoculumCard}>
-        <div className={styles.inoculumHeaderRow}>
-          <label className={styles.inoculumToggleLabel}>
-            <input type="checkbox" checked={reserveActive} onChange={(e) => { setReserveActive(e.target.checked); if (!e.target.checked) setInoculoQty(''); }} />
-            <FlaskConical size={16} /> Reservar fracción para próximo cultivo iniciador (Inóculo)
-          </label>
-        </div>
-        {reserveActive && (
-          <div>
-            <div className={styles.inoculumInputRow}>
-              <input type="number" min="0.1" step="0.1" value={inoculoQty} onChange={(e) => setInoculoQty(e.target.value)} placeholder="0.0" className={styles.inputTableQty} />
-              <span className={styles.infoGridLabel}>{uMed} a reservar</span>
+        <input type="number" min="0.1" step="0.1" value={completeModal.realQty} onChange={(e) => setCompleteModal(prev => ({ ...prev, realQty: e.target.value }))} className={styles.inputTableQty} />
+        {diasVida > 0 && (
+          <div className={styles.expiryBox}>
+            <label className={styles.expiryLabel}><Calendar size={14} /> Fecha de Vencimiento:</label>
+            <div className={styles.expiryRowContainer}>
+              <input type="date" className={styles.expiryDateInput} value={fechaVenc} min={hoyStr} onChange={(e) => setFechaVenc(e.target.value)} />
+              <span className={styles.daysBadge}>⏱️ {calcDiff(fechaVenc)} días de vida útil</span>
             </div>
-            <div className={styles.inoculumExpiryGroup}>
-              <label className={styles.expiryLabelSub}><Calendar size={13} /> Caducidad Cepa / Inóculo:</label>
-              <div className={styles.expiryRowContainer}>
-                <input type="date" className={styles.expiryDateInputCompact} value={fechaVencInoc} min={hoyStr} onChange={(e) => setFechaVencInoc(e.target.value)} />
-                <span className={styles.daysBadgeInoculum}>🧫 {calcDiff(fechaVencInoc)} días de vida útil</span>
-              </div>
-            </div>
-            {isInvalidReserve ? (
-              <div className={styles.pokaYokeAlert}>La reserva debe ser mayor a 0 y menor al volumen total ({volTotal} {uMed}).</div>
-            ) : (
-              <div className={styles.splitBalanceGrid}>
-                <span className={styles.splitBalanceBadge}>Disponible para Venta: {fmt(volPrincipal, uMed)}</span>
-                <span className={`${styles.splitBalanceBadge} ${styles.splitBalanceHighlight}`}>Iniciador: {fmt(inoculoNum, uMed)} ({loteHijoCode})</span>
-              </div>
-            )}
           </div>
         )}
       </div>
+
+      {isWipBase && (
+        <div className={styles.inoculumCard}>
+          <div className={styles.inoculumHeaderRow}>
+            <label className={styles.inoculumToggleLabel}>
+              <input type="checkbox" checked={reserveActive} onChange={(e) => { setReserveActive(e.target.checked); if (!e.target.checked) setInoculoQty(''); }} />
+              <FlaskConical size={16} /> Reservar fracción para próximo cultivo iniciador (Inóculo)
+            </label>
+          </div>
+          {reserveActive && (
+            <div>
+              <div className={styles.inoculumInputRow}>
+                <input type="number" min="0.1" step="0.1" value={inoculoQty} onChange={(e) => setInoculoQty(e.target.value)} placeholder="0.0" className={styles.inputTableQty} />
+                <span className={styles.infoGridLabel}>{uMed} a reservar</span>
+              </div>
+              <div className={styles.inoculumExpiryGroup}>
+                <label className={styles.expiryLabelSub}><Calendar size={13} /> Caducidad Cepa / Inóculo:</label>
+                <div className={styles.expiryRowContainer}>
+                  <input type="date" className={styles.expiryDateInputCompact} value={fechaVencInoc} min={hoyStr} onChange={(e) => setFechaVencInoc(e.target.value)} />
+                  <span className={styles.daysBadgeInoculum}>🧫 {calcDiff(fechaVencInoc)} días de vida útil</span>
+                </div>
+              </div>
+              {isInvalidReserve ? (
+                <div className={styles.pokaYokeAlert}>La reserva debe ser mayor a 0 y menor o igual al volumen total ({volTotal} {uMed}).</div>
+              ) : (
+                <div className={styles.splitBalanceGrid}>
+                  <span className={styles.splitBalanceBadge}>Disponible para Venta: {fmt(volPrincipal, uMed)}</span>
+                  <span className={`${styles.splitBalanceBadge} ${styles.splitBalanceHighlight}`}>Iniciador: {fmt(inoculoNum, uMed)} ({loteHijoCode})</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <h4 className={styles.consumoTitle}>Consumo Real de Insumos vs Teórico</h4>
       <table className={styles.liquidationTable}>

@@ -6,12 +6,12 @@
  * @usedBy apps/web/src/app/operations/production/components/ProductionOrderCreator.jsx
  * @dependencies react, @/components/ui/Button, lucide-react, @/lib/formatters
  */
-import React from 'react';
-import { Button } from '@/components/ui/Button';
-import { AlertTriangle, X, CalendarClock, Play } from 'lucide-react';
-import { formatCurrency } from '@/lib/formatters';
+import React, { useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { X, CalendarClock, Play } from 'lucide-react';
 import { ProductionFinancialSummary } from './ProductionFinancialSummary';
 import { ProductionBomTable } from './ProductionBomTable';
+import { ProductionMrpShortageAlert } from './ProductionMrpShortageAlert';
 import styles from '../production.module.css';
 
 export function ProductionBomSection({
@@ -22,14 +22,50 @@ export function ProductionBomSection({
   tiempoProceso,
   loteSugerido,
   bomLoading,
-  hasShortage,
-  enrichedBom,
+  enrichedBom = [],
   handlePurchaseShortage,
   handleCreateOrder,
   qty = 1,
   onClose
 }) {
+  const router = useRouter();
   const isInvalidQty = !qty || Number(qty) <= 0;
+
+  const { faltantesWip, faltantesCompra } = useMemo(() => {
+    const isWip = (item) => Boolean(
+      item.esProductoIntermedio ||
+      item.idProductoIntermedio ||
+      item.tipo === 'WIP' ||
+      item.tipo === 'INOCULO_WIP' ||
+      item.categoria === 'BASES_LACTEAS'
+    );
+    return {
+      faltantesWip: enrichedBom.filter(item => Number(item.faltante) > 0 && isWip(item)),
+      faltantesCompra: enrichedBom.filter(item => Number(item.faltante) > 0 && !isWip(item))
+    };
+  }, [enrichedBom]);
+
+  const hasAnyShortage = faltantesCompra.length > 0 || faltantesWip.length > 0;
+
+  const handleGoToPurchases = () => {
+    if (handlePurchaseShortage) {
+      handlePurchaseShortage();
+      return;
+    }
+    const payload = encodeURIComponent(
+      JSON.stringify(faltantesCompra.map(i => ({ id: i.idInsumo || i.id, faltante: i.faltante })))
+    );
+    if (onClose) onClose();
+    router.push(`/operations/purchases/new?shortages=${payload}`);
+  };
+
+  const handleGoToProduction = () => {
+    const target = faltantesWip[0];
+    const targetId = target?.idProductoIntermedio || target?.idInsumo || target?.id;
+    const targetQty = target?.faltante || 1;
+    if (onClose) onClose();
+    router.push(`/operations/production?action=new&productId=${targetId}&qty=${targetQty}`);
+  };
 
   return (
     <div className={styles.bomSection}>
@@ -44,22 +80,13 @@ export function ProductionBomSection({
       <h4>BOM (Lista de Materiales y Fórmula Requerida)</h4>
       {bomLoading ? <p>Calculando...</p> : (
         <>
-          {hasShortage && enrichedBom.some(b => Number(b.faltante) > 0 && !b.esProductoIntermedio && !b.idProductoIntermedio) && (
-            <div className={styles.alertBanner}>
-              <div className={styles.alertContent}>
-                <AlertTriangle size={20} />
-                <span>
-                  Insumos insuficientes para esta escala de producción. Compra estimada requerida:{' '}
-                  <span className={styles.alertShortageCost}>
-                    {formatCurrency(costoFaltanteTotal)}
-                  </span>
-                </span>
-              </div>
-              <Button variant="danger" size="sm" onClick={handlePurchaseShortage}>
-                + Disparar Lista de Compra
-              </Button>
-            </div>
-          )}
+          <ProductionMrpShortageAlert
+            faltantesCompra={faltantesCompra}
+            faltantesWip={faltantesWip}
+            costoFaltanteTotal={costoFaltanteTotal}
+            onGoToPurchases={handleGoToPurchases}
+            onGoToProduction={handleGoToProduction}
+          />
           <ProductionBomTable items={enrichedBom} />
           <div className={styles.formFooterActions}>
             <button type="button" onClick={onClose} className={styles.btnSecondaryNeutral}>
@@ -77,16 +104,16 @@ export function ProductionBomSection({
             </button>
             <button 
               type="button" 
-              disabled={hasShortage || isInvalidQty} 
+              disabled={hasAnyShortage || isInvalidQty} 
               onClick={() => handleCreateOrder('EN_PROCESO')} 
               className={styles.btnPrimaryCorp}
-              title={hasShortage ? '⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente' : isInvalidQty ? '⚠️ Ingrese una cantidad válida mayor a 0' : 'Iniciar Fabricación'}
+              title={hasAnyShortage ? '⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente' : isInvalidQty ? '⚠️ Ingrese una cantidad válida mayor a 0' : 'Iniciar Fabricación'}
             >
               <Play size={15} fill="currentColor" />
               Iniciar Fabricación Inmediata
             </button>
           </div>
-          {hasShortage && (
+          {hasAnyShortage && (
             <p className={styles.shortageWarningNotice}>
               ⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente
             </p>

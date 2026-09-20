@@ -902,5 +902,14 @@
   gap: 0.25rem;
 }
 
+.packagingOverflowError {
+  color: #BE123C;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+  display: block;
+}
+
 
 

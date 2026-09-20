@@ -89,10 +89,10 @@ export default function ProductionOrderCard({ order, startOrder, openComplete, o
         {order.estado === 'EN_PROCESO' && (
           <div className={styles.orderActionsGroup}>
             <button type="button" onClick={() => setShowIncidentModal(true)} className={styles.btnIncident}>
-              <AlertTriangle size={13} className={styles.iconSpaced} /> ⚠ Reportar Incidencia
+              <AlertTriangle size={13} className={styles.iconSpaced} /> Reportar Incidencia
             </button>
             <button type="button" className={styles.btnMannaPrimary} onClick={() => openComplete(order)}>
-              <CheckCircle2 size={14} className={styles.iconSpaced} /> ✔ Finalizar y Liquidar Lote
+              <CheckCircle2 size={14} className={styles.iconSpaced} /> Finalizar y Liquidar Lote
             </button>
           </div>
         )}

@@ -9,10 +9,10 @@ import { RecipeStagesList } from './modal-parts/RecipeStagesList';
 import { RecipeBalanceFooter } from './modal-parts/RecipeBalanceFooter';
 import { RecipeOperationalSummaryModal } from './modal-parts/RecipeOperationalSummaryModal';
 import { RecipeExitConfirmModal } from './modal-parts/RecipeExitConfirmModal';
-import { generateStageSummaryText, formatMinutesToDigitalClock, validateRecipeSubmission } from './recipeHelpers';
+import { generateStageSummaryText, formatMinutesToDigitalClock, validateRecipeSubmission, getPackagingPhysicalLimit } from './recipeHelpers';
 import styles from './recipe-modal.module.css';
 
-export { generateStageSummaryText, formatMinutesToDigitalClock };
+export { generateStageSummaryText, formatMinutesToDigitalClock, getPackagingPhysicalLimit };
 
 export function RecipeModal({ 
   formData, products = [], supplies = [], onClose, onSubmit, onChange,
@@ -48,18 +48,22 @@ export function RecipeModal({
   }));
   const isMissingCommercialPackaging = Boolean(isCommercialProduct && !hasPackagingItem);
 
+  const hasCapacityOverflow = formData.etapas?.some(e => e.activo !== false && e.detalles?.some(d => {
+    if (d.activo === false) return false;
+    const isLiquid = ['l', 'litros'].includes(String(d.unidad || '').toLowerCase()) || Boolean(d.idProductoIntermedio);
+    const limit = getPackagingPhysicalLimit(selectedProduct, formData.rendimientoBase);
+    return limit && limit.maxLitrosPermitidos > 0 && isLiquid && Number(d.cantidadRequerida || 0) > limit.maxLitrosPermitidos;
+  }));
   const precioVentaNum = Number(selectedProduct?.precioVenta) || 0, margenObjetivoNum = Number(selectedProduct?.margenObjetivo) || 0;
   const costoTopePermitido = precioVentaNum > 0 && margenObjetivoNum > 0 ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100))) : 0;
   const isInternoOrBulk = precioVentaNum === 0 || isSelectedProductBulk;
-  const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging;
-
+  const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging && !hasCapacityOverflow;
   const handleOpenSummaryModal = () => {
-    const err = validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging);
+    const err = validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging, selectedProduct);
     if (err) return setValidationError(err);
     setValidationError('');
     setShowSummaryModal(true);
   };
-
   const handleHeaderCancel = () => {
     if (formData.idProducto || formData.nombre || formData.rendimientoBase || (formData.etapas && formData.etapas.length > 0)) setShowExitConfirm(true);
     else onClose();
@@ -117,7 +121,7 @@ export function RecipeModal({
         ) : (
           <>
             <div onClickCapture={() => { if (!isHeaderCollapsed && formData.nombre) setIsHeaderCollapsed(true); }}>
-              <RecipeStagesList etapas={formData.etapas || []} supplies={supplies} products={products} currentRecipeProductId={formData.idProducto} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onApplyStageTemplate={onApplyStageTemplate} onAddEtapa={onAddEtapa} onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={onMoveEtapa} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
+              <RecipeStagesList etapas={formData.etapas || []} supplies={supplies} products={products} currentRecipeProductId={formData.idProducto} rendimientoBase={formData.rendimientoBase} generateStageSummaryText={generateStageSummaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock} onApplyStageTemplate={onApplyStageTemplate} onAddEtapa={onAddEtapa} onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={onMoveEtapa} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
             </div>
             <RecipeBalanceFooter
               formData={formData} totalMateriasPrimas={totalMateriasPrimas} totalBasesWip={totalBasesWip}

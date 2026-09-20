@@ -21,6 +21,7 @@ export function RecipeStagesList({
   supplies = [],
   products = [],
   currentRecipeProductId,
+  rendimientoBase = 0,
   generateStageSummaryText,
   formatMinutesToDigitalClock,
   onApplyStageTemplate,
@@ -100,6 +101,7 @@ export function RecipeStagesList({
       <RecipeStageEditor
         etapa={currentStage} stageIndex={selectedStageIndex} totalStagesCount={etapas.length}
         etapas={etapas} supplies={supplies} products={products} currentRecipeProductId={currentRecipeProductId}
+        rendimientoBase={rendimientoBase}
         summaryText={summaryText} formatMinutesToDigitalClock={formatMinutesToDigitalClock}
         onUpdateEtapa={onUpdateEtapa} onRemoveEtapa={onRemoveEtapa} onMoveEtapa={handleMove}
         onDuplicateEtapa={handleDuplicate} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle}

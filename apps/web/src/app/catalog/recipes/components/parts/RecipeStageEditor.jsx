@@ -23,6 +23,7 @@ export function RecipeStageEditor({
   supplies = [],
   products = [],
   currentRecipeProductId = null,
+  rendimientoBase = 0,
   summaryText = '',
   formatMinutesToDigitalClock,
   onUpdateEtapa,
@@ -38,7 +39,9 @@ export function RecipeStageEditor({
   if (!etapa) {
     return (
       <div className={styles.workspaceCol}>
-        <div className={styles.emptyWorkspace}>Seleccione una etapa del panel izquierdo para comenzar.</div>
+        <div className={styles.emptyWorkspace}>
+          👋 Comienza tu receta: Selecciona una de las Plantillas Rápidas arriba o pulsa &apos;+ Agregar Etapa&apos; para definir los parámetros del proceso.
+        </div>
       </div>
     );
   }
@@ -59,7 +62,7 @@ export function RecipeStageEditor({
         <textarea className={styles.textarea} rows={3} value={etapa.instrucciones || ''} onChange={e => onUpdateEtapa(stageIndex, 'instrucciones', e.target.value)} placeholder="Instrucciones para el operario de planta..." />
       </div>
 
-      <RecipeStageBomTable etapa={etapa} stageIndex={stageIndex} supplies={supplies} products={products} currentRecipeProductId={currentRecipeProductId} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
+      <RecipeStageBomTable etapa={etapa} stageIndex={stageIndex} supplies={supplies} products={products} currentRecipeProductId={currentRecipeProductId} rendimientoBase={rendimientoBase} onAddDetalle={onAddDetalle} onUpdateDetalle={onUpdateDetalle} onRemoveDetalle={onRemoveDetalle} />
 
       <RecipeStageActionBar
         stageIndex={stageIndex}

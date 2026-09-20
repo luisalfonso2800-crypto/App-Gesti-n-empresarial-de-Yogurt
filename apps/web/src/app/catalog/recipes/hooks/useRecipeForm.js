@@ -46,7 +46,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
       ) : false;
 
       const isCommercial = isCommercialProduct(selectedProd);
-      const initialEtapas = isCommercial ? [createCommercialBaseStage(products)] : [];
+      const initialEtapas = [];
 
       let suggestedUnit = 'Unidades';
       if (selectedProd) {
@@ -127,18 +127,12 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
         const autoNombre = selectedProd ? `Fórmula - ${selectedProd.nombre}` : '';
         const shouldUpdateNombre = !prev.nombre || prev.nombre.startsWith('Fórmula - ');
 
-        // Detección de producto comercial e inyección inteligente de etapa base
-        let updatedEtapas = prev.etapas || [];
-        if (isCommercial && updatedEtapas.length === 0) {
-          updatedEtapas = [createCommercialBaseStage(products)];
-        }
-
         return {
           ...prev,
           idProducto: value,
           nombre: shouldUpdateNombre ? autoNombre : prev.nombre,
           unidadRendimiento: suggestedUnit,
-          etapas: updatedEtapas
+          etapas: prev.etapas || []
         };
       });
       return;
