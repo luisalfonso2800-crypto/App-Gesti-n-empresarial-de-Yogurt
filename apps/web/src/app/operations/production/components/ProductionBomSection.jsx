@@ -26,8 +26,11 @@ export function ProductionBomSection({
   enrichedBom,
   handlePurchaseShortage,
   handleCreateOrder,
+  qty = 1,
   onClose
 }) {
+  const isInvalidQty = !qty || Number(qty) <= 0;
+
   return (
     <div className={styles.bomSection}>
       <ProductionFinancialSummary
@@ -41,7 +44,7 @@ export function ProductionBomSection({
       <h4>BOM (Lista de Materiales y Fórmula Requerida)</h4>
       {bomLoading ? <p>Calculando...</p> : (
         <>
-          {hasShortage && (
+          {hasShortage && enrichedBom.some(b => Number(b.faltante) > 0 && !b.esProductoIntermedio && !b.idProductoIntermedio) && (
             <div className={styles.alertBanner}>
               <div className={styles.alertContent}>
                 <AlertTriangle size={20} />
@@ -63,16 +66,21 @@ export function ProductionBomSection({
               <X size={15} />
               Cancelar Formulario
             </button>
-            <button type="button" onClick={() => handleCreateOrder('PLANIFICADA')} className={styles.btnSecondary}>
+            <button 
+              type="button" 
+              disabled={isInvalidQty}
+              onClick={() => handleCreateOrder('PLANIFICADA')} 
+              className={styles.btnSecondary}
+            >
               <CalendarClock size={15} />
               Guardar como Planificada
             </button>
             <button 
               type="button" 
-              disabled={hasShortage} 
+              disabled={hasShortage || isInvalidQty} 
               onClick={() => handleCreateOrder('EN_PROCESO')} 
               className={styles.btnPrimaryCorp}
-              title={hasShortage ? '⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente' : 'Iniciar Fabricación'}
+              title={hasShortage ? '⚠️ Faltan insumos en bodega para iniciar el lote inmediatamente' : isInvalidQty ? '⚠️ Ingrese una cantidad válida mayor a 0' : 'Iniciar Fabricación'}
             >
               <Play size={15} fill="currentColor" />
               Iniciar Fabricación Inmediata

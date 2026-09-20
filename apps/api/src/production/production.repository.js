@@ -113,22 +113,67 @@ export class ProductionRepository {
           const invProd = await this.prisma.inventarioProducto.findUnique({
             where: { idProducto: det.idProductoIntermedio }
           });
-          const stockActual = invProd ? Number(invProd.cantidadActual) : 0;
-          const faltante = Math.max(0, reqTeorico - stockActual);
 
-          // Buscar lote padre activo/disponible para costeo y trazabilidad
-          const loteWip = await this.prisma.lote.findFirst({
+          // Buscar TODOS los lotes semielaborados activos para agregación FEFO
+          const activeWipLots = await this.prisma.lote.findMany({
             where: {
-              idProducto: det.idProductoIntermedio,
-              estado: 'DISPONIBLE',
-              cantidadDisponible: { gt: 0 }
+              OR: [
+                { idProducto: det.idProductoIntermedio, cantidadDisponible: { gt: 0 } },
+                { tipoLote: 'SEMIELABORADO_WIP', cantidadDisponible: { gt: 0 } }
+              ]
             },
-            orderBy: { fechaProduccion: 'asc' } // FIFO
+            orderBy: [
+              { fechaVencimiento: 'asc' },
+              { fechaProduccion: 'asc' }
+            ]
           });
 
-          const costoUnitario = loteWip && Number(loteWip.costoUnitario) > 0
+          const detUnidad = (det.unidad || '').toLowerCase().trim();
+          const isReqSmallUnit = detUnidad === 'g' || detUnidad === 'ml' || detUnidad === 'gramos';
+
+          let totalStockCalculado = 0;
+          const lotesDisponibles = [];
+
+          for (const lw of activeWipLots) {
+            const rawLoteQty = Number(lw.cantidadDisponible) || 0;
+            const loteUnidad = (lw.unidad || '').toLowerCase().trim();
+            const isLoteInLiters = loteUnidad === 'litros' || loteUnidad === 'l' || (!loteUnidad && rawLoteQty <= 100);
+
+            let qtyConvertida = rawLoteQty;
+            if (isReqSmallUnit && isLoteInLiters) {
+              qtyConvertida = rawLoteQty * 1000;
+            } else if (!isReqSmallUnit && (loteUnidad === 'g' || loteUnidad === 'ml')) {
+              qtyConvertida = rawLoteQty / 1000;
+            }
+
+            totalStockCalculado += qtyConvertida;
+            lotesDisponibles.push({
+              id: lw.id,
+              codigoLote: lw.codigoLote || lw.id.slice(0, 8),
+              cantidadDisponible: rawLoteQty,
+              cantidadConvertida: qtyConvertida,
+              unidad: lw.unidad,
+              costoUnitario: Number(lw.costoUnitario) || 0,
+              fechaVencimiento: lw.fechaVencimiento
+            });
+          }
+
+          if (totalStockCalculado === 0 && invProd) {
+            const rawInv = Number(invProd.cantidadActual) || 0;
+            totalStockCalculado = isReqSmallUnit ? rawInv * 1000 : rawInv;
+          }
+
+          const stockActual = totalStockCalculado;
+          const faltante = Math.max(0, reqTeorico - stockActual);
+
+          const loteWip = lotesDisponibles[0] || null;
+          let costoUnitario = loteWip && Number(loteWip.costoUnitario) > 0
             ? Number(loteWip.costoUnitario)
             : (invProd && Number(invProd.costoPromedio) > 0 ? Number(invProd.costoPromedio) : 0);
+
+          if (isReqSmallUnit && costoUnitario > 100) {
+            costoUnitario = costoUnitario / 1000;
+          }
 
           const costoTeorico = reqTeorico * costoUnitario;
 
@@ -137,7 +182,7 @@ export class ProductionRepository {
             idProductoIntermedio: det.idProductoIntermedio,
             nombreInsumo: det.productoIntermedio ? `${det.productoIntermedio.nombre} (Base / WIP)` : 'Producto Semielaborado',
             etapa: etapa.nombre,
-            tipoInsumo: det.tipoInsumo || 'INTERMEDIO_WIP',
+            tipoInsumo: det.tipoInsumo || 'INOCULO_WIP',
             requeridoTeorico: reqTeorico,
             unidad: det.unidad || 'Litros',
             stockActual: stockActual,
@@ -147,7 +192,8 @@ export class ProductionRepository {
             costoUnitario: costoUnitario,
             esProductoIntermedio: true,
             idLoteSugerido: loteWip ? loteWip.id : null,
-            codigoLoteSugerido: loteWip ? (loteWip.codigoLote || loteWip.id.slice(0, 8)) : null
+            codigoLoteSugerido: loteWip ? loteWip.codigoLote : null,
+            lotesDisponibles: lotesDisponibles
           });
         } else {
           // Consultar inventario de insumo tradicional
@@ -308,7 +354,31 @@ export class ProductionRepository {
           }
         } else if (det.idProductoIntermedio) {
           const invProd = await prisma.inventarioProducto.findUnique({ where: { idProducto: det.idProductoIntermedio } });
-          const stock = invProd ? Number(invProd.cantidadActual) : 0;
+          const loteWip = (await prisma.lote.findFirst({
+            where: { idProducto: det.idProductoIntermedio, tipoLote: 'SEMIELABORADO_WIP', estado: 'DISPONIBLE', cantidadDisponible: { gt: 0 } },
+            orderBy: { fechaProduccion: 'asc' }
+          })) || (await prisma.lote.findFirst({
+            where: { idProducto: det.idProductoIntermedio, estado: 'DISPONIBLE', cantidadDisponible: { gt: 0 } },
+            orderBy: { fechaProduccion: 'asc' }
+          }));
+
+          const rawStock = loteWip && Number(loteWip.cantidadDisponible) > 0
+            ? Number(loteWip.cantidadDisponible)
+            : (invProd ? Number(invProd.cantidadActual) : 0);
+
+          const detUnidad = (det.unidad || '').toLowerCase().trim();
+          const loteUnidad = (loteWip?.unidad || '').toLowerCase().trim();
+
+          let stock = rawStock;
+          const isReqSmallUnit = detUnidad === 'g' || detUnidad === 'ml' || detUnidad === 'gramos';
+          const isStockInLiters = loteUnidad === 'litros' || loteUnidad === 'l' || (!loteUnidad && rawStock <= 100);
+
+          if (isReqSmallUnit && isStockInLiters) {
+            stock = rawStock * 1000;
+          } else if (!isReqSmallUnit && (loteUnidad === 'g' || loteUnidad === 'ml')) {
+            stock = rawStock / 1000;
+          }
+
           if (stock < Number(det.cantidadTeorica)) {
             throw new Error(`Stock insuficiente para el producto intermedio/base ${det.idProductoIntermedio}`);
           }
@@ -405,9 +475,20 @@ export class ProductionRepository {
 
   async completeProduction(id, data) {
     return this.prisma.$transaction(async (prisma) => {
+      const targetId = id || data?.id || data?.idProduccion || data?.ordenId;
+      if (!targetId) {
+        throw new Error('Identificador de orden de producción no proporcionado o inválido');
+      }
+
       const produccion = await prisma.produccion.findUnique({
-        where: { id },
-        include: { detalles: true, producto: true, receta: true }
+        where: { id: targetId },
+        include: {
+          detalles: true,
+          producto: {
+            include: { presentacion: true }
+          },
+          lotes: true
+        }
       });
 
       if (!produccion) throw new Error("Producción no encontrada");
@@ -457,9 +538,9 @@ export class ProductionRepository {
             await prisma.detalleProduccion.update({
               where: { id: det.id },
               data: {
-                cantidadReal: qtyReal,
-                diferencia: diferencia,
-                costoReal: qtyReal * costoUnitarioInsumo
+                cantidadRealUtilizada: Number(qtyReal),
+                diferencia: Number(diferencia),
+                costoReal: Number(qtyReal * costoUnitarioInsumo)
               }
             });
           } else if (det.idProductoIntermedio) {
@@ -470,7 +551,14 @@ export class ProductionRepository {
 
             const stockAnterior = invProd ? Number(invProd.cantidadActual) : 0;
             const costoUnitarioIntermedio = Number(invProd?.costoPromedio || 0);
-            const stockNuevo = stockAnterior - qtyReal;
+
+            // Blindaje Poka-Yoke: Conversión dimensional y no-negatividad
+            const detUnidad = (det.unidad || '').toLowerCase().trim();
+            let decrementoLts = qtyReal;
+            if (detUnidad === 'g' || detUnidad === 'ml' || detUnidad === 'gramos') {
+              decrementoLts = decrementoLts / 1000;
+            }
+            const stockNuevo = Math.max(0, stockAnterior - decrementoLts);
 
             // Descontar inventario de producto intermedio
             await prisma.inventarioProducto.upsert({
@@ -484,7 +572,7 @@ export class ProductionRepository {
               data: {
                 idProducto: det.idProductoIntermedio,
                 tipoMovimiento: 'SALIDA_PRODUCCION_WIP',
-                cantidad: qtyReal,
+                cantidad: decrementoLts,
                 stockAnterior: stockAnterior,
                 stockNuevo: stockNuevo,
                 costoUnitario: costoUnitarioIntermedio,
@@ -493,32 +581,69 @@ export class ProductionRepository {
               }
             });
 
-            // Trazabilidad de Lote Padre: Buscar lote padre activo y deducir cantidad
-            let lotePadre = null;
-            if (updateDet.idLotePadre) {
-              lotePadre = await prisma.lote.findUnique({ where: { id: updateDet.idLotePadre } });
-            } else {
-              lotePadre = await prisma.lote.findFirst({
-                where: {
-                  idProducto: det.idProductoIntermedio,
-                  cantidadDisponible: { gt: 0 }
-                },
-                orderBy: { fechaProduccion: 'asc' } // FIFO
-              });
-            }
+            // Trazabilidad de Lote Padre y Deducción: Respetar data.desgloseLotes o asignacionInoculo si fue especificada
+            const alloc = updateDet.asignacionInoculo || data.asignacionInoculo;
+            const desglose = (Array.isArray(data.desgloseLotes) && data.desgloseLotes.length > 0)
+              ? data.desgloseLotes
+              : (alloc?.modo === 'MEZCLA' && Array.isArray(alloc?.lotes))
+                ? alloc.lotes.map(l => ({ idLote: l.idLote, litrosADescontar: l.cantidad }))
+                : (alloc?.modo === 'LOTE_UNICO' && alloc?.idLote)
+                  ? [{ idLote: alloc.idLote, litrosADescontar: decrementoLts }]
+                  : null;
 
-            if (lotePadre) {
-              idLotePadreDetectado = lotePadre.id;
-              const nuevaCantDisponible = Math.max(0, Number(lotePadre.cantidadDisponible) - qtyReal);
-              const nuevoEstado = nuevaCantDisponible === 0 ? 'AGOTADO' : lotePadre.estado;
-
-              await prisma.lote.update({
-                where: { id: lotePadre.id },
-                data: {
-                  cantidadDisponible: nuevaCantDisponible,
-                  estado: nuevoEstado
+            if (desglose && desglose.length > 0) {
+              for (const asignacion of desglose) {
+                let cantLitros = Number(asignacion.litrosADescontar || asignacion.cantidad);
+                if (detUnidad === 'g' || detUnidad === 'ml' || detUnidad === 'gramos') {
+                  if (cantLitros > 100) cantLitros = cantLitros / 1000;
                 }
+                if (cantLitros > 0 && asignacion.idLote) {
+                  const targetLote = await prisma.lote.findUnique({ where: { id: asignacion.idLote } });
+                  if (targetLote) {
+                    if (!idLotePadreDetectado) idLotePadreDetectado = targetLote.id;
+                    const nuevaCant = Math.max(0, Number(targetLote.cantidadDisponible) - cantLitros);
+                    await prisma.lote.update({
+                      where: { id: asignacion.idLote },
+                      data: {
+                        cantidadDisponible: nuevaCant,
+                        estado: nuevaCant === 0 ? 'AGOTADO' : targetLote.estado
+                      }
+                    });
+                  }
+                }
+              }
+            } else {
+              // Descuento FEFO automático sobre los lotes con saldo de ese semielaborado hasta agotar decrementoLts
+              let remQty = decrementoLts;
+              const lotesFefo = await prisma.lote.findMany({
+                where: {
+                  OR: [
+                    { idProducto: det.idProductoIntermedio, cantidadDisponible: { gt: 0 } },
+                    { tipoLote: 'SEMIELABORADO_WIP', cantidadDisponible: { gt: 0 } }
+                  ]
+                },
+                orderBy: [
+                  { fechaVencimiento: 'asc' },
+                  { fechaProduccion: 'asc' }
+                ]
               });
+
+              for (const lote of lotesFefo) {
+                if (remQty <= 0) break;
+                if (!idLotePadreDetectado) idLotePadreDetectado = lote.id;
+                const cantDisponible = Number(lote.cantidadDisponible);
+                const aDescontar = Math.min(cantDisponible, remQty);
+                const nuevaCant = Math.max(0, cantDisponible - aDescontar);
+                remQty -= aDescontar;
+
+                await prisma.lote.update({
+                  where: { id: lote.id },
+                  data: {
+                    cantidadDisponible: nuevaCant,
+                    estado: nuevaCant === 0 ? 'AGOTADO' : lote.estado
+                  }
+                });
+              }
             }
 
             costoTotalLote += qtyReal * costoUnitarioIntermedio;
@@ -526,10 +651,9 @@ export class ProductionRepository {
             await prisma.detalleProduccion.update({
               where: { id: det.id },
               data: {
-                cantidadReal: qtyReal,
-                diferencia: diferencia,
-                costoReal: qtyReal * costoUnitarioIntermedio,
-                idLotePadre: idLotePadreDetectado
+                cantidadRealUtilizada: Number(qtyReal),
+                diferencia: Number(diferencia),
+                costoReal: Number(qtyReal * costoUnitarioIntermedio)
               }
             });
           }
@@ -554,7 +678,7 @@ export class ProductionRepository {
         : new Date(Date.now() + diasVencimientoInoculo * 24 * 60 * 60 * 1000);
 
       await prisma.produccion.update({
-        where: { id },
+        where: { id: targetId },
         data: {
           estado: 'COMPLETADA',
           cantidadProducidaReal: qtyProducida,
@@ -570,9 +694,14 @@ export class ProductionRepository {
 
       // Gestión de Reserva de Inóculo (Split Batch)
       const reserva = data.reservaInoculo;
-      const tieneReserva = Boolean(reserva?.activo && Number(reserva?.cantidad) > 0 && Number(reserva?.cantidad) < qtyProducida);
-      const cantInoculo = tieneReserva ? Number(reserva.cantidad) : 0;
-      const cantPrincipal = qtyProducida - cantInoculo;
+      const cantInoculoSolicitada = Number(reserva?.cantidad ?? data.cantidadInoculo ?? 0);
+      const tieneReserva = Boolean(
+        (data.reservarInoculo || reserva?.activo) &&
+        cantInoculoSolicitada > 0 &&
+        cantInoculoSolicitada < qtyProducida
+      );
+      const cantInoculo = tieneReserva ? cantInoculoSolicitada : 0;
+      const cantPrincipal = Math.max(0, qtyProducida - cantInoculo);
 
       // Generar Lote Principal
       const lote = await prisma.lote.create({
@@ -592,7 +721,7 @@ export class ProductionRepository {
       });
 
       await prisma.produccion.update({
-        where: { id },
+        where: { id: targetId },
         data: { idLote: lote.id }
       });
 
@@ -611,7 +740,7 @@ export class ProductionRepository {
             unidad: 'Litros',
             estado: 'DISPONIBLE',
             costoUnitario: costoUnitarioFabricacion,
-            observaciones: `Reserva interna inóculo / cultivo madre (${reserva.codigoLoteHijo || 'INOCULO'})`
+            observaciones: `Reserva interna inóculo / cultivo madre (${reserva?.codigoLoteHijo || 'INOCULO'})`
           }
         });
 
@@ -662,7 +791,7 @@ export class ProductionRepository {
       });
 
       return prisma.produccion.findUnique({
-        where: { id },
+        where: { id: targetId },
         include: includeProduction
       });
     });

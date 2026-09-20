@@ -36,6 +36,14 @@ export class ProductsRepository {
     });
 
     const result = [];
+    let hasAddedUnifiedInoculum = false;
+
+    // Buscar si existen lotes activos con tipoLote SEMIELABORADO_WIP
+    const activeWipLot = await this.prisma.lote.findFirst({
+      where: { tipoLote: 'SEMIELABORADO_WIP', cantidadDisponible: { gt: 0 } },
+      orderBy: { fechaVencimiento: 'asc' },
+    });
+
     for (const p of products) {
       const isBaseOrWip =
         p.categoria === 'BASES_LACTEAS' ||
@@ -52,14 +60,15 @@ export class ProductsRepository {
       const costoLitro = rawCosto > 0 ? rawCosto : 4390;
       const costoGramo = costoLitro / 1000; // $4.39 COP por gramo
 
-      // Opción 1: Inóculo / Cepa (solo si tiene lotes semielaborados WIP físicos)
-      if (p.lotes && p.lotes.length > 0) {
+      // Opción 1: Inóculo / Cepa unificado (único ítem genérico para recetas)
+      if (activeWipLot && !hasAddedUnifiedInoculum) {
+        hasAddedUnifiedInoculum = true;
         result.push({
           ...p,
           id: p.id,
           idItem: `INOCULO:${p.id}`,
-          nombre: `INÓCULO / INICIADOR (${p.nombre})`,
-          displayLabel: `INÓCULO / INICIADOR (${p.nombre}) - g`,
+          nombre: "🧫 CULTIVO INICIADOR / INÓCULO LÁCTICO (WIP)",
+          displayLabel: "🧫 CULTIVO INICIADOR / INÓCULO LÁCTICO (WIP) - g",
           unidadMedida: 'g',
           tipoItem: 'INOCULO_WIP',
           costoUnitario: costoGramo,

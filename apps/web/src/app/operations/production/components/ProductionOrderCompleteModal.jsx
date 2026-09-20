@@ -8,21 +8,15 @@ import { CheckCircle2, Check, Scale, FlaskConical, Calendar } from 'lucide-react
 import SmartModal from '@/components/ui/SmartModal';
 import styles from '../production.module.css';
 
-function fmt(val, unit = '') {
+const fmt = (val, unit = '') => {
   const n = Number(val) || 0;
   const s = n % 1 === 0 ? Math.round(n).toLocaleString('es-CO') : n.toLocaleString('es-CO', { maximumFractionDigits: 2 });
   return unit ? `${s} ${unit}` : s;
-}
-
-const toDateVal = (d) => d.toISOString().split('T')[0];
-const calcDef = (days) => toDateVal(new Date(Date.now() + days * 86400000));
-const hoyStr = toDateVal(new Date());
-
-const calcDiff = (str) => {
-  if (!str) return 0;
-  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-  return Math.max(0, Math.round((new Date(`${str}T00:00:00`).getTime() - hoy.getTime()) / 86400000));
 };
+const toDateVal = (d) => d.toISOString().split('T')[0];
+const hoyStr = toDateVal(new Date());
+const calcDef = (days) => toDateVal(new Date(Date.now() + days * 86400000));
+const calcDiff = (str) => (!str ? 0 : Math.max(0, Math.round((new Date(`${str}T00:00:00`).getTime() - new Date().setHours(0, 0, 0, 0)) / 86400000)));
 
 export default function ProductionOrderCompleteModal({ completeModal, setCompleteModal, realDetails, setRealDetails, submitComplete }) {
   const [reserveActive, setReserveActive] = useState(false);
@@ -33,11 +27,9 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const volTotal = Number(completeModal.realQty) || 0;
   const inoculoNum = Number(inoculoQty) || 0;
   const loteHijoCode = `INOC-${order?.id?.slice(0, 6).toUpperCase() || 'LOTE'}`;
-
   const diasVida = order?.producto?.diasVidaUtil || order?.receta?.diasVidaUtil || 21;
   const [fechaVenc, setFechaVenc] = useState(() => calcDef(diasVida));
   const [fechaVencInoc, setFechaVencInoc] = useState(() => calcDef(14));
-
   const isInvalidReserve = reserveActive && (inoculoNum <= 0 || inoculoNum >= volTotal);
   const volPrincipal = Math.max(0, volTotal - (reserveActive ? inoculoNum : 0));
 
@@ -47,11 +39,11 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   };
 
   const handleConfirm = () => {
-    const reservaPayload = reserveActive && inoculoNum > 0
-      ? { activo: true, cantidad: inoculoNum, codigoLoteHijo: loteHijoCode, fechaVencimiento: fechaVencInoc }
-      : null;
+    const orderId = order?.id || completeModal?.order?.id;
+    if (!orderId) return;
+    const reservaPayload = reserveActive && inoculoNum > 0 ? { activo: true, cantidad: inoculoNum, codigoLoteHijo: loteHijoCode, fechaVencimiento: fechaVencInoc } : null;
     setCompleteModal(prev => ({ ...prev, reservaInoculo: reservaPayload }));
-    submitComplete(reservaPayload, fechaVenc);
+    submitComplete(reservaPayload, fechaVenc, orderId);
   };
 
   return (
@@ -112,12 +104,7 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
       <h4 className={styles.consumoTitle}>Consumo Real de Insumos vs Teórico</h4>
       <table className={styles.liquidationTable}>
         <thead>
-          <tr>
-            <th className={styles.colText}>📦 Insumo</th>
-            <th className={styles.colNumber}>📐 Teórico</th>
-            <th className={styles.colStatus}>⚖️ Real Utilizado</th>
-            <th className={styles.colNumber}>📊 Desviación</th>
-          </tr>
+          <tr><th className={styles.colText}>📦 Insumo</th><th className={styles.colNumber}>📐 Teórico</th><th className={styles.colStatus}>⚖️ Real Utilizado</th><th className={styles.colNumber}>📊 Desviación</th></tr>
         </thead>
         <tbody>
           {order?.detalles?.map((det) => {
@@ -140,9 +127,7 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
 
       <div className={styles.modalActions}>
         <button type="button" className={styles.btnMannaSecondary} onClick={handleClose}>Cancelar</button>
-        <button type="button" className={styles.btnMannaPrimary} onClick={handleConfirm} disabled={!volTotal || isInvalidReserve}>
-          <Check size={16} className={styles.iconSpaced} /> Confirmar Liquidación y Entrada a Stock
-        </button>
+        <button type="button" className={styles.btnMannaPrimary} onClick={handleConfirm} disabled={!volTotal || !order?.id || isInvalidReserve}><Check size={16} className={styles.iconSpaced} /> Confirmar Liquidación y Entrada a Stock</button>
       </div>
     </SmartModal>
   );

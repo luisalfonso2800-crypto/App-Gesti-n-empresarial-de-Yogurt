@@ -152,12 +152,37 @@ export function useProductionPageData() {
     setCompleteModal({ open: true, order, realQty: order.cantidadPlanificada });
   };
 
-  const submitComplete = async (reservaOverride = null, fechaVencimientoOverride = null) => {
+  const submitComplete = async (reservaOverride = null, fechaVencimientoOverride = null, explicitOrderId = null) => {
     try {
-      await apiClient.patch(`/production/${completeModal.order.id}/complete`, {
+      const orderId = explicitOrderId || completeModal.order?.id;
+      if (!orderId) {
+        throw new Error('Identificador de orden de producción no proporcionado o inválido');
+      }
+      const currentOrder = completeModal.order;
+      const reserva = reservaOverride !== null ? reservaOverride : (completeModal.reservaInoculo || null);
+
+      // Extraer estrategia de asignación de inóculo definida en la orden
+      const estrategia = currentOrder?.asignacionInoculo || currentOrder?.estrategiaInoculo || currentOrder?.detalles?.find(d => d.idProductoIntermedio)?.asignacionInoculo;
+      let desgloseLotes = null;
+
+      if (estrategia?.modo === 'MEZCLA' && Array.isArray(estrategia.lotes)) {
+        desgloseLotes = estrategia.lotes
+          .filter(l => l.idLote && Number(l.cantidad) > 0)
+          .map(l => ({ idLote: l.idLote, litrosADescontar: Number(l.cantidad) }));
+      } else if (estrategia?.modo === 'LOTE_UNICO' && estrategia.idLote) {
+        const detWip = currentOrder?.detalles?.find(d => d.idProductoIntermedio);
+        const totalWip = Number(realDetails[detWip?.id] ?? detWip?.cantidadTeorica ?? 0);
+        desgloseLotes = [{ idLote: estrategia.idLote, litrosADescontar: totalWip }];
+      }
+
+      await apiClient.patch(`/production/${orderId}/complete`, {
+        id: orderId,
+        idProduccion: orderId,
+        reservarInoculo: Boolean(reserva?.activo),
         cantidadProducidaReal: completeModal.realQty,
         fechaVencimiento: fechaVencimientoOverride || completeModal.fechaVencimiento || null,
-        reservaInoculo: reservaOverride !== null ? reservaOverride : (completeModal.reservaInoculo || null),
+        reservaInoculo: reserva,
+        desgloseLotes,
         detalles: Object.keys(realDetails).map(id => ({
           id,
           cantidadRealUtilizada: realDetails[id]

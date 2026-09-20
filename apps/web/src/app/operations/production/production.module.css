@@ -1832,5 +1832,88 @@
 .wipStrainBadge {
   font-size: 0.75rem;
   color: #10B981;
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.wipMultiLotDetail {
+  opacity: 0.9;
   margin-top: 2px;
 }
+
+.wipSubRow {
+  background-color: rgba(248, 250, 252, 0.9);
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.wipSubRowCell {
+  padding: 0.625rem 1rem;
+}
+
+.wipSubRowContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.wipSubRowTitle {
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.wipOptionsContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.wipPill {
+  cursor: pointer;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  border: 1px solid #CBD5E1;
+  background-color: #FFFFFF;
+  color: #475569;
+}
+
+.wipPillActiveMezcla {
+  background-color: #ECFDF5;
+  border-color: #10B981;
+  color: #065F46;
+}
+
+.wipPillActiveUnico {
+  background-color: #F0F9FF;
+  border-color: #0284C7;
+  color: #075985;
+}
+
+.wipSelectInner {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  color: inherit;
+}
+
+.wipHiddenRadio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+

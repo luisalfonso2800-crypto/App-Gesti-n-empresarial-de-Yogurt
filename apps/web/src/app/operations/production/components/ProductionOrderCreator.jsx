@@ -82,21 +82,26 @@ export default function ProductionOrderCreator({
               <label>Cantidad ({unidadRendimiento})</label>
               <input 
                 type="number" 
-                min="1" 
-                value={qty} 
-                onChange={e => setQty(Number(e.target.value))} 
+                min="0.01" 
+                step="any"
+                value={qty === '' || qty === 0 ? '' : qty} 
+                onChange={e => {
+                  const val = e.target.value;
+                  if (val === '') { setQty(''); return; }
+                  if (Number(val) < 0) return;
+                  setQty(val);
+                }} 
+                onBlur={() => {
+                  if (qty === '' || Number(qty) <= 0) setQty(rendimientoBase || 1);
+                }}
                 className={styles.inputProminent}
-                placeholder="Ej: 100"
+                placeholder="0"
               />
             </div>
           </div>
           <div className={styles.imageColumn}>
             {currentRecipe?.producto?.imagenUrl || currentRecipe?.imagenUrl ? (
-              <img 
-                src={currentRecipe?.producto?.imagenUrl || currentRecipe?.imagenUrl} 
-                alt={currentRecipe?.nombre || 'Producto'} 
-                className={styles.productImagePreviewLarge} 
-              />
+              <img src={currentRecipe?.producto?.imagenUrl || currentRecipe?.imagenUrl} alt={currentRecipe?.nombre || 'Producto'} className={styles.productImagePreviewLarge} />
             ) : (
               <div className={styles.productImagePlaceholderLarge}>🥛</div>
             )}
@@ -131,6 +136,7 @@ export default function ProductionOrderCreator({
           enrichedBom={enrichedBom}
           handlePurchaseShortage={handlePurchaseShortage}
           handleCreateOrder={handleCreateOrder}
+          qty={qty}
           onClose={onClose}
         />
       )}

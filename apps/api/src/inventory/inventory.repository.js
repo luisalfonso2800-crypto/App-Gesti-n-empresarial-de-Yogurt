@@ -53,18 +53,25 @@ export class InventoryRepository {
 
     return records.map((item) => {
       const lotesActivos = item.producto?.lotes || [];
-      const stockRealLotes = lotesActivos.length > 0
+      const stockRealLotes = Math.max(0, lotesActivos.length > 0
         ? lotesActivos.reduce((acc, l) => acc + Number(l.cantidadDisponible || 0), 0)
-        : Number(item.cantidadActual || 0);
+        : Number(item.cantidadActual || 0));
 
-      const costoRef = Number(item.costoPromedio || item.producto?.costoEstandar || 0);
+      let costoRef = Number(item.costoPromedio || item.producto?.costoEstandar || 0);
       const unidadMedida = item.producto?.unidadMedida || (item.producto?.categoria === 'INTERMEDIO_WIP' ? 'Litros' : (item.producto?.nombre?.toUpperCase().includes('BASE') ? 'Litros' : 'und'));
+
+      // Poka-Yoke contable: si el costo base o estándar estaba expresado en gramos y la unidad es Litros, ajustar factor
+      if ((unidadMedida === 'Litros' || unidadMedida === 'L') && costoRef > 0 && costoRef < 10) {
+        costoRef = costoRef * 1000;
+      }
+
+      const valorizacionTotal = stockRealLotes * costoRef;
 
       return {
         ...item,
         cantidadActual: stockRealLotes,
         unidadMedida: unidadMedida,
-        valorizacionTotal: stockRealLotes * costoRef
+        valorizacionTotal: valorizacionTotal
       };
     });
   }
