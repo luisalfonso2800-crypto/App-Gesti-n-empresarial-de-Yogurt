@@ -45,6 +45,13 @@ export function ProductPreviewCard({ product, recipes = [] }) {
   const numMargin = Number(product.margenObjetivo) || 0;
   const imageSrc = resolveProductImage(product);
 
+  const wholesalePct = product.descuentoMayoristaPorcentaje || (
+    numPrice > 0 && Number(product.precioMayorista) > 0
+      ? Math.round((1 - Number(product.precioMayorista) / numPrice) * 100)
+      : 0
+  );
+  const unitText = product.presentacionId || product.categoria === 'LACTEOS' ? 'und' : 'L';
+
   return (
     <div className={styles.previewCard}>
       <div className={styles.bannerContainer}>
@@ -97,6 +104,25 @@ export function ProductPreviewCard({ product, recipes = [] }) {
             </span>
           </div>
         </div>
+
+        {Number(product.precioMayorista) > 0 ? (
+          <div className={styles.wholesaleCard}>
+            <span className={styles.wholesaleTitle}>🏷️ Tarifa Mayorista</span>
+            <div className={styles.wholesaleMainRow}>
+              <span className={styles.wholesalePrice}>
+                ${Number(product.precioMayorista).toLocaleString()} <span className={styles.wholesaleUnit}>/{unitText}</span>
+              </span>
+              <span className={styles.wholesaleDiscount}>-{wholesalePct}%</span>
+            </div>
+            <span className={styles.wholesaleMinQty}>
+              Aplica a partir de <strong>{product.cantidadMinimaMayorista || 12} {unitText}</strong>
+            </span>
+          </div>
+        ) : !isWip ? (
+          <div className={styles.wholesaleNotConfigured}>
+            Escala mayorista no configurada
+          </div>
+        ) : null}
 
         <div>
           <span className={`${styles.recipeStatusBadge} ${hasActiveRecipe ? styles.recipeActive : styles.recipeMissing}`}>

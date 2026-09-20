@@ -13,6 +13,7 @@ import styles from './product-modal.module.css';
 import { ProductBasicFields } from './modal-parts/ProductBasicFields';
 import { ProductImageAndDescriptionFields } from './modal-parts/ProductImageAndDescriptionFields';
 import { ProductPricingAndMarginFields } from './modal-parts/ProductPricingAndMarginFields';
+import { ProductWholesaleSection } from './modal-parts/ProductWholesaleSection';
 import { ProductModalActions } from './modal-parts/ProductModalActions';
 import { useProductFormState } from './modal-parts/useProductFormState';
 import {
@@ -70,6 +71,13 @@ export function ProductModal({
           costoMaximoPermitido={costoMaximoPermitido} gananciaEsperada={gananciaEsperada}
           isPrecioVentaError={hasSubmitted && isPrecioVentaInvalid} isMargenObjetivoError={hasSubmitted && isMargenObjetivoInvalid}
         />
+        {showPricingFields && (
+          <ProductWholesaleSection
+            formData={formData}
+            handleChange={handleChange}
+            precioVentaNum={precioVentaNum}
+          />
+        )}
         <ProductModalActions 
           editingItem={editingItem} formData={formData} presentations={presentations} precioVentaNum={precioVentaNum} 
           isSubmitDisabled={isSubmitDisabled} submitTitle={submitTitle} isSubmitting={isSubmitting} onClose={onClose} 

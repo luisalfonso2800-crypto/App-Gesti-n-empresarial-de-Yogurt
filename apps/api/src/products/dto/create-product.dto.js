@@ -26,6 +26,21 @@ export class CreateProductDto {
   margenObjetivo;
 
   @IsOptional()
+  @IsNumber()
+  @Min(0)
+  precioMayorista;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  cantidadMinimaMayorista;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  descuentoMayoristaPorcentaje;
+
+  @IsOptional()
   @IsString()
   imagenUrl;
 

@@ -173,3 +173,68 @@
   line-height: 1.35;
   margin: 0;
 }
+
+.wholesaleCard {
+  background-color: rgba(254, 243, 199, 0.7);
+  border: 1px solid rgba(253, 230, 138, 0.8);
+  border-radius: 8px;
+  padding: 0.625rem;
+}
+
+.wholesaleTitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: #78350f;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.wholesaleMainRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
+
+.wholesalePrice {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: monospace;
+}
+
+.wholesaleUnit {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.wholesaleDiscount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.wholesaleMinQty {
+  font-size: 11px;
+  color: #475569;
+  display: block;
+  margin-top: 0.125rem;
+}
+
+.wholesaleNotConfigured {
+  font-size: 11px;
+  color: #78716c;
+  background-color: #f5f5f4;
+  border: 1px dashed #d6d3d1;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  text-align: center;
+}
+

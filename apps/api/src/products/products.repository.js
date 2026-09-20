@@ -166,8 +166,24 @@ export class ProductsRepository {
   }
 
   async create(data) {
+    const cleanData = { ...data };
+    if (cleanData.precioVenta !== undefined) {
+      cleanData.precioVenta = Number(cleanData.precioVenta);
+    }
+    if (cleanData.margenObjetivo !== undefined) {
+      cleanData.margenObjetivo = Number(cleanData.margenObjetivo);
+    }
+    if (cleanData.precioMayorista !== undefined) {
+      cleanData.precioMayorista = cleanData.precioMayorista !== null && cleanData.precioMayorista !== '' ? Number(cleanData.precioMayorista) : null;
+    }
+    if (cleanData.cantidadMinimaMayorista !== undefined) {
+      cleanData.cantidadMinimaMayorista = cleanData.cantidadMinimaMayorista !== null && cleanData.cantidadMinimaMayorista !== '' ? Number(cleanData.cantidadMinimaMayorista) : 12;
+    }
+    if (cleanData.descuentoMayoristaPorcentaje !== undefined) {
+      cleanData.descuentoMayoristaPorcentaje = cleanData.descuentoMayoristaPorcentaje !== null && cleanData.descuentoMayoristaPorcentaje !== '' ? Number(cleanData.descuentoMayoristaPorcentaje) : null;
+    }
     return this.prisma.producto.create({
-      data,
+      data: cleanData,
     });
   }
 
@@ -201,6 +217,15 @@ export class ProductsRepository {
     }
     if (cleanData.margenObjetivo !== undefined) {
       cleanData.margenObjetivo = Number(cleanData.margenObjetivo);
+    }
+    if (cleanData.precioMayorista !== undefined) {
+      cleanData.precioMayorista = cleanData.precioMayorista !== null && cleanData.precioMayorista !== '' ? Number(cleanData.precioMayorista) : null;
+    }
+    if (cleanData.cantidadMinimaMayorista !== undefined) {
+      cleanData.cantidadMinimaMayorista = cleanData.cantidadMinimaMayorista !== null && cleanData.cantidadMinimaMayorista !== '' ? Number(cleanData.cantidadMinimaMayorista) : 12;
+    }
+    if (cleanData.descuentoMayoristaPorcentaje !== undefined) {
+      cleanData.descuentoMayoristaPorcentaje = cleanData.descuentoMayoristaPorcentaje !== null && cleanData.descuentoMayoristaPorcentaje !== '' ? Number(cleanData.descuentoMayoristaPorcentaje) : null;
     }
 
     return this.prisma.producto.update({

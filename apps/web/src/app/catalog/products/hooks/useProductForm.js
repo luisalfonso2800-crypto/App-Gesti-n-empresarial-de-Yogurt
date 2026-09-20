@@ -18,7 +18,8 @@ export function useProductForm({ onSuccess }) {
 
   const [formData, setFormData] = useState({
     nombre: '', idPresentacion: '', categoria: '', descripcion: '',
-    canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true
+    canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true,
+    precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: ''
   });
 
   const loadPresentations = async () => {
@@ -39,13 +40,17 @@ export function useProductForm({ onSuccess }) {
         ...restItem,
         idPresentacion: item.idPresentacion || item.presentacion?.id || '',
         precioVenta: item.precioVenta || '',
-        margenObjetivo: item.margenObjetivo || ''
+        margenObjetivo: item.margenObjetivo || '',
+        precioMayorista: item.precioMayorista ?? '',
+        cantidadMinimaMayorista: item.cantidadMinimaMayorista ?? 12,
+        descuentoMayoristaPorcentaje: item.descuentoMayoristaPorcentaje ?? ''
       });
     } else {
       setEditingItem(null);
       setFormData({
         nombre: '', idPresentacion: '', categoria: '', descripcion: '',
-        canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true
+        canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true,
+        precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: ''
       });
     }
     setErrorMsg('');

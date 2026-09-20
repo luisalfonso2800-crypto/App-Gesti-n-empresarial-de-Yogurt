@@ -57,8 +57,11 @@ export function useProductFormState({
   const isGranel = productType === 'WIP' || selectedPres?.tipoEnvase === 'TANQUE_GRANEL' || selectedPres?.tipoEnvase === 'BALDE' || selectedPres?.nombre?.toUpperCase().includes('GRANEL');
   const availableCategories = isGranel ? CATEGORIAS_WIP : CATEGORIAS_COMERCIALES;
 
-  const isPureInternalPlant = formData.canalVenta === 'USO_INTERNO' || formData.canalVenta === 'PLANTA';
-  const showPricingFields = !isGranel || !isPureInternalPlant || formData.canalVenta?.includes('MIXTO') || formData.canalVenta?.includes('VENTA');
+  const canalesConPrecio = ['MIXTO', 'B2B', 'B2C', 'COMERCIAL_COMPLETO', 'AMBOS'];
+  const showPricingFields = 
+    productType === 'COMERCIAL' || 
+    canalesConPrecio.includes(formData.canalVenta) ||
+    !isGranel;
 
   const handleToggleProductType = (type) => {
     setProductType(type);
@@ -98,10 +101,7 @@ export function useProductFormState({
       if (!formData.categoria || !validWipCategories.includes(formData.categoria)) {
         handleChange({ target: { name: 'categoria', value: 'INSUMO_BASE_WIP' } });
       }
-      if (formData.canalVenta !== 'USO_INTERNO' && formData.canalVenta !== 'MIXTO') {
-        handleChange({ target: { name: 'canalVenta', value: 'USO_INTERNO' } });
-      }
-      if (isPureInternalPlant) {
+      if (formData.canalVenta === 'USO_INTERNO' || formData.canalVenta === 'PLANTA') {
         if (formData.precioVenta !== 0 && formData.precioVenta !== '0') {
           handleChange({ target: { name: 'precioVenta', value: 0 } });
         }
@@ -117,7 +117,7 @@ export function useProductFormState({
         handleChange({ target: { name: 'canalVenta', value: 'AMBOS' } });
       }
     }
-  }, [isGranel, isOpen, isPureInternalPlant]);
+  }, [isGranel, isOpen, formData.canalVenta]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -154,9 +154,12 @@ export function useProductFormState({
       nombre: (formData.nombre || '').trim().toUpperCase(),
       descripcion: (formData.descripcion || '').trim().toUpperCase(),
       observaciones: (formData.observaciones || '').trim().toUpperCase(),
-      canalVenta: isGranel ? (formData.canalVenta || 'USO_INTERNO') : formData.canalVenta,
+      canalVenta: formData.canalVenta || (isGranel ? 'USO_INTERNO' : 'AMBOS'),
       precioVenta: !showPricingFields ? 0 : cleanCurrency(formData.precioVenta),
-      margenObjetivo: !showPricingFields ? 0 : Number(formData.margenObjetivo)
+      margenObjetivo: !showPricingFields ? 0 : Number(formData.margenObjetivo),
+      precioMayorista: !showPricingFields || !formData.precioMayorista ? null : cleanCurrency(formData.precioMayorista),
+      cantidadMinimaMayorista: !showPricingFields ? 12 : (Number(formData.cantidadMinimaMayorista) || 12),
+      descuentoMayoristaPorcentaje: !showPricingFields || !formData.descuentoMayoristaPorcentaje ? null : Number(formData.descuentoMayoristaPorcentaje)
     });
   };
 
