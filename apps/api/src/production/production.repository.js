@@ -37,10 +37,63 @@ const includeProduction = {
   producto: {
     include: {
       presentacion: true,
-      inventario: true
+      inventario: true,
+      recetas: {
+        where: { activo: true },
+        include: {
+          etapas: {
+            where: { activo: true },
+            include: {
+              detalles: {
+                where: { activo: true },
+                include: {
+                  insumo: true,
+                  productoIntermedio: true
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 };
+
+function enrichInoculoData(orden) {
+  if (!orden) return orden;
+  // 1. Extraer lote físico de inóculo o ancestro
+  const lotePrincipal = orden.lotes?.[0];
+  const lotePadre = lotePrincipal?.lotePadre;
+  const loteInoculoCod = orden.loteIniciador?.codigoLote || orden.loteIniciadorId || orden.codigoLoteIniciador || lotePadre?.id || orden.idLotePadre;
+
+  // 2. Verificar en detalles reales de la orden si hubo producto intermedio (WIP)
+  const detalleWip = orden.detalles?.find(d => d.idProductoIntermedio || d.productoIntermedio);
+
+  // 3. Verificar en la receta o fórmula si el ingrediente de inoculación es Semielaborado (WIP)
+  const recetaActiva = orden.producto?.recetas?.[0];
+  const insumoInoculoReceta = recetaActiva?.etapas?.flatMap(e => e.detalles || []).find(d =>
+    d.idProductoIntermedio ||
+    d.tipoInsumo === 'INOCULO_WIP' ||
+    /semi\s*elaborado|inoculo|inóculo|madre|base/i.test(d.nombreInsumo || d.productoIntermedio?.nombre || d.insumo?.nombre || '')
+  );
+  const esSemielaboradoPorNombre = /semi\s*elaborado/i.test(recetaActiva?.nombre || orden.producto?.nombre || '');
+
+  let inoculoTipo = 'COMERCIAL';
+  let inoculoDetalle = 'Comercial';
+
+  if (loteInoculoCod && loteInoculoCod !== 'INOC' && String(loteInoculoCod).toUpperCase() !== 'COMERCIAL') {
+    inoculoTipo = 'SEMIELABORADO';
+    inoculoDetalle = String(loteInoculoCod).split('-')[0].toUpperCase();
+  } else if (detalleWip || insumoInoculoReceta || esSemielaboradoPorNombre) {
+    inoculoTipo = 'SEMIELABORADO';
+    inoculoDetalle = loteInoculoCod ? String(loteInoculoCod).split('-')[0].toUpperCase() : 'Semielaborado';
+  }
+
+  orden.inoculoOrigenTipo = inoculoTipo;
+  orden.inoculoOrigenLabel = inoculoDetalle;
+  orden.canalVenta = orden.producto?.canalVenta || 'SOLO_PLANTA';
+  return orden;
+}
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -50,18 +103,21 @@ export class ProductionRepository {
   }
 
   async findAll() {
-    return this.prisma.produccion.findMany({
+    const list = await this.prisma.produccion.findMany({
       include: includeProduction,
       orderBy: { fechaProduccion: 'desc' }
     });
+    return list.map(enrichInoculoData);
   }
 
   async findById(id) {
-    return this.prisma.produccion.findUnique({
+    const item = await this.prisma.produccion.findUnique({
       where: { id },
       include: includeProduction
     });
+    return enrichInoculoData(item);
   }
+
 
   async getRecipeBom(idReceta, cantidadProduccion, variantesQuery) {
     const receta = await this.prisma.receta.findUnique({
