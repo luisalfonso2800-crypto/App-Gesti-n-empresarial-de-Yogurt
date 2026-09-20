@@ -2,14 +2,13 @@
  * @file ClientFormModal.jsx
  * @module commercial/clients/components
  * @description Modal de captura y edición de clientes comerciales y personas naturales (SRP + CSS Modules).
- * @responsibility Presentar los campos de datos generales, canal, contacto y días de crédito con feedback Poka-Yoke.
+ * @responsibility Presentar los campos de datos generales, canal y contacto con feedback Poka-Yoke.
  * @usedBy apps/web/src/app/commercial/clients/page.jsx
- * @dependencies react, @/components/ui/SmartModal, @/components/ui/inputs/SmartSelect, @/components/ui/inputs/StrictNumberInput
+ * @dependencies react, @/components/ui/SmartModal, @/components/ui/inputs/SmartSelect
  */
 import React from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
 import SmartSelect from '@/components/ui/inputs/SmartSelect';
-import StrictNumberInput from '@/components/ui/inputs/StrictNumberInput';
 import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from '../clients.module.css';
 
@@ -26,27 +25,13 @@ const CANALES_VENTA = [
 ];
 
 export default function ClientFormModal({
-  isOpen,
-  onClose,
-  formData,
-  isSubmitting,
-  submitError,
-  isDirty,
-  isSubmitDisabled,
-  submitTitle,
-  handleChange,
-  handleSubmit
+  isOpen, onClose, formData, isSubmitting, submitError,
+  isDirty, isSubmitDisabled, submitTitle, handleChange, handleSubmit
 }) {
   const isPhoneInvalid = Boolean(formData.telefono && formData.telefono.replace(/\D/g, '').length < 10);
 
   return (
-    <SmartModal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      title="Nuevo Cliente"
-      isDirty={isDirty}
-      isSubmitting={isSubmitting}
-    >
+    <SmartModal isOpen={isOpen} onClose={onClose} title="Nuevo Cliente" isDirty={isDirty} isSubmitting={isSubmitting}>
       {submitError && (
         <div className={styles.errorMessage}>
           <span>⚠️</span>
@@ -78,7 +63,6 @@ export default function ClientFormModal({
             options={TIPOS_CLIENTE}
             required
           />
-          
           <SmartSelect
             label="Canal"
             name="canal"
@@ -110,9 +94,7 @@ export default function ClientFormModal({
               className={`${modalStyles.input} ${isPhoneInvalid ? styles.inputErrorBorder : ''}`}
             />
             {isPhoneInvalid && (
-              <span className={styles.fieldErrorText}>
-                El celular debe tener 10 dígitos
-              </span>
+              <span className={styles.fieldErrorText}>El celular debe tener 10 dígitos</span>
             )}
           </div>
         </div>
@@ -124,17 +106,6 @@ export default function ClientFormModal({
             value={formData.direccion} 
             onChange={handleChange} 
             className={`${modalStyles.input} ${styles.uppercaseInput}`} 
-          />
-        </div>
-
-        <div className={styles.creditDaysCol}>
-          <StrictNumberInput
-            label="Días de Crédito"
-            name="diasCredito"
-            value={formData.diasCredito}
-            onChange={handleChange}
-            placeholder="Ej: 30"
-            required
           />
         </div>
 
@@ -150,18 +121,12 @@ export default function ClientFormModal({
 
         {formData.nombre && formData.tipoCliente && formData.canal && (
           <div className={styles.summaryBanner}>
-            <strong>Resumen:</strong> Se registrará el cliente <strong>{formData.nombre}</strong> clasificado como <strong>{formData.tipoCliente.toLowerCase()}</strong> para el canal <strong>{formData.canal.toLowerCase()}</strong>. {Number(formData.diasCredito) > 0 ? `Se le otorgarán ${formData.diasCredito} días de crédito.` : 'Las ventas serán de contado (0 días de crédito).'}
+            <strong>Resumen:</strong> Se registrará el cliente <strong>{formData.nombre}</strong> clasificado como <strong>{formData.tipoCliente}</strong> para el canal <strong>{formData.canal}</strong>.
           </div>
         )}
 
         <div className={modalStyles.actions}>
-          <button 
-            type="button" 
-            onClick={onClose}
-            className={modalStyles.btnCancel}
-          >
-            Cancelar
-          </button>
+          <button type="button" onClick={onClose} className={modalStyles.btnCancel}>Cancelar</button>
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Guardar Cliente"

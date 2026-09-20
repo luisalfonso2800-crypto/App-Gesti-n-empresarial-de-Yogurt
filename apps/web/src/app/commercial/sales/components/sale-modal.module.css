@@ -102,74 +102,149 @@
 
 .tableWrapper {
   overflow-x: auto;
+  margin-top: 0.5rem;
 }
 
 .productsTable {
   width: 100%;
-  font-size: 0.875rem;
+  font-size: 0.82rem;
   border-collapse: collapse;
 }
 
 .tableHeaderRow {
-  border-bottom: 1px solid #D6D3D1;
+  border-bottom: 1px solid #E7E5E4;
   color: #78716C;
 }
 
-.thLeft {
-  padding: 0.5rem 0;
+.thProductCol {
+  padding: 0.5rem 0.25rem;
   text-align: left;
-  font-weight: 500;
+  font-weight: 600;
+  min-width: 160px;
 }
 
-.thRight {
-  padding: 0.5rem 0;
+.thQtyCol {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  font-weight: 600;
+  width: 110px;
+}
+
+.thPriceCol {
+  padding: 0.5rem 0.25rem;
   text-align: right;
-  font-weight: 500;
+  font-weight: 600;
+  width: 90px;
 }
 
-.thAction {
-  padding: 0.5rem 0;
+.thSubtotalCol {
+  padding: 0.5rem 0.25rem;
+  text-align: right;
+  font-weight: 600;
+  width: 105px;
+}
+
+.thActionCol {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  width: 36px;
 }
 
 .tableBodyRow {
-  border-bottom: 1px solid #E7E5E4;
+  border-bottom: 1px solid #F5F5F4;
 }
 
-.tdName {
-  padding: 0.75rem 0;
+.tdProductCell {
+  padding: 0.65rem 0.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.tdProductName {
+  font-weight: 600;
   color: #1C1917;
-  font-weight: 500;
+  font-size: 0.82rem;
 }
 
-.tdQty {
-  padding: 0.75rem 0;
+.tdProductPresentation {
+  font-size: 0.72rem;
+  color: #78716C;
+}
+
+.tdQtyCell {
+  padding: 0.65rem 0.25rem;
+  text-align: center;
+}
+
+.tableQtyGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.btnTableQty {
+  width: 24px;
+  height: 26px;
+  background-color: #F5F5F4;
+  border: 1px solid #D6D3D1;
+  border-radius: 4px;
+  color: #292524;
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnTableQty:hover {
+  background-color: #E7E5E4;
+}
+
+.tableQtyValue {
+  width: 32px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.82rem;
   color: #1C1917;
-  text-align: right;
 }
 
-.tdPrice {
-  padding: 0.75rem 0;
-  color: #1C1917;
+.tdPriceCell {
+  padding: 0.65rem 0.25rem;
   text-align: right;
+  font-family: monospace;
+  color: #44403C;
 }
 
-.tdSubtotal {
-  padding: 0.75rem 0;
-  color: #1C1917;
+.tdSubtotalCell {
+  padding: 0.65rem 0.25rem;
   text-align: right;
-  font-weight: 500;
+  font-family: monospace;
+  font-weight: 700;
+  color: #182622;
 }
 
-.tdAction {
-  padding: 0.75rem 0;
-  text-align: right;
+.tdActionCell {
+  padding: 0.65rem 0.25rem;
+  text-align: center;
 }
 
 .btnRemoveProduct {
   background: none;
   border: none;
-  color: #E11D48;
+  color: #A8A29E;
   cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnRemoveProduct:hover {
+  color: #E11D48;
+  background-color: #FEE2E2;
 }
 
 .emptyTableMessage {
@@ -179,72 +254,73 @@
   font-style: italic;
 }
 
-/* Ficha de balance previa */
-.balanceReceiptCard {
-  background-color: #FDFAF5;
-  border: 2px dashed #D6D3D1;
-  border-radius: 8px;
-  padding: 1.25rem;
-  font-family: monospace;
-  font-size: 0.875rem;
+/* Tarjeta moderna de balance y liquidación MANNÁ */
+.settlementReceiptCard {
+  background-color: #FAFAF9;
+  border: 1px solid #E7E5E4;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
-.balanceReceiptTitle {
+.settlementHeader {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  font-family: serif;
-  font-size: 1.125rem;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: #1C1917;
-  margin: 0 0 1rem 0;
   border-bottom: 1px solid #E7E5E4;
   padding-bottom: 0.5rem;
 }
 
-.balanceReceiptItemsList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.balanceReceiptItemRow {
+.settlementRow {
   display: flex;
   justify-content: space-between;
+  font-size: 0.78rem;
   color: #57534E;
 }
 
-.balanceReceiptCostEst {
-  font-size: 0.75rem;
-  color: #A8A29E;
+.settlementDivider {
+  height: 1px;
+  background-color: #E7E5E4;
+  margin: 0.2rem 0;
 }
 
-.balanceReceiptSummaryBox {
-  border-top: 1px solid #E7E5E4;
-  padding-top: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.balanceReceiptSubtotalRow {
+.settlementTotalRow {
   display: flex;
   justify-content: space-between;
-  color: #44403C;
+  align-items: baseline;
 }
 
-.balanceReceiptMarginRow {
-  display: flex;
-  justify-content: space-between;
+.settlementTotalLabel {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1C1917;
 }
 
-.marginGainPositive {
-  color: #047857;
+.settlementTotalAmount {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #182622;
+  font-family: monospace;
 }
 
-.marginGainNegative {
-  color: #E11D48;
+.settlementMarginBadge {
+  font-size: 0.72rem;
+  color: #065F46;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  width: fit-content;
 }
 
 /* Crédito row */
@@ -278,5 +354,555 @@
   font-weight: 500;
   margin-top: 0.25rem;
   display: block;
+}
+
+/* Scheduler de Crédito Dinámico */
+.creditSchedulerContainer {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background-color: #FBFBFA;
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+}
+
+.datePickerWithArrows {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btnDateArrow {
+  background-color: #F5F5F4;
+  border: 1px solid #D6D3D1;
+  color: #44403C;
+  border-radius: 6px;
+  width: 34px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.15s ease-in-out;
+  flex-shrink: 0;
+}
+
+.btnDateArrow:hover {
+  background-color: #E7E5E4;
+  color: #1C1917;
+}
+
+.creditQuickButtonsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.quickButtonsLabel {
+  font-size: 0.75rem;
+  color: #78716C;
+  font-weight: 600;
+}
+
+.btnQuickCredit {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #292524;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.btnQuickCredit:hover {
+  background-color: #F5F5F4;
+  border-color: #A8A29E;
+}
+
+.creditExplanationBadge {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 6px;
+  color: #065F46;
+  font-size: 0.78rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+/* Selector de Cliente con botón Nuevo */
+.clientFieldContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.clientLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.clientDebtBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #B45309;
+  background-color: #FEF3C7;
+  border: 1px solid #FDE68A;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.clientSelectWithAddRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.clientSelectFlex {
+  flex: 1;
+}
+
+.btnAddClientQuick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #182622;
+  color: #F5F5F4;
+  border: none;
+  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+  flex-shrink: 0;
+}
+
+.btnAddClientQuick:hover {
+  background-color: #243832;
+}
+
+/* Catálogo visual de productos en Cava */
+.productCatalogGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  max-height: 230px;
+  overflow-y: auto;
+  padding: 0.25rem;
+}
+
+.productCatalogCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+  padding: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  transition: all 0.15s ease-in-out;
+  position: relative;
+  text-align: left;
+}
+
+.productCatalogCard:hover {
+  border-color: #A8A29E;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.productCatalogCardActive {
+  border-color: #182622;
+  background-color: #F5F7F6;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.cardImageWrapper {
+  width: 100%;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: #F5F5F4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardThumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardPlaceholder {
+  font-size: 1.5rem;
+}
+
+.cardName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1C1917;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardPresentation {
+  font-size: 0.7rem;
+  color: #78716C;
+}
+
+.cardStockBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background-color: #ECFDF5;
+  color: #065F46;
+  width: fit-content;
+}
+
+.cardStockZero {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.cardPriceRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-top: 0.2rem;
+}
+
+.cardPriceRegular {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.cardPriceWholesale {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+/* Fila de acción de producto seleccionado */
+.selectedItemActionRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.selectedItemInfo {
+  flex: 1;
+}
+
+.selectedItemTitle {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #1C1917;
+}
+
+.selectedItemSub {
+  font-size: 0.72rem;
+  color: #78716C;
+}
+
+.qtyControlGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btnQtyStep {
+  background-color: #F5F5F4;
+  border: 1px solid #D6D3D1;
+  color: #292524;
+  border-radius: 6px;
+  width: 32px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.btnQtyStep:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.qtyInputBox {
+  width: 50px;
+  text-align: center;
+  height: 34px;
+  border: 1px solid #D6D3D1;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.priceOverrideBox {
+  width: 100px;
+  height: 34px;
+  border: 1px solid #D6D3D1;
+  border-radius: 6px;
+  padding: 0 0.5rem;
+  text-align: right;
+  font-size: 0.82rem;
+}
+
+/* Header de sección de productos y botón abrir Drawer */
+.productsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.btnOpenCatalogDrawer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  background-color: #182622;
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.btnOpenCatalogDrawer:hover {
+  background-color: #243832;
+}
+
+/* Drawer lateral de catálogo */
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawerPanel {
+  width: 100%;
+  max-width: 480px;
+  height: 100%;
+  background-color: #FFFFFF;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.25s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #E7E5E4;
+  background-color: #FBFBFA;
+}
+
+.drawerTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1C1917;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btnCloseDrawer {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: #78716C;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.btnCloseDrawer:hover {
+  color: #1C1917;
+  background-color: #F5F5F4;
+}
+
+.drawerSearchBox {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #F5F5F4;
+}
+
+.drawerSearchInput {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  border: 1px solid #D6D3D1;
+  border-radius: 6px;
+  outline: none;
+}
+
+.drawerSearchInput:focus {
+  border-color: #182622;
+}
+
+.drawerBodyList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.drawerEmptyText {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #78716C;
+  font-size: 0.85rem;
+}
+
+/* Tarjeta amplia del Drawer */
+.drawerCard {
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+  padding: 0.85rem;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.drawerCardImageWrapper {
+  width: 100%;
+  height: 130px;
+  background-color: #F5F5F4;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawerCardImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.drawerCardTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.drawerCardName {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1C1917;
+}
+
+.drawerCardPresentation {
+  font-size: 0.74rem;
+  color: #78716C;
+}
+
+.drawerCardTechnical {
+  background-color: #FAFAF9;
+  border-radius: 6px;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.72rem;
+  color: #57534E;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.drawerCardBadgesRow {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.drawerStockBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background-color: #ECFDF5;
+  color: #065F46;
+}
+
+.drawerB2BBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.drawerCardActionsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.btnDrawerAdd {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background-color: #182622;
+  color: #FFFFFF;
+  border: none;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.btnDrawerAdd:hover:not(:disabled) {
+  background-color: #243832;
+}
+
+.btnDrawerAdd:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 

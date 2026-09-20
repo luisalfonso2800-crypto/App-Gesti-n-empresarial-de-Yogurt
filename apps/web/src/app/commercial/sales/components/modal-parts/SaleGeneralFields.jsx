@@ -26,21 +26,51 @@ export default function SaleGeneralFields({
   formData,
   handleChange,
   clients,
+  onNewClient,
   hasSubmitted = false,
   isClienteMissing = false,
   isFechaMissing = false
 }) {
+  const selectedClient = clients.find(c => String(c.id) === String(formData.idCliente));
+  const clientDebt = Number(selectedClient?.saldoPendiente || selectedClient?.carteraVencida || 0);
+
   return (
     <div className={modalStyles.twoColumns}>
-      <SmartSelect
-        label="Cliente"
-        name="idCliente"
-        value={formData.idCliente ?? ''}
-        onChange={handleChange}
-        required
-        options={clients.map(c => ({ id: c.id, label: c.nombre, subtext: c.documento }))}
-        error={hasSubmitted && isClienteMissing ? 'Seleccione un cliente para la venta' : undefined}
-      />
+      <div className={styles.clientFieldContainer}>
+        <div className={styles.clientLabelRow}>
+          <label className={modalStyles.label}>
+            Cliente <span className={styles.requiredAsterisk}>*</span>
+          </label>
+          {clientDebt > 0 && (
+            <span className={styles.clientDebtBadge}>
+              Saldo pendiente: ${clientDebt.toLocaleString('es-CO')}
+            </span>
+          )}
+        </div>
+        <div className={styles.clientSelectWithAddRow}>
+          <div className={styles.clientSelectFlex}>
+            <SmartSelect
+              name="idCliente"
+              value={formData.idCliente ?? ''}
+              onChange={handleChange}
+              required
+              options={clients.map(c => ({ id: c.id, label: c.nombre, subtext: c.documento }))}
+              error={hasSubmitted && isClienteMissing ? 'Seleccione un cliente para la venta' : undefined}
+            />
+          </div>
+          {onNewClient && (
+            <button
+              type="button"
+              onClick={onNewClient}
+              className={styles.btnAddClientQuick}
+              title="Registrar nuevo cliente"
+              aria-label="Registrar nuevo cliente"
+            >
+              +
+            </button>
+          )}
+        </div>
+      </div>
       
       <div className={modalStyles.inputGroup}>
         <label className={modalStyles.label}>

@@ -86,7 +86,6 @@ export function useClientsPageData() {
   if (!formData.nombre?.trim()) missingFields.push('Nombre / Razón Social');
   if (!formData.tipoCliente) missingFields.push('Tipo de cliente');
   if (!formData.canal) missingFields.push('Canal');
-  if (formData.diasCredito === '' || formData.diasCredito === null || formData.diasCredito === undefined) missingFields.push('Días de crédito');
   if (formData.telefono && formData.telefono.replace(/\D/g, '').length < 10) missingFields.push('Teléfono debe tener 10 dígitos');
 
   const isSubmitDisabled = missingFields.length > 0 || isSubmitting;

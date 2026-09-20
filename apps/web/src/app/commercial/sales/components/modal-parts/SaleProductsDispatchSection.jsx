@@ -1,191 +1,86 @@
 /**
  * @file SaleProductsDispatchSection.jsx
  * @module commercial/sales/components/modal-parts
- * @description Sección del formulario para selección y adición de productos a despachar con validación de stock y tabla resumen.
- * @responsibility Manejar la selección interactiva de producto, cantidad, precio con letras y listado de items agregados.
+ * @description Sección de productos a despachar con botón de apertura a Drawer lateral de Cava y tabla limpia (SRP < 135 líneas).
  * @usedBy apps/web/src/app/commercial/sales/components/SaleModal.jsx
- * @dependencies react, lucide-react, @/components/ui/inputs/SmartSelect, @/components/ui/inputs/StrictNumberInput, @/lib/formatters, @/utils/numberToWords
  */
-import React, { useState, useEffect } from 'react';
-import SmartSelect from '@/components/ui/inputs/SmartSelect';
-import StrictNumberInput from '@/components/ui/inputs/StrictNumberInput';
-import { ShoppingCart, Plus, Trash2 } from 'lucide-react';
-import { formatCurrency } from '@/lib/formatters';
-import { montoATextoPesos } from '@/utils/numberToWords';
-import modalStyles from '@/components/ui/SmartModal.module.css';
+import React, { useState } from 'react';
+import { ShoppingCart, Plus } from 'lucide-react';
 import styles from '../sale-modal.module.css';
+import SaleProductsTable from './SaleProductsTable';
+import SaleCavaCatalogDrawer from './SaleCavaCatalogDrawer';
 
 export default function SaleProductsDispatchSection({
   products,
   detalles,
   onAddDetail,
   onRemoveDetail,
-  onStockErrorChange
+  onUpdateQty,
+  onStockErrorChange,
+  hasSubmitted = false,
+  isDetallesMissing = false
 }) {
-  const [selectedProductId, setSelectedProductId] = useState('');
-  const [qty, setQty] = useState('');
-  const [price, setPrice] = useState('');
-  const [stockError, setStockError] = useState('');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const selectedProd = products.find(p => p.id === selectedProductId);
+  const handleAddProductFromDrawer = (prod, cantidad) => {
+    const pInfo = prod.producto || prod;
+    const minMay = Number(pInfo.cantidadMinimaMayorista || prod.cantidadMinimaMayorista || 12);
+    const mayPrice = Number(pInfo.precioMayorista || prod.precioMayorista || 0);
+    const regPrice = Number(pInfo.precioVenta || pInfo.precioVentaSug || prod.precioVenta || 0);
+    const unitPrice = mayPrice > 0 && cantidad >= minMay ? mayPrice : regPrice;
 
-  // Validar stock reactivamente contra la cava
-  useEffect(() => {
-    let err = '';
-    if (selectedProd && qty) {
-      const q = Number(qty);
-      const disp = Number(selectedProd.cantidadActual);
-      if (q > disp) {
-        err = `Stock insuficiente en cava: solo hay ${disp} unidades disponibles`;
-      }
-    }
-    setStockError(err);
-    if (onStockErrorChange) {
-      onStockErrorChange(err);
-    }
-  }, [selectedProd, qty, onStockErrorChange]);
-
-  const handleProductSelect = (e) => {
-    const val = e.target.value;
-    setSelectedProductId(val);
-    const prod = products.find(p => p.id === val);
-    if (prod && prod.producto) {
-      setPrice(Number(prod.producto.precioVentaSug) || '');
-    } else {
-      setPrice('');
-    }
-  };
-
-  const handleAdd = () => {
-    if (!selectedProductId || !qty || !price || stockError) return;
-    const q = Number(qty);
-    const p = Number(price);
-    if (q <= 0 || p <= 0 || !selectedProd) return;
+    const presNombre = prod.presentacionNombre || pInfo.presentacionNombre || prod.nombrePresentacion || pInfo.nombrePresentacion || pInfo.presentacion?.nombre || prod.presentacion?.nombre || '';
+    const volPres = prod.volumenPresentacion || pInfo.volumenPresentacion || prod.contenidoNeto || pInfo.contenidoNeto || pInfo.presentacion?.volumen || '';
 
     onAddDetail({
-      idProducto: selectedProd.id,
-      nombre: selectedProd.producto?.nombre,
-      cantidad: q,
-      precioUnitario: p,
-      costoUnitario: Number(selectedProd.costoPromedio || 0)
+      idProducto: prod.idProducto || prod.id,
+      nombre: pInfo.nombre || prod.nombre,
+      presentacion: presNombre || pInfo.unidadMedida || 'Und',
+      presentacionNombre: presNombre,
+      nombrePresentacion: presNombre,
+      volumenPresentacion: volPres,
+      contenidoNeto: volPres,
+      cantidad: Number(cantidad),
+      precioUnitario: unitPrice,
+      costoUnitario: Number(prod.costoPromedio || pInfo.costoEstandar || 0)
     });
-
-    setSelectedProductId('');
-    setQty('');
-    setPrice('');
+    if (onStockErrorChange) onStockErrorChange('');
   };
-
-  const cleanNumericPrice = price ? parseInt(String(price).replace(/\D/g, ''), 10) : 0;
 
   return (
     <div className={styles.productsSectionCard}>
-      <h4 className={styles.productsSectionTitle}>
-        <ShoppingCart size={18} /> Productos a Despachar
-      </h4>
-
-      <div className={styles.addProductRow}>
-        <div className={styles.productSelectCol}>
-          <SmartSelect
-            label="Producto en Cava"
-            name="selectedProductId"
-            value={selectedProductId}
-            onChange={handleProductSelect}
-            options={products.filter(p => Number(p.cantidadActual) > 0).map(p => ({
-              id: p.id,
-              label: p.producto?.nombre,
-              subtext: `Stock: ${p.cantidadActual} ${p.producto?.unidadMedida}`
-            }))}
-          />
-        </div>
-
-        <div className={styles.productQtyCol}>
-          <StrictNumberInput
-            label="Cant."
-            name="qty"
-            value={qty}
-            onChange={(e) => setQty(e.target.value)}
-            placeholder="1"
-            error={stockError}
-          />
-        </div>
-
-        <div className={styles.productPriceCol}>
-          <label className={modalStyles.label}>
-            Precio Unit. <span className={styles.requiredAsterisk}>*</span>
-          </label>
-          <input
-            name="price"
-            type="text"
-            inputMode="numeric"
-            min="0"
-            placeholder="0"
-            value={price ? String(price).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.') : ''}
-            onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))}
-            onKeyDown={(e) => {
-              if (e.key === '-') e.preventDefault();
-            }}
-            className={modalStyles.input}
-            required
-          />
-          {cleanNumericPrice > 0 && (
-            <span className={styles.productPriceWords}>
-              ✦ {montoATextoPesos(cleanNumericPrice)}
-            </span>
-          )}
-        </div>
-
-        <div className={styles.productAddButtonContainer}>
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={!selectedProductId || !qty || !price || !!stockError}
-            className={styles.btnAddProduct}
-          >
-            <Plus size={16} /> Agregar
-          </button>
-        </div>
+      <div className={styles.productsSectionHeader}>
+        <h4 className={styles.productsSectionTitle}>
+          <ShoppingCart size={18} /> Productos a Despachar
+        </h4>
+        <button
+          type="button"
+          onClick={() => setIsDrawerOpen(true)}
+          className={styles.btnOpenCatalogDrawer}
+        >
+          <Plus size={14} /> Agregar Productos desde Cava
+        </button>
       </div>
 
-      <div className={styles.tableWrapper}>
-        <table className={styles.productsTable}>
-          <thead>
-            <tr className={styles.tableHeaderRow}>
-              <th className={styles.thLeft}>Producto</th>
-              <th className={styles.thRight}>Cant.</th>
-              <th className={styles.thRight}>P. Venta</th>
-              <th className={styles.thRight}>Subtotal</th>
-              <th className={styles.thAction}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {detalles.map((d, i) => (
-              <tr key={i} className={styles.tableBodyRow}>
-                <td className={styles.tdName}>{d.nombre}</td>
-                <td className={styles.tdQty}>{d.cantidad}</td>
-                <td className={styles.tdPrice}>{formatCurrency(d.precioUnitario)}</td>
-                <td className={styles.tdSubtotal}>{formatCurrency(d.cantidad * d.precioUnitario)}</td>
-                <td className={styles.tdAction}>
-                  <button
-                    type="button"
-                    onClick={() => onRemoveDetail(i)}
-                    className={styles.btnRemoveProduct}
-                    aria-label="Eliminar producto"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {detalles.length === 0 && (
-              <tr>
-                <td colSpan="5" className={styles.emptyTableMessage}>
-                  No hay productos agregados.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {hasSubmitted && isDetallesMissing && (
+        <span className={styles.fieldErrorText}>
+          Debe agregar al menos un producto a la orden
+        </span>
+      )}
+
+      <SaleProductsTable
+        detalles={detalles}
+        onRemoveDetail={onRemoveDetail}
+        onUpdateQty={onUpdateQty}
+      />
+
+      <SaleCavaCatalogDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        products={products}
+        onAddProduct={handleAddProductFromDrawer}
+      />
     </div>
   );
 }
+

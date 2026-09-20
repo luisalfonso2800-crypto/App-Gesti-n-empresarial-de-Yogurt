@@ -14,18 +14,23 @@ import styles from './sale-modal.module.css';
 import SaleGeneralFields from './modal-parts/SaleGeneralFields';
 import SaleProductsDispatchSection from './modal-parts/SaleProductsDispatchSection';
 import SaleBalanceReceiptCard from './modal-parts/SaleBalanceReceiptCard';
-import SaleCreditFields from './modal-parts/SaleCreditFields';
+import SalesCreditScheduler from './SalesCreditScheduler';
 
 export function SaleModal({ 
   isOpen, onClose, formData, products, clients, 
   handleChange, handleDetailsChange, handleSubmit,
-  isSubmitting, errorMsg
+  isSubmitting, errorMsg, onNewClient
 }) {
   const [stockError, setStockError] = useState('');
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleAddDetail = (newDetail) => handleDetailsChange([...formData.detalles, newDetail]);
   const handleRemoveDetail = (index) => handleDetailsChange(formData.detalles.filter((_, i) => i !== index));
+  const handleUpdateDetailQty = (index, newQty) => {
+    if (newQty <= 0) return handleRemoveDetail(index);
+    const updated = formData.detalles.map((d, i) => i === index ? { ...d, cantidad: newQty } : d);
+    handleDetailsChange(updated);
+  };
 
   const utilidadTotal = formData.detalles.reduce((sum, d) => sum + ((d.precioUnitario - d.costoUnitario) * d.cantidad), 0);
   const isDirty = formData.detalles.length > 0 || !!formData.idCliente;
@@ -36,12 +41,11 @@ export function SaleModal({
   const isDetallesMissing = formData.detalles.length === 0;
   const isFechaLimiteMissing = formData.tipoPago === 'CREDITO' && !formData.fechaLimitePago;
 
-  const missingFields = [];
-  if (isClienteMissing) missingFields.push('Cliente');
-  if (isFechaMissing) missingFields.push('Fecha de venta');
-  if (isDetallesMissing) missingFields.push('Al menos 1 producto en la orden');
-  if (stockError) missingFields.push('Resolver stock insuficiente');
-  if (isFechaLimiteMissing) missingFields.push('Fecha límite de pago');
+  const missingFields = [
+    isClienteMissing && 'Cliente', isFechaMissing && 'Fecha de venta',
+    isDetallesMissing && 'Al menos 1 producto en la orden',
+    stockError && 'Resolver stock insuficiente', isFechaLimiteMissing && 'Fecha límite de pago'
+  ].filter(Boolean);
 
   const isSubmitDisabled = missingFields.length > 0 || isSubmitting;
   const submitTitle = missingFields.length > 0 ? `Complete los campos obligatorios: ${missingFields.join(', ')}` : '';
@@ -49,14 +53,9 @@ export function SaleModal({
   const handleFormSubmit = (e) => {
     e.preventDefault();
     setHasSubmitted(true);
-    if (isSubmitDisabled) return;
-    handleSubmit(e);
+    if (!isSubmitDisabled) handleSubmit(e);
   };
-
-  const handleClose = () => {
-    setHasSubmitted(false);
-    onClose();
-  };
+  const handleClose = () => { setHasSubmitted(false); onClose(); };
 
   return (
     <SmartModal 
@@ -78,6 +77,7 @@ export function SaleModal({
           formData={formData}
           handleChange={handleChange}
           clients={clients}
+          onNewClient={onNewClient}
           hasSubmitted={hasSubmitted}
           isClienteMissing={isClienteMissing}
           isFechaMissing={isFechaMissing}
@@ -88,6 +88,7 @@ export function SaleModal({
           detalles={formData.detalles}
           onAddDetail={handleAddDetail}
           onRemoveDetail={handleRemoveDetail}
+          onUpdateQty={handleUpdateDetailQty}
           onStockErrorChange={setStockError}
           hasSubmitted={hasSubmitted}
           isDetallesMissing={isDetallesMissing}
@@ -99,7 +100,7 @@ export function SaleModal({
           utilidadTotal={utilidadTotal}
         />
 
-        <SaleCreditFields
+        <SalesCreditScheduler
           formData={formData}
           handleChange={handleChange}
           hasSubmitted={hasSubmitted}
@@ -118,18 +119,12 @@ export function SaleModal({
 
         {formData.idCliente && formData.detalles.length > 0 && (
           <div className={styles.saleSummaryBanner}>
-            <strong>Resumen:</strong> Se registrará una venta de <strong>{formData.detalles.length} tipo(s) de producto(s)</strong> al cliente <strong>{clientName}</strong> mediante el canal <strong>{formData.canalVenta ? formData.canalVenta.toLowerCase() : 'directo'}</strong>. Modalidad de pago: <strong>{formData.tipoPago ? formData.tipoPago.toLowerCase() : 'contado'}</strong> por un total de <strong>{formatCurrency(formData.totalVenta)}</strong>.
+            <strong>Resumen:</strong> {formData.detalles.length} ítem(s) para <strong>{clientName}</strong> ({formData.canalVenta || 'DIRECTO'} / {formData.tipoPago || 'CONTADO'}): <strong>{formatCurrency(formData.totalVenta)}</strong>.
           </div>
         )}
 
         <div className={modalStyles.actions}>
-          <button 
-            type="button" 
-            onClick={handleClose}
-            className={modalStyles.btnCancel}
-          >
-            Cancelar
-          </button>
+          <button type="button" onClick={handleClose} className={modalStyles.btnCancel}>Cancelar</button>
           <SubmitButton 
             isSubmitting={isSubmitting} 
             text="Despachar y Facturar"
