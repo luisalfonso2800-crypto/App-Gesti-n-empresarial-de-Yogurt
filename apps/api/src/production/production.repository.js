@@ -684,35 +684,37 @@ export class ProductionRepository {
           const rawQty = Number(updateDet.cantidadRealUtilizada);
           const esUnidadDiscreta = UNIDADES_DISCRETAS.includes((det.unidad || '').toUpperCase().trim());
           const qtyReal = esUnidadDiscreta ? Math.ceil(rawQty) : Number(rawQty.toFixed(4));
-          const diferencia = qtyReal - Number(det.cantidadTeorica);
+          const diferencia = Number((qtyReal - Number(det.cantidadTeorica)).toFixed(4));
 
           if (det.idInsumo) {
-            // 1. Manejo de Insumo Tradicional
-            const inv = await prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
-            const stockAnterior = inv ? Number(inv.cantidadActual) : 0;
-            const stockNuevo = stockAnterior - qtyReal;
+            const insumo = await prisma.insumo.findUnique({ where: { id: det.idInsumo } });
+            const costoUnitarioInsumo = insumo ? Number(insumo.costoUnitario) : 0;
+            const stockActual = insumo ? Number(insumo.stockActual) : 0;
+            const stockFinal = stockActual - qtyReal;
 
-            // Deducir inventario
-            await prisma.inventario.update({
-              where: { idInsumo: det.idInsumo },
-              data: { cantidadActual: stockNuevo }
+            await prisma.insumo.update({
+              where: { id: det.idInsumo },
+              data: { stockActual: stockFinal }
             });
 
-            // Registrar movimiento de inventario de salida
+            await prisma.inventario.updateMany({
+              where: { idInsumo: det.idInsumo },
+              data: { cantidadActual: stockFinal }
+            });
+
             await prisma.movimientoInventario.create({
               data: {
                 idInsumo: det.idInsumo,
                 tipoMovimiento: 'SALIDA_PRODUCCION',
                 cantidad: qtyReal,
-                stockAnterior: stockAnterior,
-                stockNuevo: stockNuevo,
-                costoUnitario: Number(inv?.costoPromedio || 0),
-                motivo: `Consumo en producción ${produccion.id}`,
+                stockAnterior: stockActual,
+                stockNuevo: stockFinal,
+                costoUnitario: costoUnitarioInsumo,
+                motivo: `Consumo real en orden de producción ${produccion.id}`,
                 operacionOrigen: produccion.id
               }
             });
 
-            const costoUnitarioInsumo = Number(inv?.costoPromedio || 0);
             costoTotalLote += qtyReal * costoUnitarioInsumo;
 
             await prisma.detalleProduccion.update({
@@ -724,39 +726,43 @@ export class ProductionRepository {
               }
             });
           } else if (det.idProductoIntermedio) {
-            // 2. Manejo de Insumo Semielaborado (Producto Intermedio / Inóculo / Base)
-            const invProd = await prisma.inventarioProducto.findUnique({
-              where: { idProducto: det.idProductoIntermedio }
+            const intermediateProd = await prisma.producto.findUnique({
+              where: { id: det.idProductoIntermedio },
+              include: { inventario: true }
             });
 
-            const stockAnterior = invProd ? Number(invProd.cantidadActual) : 0;
-            const costoUnitarioIntermedio = Number(invProd?.costoPromedio || 0);
+            const costoUnitarioIntermedio = intermediateProd && intermediateProd.inventario
+              ? Number(intermediateProd.inventario.costoPromedio)
+              : 0;
 
-            // Blindaje Poka-Yoke: Conversión dimensional y no-negatividad
             const detUnidad = (det.unidad || '').toLowerCase().trim();
             let decrementoLts = qtyReal;
             if (detUnidad === 'g' || detUnidad === 'ml' || detUnidad === 'gramos') {
-              decrementoLts = decrementoLts / 1000;
+              decrementoLts = qtyReal / 1000;
             }
-            const stockNuevo = Math.max(0, stockAnterior - decrementoLts);
 
-            // Descontar inventario de producto intermedio
-            await prisma.inventarioProducto.upsert({
-              where: { idProducto: det.idProductoIntermedio },
-              update: { cantidadActual: stockNuevo },
-              create: { idProducto: det.idProductoIntermedio, cantidadActual: stockNuevo, costoPromedio: costoUnitarioIntermedio }
+            const invInter = await prisma.inventarioProducto.findUnique({
+              where: { idProducto: det.idProductoIntermedio }
             });
+            const stockAnt = invInter ? Number(invInter.cantidadActual) : 0;
+            const stockPost = Math.max(0, stockAnt - decrementoLts);
 
-            // Registrar movimiento de inventario de salida para el semielaborado
+            if (invInter) {
+              await prisma.inventarioProducto.update({
+                where: { idProducto: det.idProductoIntermedio },
+                data: { cantidadActual: stockPost }
+              });
+            }
+
             await prisma.movimientoInventario.create({
               data: {
                 idProducto: det.idProductoIntermedio,
-                tipoMovimiento: 'SALIDA_PRODUCCION_WIP',
+                tipoMovimiento: 'SALIDA_PRODUCCION',
                 cantidad: decrementoLts,
-                stockAnterior: stockAnterior,
-                stockNuevo: stockNuevo,
+                stockAnterior: stockAnt,
+                stockNuevo: stockPost,
                 costoUnitario: costoUnitarioIntermedio,
-                motivo: `Consumo de base semielaborada en producción ${produccion.id}`,
+                motivo: `Consumo base intermedio en orden ${produccion.id}`,
                 operacionOrigen: produccion.id
               }
             });
@@ -840,6 +846,30 @@ export class ProductionRepository {
         }
       }
 
+      const idPadreFinal = data.loteIniciadorId || data.idLotePadre || idLotePadreDetectado || null;
+
+      // Linaje y cálculo generacional (F0 a F4)
+      let genPadre = 0;
+      if (idPadreFinal) {
+        let currPadreId = idPadreFinal;
+        let depth = 0;
+        while (currPadreId && depth < 20) {
+          const lPadre = await prisma.lote.findUnique({
+            where: { id: currPadreId },
+            select: { id: true, idLotePadre: true }
+          });
+          if (!lPadre) break;
+          if (lPadre.idLotePadre) {
+            depth++;
+            currPadreId = lPadre.idLotePadre;
+          } else {
+            break;
+          }
+        }
+        genPadre = depth;
+      }
+      const generacion = idPadreFinal ? genPadre + 1 : 0;
+
       const qtyProducida = Number(data.cantidadProducidaReal) || Number(produccion.cantidadPlanificada);
       const costoUnitarioFabricacion = qtyProducida > 0 ? costoTotalLote / qtyProducida : 0;
 
@@ -872,10 +902,12 @@ export class ProductionRepository {
       const tipoLoteGenerado = esIntermedio ? 'SEMIELABORADO_WIP' : 'PRODUCTO_TERMINADO';
       const unidadLote = esIntermedio ? 'Litros' : 'UNIDAD';
 
-      // Gestión de Reserva de Inóculo (Split Batch o 100% Inóculo)
-      const reserva = data.reservaInoculo;
-      const cantInoculoSolicitada = Number(reserva?.cantidad ?? data.cantidadInoculo ?? 0);
+      // Poka-Yoke Límite F4: si generacion >= 4, forzar litrosAReservar = 0 y rechazar sub-lote de inóculo
+      const limiteF4Alcanzado = generacion >= 4;
+      const reserva = limiteF4Alcanzado ? null : data.reservaInoculo;
+      const cantInoculoSolicitada = limiteF4Alcanzado ? 0 : Number(reserva?.cantidad ?? data.cantidadInoculo ?? 0);
       const tieneReserva = Boolean(
+        !limiteF4Alcanzado &&
         (data.reservarInoculo || reserva?.activo) &&
         cantInoculoSolicitada > 0 &&
         cantInoculoSolicitada <= qtyProducida
@@ -892,7 +924,7 @@ export class ProductionRepository {
             tipoLote: tipoLoteGenerado,
             idProduccion: produccion.id,
             idProducto: produccion.idProducto,
-            idLotePadre: idLotePadreDetectado || null,
+            idLotePadre: idPadreFinal,
             fechaProduccion: new Date(),
             fechaVencimiento: fechaVencPrincipal,
             cantidadInicial: cantPrincipal,
@@ -905,14 +937,14 @@ export class ProductionRepository {
         lotePrincipalId = lote.id;
       }
 
-      // Si existe reserva de inóculo, crear sub-lote de inóculo derivado
+      // Si existe reserva de inóculo y no superó F4, crear sub-lote de inóculo derivado
       if (tieneReserva) {
         const subLoteInoculo = await prisma.lote.create({
           data: {
             tipoLote: 'SEMIELABORADO_WIP',
             idProduccion: produccion.id,
             idProducto: produccion.idProducto,
-            idLotePadre: lotePrincipalId || idLotePadreDetectado || null,
+            idLotePadre: lotePrincipalId || idPadreFinal,
             fechaProduccion: new Date(),
             fechaVencimiento: fechaVencInoculo,
             cantidadInicial: cantInoculo,

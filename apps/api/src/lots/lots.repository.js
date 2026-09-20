@@ -20,7 +20,19 @@ export class LotsRepository {
             presentacion: true
           }
         },
-        lotePadre: true,
+        lotePadre: {
+          include: {
+            lotePadre: {
+              include: {
+                lotePadre: {
+                  include: {
+                    lotePadre: true
+                  }
+                }
+              }
+            }
+          }
+        },
         lotesHijos: true
       },
       orderBy: { fechaProduccion: 'desc' }
@@ -31,8 +43,27 @@ export class LotsRepository {
       if (!unidadReal || unidadReal === 'UNIDAD' || unidadReal === 'UND') {
         unidadReal = lote.producto?.presentacion?.unidadMedida || (lote.tipoLote === 'SEMIELABORADO_WIP' ? 'Litros' : 'Litros');
       }
+
+      // Reconstruir linaje genealógico de ancestros
+      const linaje = [];
+      let curr = lote.lotePadre;
+      while (curr) {
+        const codigoPadre = curr.codigoLote || curr.id.split('-')[0].toUpperCase();
+        linaje.unshift(codigoPadre);
+        curr = curr.lotePadre;
+      }
+      if (linaje.length === 0) {
+        linaje.push('COMERCIAL');
+      }
+
+      const generacion = lote.idLotePadre ? (linaje.length === 1 && linaje[0] === 'COMERCIAL' ? 1 : (linaje[0] === 'COMERCIAL' ? linaje.length - 1 : linaje.length)) : 0;
+      const codigoLote = lote.codigoLote || lote.id.split('-')[0].toUpperCase();
+
       return {
         ...lote,
+        codigoLote,
+        generacion,
+        linaje,
         unidad: unidadReal
       };
     });
@@ -48,7 +79,19 @@ export class LotsRepository {
             presentacion: true
           }
         },
-        lotePadre: true,
+        lotePadre: {
+          include: {
+            lotePadre: {
+              include: {
+                lotePadre: {
+                  include: {
+                    lotePadre: true
+                  }
+                }
+              }
+            }
+          }
+        },
         lotesHijos: true
       }
     });
@@ -59,8 +102,25 @@ export class LotsRepository {
     if (!unidadReal || unidadReal === 'UNIDAD' || unidadReal === 'UND') {
       unidadReal = lote.producto?.presentacion?.unidadMedida || (lote.tipoLote === 'SEMIELABORADO_WIP' ? 'Litros' : 'Litros');
     }
+
+    const linaje = [];
+    let curr = lote.lotePadre;
+    while (curr) {
+      const codigoPadre = curr.codigoLote || curr.id.split('-')[0].toUpperCase();
+      linaje.unshift(codigoPadre);
+      curr = curr.lotePadre;
+    }
+    if (linaje.length === 0) {
+      linaje.push('COMERCIAL');
+    }
+    const generacion = lote.idLotePadre ? (linaje.length === 1 && linaje[0] === 'COMERCIAL' ? 1 : (linaje[0] === 'COMERCIAL' ? linaje.length - 1 : linaje.length)) : 0;
+    const codigoLote = lote.codigoLote || lote.id.split('-')[0].toUpperCase();
+
     return {
       ...lote,
+      codigoLote,
+      generacion,
+      linaje,
       unidad: unidadReal
     };
   }

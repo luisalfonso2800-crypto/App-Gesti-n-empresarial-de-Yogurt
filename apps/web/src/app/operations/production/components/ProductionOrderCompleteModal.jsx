@@ -35,6 +35,8 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const isInvalidReserve = isWipBase && reserveActive && (inoculoNum <= 0 || inoculoNum > volTotal);
   const isFullInoculum = isWipBase && reserveActive && volTotal > 0 && inoculoNum === volTotal;
   const volPrincipal = Math.max(0, volTotal - (isWipBase && reserveActive ? inoculoNum : 0));
+  const genPadre = Number(order?.generacionPadre ?? order?.lotePadre?.generacion ?? order?.lotes?.[0]?.lotePadre?.generacion ?? 0);
+  const isF4Reached = genPadre >= 3;
 
   const handleClose = () => {
     setReserveActive(false); setInoculoQty('');
@@ -44,7 +46,7 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const handleConfirm = () => {
     const orderId = order?.id || completeModal?.order?.id;
     if (!orderId) return;
-    const reservaPayload = isWipBase && reserveActive && inoculoNum > 0 ? { activo: true, cantidad: inoculoNum, codigoLoteHijo: loteHijoCode, fechaVencimiento: fechaVencInoc } : null;
+    const reservaPayload = !isF4Reached && isWipBase && reserveActive && inoculoNum > 0 ? { activo: true, cantidad: inoculoNum, codigoLoteHijo: loteHijoCode, fechaVencimiento: fechaVencInoc } : null;
     setCompleteModal(prev => ({ ...prev, reservaInoculo: reservaPayload }));
     submitComplete(reservaPayload, fechaVenc, orderId);
   };
@@ -73,12 +75,18 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
       {isWipBase && (
         <div className={styles.inoculumCard}>
           <div className={styles.inoculumHeaderRow}>
-            <label className={styles.inoculumToggleLabel}>
-              <input type="checkbox" checked={reserveActive} onChange={(e) => { setReserveActive(e.target.checked); if (!e.target.checked) setInoculoQty(''); }} />
-              <FlaskConical size={16} /> Reservar fracción para próximo cultivo iniciador (Inóculo)
-            </label>
+            {isF4Reached ? (
+              <div className={styles.pokaYokeAlert}>
+                🚫 Generación F4 alcanzada: Límite de resiembra superado. No apto para inóculo.
+              </div>
+            ) : (
+              <label className={styles.inoculumToggleLabel}>
+                <input type="checkbox" checked={reserveActive} onChange={(e) => { setReserveActive(e.target.checked); if (!e.target.checked) setInoculoQty(''); }} />
+                <FlaskConical size={16} /> Reservar fracción para próximo cultivo iniciador (Inóculo)
+              </label>
+            )}
           </div>
-          {reserveActive && (
+          {!isF4Reached && reserveActive && (
             <div>
               <div className={styles.inoculumInputRow}>
                 <input type="number" min="0.1" step="0.1" value={inoculoQty} onChange={(e) => setInoculoQty(e.target.value)} placeholder="0.0" className={styles.inputTableQty} />
