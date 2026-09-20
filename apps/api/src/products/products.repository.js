@@ -52,18 +52,20 @@ export class ProductsRepository {
       const costoLitro = rawCosto > 0 ? rawCosto : 4390;
       const costoGramo = costoLitro / 1000; // $4.39 COP por gramo
 
-      // Opción 1: Inóculo / Cepa
-      result.push({
-        ...p,
-        id: p.id,
-        idItem: `INOCULO:${p.id}`,
-        nombre: `INÓCULO / INICIADOR (${p.nombre})`,
-        displayLabel: `INÓCULO / INICIADOR (${p.nombre}) - g`,
-        unidadMedida: 'g',
-        tipoItem: 'INOCULO_WIP',
-        costoUnitario: costoGramo,
-        costoEstandar: costoGramo,
-      });
+      // Opción 1: Inóculo / Cepa (solo si tiene lotes semielaborados WIP físicos)
+      if (p.lotes && p.lotes.length > 0) {
+        result.push({
+          ...p,
+          id: p.id,
+          idItem: `INOCULO:${p.id}`,
+          nombre: `INÓCULO / INICIADOR (${p.nombre})`,
+          displayLabel: `INÓCULO / INICIADOR (${p.nombre}) - g`,
+          unidadMedida: 'g',
+          tipoItem: 'INOCULO_WIP',
+          costoUnitario: costoGramo,
+          costoEstandar: costoGramo,
+        });
+      }
 
       // Opción 2: Base a Granel
       result.push({

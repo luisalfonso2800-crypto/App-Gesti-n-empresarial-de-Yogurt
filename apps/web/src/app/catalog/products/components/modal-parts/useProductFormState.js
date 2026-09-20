@@ -17,15 +17,26 @@ export function useProductFormState({
   isSubmitting,
   isBaseIntermedia = false
 }) {
-  const [productType, setProductType] = useState(isBaseIntermedia ? 'WIP' : 'COMERCIAL');
+  const isEditingWip = Boolean(
+    formData?.tipo === 'INTERMEDIO_WIP' ||
+    formData?.categoria === 'BASES_LACTEAS' ||
+    formData?.categoria === 'PREMEZCLAS_PLANTA' ||
+    formData?.categoria === 'INSUMO_BASE_WIP' ||
+    formData?.canalVenta === 'USO_INTERNO' ||
+    formData?.canalVenta === 'PLANTA' ||
+    formData?.presentacion?.nombre?.toUpperCase().includes('GRANEL')
+  );
+
+  const initialWipMode = isBaseIntermedia || isEditingWip;
+  const [productType, setProductType] = useState(initialWipMode ? 'WIP' : 'COMERCIAL');
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      setProductType(isBaseIntermedia ? 'WIP' : 'COMERCIAL');
+      setProductType(initialWipMode ? 'WIP' : 'COMERCIAL');
       setHasSubmitted(false);
     }
-  }, [isOpen, isBaseIntermedia]);
+  }, [isOpen, initialWipMode]);
 
   const isWipMode = productType === 'WIP';
   const filteredPresentations = presentations.filter((pres) => {
@@ -45,6 +56,9 @@ export function useProductFormState({
   const selectedPres = presentations.find(p => String(p.id) === String(formData.idPresentacion));
   const isGranel = productType === 'WIP' || selectedPres?.tipoEnvase === 'TANQUE_GRANEL' || selectedPres?.tipoEnvase === 'BALDE' || selectedPres?.nombre?.toUpperCase().includes('GRANEL');
   const availableCategories = isGranel ? CATEGORIAS_WIP : CATEGORIAS_COMERCIALES;
+
+  const isPureInternalPlant = formData.canalVenta === 'USO_INTERNO' || formData.canalVenta === 'PLANTA';
+  const showPricingFields = !isGranel || !isPureInternalPlant || formData.canalVenta?.includes('MIXTO') || formData.canalVenta?.includes('VENTA');
 
   const handleToggleProductType = (type) => {
     setProductType(type);
@@ -80,27 +94,30 @@ export function useProductFormState({
   useEffect(() => {
     if (!isOpen) return;
     if (isGranel) {
-      if (!formData.categoria || ['LACTEOS', 'POSTRES', 'BEBIDAS'].includes(formData.categoria)) {
+      const validWipCategories = ['BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL', 'INSUMO_BASE_WIP', 'PREMEZCLAS_PLANTA'];
+      if (!formData.categoria || !validWipCategories.includes(formData.categoria)) {
         handleChange({ target: { name: 'categoria', value: 'INSUMO_BASE_WIP' } });
       }
       if (formData.canalVenta !== 'USO_INTERNO' && formData.canalVenta !== 'MIXTO') {
         handleChange({ target: { name: 'canalVenta', value: 'USO_INTERNO' } });
       }
-      if (formData.precioVenta !== 0 && formData.precioVenta !== '0') {
-        handleChange({ target: { name: 'precioVenta', value: 0 } });
-      }
-      if (formData.margenObjetivo !== 0 && formData.margenObjetivo !== '0') {
-        handleChange({ target: { name: 'margenObjetivo', value: 0 } });
+      if (isPureInternalPlant) {
+        if (formData.precioVenta !== 0 && formData.precioVenta !== '0') {
+          handleChange({ target: { name: 'precioVenta', value: 0 } });
+        }
+        if (formData.margenObjetivo !== 0 && formData.margenObjetivo !== '0') {
+          handleChange({ target: { name: 'margenObjetivo', value: 0 } });
+        }
       }
     } else {
-      if (!formData.categoria || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL'].includes(formData.categoria)) {
+      if (!formData.categoria || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL', 'PREMEZCLAS_PLANTA'].includes(formData.categoria)) {
         handleChange({ target: { name: 'categoria', value: 'LACTEOS' } });
       }
       if (formData.canalVenta === 'USO_INTERNO') {
         handleChange({ target: { name: 'canalVenta', value: 'AMBOS' } });
       }
     }
-  }, [isGranel, isOpen]);
+  }, [isGranel, isOpen, isPureInternalPlant]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -110,8 +127,8 @@ export function useProductFormState({
   const isNombreInvalid = !formData.nombre?.trim();
   const isPresentacionInvalid = !formData.idPresentacion;
   const isDescripcionInvalid = !formData.descripcion?.trim();
-  const isPrecioVentaInvalid = !isGranel && (!formData.precioVenta && formData.precioVenta !== 0);
-  const isMargenObjetivoInvalid = !isGranel && (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined);
+  const isPrecioVentaInvalid = showPricingFields && (!formData.precioVenta && formData.precioVenta !== 0);
+  const isMargenObjetivoInvalid = showPricingFields && (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined);
 
   const missingFields = [];
   if (isNombreInvalid) missingFields.push('Nombre');
@@ -138,8 +155,8 @@ export function useProductFormState({
       descripcion: (formData.descripcion || '').trim().toUpperCase(),
       observaciones: (formData.observaciones || '').trim().toUpperCase(),
       canalVenta: isGranel ? (formData.canalVenta || 'USO_INTERNO') : formData.canalVenta,
-      precioVenta: isGranel ? 0 : cleanCurrency(formData.precioVenta),
-      margenObjetivo: isGranel ? 0 : Number(formData.margenObjetivo)
+      precioVenta: !showPricingFields ? 0 : cleanCurrency(formData.precioVenta),
+      margenObjetivo: !showPricingFields ? 0 : Number(formData.margenObjetivo)
     });
   };
 
@@ -167,6 +184,7 @@ export function useProductFormState({
     margenObjetivoNum,
     costoMaximoPermitido,
     gananciaEsperada,
-    filteredPresentations
+    filteredPresentations,
+    showPricingFields
   };
 }

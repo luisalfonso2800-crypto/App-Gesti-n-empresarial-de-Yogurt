@@ -12,14 +12,20 @@ import { resolveProductImage } from '@/lib/presetImages';
 import styles from '../recipes.module.css';
 
 export function OrphanProductsBanner({ orphanProducts = [], onSelectProduct }) {
-  if (orphanProducts.length === 0) return null;
+  const cleanOrphans = (orphanProducts || []).filter(p => 
+    !p.idItem && 
+    p.tipoItem !== 'INOCULO_WIP' && 
+    p.tipoItem !== 'BASE_GRANEL'
+  );
+
+  if (cleanOrphans.length === 0) return null;
 
   return (
     <div className={styles.orphanBanner}>
       <div className={styles.orphanContent}>
         <div className={styles.orphanTitle}>
           <span>⚠️</span>
-          <span>{orphanProducts.length} producto(s) en catálogo sin receta técnica formulada</span>
+          <span>{cleanOrphans.length} producto(s) en catálogo sin receta técnica formulada</span>
         </div>
         <span className={styles.orphanSubtitle}>
           Los productos huérfanos no se pueden fabricar ni descontar ingredientes en bodega. Selecciona uno para formular:
@@ -27,8 +33,8 @@ export function OrphanProductsBanner({ orphanProducts = [], onSelectProduct }) {
       </div>
 
       <div className={styles.orphanGrid}>
-        {orphanProducts.map((product) => (
-          <div key={product.id} className={styles.orphanCard}>
+        {cleanOrphans.map((product) => (
+          <div key={`orphan-prod-${product.id}`} className={styles.orphanCard}>
             <div className={styles.orphanCardAvatar}>
               <ProductAvatar
                 src={resolveProductImage(product)}

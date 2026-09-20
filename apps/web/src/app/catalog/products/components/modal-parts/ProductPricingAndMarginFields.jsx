@@ -5,6 +5,7 @@ import styles from '../product-modal.module.css';
 
 export function ProductPricingAndMarginFields({
   isGranel = false,
+  showPricingFields = true,
   formData,
   handleChange,
   precioVentaNum = 0,
@@ -14,7 +15,7 @@ export function ProductPricingAndMarginFields({
   isPrecioVentaError = false,
   isMargenObjetivoError = false
 }) {
-  if (isGranel) {
+  if (isGranel && !showPricingFields) {
     return (
       <div className={styles.bulkCostingCard}>
         <div className={styles.bulkCostingHeader}>
