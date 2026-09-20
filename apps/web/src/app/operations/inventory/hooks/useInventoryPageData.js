@@ -104,9 +104,24 @@ export function useInventoryPageData() {
     }
   };
 
+  const [cavaSubTab, setCavaSubTab] = useState('COMERCIAL');
+
+  const commercialItems = finishedProducts.filter((item) => {
+    const cat = (item.producto?.categoria || item.categoria || '').toUpperCase();
+    const pres = (item.presentacionNombre || item.nombrePresentacion || item.producto?.presentacion?.nombre || '').toUpperCase();
+    const esGranel = pres.includes('GRANEL') || (item.producto?.nombre || item.nombre || '').toUpperCase().includes('GRANEL') || cat === 'BASES_LACTEAS';
+    return (cat === 'LACTEOS' || cat === 'PRODUCTO_TERMINADO' || Boolean(item.presentacionId || item.producto?.presentacionId)) && !esGranel;
+  });
+
+  const bulkItems = finishedProducts.filter((item) => !commercialItems.includes(item));
+
   return {
     activeTab,
     setActiveTab,
+    cavaSubTab,
+    setCavaSubTab,
+    commercialItems,
+    bulkItems,
     inventory,
     finishedProducts,
     wipLots,

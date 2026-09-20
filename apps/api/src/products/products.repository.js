@@ -64,11 +64,20 @@ export class ProductsRepository {
       // Tomar el mayor entre lotes físicos activos y el inventario registrado
       const stockReal = Math.max(totalLotes, totalInventario);
 
+      const pres = prod.presentacion;
+      const volPres = pres ? (
+        pres.volumen || pres.volumenOzMl || (
+          pres.cantidadMl ? `${pres.cantidadOz ? `${pres.cantidadOz} oz / ` : ''}${pres.cantidadMl} ml` : ''
+        ) || pres.capacidad || ''
+      ) : '';
+
       return {
         ...prod,
         stockLitros: stockReal,
         stockCava: stockReal,
-        stockActual: stockReal
+        stockActual: stockReal,
+        volumenPresentacion: volPres,
+        nombrePresentacion: pres?.nombre || ''
       };
     });
   }

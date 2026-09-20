@@ -35,6 +35,11 @@ export class InventoryRepository {
 
   async findFinishedProducts() {
     const records = await this.prisma.inventarioProducto.findMany({
+      where: {
+        producto: {
+          categoria: { in: ['LACTEOS', 'PRODUCTO_TERMINADO', 'BASES_LACTEAS', 'PREMEZCLA_PLANTA'] }
+        }
+      },
       include: {
         producto: {
           include: {
@@ -42,7 +47,6 @@ export class InventoryRepository {
             recetas: { take: 1, select: { unidadRendimiento: true } },
             lotes: {
               where: {
-                tipoLote: 'PRODUCTO_TERMINADO',
                 cantidadDisponible: { gt: 0 }
               }
             }
@@ -76,13 +80,22 @@ export class InventoryRepository {
       }
 
       const valorizacionTotal = stockRealLotes * costoRef;
+      const pres = prod.presentacion;
+      const volPres = pres ? (
+        pres.volumen || pres.volumenOzMl || (
+          pres.cantidadMl ? `${pres.cantidadOz ? `${pres.cantidadOz} oz / ` : ''}${pres.cantidadMl} ml` : ''
+        ) || pres.capacidad || ''
+      ) : '';
 
       return {
         ...item,
         costoPromedio: costoRef,
         cantidadActual: stockRealLotes,
         unidadMedida: unidadMedida,
-        valorizacionTotal: valorizacionTotal
+        valorizacionTotal: valorizacionTotal,
+        volumenPresentacion: volPres,
+        nombrePresentacion: pres?.nombre || '',
+        lotes: lotesActivos
       };
     });
   }
