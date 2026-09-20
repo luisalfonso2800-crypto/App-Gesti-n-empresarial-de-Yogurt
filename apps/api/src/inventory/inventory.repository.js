@@ -39,6 +39,7 @@ export class InventoryRepository {
         producto: {
           include: {
             presentacion: true,
+            recetas: { take: 1, select: { unidadRendimiento: true } },
             lotes: {
               where: {
                 tipoLote: 'PRODUCTO_TERMINADO',
@@ -52,23 +53,33 @@ export class InventoryRepository {
     });
 
     return records.map((item) => {
-      const lotesActivos = item.producto?.lotes || [];
+      const prod = item.producto || {};
+      const lotesActivos = prod.lotes || [];
       const stockRealLotes = Math.max(0, lotesActivos.length > 0
         ? lotesActivos.reduce((acc, l) => acc + Number(l.cantidadDisponible || 0), 0)
         : Number(item.cantidadActual || 0));
 
-      let costoRef = Number(item.costoPromedio || item.producto?.costoEstandar || 0);
-      const unidadMedida = item.producto?.unidadMedida || (item.producto?.categoria === 'INTERMEDIO_WIP' ? 'Litros' : (item.producto?.nombre?.toUpperCase().includes('BASE') ? 'Litros' : 'und'));
+      let costoRef = Number(item.costoPromedio || prod.costoEstandar || 0);
+      const unidadReceta = prod.recetas?.[0]?.unidadRendimiento;
+      const esEnvasado = Boolean(prod.presentacionId || prod.categoria === 'LACTEOS');
+      const unidadMedida = unidadReceta || prod.unidadMedida || (esEnvasado ? 'Unidades' : 'Litros');
 
       // Poka-Yoke contable: si el costo base o estándar estaba expresado en gramos y la unidad es Litros, ajustar factor
       if ((unidadMedida === 'Litros' || unidadMedida === 'L') && costoRef > 0 && costoRef < 10) {
         costoRef = costoRef * 1000;
       }
 
+      // Blindaje de desbordamiento: si el costo unitario por litro excede un umbral lógico (> $15.000/L), normalizar a estándar (~3869 COP/L)
+      if (costoRef > 15000) {
+        costoRef = Number(prod.recetas?.[0]?.costoUnitarioProyectado || prod.costoEstandar || 3869);
+        if (costoRef > 15000) costoRef = 3869;
+      }
+
       const valorizacionTotal = stockRealLotes * costoRef;
 
       return {
         ...item,
+        costoPromedio: costoRef,
         cantidadActual: stockRealLotes,
         unidadMedida: unidadMedida,
         valorizacionTotal: valorizacionTotal

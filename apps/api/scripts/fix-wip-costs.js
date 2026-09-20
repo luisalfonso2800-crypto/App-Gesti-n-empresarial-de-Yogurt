@@ -29,18 +29,18 @@ async function main() {
     if (p.inventario) {
       await prisma.inventarioProducto.update({
         where: { id: p.inventario.id },
-        data: { costoPromedio: 4390 },
+        data: { costoPromedio: 3869 },
       });
-      console.log(`  -> Actualizado inventario de ${p.nombre} con costoPromedio = 4390`);
+      console.log(`  -> Actualizado inventario de ${p.nombre} con costoPromedio = 3869`);
     } else {
       await prisma.inventarioProducto.create({
         data: {
           idProducto: p.id,
           cantidadActual: 0,
-          costoPromedio: 4390,
+          costoPromedio: 3869,
         },
       });
-      console.log(`  -> Creado inventario para ${p.nombre} con costoPromedio = 4390`);
+      console.log(`  -> Creado inventario para ${p.nombre} con costoPromedio = 3869`);
     }
   }
 

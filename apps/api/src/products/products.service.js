@@ -57,6 +57,9 @@ export class ProductsService {
     await this.findOne(id);
     const {
       id: _id,
+      stockLitros,
+      stockCava,
+      stockActual,
       presentacion,
       recetas,
       producciones,

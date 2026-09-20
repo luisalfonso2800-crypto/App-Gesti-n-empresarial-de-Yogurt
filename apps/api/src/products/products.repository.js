@@ -9,99 +9,150 @@ export class ProductsRepository {
   }
 
   async findAll() {
-    return this.prisma.producto.findMany({
-      include: { presentacion: true },
-    });
+    return this.findWithCavaStock();
   }
 
   async findActive() {
-    return this.prisma.producto.findMany({
-      where: { activo: true },
-      include: { presentacion: true },
+    return this.findWithCavaStock({ activo: true });
+  }
+
+  async findWithCavaStock(where = {}) {
+    const products = await this.prisma.producto.findMany({
+      where,
+      include: {
+        presentacion: true,
+        inventario: true,
+        lotes: {
+          where: { estado: 'DISPONIBLE', cantidadDisponible: { gt: 0 } },
+          select: { cantidadDisponible: true, tipoLote: true }
+        }
+      },
+      orderBy: { nombre: 'asc' }
+    });
+
+    // Cargar todos los productos con inventario y lotes para resolución consolidada por nombre base
+    const allProducts = await this.prisma.producto.findMany({
+      include: {
+        inventario: true,
+        lotes: {
+          where: { estado: 'DISPONIBLE', cantidadDisponible: { gt: 0 } },
+          select: { cantidadDisponible: true }
+        }
+      }
+    });
+
+    return products.map(prod => {
+      const baseName = (prod.nombre || '').replace(/\s*-\s*YOGURT A GRANEL/i, '').trim().toLowerCase();
+
+      // Buscar productos coincidentes por ID o por nombre base
+      const matching = allProducts.filter(item => {
+        if (item.id === prod.id) return true;
+        const itemClean = (item.nombre || '').replace(/\s*-\s*YOGURT A GRANEL/i, '').trim().toLowerCase();
+        return itemClean === baseName;
+      });
+
+      let totalLotes = 0;
+      let totalInventario = 0;
+
+      for (const m of matching) {
+        const invQty = Number(m.inventario?.cantidadActual || 0);
+        totalInventario += invQty;
+        const lotesSum = (m.lotes || []).reduce((acc, l) => acc + Number(l.cantidadDisponible || 0), 0);
+        totalLotes += lotesSum;
+      }
+
+      // Tomar el mayor entre lotes físicos activos y el inventario registrado
+      const stockReal = Math.max(totalLotes, totalInventario);
+
+      return {
+        ...prod,
+        stockLitros: stockReal,
+        stockCava: stockReal,
+        stockActual: stockReal
+      };
     });
   }
 
   async findIntermediates() {
     const products = await this.prisma.producto.findMany({
-      where: { activo: true },
+      where: {
+        activo: true,
+        OR: [
+          { categoria: 'BASES_LACTEAS' },
+          { categoria: 'INTERMEDIO_WIP' }
+        ]
+      },
       include: {
         presentacion: true,
         inventario: true,
         lotes: {
-          where: { tipoLote: 'SEMIELABORADO_WIP' },
-          orderBy: { fechaProduccion: 'desc' },
-          take: 1,
-        },
-      },
+          where: { tipoLote: 'SEMIELABORADO_WIP', cantidadDisponible: { gt: 0 } },
+          orderBy: { fechaProduccion: 'desc' }
+        }
+      }
     });
 
-    const result = [];
-    let hasAddedUnifiedInoculum = false;
-
-    // Buscar si existen lotes activos con tipoLote SEMIELABORADO_WIP
     const activeWipLot = await this.prisma.lote.findFirst({
       where: { tipoLote: 'SEMIELABORADO_WIP', cantidadDisponible: { gt: 0 } },
-      orderBy: { fechaVencimiento: 'asc' },
+      orderBy: { fechaVencimiento: 'asc' }
     });
 
-    for (const p of products) {
-      const isBaseOrWip =
-        p.categoria === 'BASES_LACTEAS' ||
-        p.categoria === 'INTERMEDIO_WIP' ||
-        p.tipo === 'INTERMEDIO_WIP' ||
-        p.categoria === 'INSUMO_BASE_WIP' ||
-        p.nombre?.toUpperCase().includes('BASE');
+    const basesMap = new Map();
 
-      if (!isBaseOrWip) {
-        continue;
-      }
+    for (const p of products) {
+      const nombreLimpio = (p.nombre || '')
+        .replace(/\s*\(.*?\)/g, '')
+        .replace(/\s*-\s*YOGURT A GRANEL/i, '')
+        .trim();
+
+      if (!nombreLimpio) continue;
 
       const rawCosto = Number(p.lotes?.[0]?.costoUnitario || p.inventario?.costoPromedio || p.costoEstandar || 0);
       const costoLitro = rawCosto > 0 ? rawCosto : 4390;
-      const costoGramo = costoLitro / 1000; // $4.39 COP por gramo
 
-      // Opción 1: Inóculo / Cepa unificado (único ítem genérico para recetas)
-      if (activeWipLot && !hasAddedUnifiedInoculum) {
-        hasAddedUnifiedInoculum = true;
-        result.push({
+      // Si aún no está en el mapa, o si este registro tiene inventario físico con stock real
+      const existing = basesMap.get(nombreLimpio);
+      const currentStock = Number(p.inventario?.cantidadActual || 0);
+      const existingStock = Number(existing?.inventario?.cantidadActual || 0);
+
+      if (!existing || currentStock > existingStock) {
+        basesMap.set(nombreLimpio, {
           ...p,
-          id: p.id,
-          idItem: `INOCULO:${p.id}`,
-          nombre: "🧫 CULTIVO INICIADOR / INÓCULO LÁCTICO (WIP)",
-          displayLabel: "🧫 CULTIVO INICIADOR / INÓCULO LÁCTICO (WIP) - g",
-          unidadMedida: 'g',
-          tipoItem: 'INOCULO_WIP',
-          costoUnitario: costoGramo,
-          costoEstandar: costoGramo,
-        });
-      }
-
-      // Opción 2: Base a Granel
-      result.push({
-        ...p,
-        id: p.id,
-        idItem: `BASE:${p.id}`,
-        nombre: `${p.nombre} (Base a Granel)`,
-        unidadMedida: p.unidadMedida || 'Litros',
-        tipoItem: 'BASE_GRANEL',
-        displayLabel: `${p.nombre} (Base a Granel - Litros)`,
-        costoUnitario: costoLitro,
-        costoEstandar: costoLitro,
-      });
-
-      // Si tiene presentación específica envasada
-      if (p.presentacion && p.presentacion.nombre !== p.nombre && p.presentacion.tipoEnvase !== 'TANQUE_GRANEL') {
-        result.push({
-          ...p,
-          id: p.id,
-          idItem: `PROD:${p.id}`,
-          nombre: `${p.nombre} (${p.presentacion.nombre})`,
+          nombre: nombreLimpio,
+          displayLabel: nombreLimpio,
           unidadMedida: 'Litros',
-          tipoItem: 'PRODUCTO_ENVASADO',
-          displayLabel: `${p.nombre} (${p.presentacion.nombre})`,
-          costoEstandar: p.costoEstandar || 0,
+          tipoItem: 'BASE_GRANEL',
+          costoUnitario: costoLitro,
+          costoEstandar: costoLitro
         });
       }
+    }
+
+    const result = [];
+
+    // Ítem maestro permanente de inóculo láctico (WIP) para formulación de recetas
+    const baseReferencia = basesMap.size > 0 ? Array.from(basesMap.values())[0] : products[0];
+    const baseId = baseReferencia?.id || 'INOCULO_BASE_WIP';
+    const costoLitroBase = Number(baseReferencia?.costoUnitario || baseReferencia?.costoEstandar || 4390);
+    const costoGramo = costoLitroBase / 1000;
+
+    result.push({
+      ...(baseReferencia || {}),
+      id: baseId,
+      idItem: `INOCULO:${baseId}`,
+      nombre: '🧫 CULTIVO INICIADOR / INÓCULO LÁCTICO (WIP)',
+      displayLabel: '🧫 CULTIVO INICIADOR / INÓCULO LÁCTICO (WIP) - g',
+      unidadMedida: 'g',
+      unidad: 'g',
+      tipoItem: 'INOCULO_WIP',
+      categoria: 'INOCULO_WIP',
+      costoUnitario: costoGramo,
+      costoEstandar: costoGramo
+    });
+
+    // Agregar las bases deduplicadas limpias
+    for (const base of basesMap.values()) {
+      result.push(base);
     }
 
     return result;
@@ -123,6 +174,9 @@ export class ProductsRepository {
   async update(id, data) {
     const {
       id: _id,
+      stockLitros,
+      stockCava,
+      stockActual,
       presentacion,
       recetas,
       producciones,
@@ -140,6 +194,13 @@ export class ProductsRepository {
     const idPresentacionFinal = cleanData.idPresentacion || presentacion?.id;
     if (idPresentacionFinal) {
       cleanData.idPresentacion = idPresentacionFinal;
+    }
+
+    if (cleanData.precioVenta !== undefined) {
+      cleanData.precioVenta = Number(cleanData.precioVenta);
+    }
+    if (cleanData.margenObjetivo !== undefined) {
+      cleanData.margenObjetivo = Number(cleanData.margenObjetivo);
     }
 
     return this.prisma.producto.update({

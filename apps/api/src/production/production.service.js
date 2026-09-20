@@ -1,4 +1,4 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ProductionRepository } from './production.repository';
 
 @Injectable()
@@ -23,6 +23,31 @@ export class ProductionService {
   }
 
   async create(createDto) {
+    // Validar disponibilidad neta (físico - comprometido) antes de crear la orden
+    if (createDto.detalles && Array.isArray(createDto.detalles)) {
+      for (const det of createDto.detalles) {
+        const reqTeorico = Number(det.cantidadTeorica) || 0;
+        if (reqTeorico <= 0) continue;
+
+        if (det.idInsumo) {
+          const { stockDisponible, stockFisico, stockComprometido } =
+            await this.repository.getNetInsumoAvailability(det.idInsumo);
+          if (stockDisponible < reqTeorico) {
+            throw new BadRequestException(
+              `Stock neto insuficiente para insumo. Requerido: ${reqTeorico}, Físico: ${stockFisico}, Comprometido: ${stockComprometido}, Disponible: ${stockDisponible}`
+            );
+          }
+        } else if (det.idProductoIntermedio) {
+          const { stockDisponible, stockFisico, stockComprometido } =
+            await this.repository.getNetIntermediateAvailability(det.idProductoIntermedio, det.unidad);
+          if (stockDisponible < reqTeorico) {
+            throw new BadRequestException(
+              `Stock neto insuficiente para producto intermedio/WIP. Requerido: ${reqTeorico}, Físico: ${stockFisico}, Comprometido: ${stockComprometido}, Disponible: ${stockDisponible}`
+            );
+          }
+        }
+      }
+    }
     return this.repository.createWithTransaction(createDto);
   }
 
@@ -38,3 +63,4 @@ export class ProductionService {
     return this.repository.createPurchaseOrderFromShortage(data);
   }
 }
+
