@@ -24,7 +24,15 @@ export class ProductsRepository {
   async findIntermediates() {
     const products = await this.prisma.producto.findMany({
       where: { activo: true },
-      include: { presentacion: true },
+      include: {
+        presentacion: true,
+        inventario: true,
+        lotes: {
+          where: { tipoLote: 'SEMIELABORADO_WIP' },
+          orderBy: { fechaProduccion: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     const result = [];
@@ -40,8 +48,9 @@ export class ProductsRepository {
         continue;
       }
 
-      const costoLitro = Number(p.costoEstandar || 4390);
-      const costoGramo = costoLitro / 1000;
+      const rawCosto = Number(p.lotes?.[0]?.costoUnitario || p.inventario?.costoPromedio || p.costoEstandar || 0);
+      const costoLitro = rawCosto > 0 ? rawCosto : 4390;
+      const costoGramo = costoLitro / 1000; // $4.39 COP por gramo
 
       // Opción 1: Inóculo / Cepa
       result.push({
