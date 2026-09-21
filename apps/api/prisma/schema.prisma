@@ -457,3 +457,55 @@ model ConfiguracionEmpresa {
 
   @@map("Configuracion_Empresa")
 }
+
+enum TipoAmbito {
+  PERSONAL_FAMILIAR
+  EMPRESARIAL
+}
+
+enum CategoriaSueno {
+  CASA_CAMPESTRE
+  CAMIONETA_TRABAJO
+  BIENESTAR_FAMILIAR
+  EXPANSION_PLANTA
+  CAPITAL_TRABAJO
+  OTRO
+}
+
+model MetaEmpresarial {
+  id                   String           @id @default(uuid()) @map("ID_Meta")
+  titulo               String           @map("Titulo")
+  descripcion          String?          @map("Descripcion")
+  ambito               TipoAmbito       @default(EMPRESARIAL) @map("Ambito")
+  categoriaSueno       CategoriaSueno   @default(OTRO) @map("Categoria_Sueno")
+  tipoMetrica          String           @default("VENTAS_TOTALES") @map("Tipo_Metrica")
+  estrategiaAsignacion String           @default("MANUAL") @map("Estrategia_Asignacion")
+  porcentajeFlujo      Decimal?         @default(0) @map("Porcentaje_Flujo") @db.Decimal(5, 2)
+  ordenPrioridad       Int?             @default(1) @map("Orden_Prioridad")
+  valorObjetivo        Decimal          @map("Valor_Objetivo") @db.Decimal(14, 2)
+  horizonte            String           @default("MEDIANO_PLAZO") @map("Horizonte")
+  fechaInicio          DateTime         @map("Fecha_Inicio")
+  fechaFin             DateTime         @map("Fecha_Fin")
+  metaPadreId          String?          @map("Meta_Padre_Id")
+  metaPadre            MetaEmpresarial? @relation("JerarquiaMetas", fields: [metaPadreId], references: [id])
+  subMetas             MetaEmpresarial[] @relation("JerarquiaMetas")
+  aportes              AporteMeta[]
+  activo               Boolean          @default(true) @map("Activo")
+  observaciones        String?          @map("Observaciones")
+  createdAt            DateTime         @default(now()) @map("Fecha_Creacion")
+  updatedAt            DateTime         @updatedAt @map("Fecha_Actualizacion")
+
+  @@map("Metas_Empresariales")
+}
+
+model AporteMeta {
+  id            String          @id @default(uuid()) @map("ID_Aporte")
+  metaId        String          @map("Meta_ID")
+  meta          MetaEmpresarial @relation(fields: [metaId], references: [id], onDelete: Cascade)
+  monto         Decimal         @map("Monto") @db.Decimal(12, 2)
+  fecha         DateTime        @default(now()) @map("Fecha")
+  nota          String?         @map("Nota")
+  creadoEn      DateTime        @default(now()) @map("Creado_En")
+
+  @@map("Aportes_Metas")
+}

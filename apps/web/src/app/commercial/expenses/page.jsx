@@ -1,10 +1,8 @@
 /**
  * @file page.jsx
  * @module commercial/expenses
- * @description Orquestador de la vista de Gastos Operativos (SRP + CSS Modules).
- * @responsibility Renderizar cabecera, tabla histórica de gastos y delegar formulario modal a ExpenseFormModal.
+ * @description Orquestador de la vista de Gastos Operativos (SRP < 120 líneas).
  * @usedBy Next.js App Router
- * @dependencies react, @/components/ui/Button, @/components/ui/Table, @/components/ui/States, @/components/ui/AssistedEmptyState, @/lib/formatters
  */
 'use client';
 
@@ -16,45 +14,51 @@ import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { formatCurrency } from '@/lib/formatters';
 import styles from './expenses.module.css';
 import { useExpensesPageData } from './hooks/useExpensesPageData';
+import { useExpensesFilter } from './hooks/useExpensesFilter';
 import ExpenseFormModal from './components/ExpenseFormModal';
+import ExpensesKpis from './components/ExpensesKpis';
+import ExpensesFilters from './components/ExpensesFilters';
 
 export default function ExpensesPage() {
   const {
-    expenses,
-    loading,
-    error,
-    submitError,
-    isModalOpen,
-    isSubmitting,
-    formData,
-    isDirty,
-    isSubmitDisabled,
-    submitTitle,
-    handleOpenModal,
-    handleCloseModal,
-    handleChange,
-    handleSubmit
+    expenses, loading, error, submitError, isModalOpen, isSubmitting,
+    formData, isDirty, isSubmitDisabled, submitTitle,
+    handleOpenModal, handleCloseModal, handleChange, handleSubmit
   } = useExpensesPageData();
+
+  const filter = useExpensesFilter(expenses);
 
   return (
     <div>
       <div className={styles.header}>
         <div className={styles.headerTitle}>
           <h1 className={styles.title}>Gastos</h1>
-          <p className={styles.subtitle}>Registro de erogaciones operativas, servicios públicos, nómina y costos indirectos de fabricación.</p>
+          <p className={styles.subtitle}>Registro de erogaciones operativas, servicios públicos, nómina y costos de planta.</p>
         </div>
         <Button onClick={handleOpenModal}>Nuevo Gasto</Button>
       </div>
+
+      <ExpensesKpis items={filter.filteredExpenses} />
+
+      <ExpensesFilters
+        searchQuery={filter.searchQuery}
+        onSearchChange={filter.setSearchQuery}
+        selectedCategory={filter.selectedCategory}
+        onCategoryChange={filter.setSelectedCategory}
+        selectedPeriod={filter.selectedPeriod}
+        onPeriodChange={filter.setSelectedPeriod}
+        onReset={filter.handleResetFilters}
+      />
 
       {loading ? (
         <LoadingState />
       ) : error ? (
         <ErrorState error={error} />
-      ) : expenses.length === 0 ? (
+      ) : filter.filteredExpenses.length === 0 ? (
         <AssistedEmptyState
           icon="📊"
-          title="Comienza registrando tu primer Gasto Operativo"
-          description="Registro de servicios, nómina y costos operativos de la planta."
+          title="No se encontraron gastos para los criterios seleccionados"
+          description="Ajusta o limpia los filtros para ver otros períodos o registra un nuevo gasto."
           actionLabel="+ Nuevo Gasto"
           onAction={handleOpenModal}
           topButtonLabel="Nuevo Gasto"
@@ -71,7 +75,7 @@ export default function ExpensesPage() {
             </TR>
           </THead>
           <TBody>
-            {expenses.map((item) => (
+            {filter.filteredExpenses.map((item) => (
               <TR key={item.id}>
                 <TD>{new Date(item.fecha).toLocaleDateString()}</TD>
                 <TD>{item.categoria.replace('_', ' ')}</TD>
@@ -85,16 +89,11 @@ export default function ExpensesPage() {
       )}
 
       <ExpenseFormModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        formData={formData}
-        isSubmitting={isSubmitting}
-        submitError={submitError}
-        isDirty={isDirty}
-        isSubmitDisabled={isSubmitDisabled}
-        submitTitle={submitTitle}
-        handleChange={handleChange}
-        handleSubmit={handleSubmit}
+        isOpen={isModalOpen} onClose={handleCloseModal}
+        formData={formData} isSubmitting={isSubmitting}
+        submitError={submitError} isDirty={isDirty}
+        isSubmitDisabled={isSubmitDisabled} submitTitle={submitTitle}
+        handleChange={handleChange} handleSubmit={handleSubmit}
       />
     </div>
   );

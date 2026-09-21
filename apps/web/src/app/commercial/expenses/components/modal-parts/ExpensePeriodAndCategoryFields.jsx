@@ -59,15 +59,17 @@ export default function ExpensePeriodAndCategoryFields({
         
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>
-            Periodo <span className={styles.requiredAsterisk}>*</span>
+            Periodo Contable <span className={styles.requiredAsterisk}>*</span>
           </label>
           <input 
             name="periodo" 
             value={formData.periodo} 
             onChange={handleChange} 
-            placeholder="Ej: ENERO 2026"
+            placeholder="SELECCIONE FECHA"
             className={`${modalStyles.input} ${styles.uppercaseInput} ${isPeriodoInvalid ? styles.inputErrorBorder : ''}`} 
             required 
+            readOnly
+            title="Autocalculado a partir de la fecha seleccionada"
           />
           {isPeriodoInvalid && (
             <span className={styles.fieldErrorText}>El periodo es requerido</span>

@@ -19,6 +19,7 @@ import {
   TrendingUp,
   CreditCard,
   Receipt,
+  Sprout,
   Settings
 } from 'lucide-react';
 import { SidebarCollapseButton } from './parts/SidebarCollapseButton';
@@ -63,6 +64,7 @@ const navItems = [
       { name: 'Ventas', path: '/commercial/sales', icon: TrendingUp },
       { name: 'Pagos/Cobros', path: '/commercial/payments', icon: CreditCard },
       { name: 'Gastos', path: '/commercial/expenses', icon: Receipt },
+      { name: 'Rumbo MANNÁ', path: '/commercial/goals', icon: Sprout },
     ]
   }
 ];

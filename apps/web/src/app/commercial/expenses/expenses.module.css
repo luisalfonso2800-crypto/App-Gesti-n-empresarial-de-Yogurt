@@ -97,3 +97,190 @@
   margin-top: 0.25rem;
   display: block;
 }
+
+/* KPI Cards MANNÁ */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kpiCard {
+  background-color: #FAF8F5;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.kpiLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748B;
+}
+
+.kpiValue {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #182622;
+}
+
+.kpiValueHighlight {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #B45309;
+}
+
+.kpiSub {
+  font-size: 0.72rem;
+  color: #94A3B8;
+}
+
+/* Barra de Filtros */
+.filterContainer {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.filterRowTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.searchGroup {
+  flex: 1;
+  min-width: 240px;
+}
+
+.filterInputSearch {
+  width: 100%;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: #0F172A;
+  background-color: #FAF8F5;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.filterInputSearch:focus {
+  border-color: #182622;
+  background-color: #FFFFFF;
+}
+
+.tabsGroup {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.tabActive {
+  background-color: #182622;
+  color: #FAF8F5;
+  border: 1px solid #182622;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabInactive {
+  background-color: #FAF8F5;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tabInactive:hover {
+  background-color: #F1EFEA;
+  color: #182622;
+}
+
+.filterRowBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-top: 1px dashed #E2E8F0;
+  padding-top: 0.75rem;
+}
+
+.periodGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.periodLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748B;
+}
+
+.btnPeriodActive {
+  background-color: #CAD5B5;
+  color: #182622;
+  border: 1px solid #B8C6A0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnPeriodInactive {
+  background-color: transparent;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnPeriodInactive:hover {
+  background-color: #F8FAFC;
+  color: #0F172A;
+}
+
+.btnResetFilters {
+  background-color: transparent;
+  color: #8C6D46;
+  border: 1px dashed #D9CBB7;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnResetFilters:hover {
+  background-color: #FAF6EF;
+  color: #182622;
+}

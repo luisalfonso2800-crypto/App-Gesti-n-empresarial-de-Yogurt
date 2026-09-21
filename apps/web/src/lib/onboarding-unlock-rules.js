@@ -72,6 +72,11 @@ const ROUTE_REQUIREMENTS = [
     path: '/commercial/expenses',
     requiredStep: 5,
     requiredStepText: 'Producción y Lotes de Producto (Paso 5)'
+  },
+  {
+    path: '/commercial/goals',
+    requiredStep: 5,
+    requiredStepText: 'Producción y Lotes de Producto (Paso 5)'
   }
 ];
 

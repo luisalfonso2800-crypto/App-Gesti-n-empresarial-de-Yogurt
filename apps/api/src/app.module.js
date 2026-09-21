@@ -19,6 +19,7 @@ import { SalesModule } from './sales/sales.module';
 import { PaymentsModule } from './payments/payments.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { GoalsModule } from './goals/goals.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { SystemModule } from './system/system.module';
 import { CompanyConfigModule } from './company-config/company-config.module';
@@ -45,6 +46,7 @@ import { CompanyConfigModule } from './company-config/company-config.module';
     SalesModule,
     PaymentsModule,
     ExpensesModule,
+    GoalsModule,
     DashboardModule,
     SystemModule,
     CompanyConfigModule,

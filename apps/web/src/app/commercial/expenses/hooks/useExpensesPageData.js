@@ -10,14 +10,28 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { cleanCurrency } from '@/lib/formatters';
 
-const INITIAL_FORM = {
-  fecha: new Date().toISOString().substring(0, 10),
-  categoria: '',
-  descripcion: '',
-  valor: '',
-  tipoGasto: 'OPERATIVO',
-  periodo: '',
-  observaciones: ''
+const getPeriodoFromFecha = (fechaStr) => {
+  if (!fechaStr) return '';
+  const [year, month] = fechaStr.split('-');
+  const meses = [
+    'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+    'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+  ];
+  const mIndex = parseInt(month, 10) - 1;
+  return `${meses[mIndex] || ''} ${year || ''}`.trim();
+};
+
+const getInitialForm = () => {
+  const hoy = new Date().toISOString().substring(0, 10);
+  return {
+    fecha: hoy,
+    categoria: '',
+    descripcion: '',
+    valor: '',
+    tipoGasto: 'OPERATIVO',
+    periodo: getPeriodoFromFecha(hoy),
+    observaciones: ''
+  };
 };
 
 export function useExpensesPageData() {
@@ -28,7 +42,7 @@ export function useExpensesPageData() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [formData, setFormData] = useState(getInitialForm);
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -48,7 +62,7 @@ export function useExpensesPageData() {
   }, []);
 
   const handleOpenModal = () => {
-    setFormData(INITIAL_FORM);
+    setFormData(getInitialForm());
     setSubmitError(null);
     setIsModalOpen(true);
   };
@@ -63,10 +77,13 @@ export function useExpensesPageData() {
     if (['descripcion', 'periodo', 'observaciones'].includes(name)) {
       parsedValue = value.toUpperCase();
     }
-    setFormData(prev => ({
-      ...prev,
-      [name]: parsedValue
-    }));
+    setFormData(prev => {
+      const next = { ...prev, [name]: parsedValue };
+      if (name === 'fecha' && value) {
+        next.periodo = getPeriodoFromFecha(value);
+      }
+      return next;
+    });
   };
 
   const isDirty = !!formData.categoria || !!formData.descripcion || !!formData.valor;

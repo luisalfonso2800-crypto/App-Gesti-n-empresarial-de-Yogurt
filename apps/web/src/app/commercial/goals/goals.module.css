@@ -1,0 +1,727 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 1.5rem 2rem 3rem 2rem;
+  color: #182622;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+}
+
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sproutIcon {
+  color: #2D5A43;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #182622;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #556B64;
+}
+
+.newGoalBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #2D5A43;
+  color: #FAF8F5;
+  border: 1px solid #1E3F2F;
+  border-radius: 8px;
+  padding: 0.7rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(24, 38, 34, 0.08);
+}
+
+.newGoalBtn:hover {
+  background-color: #234735;
+}
+
+/* Dedicatoria Editorial - Manifiesto / Carta Fundacional */
+.editorialWrapper {
+  background: radial-gradient(circle at 50% 20%, #FFFDF9 0%, #FAF6F0 100%);
+  border: 2px solid #D6C3A5;
+  outline: 1px solid #EADBCA;
+  outline-offset: -5px;
+  border-radius: 12px;
+  padding: 1.25rem 1.75rem;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(197, 168, 128, 0.12);
+  position: relative;
+}
+
+.editorialBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editorialBarLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.editorialBarMotto {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1E3F2F;
+  letter-spacing: 0.04em;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.editorialToggleBtn {
+  background: #FAF6F0;
+  border: 1px solid #C5A880;
+  color: #7A5B2B;
+  border-radius: 6px;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(197, 168, 128, 0.15);
+}
+
+.editorialToggleBtn:hover {
+  background: #F2E8DC;
+  color: #5D431B;
+  border-color: #B39364;
+}
+
+.storyContent {
+  margin-top: 1.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid #DFD2C0;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #262D29;
+  line-height: 1.8;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.storyLead {
+  font-size: 1.15rem;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+  color: #1E3F2F;
+  text-align: center;
+}
+
+.storyEpigraph {
+  font-size: 0.98rem;
+  color: #6E5328;
+  font-style: italic;
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.storyTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #182622;
+  letter-spacing: -0.01em;
+  text-align: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #EADBCA;
+  padding-bottom: 0.75rem;
+}
+
+.storyParagraph {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  text-align: justify;
+  text-indent: 1.25rem;
+}
+
+.storyHighlight {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1E3F2F;
+  text-align: center;
+  margin: 1.5rem 0 0.5rem 0;
+  font-style: italic;
+}
+
+.storyMottoCallout {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #8C6D3B;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+
+.storyFooter {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #EADBCA;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #72827D;
+}
+
+.storyHolding {
+  font-weight: 600;
+  color: #4B5A54;
+  letter-spacing: 0.03em;
+}
+
+.storyBrandMotto {
+  font-weight: 700;
+  color: #8C6D3B;
+  letter-spacing: 0.06em;
+}
+
+/* Grilla de Metas */
+.goalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: #FFFFFF;
+  border: 2px dashed #E2D9CE;
+  border-radius: 12px;
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.emptyTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #2D5A43;
+}
+
+.emptyDesc {
+  font-size: 0.9rem;
+  color: #72827D;
+  max-width: 440px;
+}
+
+/* Card */
+.card {
+  background: #FFFFFF;
+  border: 1px solid #E5DFD7;
+  border-radius: 12px;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 2px 6px rgba(24, 38, 34, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(24, 38, 34, 0.08);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.cardBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.ambitoBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ambitoPersonal {
+  background: #F4E8DB;
+  color: #8C531B;
+  border: 1px solid #E5D0BA;
+}
+
+.ambitoEmpresarial {
+  background: #E3EBE6;
+  color: #1E4633;
+  border: 1px solid #C4D6CC;
+}
+
+.botanicoBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: #FAF8F5;
+  color: #2D5A43;
+  border: 1px solid #D5C7B8;
+}
+
+.deleteBtn {
+  background: transparent;
+  border: none;
+  color: #A0ADA8;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+
+.deleteBtn:hover {
+  color: #B23B3B;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #182622;
+  line-height: 1.35;
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #556B64;
+  line-height: 1.4;
+}
+
+.progressSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.progressLabelRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #556B64;
+  font-weight: 500;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 8px;
+  background: #ECE7DF;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background: #2D5A43;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.qaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  background: #FAF8F5;
+  border: 1px solid #EDE7DD;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.qaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.qaQuestion {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #72827D;
+  font-weight: 600;
+}
+
+.qaAnswer {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #F0ECE4;
+}
+
+.ritmoBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  letter-spacing: 0.03em;
+}
+
+.ritmoAdelantada {
+  background: #D9F0E1;
+  color: #156333;
+}
+
+.ritmoEnRitmo {
+  background: #E5F3ED;
+  color: #20563C;
+}
+
+.ritmoEnRiesgo {
+  background: #FEF3D6;
+  color: #8C600B;
+}
+
+.ritmoAtrasada {
+  background: #FCE8E6;
+  color: #9E2A2B;
+}
+
+.ritmoCumplida {
+  background: #D6EBD9;
+  color: #0E5924;
+  border: 1px solid #A1D4AB;
+}
+
+.cardDates {
+  font-size: 0.75rem;
+  color: #72827D;
+}
+
+.rewardQuote {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #8C6D3B;
+  background: #FAF6EF;
+  border-left: 3px solid #C5A880;
+  padding: 0.4rem 0.65rem;
+  border-radius: 4px;
+}
+
+/* Modal Form */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 38, 34, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modalCard {
+  background: #FFFFFF;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 16px 32px rgba(24, 38, 34, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #D9D2C7;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: #FAF8F5;
+  border-bottom: 1px solid #EAE3D7;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.closeModalBtn {
+  background: transparent;
+  border: none;
+  color: #72827D;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.modalForm {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.formLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2D5A43;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.formInput,
+.formSelect {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #C8C1B4;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #182622;
+  background: #FFFFFF;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.formInput:focus,
+.formSelect:focus {
+  border-color: #2D5A43;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: #FAF8F5;
+  border-top: 1px solid #EAE3D7;
+}
+
+.cancelBtn {
+  background: transparent;
+  border: 1px solid #C8C1B4;
+  color: #556B64;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.submitBtn {
+  background: #2D5A43;
+  color: #FAF8F5;
+  border: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(24, 38, 34, 0.1);
+}
+
+.submitBtn:hover {
+  background: #234735;
+}
+
+/* Acciones y Badges Nuevos */
+.cardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.iconBtn {
+  background: transparent;
+  border: none;
+  color: #72827D;
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.iconBtn:hover {
+  background: #F0ECE4;
+  color: #182622;
+}
+
+.deleteBtn:hover {
+  background: #FCE8E6;
+  color: #B23B3B;
+}
+
+.estrategiaBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background: #F2EFE9;
+  color: #4A3E31;
+  border: 1px solid #D8CFC4;
+}
+
+.contributeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: #F7F3EB;
+  color: #7A5B2B;
+  border: 1px solid #C5A880;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.contributeBtn:hover {
+  background: #F0E6D6;
+  border-color: #B39364;
+  color: #5D431B;
+}
+
+/* Banner de Fondos Disponibles */
+.fundsBanner {
+  background: #F8F5EE;
+  border: 1px solid #D8C7B0;
+  border-left: 4px solid #2D5A43;
+  border-radius: 10px;
+  padding: 1rem 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 2px 6px rgba(24, 38, 34, 0.03);
+}
+
+.fundsIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #E5EDE8;
+  color: #2D5A43;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.fundsInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.fundsLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6E5328;
+  font-weight: 700;
+}
+
+.fundsAmount {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #182622;
+}
+
+.fundsDetailRow {
+  margin-left: auto;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: #556B64;
+}
+
+/* Contribute Modal Summary */
+.contributeGoalSummary {
+  background: #FAF6EF;
+  border: 1px solid #E5D5C0;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.contributeGoalTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.contributeBalanceRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #556B64;
+}
+
+.contributeFaltaValue {
+  color: #8C531B;
+  font-weight: 700;
+}
