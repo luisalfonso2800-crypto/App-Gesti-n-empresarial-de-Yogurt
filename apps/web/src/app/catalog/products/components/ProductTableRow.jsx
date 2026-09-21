@@ -39,7 +39,8 @@ export function ProductTableRow({
   onToggleSelect,
   isHovered = false,
   onHoverProduct,
-  onEdit
+  onEdit,
+  onDelete
 }) {
   const categoryConfig = CATEGORY_MAP[item.categoria] || {
     label: item.categoria || 'Sin Categoría',
@@ -124,6 +125,17 @@ export function ProductTableRow({
           >
             Editar
           </button>
+          {onDelete && (
+            <button
+              type="button"
+              className={styles.btnDelete}
+              onClick={() => onDelete(item)}
+              title="Eliminar producto"
+              aria-label={`Eliminar ${item.nombre}`}
+            >
+              🗑️
+            </button>
+          )}
         </div>
       </TD>
     </TR>

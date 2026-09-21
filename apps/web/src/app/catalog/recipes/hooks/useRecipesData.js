@@ -63,7 +63,18 @@ export function useRecipesData() {
     }
   };
 
+  const deleteRecipe = async (id) => {
+    try {
+      const res = await apiClient.delete(`/recipes/${id}`);
+      await fetchData();
+      return { success: true, message: res?.message || 'Receta eliminada correctamente' };
+    } catch (err) {
+      const msg = err?.message || 'No se pudo eliminar la receta técnica.';
+      return { success: false, message: msg };
+    }
+  };
+
   return {
-    items, products, supplies, prices, loading, error, fetchData, handleToggleActive
+    items, products, supplies, prices, loading, error, fetchData, handleToggleActive, deleteRecipe
   };
 }

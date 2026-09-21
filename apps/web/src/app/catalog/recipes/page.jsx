@@ -14,6 +14,7 @@ import { RecipesHeader } from './components/RecipesHeader';
 import { RecipesList } from './components/RecipesList';
 import { RecipeModal } from './components/RecipeModal';
 import { OrphanProductsBanner } from './components/OrphanProductsBanner';
+import { ConfirmDeleteRecipeModal } from './components/ConfirmDeleteRecipeModal';
 import styles from './recipes.module.css';
 
 import { useRecipesPageManager } from './hooks/useRecipesPageManager';
@@ -24,6 +25,9 @@ function RecipesContent() {
     handleOpenEditor, handleCloseEditor, handleChange, applyStageTemplate,
     addEtapa, updateEtapa, removeEtapa, moveStage, addDetalle, updateDetalle,
     removeDetalle, handleSubmit, calculateCost, getCostRollup, handleToggleActive,
+    recipeToDelete, isDeleting, deleteError,
+    handleOpenDelete, handleCloseDelete, handleConfirmDelete,
+    notice, clearNotice,
     canCreate, hasProducts, hasSupplies, disabledTooltip
   } = useRecipesPageManager();
 
@@ -47,6 +51,15 @@ function RecipesContent() {
         canCreate={canCreate} 
         disabledTooltip={disabledTooltip} 
       />
+
+      {notice && (
+        <div className={styles.noticeBanner}>
+          <div>⚠️ {notice}</div>
+          <button type="button" className={styles.noticeBannerClose} onClick={clearNotice} aria-label="Cerrar advertencia">
+            ✕
+          </button>
+        </div>
+      )}
 
       {!loading && !hasProducts && (
         <div className={styles.prereqBanner}>
@@ -74,8 +87,18 @@ function RecipesContent() {
       <RecipesList 
         items={items} loading={loading} error={error}
         onEdit={handleOpenEditor} onToggleActive={handleToggleActive}
+        onDelete={handleOpenDelete}
         onNewRecipe={handleOpenEditor} canCreate={canCreate}
         disabledTooltip={disabledTooltip}
+      />
+
+      <ConfirmDeleteRecipeModal
+        isOpen={Boolean(recipeToDelete)}
+        item={recipeToDelete}
+        isDeleting={isDeleting}
+        errorMessage={deleteError}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDelete}
       />
     </div>
   );

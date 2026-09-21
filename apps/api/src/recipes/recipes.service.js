@@ -7,7 +7,7 @@
  * @dependencies @nestjs/common, apps/api/src/recipes/recipes.repository.js, apps/api/src/database/prisma.service.js
  */
 
-import { Injectable, Dependencies, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { RecipesRepository } from './recipes.repository';
 import { PrismaService } from '../database/prisma.service';
 
@@ -339,12 +339,28 @@ export class RecipesService {
   }
 
   /**
-   * Desactiva lógicamente una receta en el sistema.
+   * Elimina físicamente una receta técnica si está desactivada y no cuenta con historial productivo.
    * @param {string} id - UUID de la receta.
-   * @returns {Promise<Object>} Receta desactivada.
+   * @throws {ConflictException} Si la receta está activa, o si cuenta con órdenes de producción, lotes o uso como ingrediente.
+   * @returns {Promise<Object>} Resultado de eliminación.
    */
   async remove(id) {
-    await this.findOne(id);
-    return this.repository.remove(id);
+    const recipe = await this.findOne(id);
+
+    if (recipe.activo) {
+      throw new ConflictException(
+        'La receta técnica debe estar desactivada antes de poder eliminarla. Desactívela primero.'
+      );
+    }
+
+    const depCounts = await this.repository.countDependencies(id);
+    if (depCounts && depCounts.total > 0) {
+      throw new ConflictException(
+        'No se puede eliminar la receta técnica porque cuenta con órdenes de producción, lotes fabricados o uso activo como ingrediente en otras fórmulas. Manténgala desactivada para preservar la trazabilidad.'
+      );
+    }
+
+    await this.repository.hardDelete(id);
+    return { success: true, message: 'Receta técnica eliminada exitosamente' };
   }
 }

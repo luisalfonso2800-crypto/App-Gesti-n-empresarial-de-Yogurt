@@ -264,4 +264,63 @@ export class RecipesRepository {
       data: { activo: false }
     });
   }
+
+  async countDependencies(id) {
+    const receta = await this.prisma.receta.findUnique({
+      where: { id },
+      select: { idProducto: true }
+    });
+
+    if (!receta) return null;
+
+    const [produccionesCount, lotesCount, usoEnOtrasRecetasCount] = await Promise.all([
+      this.prisma.produccion.count({
+        where: { idProducto: receta.idProducto }
+      }),
+      this.prisma.lote.count({
+        where: { idProducto: receta.idProducto }
+      }),
+      this.prisma.detalleReceta.count({
+        where: {
+          idProductoIntermedio: receta.idProducto,
+          etapa: { idReceta: { not: id } }
+        }
+      })
+    ]);
+
+    return {
+      produccionesCount,
+      lotesCount,
+      usoEnOtrasRecetasCount,
+      total: produccionesCount + lotesCount + usoEnOtrasRecetasCount
+    };
+  }
+
+  async hardDelete(id) {
+    return this.prisma.$transaction(async (tx) => {
+      // 1. Obtener etapas
+      const etapas = await tx.etapaReceta.findMany({
+        where: { idReceta: id },
+        select: { id: true }
+      });
+      const etapaIds = etapas.map(e => e.id);
+
+      // 2. Eliminar detalles de receta
+      if (etapaIds.length > 0) {
+        await tx.detalleReceta.deleteMany({
+          where: { idEtapaReceta: { in: etapaIds } }
+        });
+      }
+
+      // 3. Eliminar etapas
+      await tx.etapaReceta.deleteMany({
+        where: { idReceta: id }
+      });
+
+      // 4. Eliminar receta maestro
+      return tx.receta.delete({
+        where: { id }
+      });
+    });
+  }
 }

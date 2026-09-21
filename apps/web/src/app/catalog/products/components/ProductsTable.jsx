@@ -79,6 +79,7 @@ export function ProductsTable({
             isHovered={String(hoveredProductId) === String(item.id)}
             onHoverProduct={onHoverProduct}
             onEdit={onEdit}
+            onDelete={onDelete}
           />
         ))}
       </TBody>

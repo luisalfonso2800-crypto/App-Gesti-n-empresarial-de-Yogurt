@@ -6,7 +6,7 @@
  * @usedBy apps/web/src/app/catalog/recipes/page.jsx
  * @dependencies React, next/navigation, ./useRecipesData, ./useRecipeForm
  */
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRecipesData } from './useRecipesData';
 import { useRecipeForm } from './useRecipeForm';
@@ -14,8 +14,41 @@ import { useRecipeForm } from './useRecipeForm';
 export function useRecipesPageManager() {
   const {
     items, products, supplies, prices,
-    loading, error, fetchData, handleToggleActive
+    loading, error, fetchData, handleToggleActive, deleteRecipe
   } = useRecipesData();
+
+  const [notice, setNotice] = useState(null);
+  const [recipeToDelete, setRecipeToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+
+  const handleOpenDelete = (item) => {
+    setDeleteError(null);
+    setRecipeToDelete(item);
+  };
+
+  const handleCloseDelete = () => {
+    if (isDeleting) return;
+    setRecipeToDelete(null);
+    setDeleteError(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!recipeToDelete?.id) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    setNotice(null);
+
+    const result = await deleteRecipe(recipeToDelete.id);
+    setIsDeleting(false);
+
+    if (result.success) {
+      setRecipeToDelete(null);
+    } else {
+      setDeleteError(result.message);
+      setNotice(result.message);
+    }
+  };
 
   const {
     isEditing, formData, handleOpenEditor, handleCloseEditor,
@@ -85,6 +118,9 @@ export function useRecipesPageManager() {
     handleOpenEditor, handleCloseEditor, handleChange, applyStageTemplate,
     addEtapa, updateEtapa, removeEtapa, moveStage, addDetalle, updateDetalle,
     removeDetalle, handleSubmit, calculateCost, getCostRollup, handleToggleActive,
+    recipeToDelete, isDeleting, deleteError,
+    handleOpenDelete, handleCloseDelete, handleConfirmDelete,
+    notice, clearNotice: () => setNotice(null),
     canCreate, hasProducts, hasSupplies, disabledTooltip
   };
 }

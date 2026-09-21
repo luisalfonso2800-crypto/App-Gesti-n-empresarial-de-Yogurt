@@ -22,6 +22,7 @@ export function RecipesList({
   error, 
   onEdit, 
   onToggleActive, 
+  onDelete,
   onNewRecipe,
   canCreate = true,
   disabledTooltip = ''
@@ -91,14 +92,35 @@ export function RecipesList({
               </Badge>
             </TD>
             <TD>
-              <div className={styles.actions}>
-                <Button variant="secondary" onClick={() => onEdit(item)}>Editar / Ver BOM (Lista de Materiales)</Button>
-                <Button 
-                  variant={item.activo ? 'danger' : 'primary'} 
+              <div className={styles.tableActionsGroup}>
+                <button
+                  type="button"
+                  className={styles.btnBomEdit}
+                  onClick={() => onEdit(item)}
+                  title="Ver explosión BOM y editar formulación"
+                >
+                  👁️ Ver BOM
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.btnStatusToggle} ${item.activo ? styles.btnStatusActive : styles.btnStatusInactive}`}
                   onClick={() => onToggleActive(item)}
+                  title={item.activo ? "Desactivar receta" : "Activar receta"}
                 >
                   {item.activo ? 'Desactivar' : 'Activar'}
-                </Button>
+                </button>
+                {onDelete && (
+                  <button
+                    type="button"
+                    className={`${styles.btnDeleteCompact} ${item.activo ? styles.btnDeleteDisabled : ''}`}
+                    onClick={() => onDelete(item)}
+                    title={item.activo ? "Debe desactivar la receta antes de poder eliminarla" : "Eliminar receta técnica de forma segura"}
+                    aria-label={`Eliminar receta ${item.nombre}`}
+                    disabled={item.activo}
+                  >
+                    🗑️
+                  </button>
+                )}
               </div>
             </TD>
           </TR>

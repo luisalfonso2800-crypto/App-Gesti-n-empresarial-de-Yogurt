@@ -7,7 +7,8 @@
  * @dependencies Hooks y Componentes locales
  */
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useSalesData } from './hooks/useSalesData';
 import { useSaleForm } from './hooks/useSaleForm';
 import { useClientsPageData } from '../clients/hooks/useClientsPageData';
@@ -18,7 +19,9 @@ import SalesDateFilterBar from './components/SalesDateFilterBar';
 import { SalesTable } from './components/SalesTable';
 import { SaleModal } from './components/SaleModal';
 
-export default function SalesPage() {
+function SalesContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [mostrarCifras, setMostrarCifras] = useState(false);
   const {
     sales, filteredSales, paginatedSales, loading, error, fetchSales,
@@ -28,6 +31,19 @@ export default function SalesPage() {
 
   const form = useSaleForm({ onSuccess: fetchSales });
   const clientHook = useClientsPageData();
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'new') {
+      form.handleOpenModal();
+      router.replace('/commercial/sales');
+    }
+  }, [searchParams, router, form]);
+
+  useEffect(() => {
+    const handleOpen = () => form.handleOpenModal();
+    window.addEventListener('open-sales-modal', handleOpen);
+    return () => window.removeEventListener('open-sales-modal', handleOpen);
+  }, [form]);
 
   const handleCreatedClientSubmit = async (e) => {
     await clientHook.handleSubmit(e);
@@ -41,31 +57,19 @@ export default function SalesPage() {
   return (
     <div>
       <SalesHeader
-        onNew={form.handleOpenModal}
-        mostrarCifras={mostrarCifras}
+        onNew={form.handleOpenModal} mostrarCifras={mostrarCifras}
         onTogglePrivacy={() => setMostrarCifras(prev => !prev)}
       />
       <SalesDateFilterBar
-        fechaInicio={fechaInicio}
-        fechaFin={fechaFin}
-        onDateChange={handleDateChange}
-        onReset={handleDateReset}
+        fechaInicio={fechaInicio} fechaFin={fechaFin}
+        onDateChange={handleDateChange} onReset={handleDateReset}
       />
       {!loading && !error && (
-        <SalesDashboardKpis
-          sales={filteredSales}
-          allSales={sales}
-          mostrarCifras={mostrarCifras}
-        />
+        <SalesDashboardKpis sales={filteredSales} allSales={sales} mostrarCifras={mostrarCifras} />
       )}
       <SalesTable
-        sales={paginatedSales}
-        loading={loading}
-        error={error}
-        onNew={form.handleOpenModal}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
+        sales={paginatedSales} loading={loading} error={error} onNew={form.handleOpenModal}
+        currentPage={currentPage} totalPages={totalPages} totalItems={totalItems}
         onPrevPage={() => setCurrentPage(p => Math.max(1, p - 1))}
         onNextPage={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
         mostrarCifras={mostrarCifras}
@@ -73,26 +77,26 @@ export default function SalesPage() {
       <SaleModal
         isOpen={form.isModalOpen} onClose={form.handleCloseModal}
         formData={form.formData} handleChange={form.handleChange}
-        handleDetailsChange={form.handleDetailsChange}
-        handleSubmit={form.handleSubmit}
-        products={form.products}
-        clients={form.clients}
-        isSubmitting={form.isSubmitting}
-        errorMsg={form.errorMsg}
+        handleDetailsChange={form.handleDetailsChange} handleSubmit={form.handleSubmit}
+        products={form.products} clients={form.clients}
+        isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
         onNewClient={clientHook.handleOpenModal}
       />
       <ClientFormModal
-        isOpen={clientHook.isModalOpen}
-        onClose={clientHook.handleCloseModal}
-        formData={clientHook.formData}
-        isSubmitting={clientHook.isSubmitting}
-        submitError={clientHook.submitError}
-        isDirty={clientHook.isDirty}
-        isSubmitDisabled={clientHook.isSubmitDisabled}
-        submitTitle={clientHook.submitTitle}
-        handleChange={clientHook.handleChange}
-        handleSubmit={handleCreatedClientSubmit}
+        isOpen={clientHook.isModalOpen} onClose={clientHook.handleCloseModal}
+        formData={clientHook.formData} isSubmitting={clientHook.isSubmitting}
+        submitError={clientHook.submitError} isDirty={clientHook.isDirty}
+        isSubmitDisabled={clientHook.isSubmitDisabled} submitTitle={clientHook.submitTitle}
+        handleChange={clientHook.handleChange} handleSubmit={handleCreatedClientSubmit}
       />
     </div>
+  );
+}
+
+export default function SalesPage() {
+  return (
+    <Suspense fallback={null}>
+      <SalesContent />
+    </Suspense>
   );
 }

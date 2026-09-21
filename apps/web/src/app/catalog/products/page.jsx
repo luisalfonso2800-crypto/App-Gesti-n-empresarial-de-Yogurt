@@ -50,6 +50,7 @@ function ProductsContent() {
             onToggleSelect={handleToggleSelect} onToggleSelectAll={handleToggleSelectAll}
             hoveredProductId={hoveredProduct?.id} onHoverProduct={setHoveredProduct}
             onEdit={form.handleOpenModal} onNew={() => form.handleOpenModal(null)}
+            onDelete={handleOpenDelete}
           />
           {!loading && !error && (
             <ProductsPagination
