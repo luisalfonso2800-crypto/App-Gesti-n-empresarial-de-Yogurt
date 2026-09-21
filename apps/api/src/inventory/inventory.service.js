@@ -1,5 +1,6 @@
 import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
 import { InventoryRepository } from './inventory.repository';
+import { UnitConverter } from '../common/utils/unit-converter';
 
 @Injectable()
 @Dependencies(InventoryRepository)
@@ -13,14 +14,29 @@ export class InventoryService {
     
     const enriched = data.map(item => {
       let costoUnitario = Number(item.costoPromedio) || 0;
+
       if (!costoUnitario && item.insumo?.precios?.length > 0) {
         const sortedPrices = [...item.insumo.precios].sort((a, b) => new Date(b.fechaRegistro) - new Date(a.fechaRegistro));
         costoUnitario = Number(sortedPrices[0].costoUnidadBase) || 0;
       }
 
+      const unidadBase = (item.insumo?.unidadBase || item.unidadMedida || '').toUpperCase().trim();
+      const isSmallUnit = ['G', 'GRAMO', 'GRAMOS', 'ML', 'MILILITRO', 'MILILITROS'].includes(unidadBase);
+
+      let costoPorUnidadBase = costoUnitario;
       const stockActual = Number(item.cantidadActual) || 0;
+      let valorTotal = 0;
+
+      if (isSmallUnit && costoUnitario > 100) {
+        costoPorUnidadBase = costoUnitario / 1000;
+        valorTotal = Math.round(stockActual * costoPorUnidadBase);
+      } else {
+        valorTotal = Math.round(stockActual * costoUnitario);
+      }
+
+      costoUnitario = costoPorUnidadBase;
+
       const stockMinimo = Number(item.insumo?.stockMinimo) || 0;
-      const valorTotal = stockActual * costoUnitario;
       
       let estado = 'OPTIMO';
       if (stockActual <= 0) estado = 'CRITICO';

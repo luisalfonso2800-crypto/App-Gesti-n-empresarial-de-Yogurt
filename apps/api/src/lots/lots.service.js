@@ -8,8 +8,8 @@ export class LotsService {
     this.repository = repository;
   }
 
-  async findAll() {
-    return this.repository.findAll();
+  async findAll(query) {
+    return this.repository.findAll(query);
   }
 
   async findOne(id) {

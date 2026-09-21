@@ -38,7 +38,7 @@ export class SystemService {
     const step2Done = counts.supplies > 0 && counts.suppliers > 0;
     const step3Done = counts.suppliesWithStock > 0;
     const step4Done = counts.products > 0 && counts.recipes > 0;
-    const step5Done = counts.finishedLotsWithStock > 0;
+    const step5Done = (counts.finishedLotsWithStock > 0 || (counts.cavaStock || 0) > 0 || counts.sales > 0);
     const step6Done = counts.sales > 0;
 
     const steps = [
@@ -82,7 +82,7 @@ export class SystemService {
         title: 'Fabricar Primer Lote (Producción)',
         route: '/operations/production',
         completed: step5Done,
-        detail: `${counts.finishedLotsWithStock} lote(s) con saldo en cava`
+        detail: `${counts.finishedLotsWithStock} lote(s) o saldo en cava`
       },
       {
         step: 6,

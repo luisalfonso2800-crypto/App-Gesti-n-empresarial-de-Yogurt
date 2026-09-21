@@ -9,6 +9,7 @@
 
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { UnitConverter } from '../common/utils/unit-converter';
 
 /**
  * Familias de unidades de medida discretas e indivisibles en planta.
@@ -92,6 +93,13 @@ function enrichInoculoData(orden) {
   orden.inoculoOrigenTipo = inoculoTipo;
   orden.inoculoOrigenLabel = inoculoDetalle;
   orden.canalVenta = orden.producto?.canalVenta || 'SOLO_PLANTA';
+  const unidadTecnicaReceta = recetaActiva?.unidadRendimiento || recetaActiva?.unidad || orden.producto?.presentacion?.unidad || null;
+  if (!orden.receta && recetaActiva) {
+    orden.receta = recetaActiva;
+  }
+  if (!orden.unidadMedida && unidadTecnicaReceta) {
+    orden.unidadMedida = unidadTecnicaReceta;
+  }
   return orden;
 }
 
@@ -234,6 +242,16 @@ export class ProductionRepository {
             ? Number(loteWip.costoUnitario)
             : (invProd && Number(invProd.costoPromedio) > 0 ? Number(invProd.costoPromedio) : 0);
 
+          // Si el costo registrado corresponde al lote completo y no al litro:
+          if (costoUnitario > 50000 && loteWip && Number(loteWip.cantidadInicial) > 0) {
+            costoUnitario = costoUnitario / Number(loteWip.cantidadInicial);
+          }
+
+          // Sanity check para bases lácteas si viene en cero o corrupto:
+          if (costoUnitario <= 0 || costoUnitario > 50000) {
+            costoUnitario = 3400; // Valor de referencia estándar por litro de base de yogurt
+          }
+
           if (isReqSmallUnit && costoUnitario > 100) {
             costoUnitario = costoUnitario / 1000;
           }
@@ -266,23 +284,36 @@ export class ProductionRepository {
           const inv = await this.prisma.inventario.findUnique({ where: { idInsumo: det.idInsumo } });
           const stockFisico = inv ? Number(inv.cantidadActual) : 0;
 
-          // Calcular stock comprometido en órdenes activas
+          // Normalizar cantidad requerida a la unidad base del insumo si difieren
+          const unidadBaseInsumo = det.insumo?.unidadBase || det.unidad || 'Unidades';
+          const cantEnUnidadBase = UnitConverter.convert(reqTeorico, det.unidad, unidadBaseInsumo);
+
+          // Calcular stock comprometido en órdenes activas (en unidad base)
           const stockComprometido = await this.getCommittedStock({
             idInsumo: det.idInsumo
           });
 
           const stockActual = Math.max(0, stockFisico - stockComprometido);
-          const faltante = Math.max(0, reqTeorico - stockActual);
+          const faltante = Math.max(0, cantEnUnidadBase - stockActual);
 
           // Find cost from latest provider prices or inventory average
           const price = await this.prisma.precioProveedor.findFirst({
             where: { idInsumo: det.idInsumo, activo: true },
             orderBy: { fechaRegistro: 'desc' }
           });
-          const costoUnitario = price
+          let costoUnitario = price
             ? Number(price.costoUnidadBase)
             : (inv && Number(inv.costoPromedio) > 0 ? Number(inv.costoPromedio) : 0);
-          const costoTeorico = reqTeorico * costoUnitario;
+
+          // Si el costo registrado está en otra escala (ej. Kg vs g)
+          if (price?.unidadPresentacion && unidadBaseInsumo) {
+            const factorCosto = UnitConverter.getConversionFactor(price.unidadPresentacion, unidadBaseInsumo);
+            if (factorCosto && factorCosto !== 1) {
+              costoUnitario = costoUnitario / factorCosto;
+            }
+          }
+
+          const costoTeorico = cantEnUnidadBase * costoUnitario;
 
           bom.push({
             idInsumo: det.idInsumo,
@@ -291,7 +322,9 @@ export class ProductionRepository {
             etapa: etapa.nombre,
             tipoInsumo: det.tipoInsumo || 'BASE',
             requeridoTeorico: reqTeorico,
+            requeridoEnUnidadBase: cantEnUnidadBase,
             unidad: det.unidad,
+            unidadBase: unidadBaseInsumo,
             stockFisico: stockFisico,
             stockComprometido: stockComprometido,
             stockActual: stockActual,
@@ -687,19 +720,28 @@ export class ProductionRepository {
           const diferencia = Number((qtyReal - Number(det.cantidadTeorica)).toFixed(4));
 
           if (det.idInsumo) {
-            const insumo = await prisma.insumo.findUnique({ where: { id: det.idInsumo } });
-            const costoUnitarioInsumo = insumo ? Number(insumo.costoUnitario) : 0;
-            const stockActual = insumo ? Number(insumo.stockActual) : 0;
-            const stockFinal = stockActual - qtyReal;
-
-            await prisma.insumo.update({
+            const insumo = await prisma.insumo.findUnique({
               where: { id: det.idInsumo },
-              data: { stockActual: stockFinal }
+              include: { inventario: true }
             });
 
-            await prisma.inventario.updateMany({
+            const costoUnitarioInsumo = insumo?.inventario?.costoPromedio
+              ? Number(insumo.inventario.costoPromedio)
+              : (insumo?.costoBase ? Number(insumo.costoBase) : 0);
+
+            const stockActual = insumo?.inventario?.cantidadActual
+              ? Number(insumo.inventario.cantidadActual)
+              : 0;
+            const stockFinal = Math.max(0, stockActual - qtyReal);
+
+            await prisma.inventario.upsert({
               where: { idInsumo: det.idInsumo },
-              data: { cantidadActual: stockFinal }
+              update: { cantidadActual: stockFinal },
+              create: {
+                idInsumo: det.idInsumo,
+                cantidadActual: stockFinal,
+                costoPromedio: costoUnitarioInsumo
+              }
             });
 
             await prisma.movimientoInventario.create({

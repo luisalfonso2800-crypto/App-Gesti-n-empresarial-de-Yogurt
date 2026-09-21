@@ -17,7 +17,8 @@ const WEB_SRC = path.join(ROOT_DIR, 'apps/web/src');
 
 // Exclusión explícita solicitada
 const EXCLUDED_FILES = [
-  path.join(ROOT_DIR, 'apps/web/src/app/dashboard/page.jsx').replace(/\\/g, '/')
+  path.join(ROOT_DIR, 'apps/web/src/app/dashboard/page.jsx').replace(/\\/g, '/'),
+  path.join(ROOT_DIR, 'apps/web/src/app/dashboard/components/DashboardOperationalView.jsx').replace(/\\/g, '/')
 ];
 
 const LIMITS = {

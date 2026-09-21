@@ -32,6 +32,7 @@ export class SystemRepository {
       recipes,
       suppliesWithStock,
       finishedLotsWithStock,
+      cavaStock,
       sales,
       clients
     ] = await Promise.all([
@@ -71,6 +72,12 @@ export class SystemRepository {
           }
         }
       }),
+      // Unidades o stock en cava registrado
+      this.prisma.inventarioProducto.count({
+        where: {
+          cantidadActual: { gt: 0 }
+        }
+      }),
       // Ventas de productos comerciales terminados con precio > 0
       this.prisma.venta.count({
         where: {
@@ -99,6 +106,7 @@ export class SystemRepository {
       recipes,
       suppliesWithStock,
       finishedLotsWithStock,
+      cavaStock,
       sales,
       clients
     };

@@ -8,11 +8,23 @@ export class LotsRepository {
     this.prisma = prisma;
   }
 
-  async findAll() {
+  async findAll(query = {}) {
+    const whereClause = {
+      tipoLote: { in: ['PRODUCTO_TERMINADO', 'SEMIELABORADO_WIP'] }
+    };
+
+    if (query?.productoId || query?.idProducto) {
+      whereClause.idProducto = query.productoId || query.idProducto;
+    }
+
+    if (query?.estado) {
+      whereClause.estado = query.estado;
+    } else if (query?.disponible === 'true' || query?.disponible === true) {
+      whereClause.cantidadDisponible = { gt: 0 };
+    }
+
     const lotes = await this.prisma.lote.findMany({
-      where: {
-        tipoLote: { in: ['PRODUCTO_TERMINADO', 'SEMIELABORADO_WIP'] }
-      },
+      where: whereClause,
       include: {
         produccion: true,
         producto: {

@@ -16,6 +16,55 @@ export class ProductsRepository {
     return this.findWithCavaStock({ activo: true });
   }
 
+  async findForSaleSelector() {
+    const products = await this.prisma.producto.findMany({
+      where: { activo: true },
+      select: {
+        id: true,
+        nombre: true,
+        categoria: true,
+        precioVenta: true,
+        precioMayorista: true,
+        cantidadMinimaMayorista: true,
+        imagenUrl: true,
+        presentacion: {
+          select: {
+            id: true,
+            nombre: true,
+            cantidadOz: true,
+            cantidadMl: true,
+            tipoEnvase: true,
+            unidadMedida: true
+          }
+        },
+        inventario: {
+          select: {
+            cantidadActual: true,
+            costoPromedio: true
+          }
+        }
+      },
+      orderBy: { nombre: 'asc' }
+    });
+
+    return products.map(p => {
+      const stockReal = Number(p.inventario?.cantidadActual || 0);
+      const pres = p.presentacion;
+      const volPres = pres ? (
+        pres.cantidadMl ? `${pres.cantidadOz ? `${pres.cantidadOz} oz / ` : ''}${pres.cantidadMl} ml` : (pres.nombre || '')
+      ) : '';
+
+      return {
+        ...p,
+        stock: stockReal,
+        stockCava: stockReal,
+        stockActual: stockReal,
+        volumenPresentacion: volPres,
+        presentacionNombre: pres?.nombre || ''
+      };
+    });
+  }
+
   async findWithCavaStock(where = {}) {
     const products = await this.prisma.producto.findMany({
       where,
@@ -73,6 +122,7 @@ export class ProductsRepository {
 
       return {
         ...prod,
+        stock: stockReal,
         stockLitros: stockReal,
         stockCava: stockReal,
         stockActual: stockReal,

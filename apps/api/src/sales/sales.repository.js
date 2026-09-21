@@ -9,16 +9,59 @@ export class SalesRepository {
   }
 
   async findAll() {
-    return this.prisma.venta.findMany({
-      include: { detalles: true, cliente: true }
+    const ventas = await this.prisma.venta.findMany({
+      include: {
+        cliente: { select: { id: true, nombre: true, tipoCliente: true, canal: true } },
+        detalles: {
+          include: {
+            producto: { select: { id: true, nombre: true, precioVenta: true, precioMayorista: true } }
+          }
+        }
+      },
+      orderBy: { fechaVenta: 'desc' }
+    });
+
+    return ventas.map(venta => {
+      const costoTotal = (venta.detalles || []).reduce((acc, d) => {
+        const cUnit = Number(d.costoUnitario || 0);
+        return acc + (cUnit * Number(d.cantidad || 0));
+      }, 0);
+
+      return {
+        ...venta,
+        clienteNombre: venta.cliente?.nombre || 'Cliente Ocasional',
+        clienteTipo: venta.cliente?.tipoCliente || 'MINORISTA',
+        costoTotal
+      };
     });
   }
 
   async findById(id) {
-    return this.prisma.venta.findUnique({
+    const venta = await this.prisma.venta.findUnique({
       where: { id },
-      include: { detalles: true, cliente: true }
+      include: {
+        cliente: { select: { id: true, nombre: true, tipoCliente: true, canal: true } },
+        detalles: {
+          include: {
+            producto: { select: { id: true, nombre: true, precioVenta: true, precioMayorista: true } }
+          }
+        }
+      }
     });
+
+    if (!venta) return null;
+
+    const costoTotal = (venta.detalles || []).reduce((acc, d) => {
+      const cUnit = Number(d.costoUnitario || 0);
+      return acc + (cUnit * Number(d.cantidad || 0));
+    }, 0);
+
+    return {
+      ...venta,
+      clienteNombre: venta.cliente?.nombre || 'Cliente Ocasional',
+      clienteTipo: venta.cliente?.tipoCliente || 'MINORISTA',
+      costoTotal
+    };
   }
 
   async createWithTransaction(data) {

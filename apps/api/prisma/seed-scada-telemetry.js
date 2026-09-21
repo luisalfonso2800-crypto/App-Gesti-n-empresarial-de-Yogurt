@@ -82,7 +82,7 @@ async function main() {
           activo: true,
           idPresentacion: presentacion.id,
           categoria: 'YOGURT',
-          canalVenta: 'MAYORISTA', tipoPago: 'EFECTIVO', valorPagado: 125000,
+          canalVenta: 'MAYORISTA',
           margenObjetivo: 20
         }
       });
@@ -107,7 +107,8 @@ async function main() {
       data: {
         idProducto: fresaProd.id,
         nombre: 'Receta Maestra Yogur Fresa 100L',
-        rendimientoBase: 100
+        rendimientoBase: 100,
+        unidadRendimiento: 'Litros'
       }
     });
   }
@@ -115,7 +116,7 @@ async function main() {
     let etapa = await prisma.etapaReceta.findFirst({ where: { idReceta: recetaFresa.id } });
   if (!etapa) {
     etapa = await prisma.etapaReceta.create({
-      data: {  nombre: 'Preparación', orden: 1, tiempoMinutos: 60 }
+      data: { idReceta: recetaFresa.id, nombre: 'Preparación', orden: 1, tiempoEstandarMin: 60 }
     });
   }
 

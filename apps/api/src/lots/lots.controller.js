@@ -1,4 +1,4 @@
-import { Controller, Dependencies, Get, Post, Param, Bind, Body } from '@nestjs/common';
+import { Controller, Dependencies, Get, Post, Param, Bind, Body, Query } from '@nestjs/common';
 import { LotsService } from './lots.service';
 
 @Controller('lots')
@@ -9,8 +9,9 @@ export class LotsController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  @Bind(Query())
+  findAll(query) {
+    return this.service.findAll(query);
   }
 
   @Get(':id')

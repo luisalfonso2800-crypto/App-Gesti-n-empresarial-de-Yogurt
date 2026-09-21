@@ -29,6 +29,11 @@ export class ProductsController {
     return this.service.findIntermediates();
   }
 
+  @Get('selector')
+  findForSaleSelector() {
+    return this.service.findForSaleSelector();
+  }
+
   @Get(':id')
   @Bind(Param('id'))
   findOne(id) {
