@@ -17,7 +17,13 @@ export default function ProductionOrderCard({ order, startOrder, openComplete, o
   const [showIncidentModal, setShowIncidentModal] = useState(false);
 
   const nombreProducto = order.producto?.nombre || order.receta?.nombre || 'YOGURT BASE';
-  const uMed = order.receta?.unidadRendimiento || order.receta?.unidadMedida || 'Litros';
+  const uMed = (
+    order?.receta?.unidadRendimiento ||
+    order?.receta?.unidad ||
+    order?.unidadMedida ||
+    order?.producto?.presentacion?.unidad ||
+    'Unidades'
+  ).trim();
   const cantidad = Number(order.cantidadPlanificada) || 0;
   const fechaProd = order.fechaProduccion ? new Date(order.fechaProduccion).toLocaleDateString('es-CO') : 'Sin fecha';
   const codigoLote = order.idLote ? order.idLote.split('-')[0].toUpperCase() : null;

@@ -6,9 +6,10 @@
  * @usedBy apps/web/src/app/operations/purchases/new/components/FormPhase.jsx
  * @dependencies React, apiClient
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
+import { calculateRowFinancials, calculatePurchaseTotals } from '../utils/purchaseCalculations';
 
 export function useFormPhaseData({
   proveedoresDBProp,
@@ -109,47 +110,12 @@ export function useFormPhaseData({
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const calculateRowFinancials = (d) => {
-    const empaquesNum = parseInt(d.empaques, 10) || 0;
-    const precioUnitarioNum = parseInt(d.precioUnitario, 10) || 0;
-    const tieneIva = d.tieneIva !== undefined ? Boolean(d.tieneIva) : true;
-    const pctIva = tieneIva ? (Number(d.porcentajeIva !== undefined ? d.porcentajeIva : 19) || 0) : 0;
-    const precioIncluyeIva = d.precioIncluyeIva !== undefined ? Boolean(d.precioIncluyeIva) : true;
-
-    let subtotalSinIva = 0;
-    let montoIva = 0;
-    let subtotalConIva = 0;
-
-    if (!tieneIva) {
-      subtotalSinIva = precioUnitarioNum * empaquesNum;
-      montoIva = 0;
-      subtotalConIva = subtotalSinIva;
-    } else if (tieneIva && precioIncluyeIva) {
-      subtotalConIva = precioUnitarioNum * empaquesNum;
-      subtotalSinIva = pctIva > 0 ? (subtotalConIva / (1 + (pctIva / 100))) : subtotalConIva;
-      montoIva = subtotalConIva - subtotalSinIva;
-    } else {
-      subtotalSinIva = precioUnitarioNum * empaquesNum;
-      montoIva = subtotalSinIva * (pctIva / 100);
-      subtotalConIva = subtotalSinIva + montoIva;
-    }
-
-    return {
-      subtotalSinIva,
-      montoIva,
-      subtotalConIva,
-      subtotal: Math.round(subtotalConIva),
-      tieneIva,
-      porcentajeIva: pctIva,
-      precioIncluyeIva
-    };
-  };
-
-  const totalSinIvaCompra = Math.round(detalles.reduce((acc, d) => acc + calculateRowFinancials(d).subtotalSinIva, 0));
-  const totalIvaCompra = Math.round(detalles.reduce((acc, d) => acc + calculateRowFinancials(d).montoIva, 0));
-  const totalCompra = Math.round(detalles.reduce((acc, d) => acc + calculateRowFinancials(d).subtotalConIva, 0));
-  const rawFlete = String(flete).replace(/\D/g, '');
-  const totalConFlete = totalCompra + (parseInt(rawFlete, 10) || 0);
+  const {
+    totalSinIvaCompra,
+    totalIvaCompra,
+    totalCompra,
+    totalConFlete
+  } = useMemo(() => calculatePurchaseTotals(detalles, flete), [detalles, flete]);
 
   const addRow = () => {
     const newRow = {

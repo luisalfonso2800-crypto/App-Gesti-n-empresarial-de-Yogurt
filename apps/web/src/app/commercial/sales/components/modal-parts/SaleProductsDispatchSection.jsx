@@ -24,23 +24,39 @@ export default function SaleProductsDispatchSection({
 
   const handleAddProductFromDrawer = (prod, cantidad) => {
     const pInfo = prod.producto || prod;
+    const targetId = prod.idProducto || prod.id || pInfo.id;
+    const stockMax = Number(prod.stockCava ?? prod.stockActual ?? prod.cantidadActual ?? pInfo.stockCava ?? pInfo.stockActual ?? 9999);
+    const cantSumar = Number(cantidad) || 1;
+
     const minMay = Number(pInfo.cantidadMinimaMayorista || prod.cantidadMinimaMayorista || 12);
     const mayPrice = Number(pInfo.precioMayorista || prod.precioMayorista || 0);
     const regPrice = Number(pInfo.precioVenta || pInfo.precioVentaSug || prod.precioVenta || 0);
-    const unitPrice = mayPrice > 0 && cantidad >= minMay ? mayPrice : regPrice;
 
+    const existingIndex = detalles.findIndex(d => (d.idProducto || d.id) === targetId);
+
+    if (existingIndex !== -1) {
+      const existing = detalles[existingIndex];
+      const nuevaCantidad = Math.min(Number(existing.cantidad) + cantSumar, stockMax);
+      const unitPrice = mayPrice > 0 && nuevaCantidad >= minMay ? mayPrice : regPrice;
+      onUpdateQty(existingIndex, nuevaCantidad, unitPrice);
+      if (onStockErrorChange) onStockErrorChange('');
+      return;
+    }
+
+    const cantInicial = Math.min(cantSumar, stockMax);
+    const unitPrice = mayPrice > 0 && cantInicial >= minMay ? mayPrice : regPrice;
     const presNombre = prod.presentacionNombre || pInfo.presentacionNombre || prod.nombrePresentacion || pInfo.nombrePresentacion || pInfo.presentacion?.nombre || prod.presentacion?.nombre || '';
     const volPres = prod.volumenPresentacion || pInfo.volumenPresentacion || prod.contenidoNeto || pInfo.contenidoNeto || pInfo.presentacion?.volumen || '';
 
     onAddDetail({
-      idProducto: prod.idProducto || prod.id,
+      idProducto: targetId,
       nombre: pInfo.nombre || prod.nombre,
       presentacion: presNombre || pInfo.unidadMedida || 'Und',
       presentacionNombre: presNombre,
       nombrePresentacion: presNombre,
       volumenPresentacion: volPres,
       contenidoNeto: volPres,
-      cantidad: Number(cantidad),
+      cantidad: cantInicial,
       precioUnitario: unitPrice,
       costoUnitario: Number(prod.costoPromedio || pInfo.costoEstandar || 0)
     });

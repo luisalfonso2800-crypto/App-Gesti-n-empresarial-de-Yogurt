@@ -4,10 +4,11 @@
  * @description Hook orquestador de datos para InventoryPage: stock de bodega y cava, kpis, kárdex y ajustes.
  * @responsibility Cargar inventarios, calcular valorizaciones y procesar ajustes individuales.
  * @usedBy apps/web/src/app/operations/inventory/page.jsx
- * @dependencies react, @/lib/api-client
+ * @dependencies react, @/lib/api-client, @/lib/adapters/schema.adapter
  */
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
+import { normalizeProduct, normalizeSupply } from '@/lib/adapters/schema.adapter';
 
 export function useInventoryPageData() {
   const [activeTab, setActiveTab] = useState('INSUMOS');
@@ -18,24 +19,23 @@ export function useInventoryPageData() {
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [expandedId, setExpandedId] = useState(null);
   const [movements, setMovements] = useState({});
   const [loadingMovements, setLoadingMovements] = useState(false);
-
   const [isGlobalAdjustmentOpen, setIsGlobalAdjustmentOpen] = useState(false);
   const [adjustmentModal, setAdjustmentModal] = useState({ open: false, item: null, tipo: 'AJUSTE_POSITIVO', cantidad: '', motivo: '' });
+  const [cavaSubTab, setCavaSubTab] = useState('COMERCIAL');
 
   const fetchData = async () => {
     setLoading(true);
     try {
       if (activeTab === 'INSUMOS') {
         const response = await apiClient.get('/inventory');
-        setInventory(response.data || []);
+        setInventory((response.data || []).map(normalizeSupply));
         setMetadata(response.metadata || { valorTotalBodega: 0, totalCriticos: 0, totalBajoMinimo: 0, totalReferencias: 0 });
       } else if (activeTab === 'PRODUCTOS') {
         const data = await apiClient.get('/inventory/finished-products');
-        setFinishedProducts(data || []);
+        setFinishedProducts((data || []).map(normalizeProduct));
       } else if (activeTab === 'WIP') {
         const data = await apiClient.get('/inventory/wip');
         setWipLots(data || []);
@@ -69,9 +69,7 @@ export function useInventoryPageData() {
       setExpandedId(null);
     } else {
       setExpandedId(id);
-      if (!movements[id]) {
-        fetchMovements(id);
-      }
+      if (!movements[id]) fetchMovements(id);
     }
   };
 
@@ -103,8 +101,6 @@ export function useInventoryPageData() {
       alert('Error guardando ajuste');
     }
   };
-
-  const [cavaSubTab, setCavaSubTab] = useState('COMERCIAL');
 
   const commercialItems = finishedProducts.filter((item) => {
     const cat = (item.producto?.categoria || item.categoria || '').toUpperCase();

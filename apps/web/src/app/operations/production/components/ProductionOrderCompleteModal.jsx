@@ -22,7 +22,10 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const [reserveActive, setReserveActive] = useState(false);
   const [inoculoQty, setInoculoQty] = useState('');
   const order = completeModal.order;
-  const uMed = order?.receta?.unidadRendimiento || order?.receta?.unidadMedida || 'Litros';
+  const unidad = (order?.receta?.unidadRendimiento || order?.receta?.unidad || order?.unidadMedida || order?.producto?.presentacion?.unidad || 'Unidades').trim();
+  const uMed = unidad;
+  const labelVolumen = `CANTIDAD / VOLUMEN OBTENIDO (${uMed.toUpperCase()})`;
+  const placeholderVolumen = uMed.toLowerCase().includes('und') ? 'Ej: 6' : '0.0';
   const prodName = order?.receta?.nombre || order?.producto?.nombre || 'Producto Terminado';
   const volTotal = Number(completeModal.realQty) || 0;
   const inoculoNum = Number(inoculoQty) || 0;
@@ -33,7 +36,6 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
   const cat = (order?.producto?.categoria || order?.receta?.producto?.categoria || '').toUpperCase();
   const isWipBase = cat === 'BASES_LACTEAS' || cat === 'INTERMEDIO_WIP';
   const isInvalidReserve = isWipBase && reserveActive && (inoculoNum <= 0 || inoculoNum > volTotal);
-  const isFullInoculum = isWipBase && reserveActive && volTotal > 0 && inoculoNum === volTotal;
   const volPrincipal = Math.max(0, volTotal - (isWipBase && reserveActive ? inoculoNum : 0));
   const genPadre = Number(order?.generacionPadre ?? order?.lotePadre?.generacion ?? order?.lotes?.[0]?.lotePadre?.generacion ?? 0);
   const isF4Reached = genPadre >= 3;
@@ -42,7 +44,6 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
     setReserveActive(false); setInoculoQty('');
     setCompleteModal({ open: false, order: null, realQty: '', reservaInoculo: null });
   };
-
   const handleConfirm = () => {
     const orderId = order?.id || completeModal?.order?.id;
     if (!orderId) return;
@@ -59,8 +60,8 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
       </div>
 
       <div className={styles.volumeFieldGroup}>
-        <label className={styles.volumeLabel}>Volumen Real Obtenido ({uMed})</label>
-        <input type="number" min="0.1" step="0.1" value={completeModal.realQty} onChange={(e) => setCompleteModal(prev => ({ ...prev, realQty: e.target.value }))} className={styles.inputTableQty} />
+        <label className={styles.volumeLabel}>{labelVolumen}</label>
+        <input type="number" min="0.1" step="0.1" placeholder={placeholderVolumen} value={completeModal.realQty} onChange={(e) => setCompleteModal(prev => ({ ...prev, realQty: e.target.value }))} className={styles.inputTableQty} />
         {diasVida > 0 && (
           <div className={styles.expiryBox}>
             <label className={styles.expiryLabel}><Calendar size={14} /> Fecha de Vencimiento:</label>
@@ -138,7 +139,10 @@ export default function ProductionOrderCompleteModal({ completeModal, setComplet
 
       <div className={styles.modalActions}>
         <button type="button" className={styles.btnMannaSecondary} onClick={handleClose}>Cancelar</button>
-        <button type="button" className={styles.btnMannaPrimary} onClick={handleConfirm} disabled={!volTotal || !order?.id || isInvalidReserve}><Check size={16} className={styles.iconSpaced} /> Confirmar Liquidación y Entrada a Stock</button>
+        <button type="button" className={styles.btnMannaPrimary} onClick={handleConfirm} disabled={!volTotal || !order?.id || isInvalidReserve}>
+          <Check size={16} className={styles.iconSpaced} />
+          <span>Confirmar Liquidación (Entrada a Stock: {volTotal || 0} {uMed})</span>
+        </button>
       </div>
     </SmartModal>
   );

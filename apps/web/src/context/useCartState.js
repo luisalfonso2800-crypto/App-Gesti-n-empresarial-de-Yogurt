@@ -48,9 +48,9 @@ export function useCartState() {
       let orders = [];
       try {
         const res = await apiClient.get('/purchases/orders/active');
-        orders = Array.isArray(res) ? res : [];
+        orders = Array.isArray(res) ? res : (res?.data && Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.warn('[CartContext] Servidor de planta no disponible, iniciando carrito vacío local.');
+        console.warn('Silent fallback for active purchases orders:', err.message);
         orders = [];
       }
 

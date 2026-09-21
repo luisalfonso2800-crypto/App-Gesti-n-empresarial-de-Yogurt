@@ -8,16 +8,35 @@
  */
 import React from 'react';
 import { Button } from '@/components/ui/Button';
+import { Eye, EyeOff } from 'lucide-react';
 import styles from '../sales.module.css';
 
-export function SalesHeader({ onNew }) {
+export function SalesHeader({ onNew, mostrarCifras, onTogglePrivacy }) {
   return (
     <div className={styles.header}>
       <div className={styles.headerTitle}>
         <h1 className={styles.title}>Ventas</h1>
         <p className={styles.subtitle}>Facturación, pedidos y despachos de productos terminados a clientes.</p>
       </div>
-      <Button onClick={onNew}>Nueva Venta</Button>
+      <div className={styles.headerActions}>
+        <button
+          type="button"
+          onClick={onTogglePrivacy}
+          title={mostrarCifras ? "Ocultar cifras financieras" : "Mostrar cifras financieras"}
+          aria-label={mostrarCifras ? "Ocultar cifras financieras" : "Mostrar cifras financieras"}
+          className={styles.privacyToggleBtn}
+        >
+          {mostrarCifras ? (
+            <Eye size={18} className={styles.privacyIconOpen} />
+          ) : (
+            <EyeOff size={18} className={styles.privacyIconClosed} />
+          )}
+          <span className={styles.privacyBtnText}>
+            {mostrarCifras ? "Ocultar Cifras" : "Ver Cifras"}
+          </span>
+        </button>
+        <Button onClick={onNew}>Nueva Venta</Button>
+      </div>
     </div>
   );
 }

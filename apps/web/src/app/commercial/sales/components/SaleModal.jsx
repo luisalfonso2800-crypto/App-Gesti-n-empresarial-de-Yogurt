@@ -26,16 +26,24 @@ export function SaleModal({
 
   const handleAddDetail = (newDetail) => handleDetailsChange([...formData.detalles, newDetail]);
   const handleRemoveDetail = (index) => handleDetailsChange(formData.detalles.filter((_, i) => i !== index));
-  const handleUpdateDetailQty = (index, newQty) => {
+  const handleUpdateDetailQty = (index, newQty, newPrice) => {
     if (newQty <= 0) return handleRemoveDetail(index);
-    const updated = formData.detalles.map((d, i) => i === index ? { ...d, cantidad: newQty } : d);
+    const updated = formData.detalles.map((d, i) => {
+      if (i !== index) return d;
+      const targetProduct = products.find(p => (p.idProducto || p.id) === (d.idProducto || d.id));
+      const pInfo = targetProduct?.producto || targetProduct || {};
+      const minMay = Number(pInfo.cantidadMinimaMayorista || 12);
+      const mayPrice = Number(pInfo.precioMayorista || 0);
+      const regPrice = Number(pInfo.precioVenta || pInfo.precioVentaSug || d.precioUnitario);
+      const calculatedPrice = newPrice !== undefined ? newPrice : (mayPrice > 0 && newQty >= minMay ? mayPrice : regPrice);
+      return { ...d, cantidad: newQty, precioUnitario: calculatedPrice };
+    });
     handleDetailsChange(updated);
   };
 
   const utilidadTotal = formData.detalles.reduce((sum, d) => sum + ((d.precioUnitario - d.costoUnitario) * d.cantidad), 0);
   const isDirty = formData.detalles.length > 0 || !!formData.idCliente;
   const clientName = clients.find(x => String(x.id) === String(formData.idCliente))?.nombre || 'Cliente no seleccionado';
-
   const isClienteMissing = !formData.idCliente;
   const isFechaMissing = !formData.fechaVenta;
   const isDetallesMissing = formData.detalles.length === 0;
