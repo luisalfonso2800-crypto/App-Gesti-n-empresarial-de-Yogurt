@@ -26,6 +26,9 @@ export class ProductsRepository {
         precioVenta: true,
         precioMayorista: true,
         cantidadMinimaMayorista: true,
+        tipoImpuesto: true,
+        tarifaIva: true,
+        precioIncluyeIva: true,
         imagenUrl: true,
         presentacion: {
           select: {

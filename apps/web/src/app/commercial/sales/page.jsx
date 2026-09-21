@@ -18,6 +18,7 @@ import SalesDashboardKpis from './components/SalesDashboardKpis';
 import SalesDateFilterBar from './components/SalesDateFilterBar';
 import { SalesTable } from './components/SalesTable';
 import { SaleModal } from './components/SaleModal';
+import SaleInvoicePrintModal from './components/SaleInvoicePrintModal';
 
 function SalesContent() {
   const router = useRouter();
@@ -81,6 +82,11 @@ function SalesContent() {
         products={form.products} clients={form.clients}
         isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
         onNewClient={clientHook.handleOpenModal}
+      />
+      <SaleInvoicePrintModal
+        isOpen={form.isPrintModalOpen}
+        onClose={form.handleClosePrintModal}
+        sale={form.createdSale}
       />
       <ClientFormModal
         isOpen={clientHook.isModalOpen} onClose={clientHook.handleCloseModal}

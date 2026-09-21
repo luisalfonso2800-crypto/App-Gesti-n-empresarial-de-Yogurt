@@ -1,0 +1,132 @@
+/* apps/web/src/components/settings/invoice-settings-modal.module.css */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tabsRow {
+  display: flex;
+  border-bottom: 1px solid #E8E2D7;
+  gap: 0.5rem;
+}
+
+.tabBtn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #798D80;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  color: #182622;
+}
+
+.tabBtnActive {
+  color: #182622;
+  border-bottom-color: #182622;
+}
+
+.sectionFields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.85rem;
+}
+
+.fullWidthCol {
+  grid-column: span 2;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.fieldLabel {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #4A4031;
+}
+
+.fieldInput,
+.fieldTextarea {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #D9CBB7;
+  border-radius: 6px;
+  background-color: #FAF8F5;
+  font-size: 0.82rem;
+  color: #182622;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.fieldInput:focus,
+.fieldTextarea:focus {
+  border-color: #182622;
+  background-color: #FFFFFF;
+}
+
+.fieldTextarea {
+  min-height: 60px;
+  resize: vertical;
+}
+
+.actionsContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #E8E2D7;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+}
+
+.btnReset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8C6D46;
+  background: transparent;
+  border: 1px dashed #D9CBB7;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnReset:hover {
+  background-color: #FAF6EF;
+  color: #182622;
+}
+
+.rightActions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.btnSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #182622;
+  color: #FAF8F5;
+  border: 1px solid #182622;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btnSave:hover {
+  background-color: #243832;
+}

@@ -18,10 +18,12 @@ import {
   Users,
   TrendingUp,
   CreditCard,
-  Receipt
+  Receipt,
+  Settings
 } from 'lucide-react';
 import { SidebarCollapseButton } from './parts/SidebarCollapseButton';
 import { SidebarNavItem } from './parts/SidebarNavItem';
+import InvoiceSettingsModal from '@/components/settings/InvoiceSettingsModal';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
 import { isRouteUnlocked } from '@/lib/onboarding-unlock-rules';
 import styles from './shell.module.css';
@@ -68,6 +70,7 @@ const navItems = [
 export function Sidebar({ collapsed = false, onToggle }) {
   const pathname = usePathname();
   const { data: onboardingData } = useOnboardingStatus();
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`} aria-label="Navegación ERP MANNÁ">
@@ -107,11 +110,28 @@ export function Sidebar({ collapsed = false, onToggle }) {
         </nav>
       </div>
 
+      <div className={styles.footerTopRow}>
+        <button
+          type="button"
+          className={styles.settingsBtn}
+          onClick={() => setIsSettingsOpen(true)}
+          title="Configuración de comprobante"
+          aria-label="Configuración de comprobante"
+        >
+          <Settings size={16} />
+        </button>
+      </div>
+
       <div className={styles.sidebarFooter}>
         <Leaf className={styles.footerLeafIcon} size={14} />
         <span className={styles.footerQuote}>"Procesos que dan vida."</span>
         <span className={styles.footerSubQuote}>La tecnología también puede cuidar lo esencial.</span>
       </div>
+
+      <InvoiceSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </aside>
   );
 }

@@ -10,6 +10,7 @@ import { Shell } from "@/components/shell/Shell";
 import { CartProvider } from "@/context/CartContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { PrivacyProvider } from "@/context/PrivacyContext";
+import { InvoiceConfigProvider } from "@/context/InvoiceConfigContext";
 import "./globals.css";
 
 export const metadata = {
@@ -21,13 +22,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <PrivacyProvider>
-          <NotificationProvider>
-            <CartProvider>
-              <Shell>{children}</Shell>
-            </CartProvider>
-          </NotificationProvider>
-        </PrivacyProvider>
+        <InvoiceConfigProvider>
+          <PrivacyProvider>
+            <NotificationProvider>
+              <CartProvider>
+                <Shell>{children}</Shell>
+              </CartProvider>
+            </NotificationProvider>
+          </PrivacyProvider>
+        </InvoiceConfigProvider>
       </body>
     </html>
   );

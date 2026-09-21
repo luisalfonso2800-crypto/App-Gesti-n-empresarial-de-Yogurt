@@ -1,4 +1,4 @@
-import { Controller, Dependencies, Get, Post, Body, Param, Bind } from '@nestjs/common';
+import { Controller, Dependencies, Get, Post, Body, Param, Query, Bind } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 
 @Controller('payments')
@@ -17,6 +17,12 @@ export class PaymentsController {
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get('receivables')
+  @Bind(Query())
+  getReceivables(query) {
+    return this.service.getReceivables(query || {});
   }
 
   @Get(':id')

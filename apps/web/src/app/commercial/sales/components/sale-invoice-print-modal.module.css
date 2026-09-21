@@ -1,0 +1,468 @@
+/* apps/web/src/app/commercial/sales/components/sale-invoice-print-modal.module.css */
+/* Design System MANNÁ: Comprobante Editorial Exacto (3 Columnas, Doble Columna Datos, Tabla y Footer Holding) */
+
+.editorialVoucherContainer {
+  background-color: #FAF8F5;
+  border: 1px solid #D9CBB7;
+  border-radius: 4px;
+  padding: 1.75rem 2rem;
+  max-width: 780px;
+  margin: 0 auto;
+  color: #182622;
+  box-shadow: 0 4px 20px rgba(24, 38, 34, 0.06);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* 1. Cabecera Editorial 3 Columnas */
+.headerEditorial3Col {
+  display: grid;
+  grid-template-columns: 1.4fr 1.6fr 1.2fr;
+  align-items: center;
+  border-bottom: 2px solid #D9CBB7;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.headerLeftCol {
+  text-align: left;
+}
+
+.brandTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.brandMannaTitle {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #182622;
+  margin: 0;
+  line-height: 1;
+}
+
+.brandLeafGlyph {
+  color: #8C6D46;
+  font-size: 0.9rem;
+}
+
+.brandMannaMotto {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-style: italic;
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+  color: #7D6E5D;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.headerCenterCol {
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+.headerCenterPhrase {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-style: italic;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #615545;
+  margin: 0;
+}
+
+.headerRightCol {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.voucherBox {
+  border: 1.5px solid #182622;
+  background-color: #FAF6EF;
+  padding: 0.6rem 0.85rem;
+  text-align: center;
+  width: 100%;
+  border-radius: 2px;
+}
+
+.voucherTitle {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #182622;
+  text-transform: uppercase;
+}
+
+.voucherNumber {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #182622;
+  margin: 0.2rem 0;
+  letter-spacing: 0.05em;
+}
+
+.voucherDate {
+  font-size: 0.7rem;
+  color: #5C5243;
+}
+
+.voucherSeal {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8C6D46;
+  border-top: 1px dashed #D9CBB7;
+  padding-top: 0.25rem;
+  margin-top: 0.35rem;
+  text-transform: uppercase;
+}
+
+/* 2. Bloques de Datos a Doble Columna */
+.dataColumnsContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: #FDFCFA;
+  border: 1px solid #E8DFD1;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.dataColumn {
+  padding: 0.85rem 1.15rem;
+}
+
+.dataColumn:first-child {
+  border-right: 1px solid #E8DFD1;
+}
+
+.dataColumnHeader {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #8C6D46;
+  border-bottom: 1px solid #EAE2D5;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.dataRow {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: #383127;
+  margin-bottom: 0.35rem;
+}
+
+.dataIcon {
+  color: #8C6D46;
+  flex-shrink: 0;
+}
+
+.statusBadge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background-color: #E2E8F0;
+  color: #1E293B;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+/* 3. Tabla de Productos */
+.tableContainer {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.25rem;
+  border: 1px solid #D9CBB7;
+}
+
+.tableTh {
+  background-color: #F2EBE0;
+  border-bottom: 1px solid #D9CBB7;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #182622;
+  text-transform: uppercase;
+}
+
+.tableThLeft {
+  text-align: left;
+}
+
+.tableThCenter {
+  text-align: center;
+}
+
+.tableThRight {
+  text-align: right;
+}
+
+.tableTd {
+  padding: 0.55rem 0.6rem;
+  font-size: 0.78rem;
+  border-bottom: 1px dashed #E3D8C8;
+  color: #2D271E;
+}
+
+.tableTdCenter {
+  text-align: center;
+}
+
+.tableTdRight {
+  text-align: right;
+}
+
+.tableTdTotal {
+  text-align: right;
+  font-weight: 700;
+  color: #182622;
+}
+
+.itemDiscountBadge {
+  display: block;
+  font-size: 0.66rem;
+  color: #9C5226;
+  font-weight: 600;
+}
+
+.giftBadge {
+  display: inline-block;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #854D0E;
+  background-color: #FEF9C3;
+  border: 1px solid #FDE047;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+}
+
+/* 4. Sección Inferior: Observaciones & Resumen */
+.bottomSectionGrid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.observationsBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px dashed #D9CBB7;
+  background-color: #FAF6EF;
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+}
+
+.observationsTitle {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #8C6D46;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.observationsContent {
+  font-size: 0.78rem;
+  color: #4A4031;
+  line-height: 1.4;
+}
+
+.observationsGratitude {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-style: italic;
+  font-size: 0.8rem;
+  color: #7D6E5D;
+  margin-top: 0.8rem;
+}
+
+.financialSummaryCard {
+  background-color: #FAF6EF;
+  border: 1px solid #D9CBB7;
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.financialRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #4A4031;
+}
+
+.financialDiscountRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #9C5226;
+  font-weight: 600;
+}
+
+.financialRowTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #F2EBE0;
+  border: 1px solid #182622;
+  padding: 0.5rem 0.65rem;
+  margin-top: 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #182622;
+  border-radius: 2px;
+}
+
+.creditSummaryBox {
+  border-top: 1px dashed #D9CBB7;
+  padding-top: 0.35rem;
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.76rem;
+}
+
+.creditPendingValue {
+  font-weight: 700;
+  color: #B45309;
+}
+
+/* 5. Pie de Página Corporativo (3 Bloques) */
+.corporateFooter {
+  border-top: 2px solid #D9CBB7;
+  padding-top: 1rem;
+}
+
+.footer3Cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1.2fr 0.9fr;
+  gap: 1rem;
+  align-items: center;
+  font-size: 0.72rem;
+}
+
+.footerBrand {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: #182622;
+}
+
+.footerLegal {
+  color: #5C5243;
+  font-weight: 600;
+}
+
+.footerHolding {
+  font-size: 0.64rem;
+  color: #8C6D46;
+  font-weight: 700;
+  margin-top: 0.15rem;
+}
+
+.footerCity {
+  font-size: 0.64rem;
+  color: #7D6E5D;
+}
+
+.footerColCenter {
+  color: #4A4031;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.footerColRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.qrContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 110px;
+}
+
+.qrSvg {
+  color: #182622;
+}
+
+.qrText {
+  font-size: 0.58rem;
+  color: #7D6E5D;
+  margin-top: 0.2rem;
+  line-height: 1.2;
+}
+
+.footerMottoSpread {
+  text-align: center;
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: #8C6D46;
+  border-top: 1px dashed #D9CBB7;
+  padding-top: 0.75rem;
+  margin-top: 0.85rem;
+  text-transform: uppercase;
+}
+
+/* Acciones y Print Media */
+.actionsRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.btnPrint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background-color: #182622;
+  color: #FAF8F5;
+  border: 1px solid #182622;
+  padding: 0.55rem 1.15rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btnPrint:hover {
+  background-color: #243832;
+}
+
+@media print {
+  .editorialVoucherContainer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 1.5cm;
+    border: none;
+    box-shadow: none;
+    background: #FFFFFF !important;
+    z-index: 999999;
+  }
+  .actionsRow {
+    display: none !important;
+  }
+}

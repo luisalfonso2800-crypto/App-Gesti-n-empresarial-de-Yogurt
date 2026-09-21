@@ -19,7 +19,8 @@ export function useProductForm({ onSuccess }) {
   const [formData, setFormData] = useState({
     nombre: '', idPresentacion: '', categoria: '', descripcion: '',
     canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true,
-    precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: ''
+    precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: '',
+    tipoImpuesto: 'GRAVADO', tarifaIva: 19, precioIncluyeIva: true
   });
 
   const loadPresentations = async () => {
@@ -43,14 +44,18 @@ export function useProductForm({ onSuccess }) {
         margenObjetivo: item.margenObjetivo || '',
         precioMayorista: item.precioMayorista ?? '',
         cantidadMinimaMayorista: item.cantidadMinimaMayorista ?? 12,
-        descuentoMayoristaPorcentaje: item.descuentoMayoristaPorcentaje ?? ''
+        descuentoMayoristaPorcentaje: item.descuentoMayoristaPorcentaje ?? '',
+        tipoImpuesto: item.tipoImpuesto || 'GRAVADO',
+        tarifaIva: item.tarifaIva !== undefined && item.tarifaIva !== null ? Number(item.tarifaIva) : 19,
+        precioIncluyeIva: item.precioIncluyeIva ?? true
       });
     } else {
       setEditingItem(null);
       setFormData({
         nombre: '', idPresentacion: '', categoria: '', descripcion: '',
         canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true,
-        precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: ''
+        precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: '',
+        tipoImpuesto: 'GRAVADO', tarifaIva: 19, precioIncluyeIva: true
       });
     }
     setErrorMsg('');

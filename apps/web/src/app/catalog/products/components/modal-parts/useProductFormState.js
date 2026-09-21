@@ -159,7 +159,10 @@ export function useProductFormState({
       margenObjetivo: !showPricingFields ? 0 : Number(formData.margenObjetivo),
       precioMayorista: !showPricingFields || !formData.precioMayorista ? null : cleanCurrency(formData.precioMayorista),
       cantidadMinimaMayorista: !showPricingFields ? 12 : (Number(formData.cantidadMinimaMayorista) || 12),
-      descuentoMayoristaPorcentaje: !showPricingFields || !formData.descuentoMayoristaPorcentaje ? null : Number(formData.descuentoMayoristaPorcentaje)
+      descuentoMayoristaPorcentaje: !showPricingFields || !formData.descuentoMayoristaPorcentaje ? null : Number(formData.descuentoMayoristaPorcentaje),
+      tipoImpuesto: formData.tipoImpuesto || 'GRAVADO',
+      tarifaIva: formData.tipoImpuesto === 'EXCLUIDO' || formData.tipoImpuesto === 'EXENTO' ? 0 : (Number(formData.tarifaIva) || 19),
+      precioIncluyeIva: formData.precioIncluyeIva ?? true
     });
   };
 

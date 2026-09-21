@@ -1,25 +1,41 @@
 /**
  * @file useSaleForm.js
  * @module commercial/sales/hooks
- * @description Gestión del formulario de emisión de nuevas ventas.
- * @responsibility Manejar el state y el submit action de una factura de venta.
+ * @description Gestión del formulario de emisión de nuevas ventas con liquidación tributaria (SRP < 150).
+ * @responsibility Manejar el state, cálculo condicional de IVA y el submit de una factura de venta.
  * @usedBy apps/web/src/app/commercial/sales/page.jsx
  * @dependencies @/lib/api-client
  */
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api-client';
 
+const INITIAL_FORM = {
+  idCliente: '',
+  fechaVenta: new Date().toISOString().substring(0, 10),
+  canalVenta: 'DIRECTO',
+  tipoPago: 'CONTADO',
+  aplicaIva: false,
+  subtotal: 0,
+  descuentoTotal: 0,
+  baseImponible: 0,
+  ivaTotal: 0,
+  totalVenta: 0,
+  valorPagado: 0,
+  saldoPendiente: 0,
+  estado: 'COMPLETADO',
+  observaciones: '',
+  detalles: []
+};
+
 export function useSaleForm({ onSuccess }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    idCliente: '', fechaVenta: new Date().toISOString().substring(0, 10),
-    canalVenta: 'DIRECTO', tipoPago: 'CONTADO', totalVenta: 0,
-    valorPagado: 0, saldoPendiente: 0, estado: 'COMPLETADO',
-    observaciones: '', detalles: []
-  });
-
+  const [createdSale, setCreatedSale] = useState(null);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [formData, setFormData] = useState(INITIAL_FORM);
   const [products, setProducts] = useState([]);
   const [clients, setClients] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (isModalOpen) {
@@ -42,16 +58,16 @@ export function useSaleForm({ onSuccess }) {
             nombre: p.nombre,
             presentacion: presObj,
             presentacionNombre: presNombre,
-            nombrePresentacion: presNombre,
             volumenPresentacion: volPres,
             fotoComercialUrl: p.imagenUrl,
             precioVenta: Number(p.precioVenta || 0),
             precioMayorista: Number(p.precioMayorista || 0),
             cantidadMinimaMayorista: Number(p.cantidadMinimaMayorista || 12),
+            tipoImpuesto: p.tipoImpuesto || 'GRAVADO',
+            tarifaIva: p.tarifaIva !== undefined && p.tarifaIva !== null ? Number(p.tarifaIva) : 19,
+            precioIncluyeIva: p.precioIncluyeIva ?? true,
             stockCava: stock,
             stockActual: stock,
-            cantidadActual: stock,
-            stock: stock,
             producto: p
           };
         });
@@ -61,41 +77,108 @@ export function useSaleForm({ onSuccess }) {
     }
   }, [isModalOpen]);
 
-  const handleOpenModal = () => {
-    setFormData({
-      idCliente: '', fechaVenta: new Date().toISOString().substring(0, 10),
-      canalVenta: 'DIRECTO', tipoPago: 'CONTADO', totalVenta: 0,
-      valorPagado: 0, saldoPendiente: 0, estado: 'COMPLETADO',
-      observaciones: '', detalles: []
+  const computeTotals = (detalles, aplicaIva, tipoPago, valorPagadoInput) => {
+    let subtotalBruto = 0;
+    let descuentoTotal = 0;
+    let baseImponible = 0;
+    let ivaTotal = 0;
+    let totalVenta = 0;
+
+    const computedDetalles = (detalles || []).map(d => {
+      const cant = Number(d.cantidad || 0);
+      const precio = Number(d.precioUnitario || 0);
+      const desc = Number(d.descuento || 0);
+      const brutoLinea = cant * precio;
+      const subLinea = Math.max(0, brutoLinea - desc);
+
+      subtotalBruto += brutoLinea;
+      descuentoTotal += desc;
+
+      if (!aplicaIva) {
+        baseImponible += subLinea;
+        totalVenta += subLinea;
+        return {
+          ...d,
+          descuento: desc,
+          tarifaIva: 0,
+          baseGravable: subLinea,
+          montoIva: 0,
+          totalLinea: subLinea
+        };
+      }
+
+      const pInfo = products.find(p => (p.idProducto || p.id) === (d.idProducto || d.id));
+      const tipoImp = pInfo?.tipoImpuesto || 'GRAVADO';
+      const tarifa = (tipoImp === 'EXCLUIDO' || tipoImp === 'EXENTO') ? 0 : Number(pInfo?.tarifaIva ?? 19);
+      const incluye = pInfo?.precioIncluyeIva ?? true;
+
+      let baseLinea = subLinea;
+      let ivaLinea = 0;
+
+      if (tarifa > 0) {
+        if (incluye) {
+          baseLinea = Math.round(subLinea / (1 + (tarifa / 100)));
+          ivaLinea = subLinea - baseLinea;
+        } else {
+          baseLinea = subLinea;
+          ivaLinea = Math.round(baseLinea * (tarifa / 100));
+        }
+      }
+
+      baseImponible += baseLinea;
+      ivaTotal += ivaLinea;
+      const totalLineaFinal = baseLinea + ivaLinea;
+      totalVenta += totalLineaFinal;
+
+      return {
+        ...d,
+        descuento: desc,
+        tarifaIva: tarifa,
+        baseGravable: baseLinea,
+        montoIva: ivaLinea,
+        totalLinea: totalLineaFinal
+      };
     });
+
+    const valorPagado = tipoPago === 'CONTADO' ? totalVenta : Number(valorPagadoInput || 0);
+    const saldoPendiente = tipoPago === 'CONTADO' ? 0 : Math.max(0, totalVenta - valorPagado);
+
+    return {
+      detalles: computedDetalles,
+      subtotal: subtotalBruto,
+      descuentoTotal,
+      baseImponible,
+      ivaTotal,
+      totalVenta,
+      valorPagado,
+      saldoPendiente
+    };
+  };
+
+  const handleOpenModal = () => {
+    setFormData(INITIAL_FORM);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => setIsModalOpen(false);
 
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? (parseFloat(value) || 0) : value
-    }));
+    const { name, value, type, checked } = e.target;
+    const actualVal = type === 'checkbox' ? checked : (type === 'number' ? (parseFloat(value) || 0) : value);
+
+    setFormData(prev => {
+      const updated = { ...prev, [name]: actualVal };
+      const totals = computeTotals(updated.detalles, updated.aplicaIva, updated.tipoPago, updated.valorPagado);
+      return { ...updated, ...totals };
+    });
   };
 
   const handleDetailsChange = (newDetails) => {
     setFormData(prev => {
-      const subtotal = newDetails.reduce((sum, d) => sum + (Number(d.cantidad) * Number(d.precioUnitario)), 0);
-      return {
-        ...prev,
-        detalles: newDetails,
-        totalVenta: subtotal,
-        valorPagado: prev.tipoPago === 'CONTADO' ? subtotal : prev.valorPagado,
-        saldoPendiente: prev.tipoPago === 'CONTADO' ? 0 : subtotal - prev.valorPagado
-      };
+      const totals = computeTotals(newDetails, prev.aplicaIva, prev.tipoPago, prev.valorPagado);
+      return { ...prev, ...totals };
     });
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -111,19 +194,34 @@ export function useSaleForm({ onSuccess }) {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      await apiClient.post('/sales', {
+      const response = await apiClient.post('/sales', {
         ...formData,
         fechaVenta: new Date(formData.fechaVenta).toISOString(),
         valorPagado: formData.tipoPago === 'CONTADO' ? formData.totalVenta : formData.valorPagado,
         saldoPendiente: formData.tipoPago === 'CONTADO' ? 0 : formData.totalVenta - formData.valorPagado
       });
+      const saleResult = response?.data || response;
+      const clientObj = clients.find(c => c.id === formData.idCliente);
+      const saleWithMeta = {
+        ...formData,
+        ...(typeof saleResult === 'object' ? saleResult : {}),
+        cliente: clientObj || saleResult?.cliente || { nombre: 'CLIENTE' },
+        detalles: saleResult?.detalles || formData.detalles
+      };
+      setCreatedSale(saleWithMeta);
       handleCloseModal();
+      setIsPrintModalOpen(true);
       if (onSuccess) onSuccess();
     } catch (err) {
       setErrorMsg(err.message || 'Error al procesar la venta');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleClosePrintModal = () => {
+    setIsPrintModalOpen(false);
+    setCreatedSale(null);
   };
 
   const reloadClients = async () => {
@@ -139,6 +237,7 @@ export function useSaleForm({ onSuccess }) {
 
   return {
     isModalOpen, formData, products, clients, isSubmitting, errorMsg,
+    createdSale, isPrintModalOpen, handleClosePrintModal,
     handleOpenModal, handleCloseModal, reloadClients, setFormData,
     handleChange, handleDetailsChange, handleSubmit
   };

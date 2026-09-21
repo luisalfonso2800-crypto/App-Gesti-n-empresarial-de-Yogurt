@@ -54,6 +54,12 @@ export class ProductsService {
       cleanData.idPresentacion = idPresentacionFinal;
     }
 
+    if (cleanData.tipoImpuesto === 'EXCLUIDO' || cleanData.tipoImpuesto === 'EXENTO') {
+      cleanData.tarifaIva = 0;
+    } else if (cleanData.tarifaIva !== undefined) {
+      cleanData.tarifaIva = Number(cleanData.tarifaIva);
+    }
+
     return this.repository.create(cleanData);
   }
 
@@ -81,6 +87,12 @@ export class ProductsService {
     const idPresentacionFinal = cleanData.idPresentacion || presentacion?.id;
     if (idPresentacionFinal) {
       cleanData.idPresentacion = idPresentacionFinal;
+    }
+
+    if (cleanData.tipoImpuesto === 'EXCLUIDO' || cleanData.tipoImpuesto === 'EXENTO') {
+      cleanData.tarifaIva = 0;
+    } else if (cleanData.tarifaIva !== undefined) {
+      cleanData.tarifaIva = Number(cleanData.tarifaIva);
     }
 
     return this.repository.update(id, cleanData);

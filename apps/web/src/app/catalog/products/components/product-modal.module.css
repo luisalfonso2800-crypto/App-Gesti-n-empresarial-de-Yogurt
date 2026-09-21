@@ -545,3 +545,33 @@
   line-height: 1.4;
 }
 
+.taxSectionCard {
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-top: 0.85rem;
+}
+
+.taxSectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #182622;
+  margin-bottom: 0.75rem;
+}
+
+.taxGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.taxCheckboxWrapper {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #E2DCD0;
+}
+

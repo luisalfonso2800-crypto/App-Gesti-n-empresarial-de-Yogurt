@@ -21,4 +21,8 @@ export class PaymentsService {
   async create(createDto) {
     return this.repository.create(createDto);
   }
+
+  async getReceivables(filters) {
+    return this.repository.getReceivables(filters);
+  }
 }

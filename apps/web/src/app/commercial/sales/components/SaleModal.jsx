@@ -1,10 +1,10 @@
 /**
  * @file SaleModal.jsx
  * @module commercial/sales/components
- * @description Modal orquestador para registro de ventas y despacho desde cava (SRP + CSS Modules).
+ * @description Modal orquestador para registro de ventas y despacho desde cava (SRP < 150 líneas).
  * @responsibility Orquestar inputs maestros, sección de despacho, ficha de balance y validaciones Poka-Yoke.
  * @usedBy apps/web/src/app/commercial/sales/page.jsx
- * @dependencies @/components/ui/SmartModal, ./modal-parts/SaleGeneralFields, ./modal-parts/SaleProductsDispatchSection, ./modal-parts/SaleBalanceReceiptCard, ./modal-parts/SaleCreditFields
+ * @dependencies @/components/ui/SmartModal, ./modal-parts/*
  */
 import React, { useState } from 'react';
 import SmartModal, { SubmitButton } from '@/components/ui/SmartModal';
@@ -42,7 +42,7 @@ export function SaleModal({
   };
 
   const utilidadTotal = formData.detalles.reduce((sum, d) => sum + ((d.precioUnitario - d.costoUnitario) * d.cantidad), 0);
-  const isDirty = formData.detalles.length > 0 || !!formData.idCliente;
+  const isDirty = formData.detalles.length > 0 || Boolean(formData.idCliente);
   const clientName = clients.find(x => String(x.id) === String(formData.idCliente))?.nombre || 'Cliente no seleccionado';
   const isClienteMissing = !formData.idCliente;
   const isFechaMissing = !formData.fechaVenta;
@@ -67,59 +67,47 @@ export function SaleModal({
 
   return (
     <SmartModal 
-      isOpen={isOpen} 
-      onClose={handleClose} 
-      title="Nueva Venta (Despacho desde Cava)"
-      isDirty={isDirty}
-      isSubmitting={isSubmitting}
+      isOpen={isOpen} onClose={handleClose} title="Nueva Venta (Despacho desde Cava)"
+      isDirty={isDirty} isSubmitting={isSubmitting}
     >
-      {errorMsg && (
-        <div className={styles.errorMessage}>
-          <span>⚠️</span>
-          <span>{errorMsg}</span>
-        </div>
-      )}
+      {errorMsg && <div className={styles.errorMessage}><span>⚠️</span><span>{errorMsg}</span></div>}
 
       <form onSubmit={handleFormSubmit} className={styles.formContainer}>
         <SaleGeneralFields
-          formData={formData}
-          handleChange={handleChange}
-          clients={clients}
-          onNewClient={onNewClient}
-          hasSubmitted={hasSubmitted}
-          isClienteMissing={isClienteMissing}
-          isFechaMissing={isFechaMissing}
+          formData={formData} handleChange={handleChange} clients={clients}
+          onNewClient={onNewClient} hasSubmitted={hasSubmitted}
+          isClienteMissing={isClienteMissing} isFechaMissing={isFechaMissing}
         />
 
+        <div className={styles.taxToggleBanner}>
+          <label className={styles.taxToggleLabel}>
+            <input type="checkbox" name="aplicaIva" checked={formData.aplicaIva ?? false} onChange={handleChange} />
+            <span>Liquidar con IVA (Factura Gravada Comercial)</span>
+          </label>
+          {formData.aplicaIva && <span className={styles.taxToggleBadge}>IVA Activo</span>}
+        </div>
+
         <SaleProductsDispatchSection
-          products={products}
-          detalles={formData.detalles}
-          onAddDetail={handleAddDetail}
-          onRemoveDetail={handleRemoveDetail}
-          onUpdateQty={handleUpdateDetailQty}
-          onStockErrorChange={setStockError}
-          hasSubmitted={hasSubmitted}
-          isDetallesMissing={isDetallesMissing}
+          products={products} detalles={formData.detalles}
+          onAddDetail={handleAddDetail} onRemoveDetail={handleRemoveDetail}
+          onUpdateQty={handleUpdateDetailQty} onStockErrorChange={setStockError}
+          hasSubmitted={hasSubmitted} isDetallesMissing={isDetallesMissing}
         />
 
         <SaleBalanceReceiptCard
-          detalles={formData.detalles}
-          totalVenta={formData.totalVenta}
-          utilidadTotal={utilidadTotal}
+          detalles={formData.detalles} totalVenta={formData.totalVenta} utilidadTotal={utilidadTotal}
+          aplicaIva={formData.aplicaIva} baseImponible={formData.baseImponible} ivaTotal={formData.ivaTotal}
         />
 
         <SalesCreditScheduler
-          formData={formData}
-          handleChange={handleChange}
-          hasSubmitted={hasSubmitted}
-          isFechaLimiteMissing={isFechaLimiteMissing}
+          formData={formData} handleChange={handleChange}
+          hasSubmitted={hasSubmitted} isFechaLimiteMissing={isFechaLimiteMissing}
         />
 
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>Observaciones</label>
           <input 
-            name="observaciones" 
-            value={formData.observaciones ?? ''} 
+            name="observaciones" value={formData.observaciones ?? ''}
             onChange={(e) => handleChange({ target: { name: 'observaciones', value: e.target.value.toUpperCase() } })} 
             className={`${modalStyles.input} ${styles.uppercaseInput}`}
           />
@@ -134,10 +122,8 @@ export function SaleModal({
         <div className={modalStyles.actions}>
           <button type="button" onClick={handleClose} className={modalStyles.btnCancel}>Cancelar</button>
           <SubmitButton 
-            isSubmitting={isSubmitting} 
-            text="Despachar y Facturar"
-            disabled={isSubmitDisabled}
-            title={submitTitle}
+            isSubmitting={isSubmitting} text="Despachar y Facturar"
+            disabled={isSubmitDisabled} title={submitTitle}
             className={isSubmitDisabled ? styles.btnSubmitDisabled : ''}
           />
         </div>

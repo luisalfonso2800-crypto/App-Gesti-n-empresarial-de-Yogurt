@@ -133,7 +133,7 @@ export class SalesRepository {
         });
 
         const costoUnit = d.costoUnitarioLote || (inv ? Number(inv.costoPromedio) : 0);
-        const subVenta = d.cantidad * Number(d.precioUnitario);
+        const subVenta = d.totalLinea !== undefined ? Number(d.totalLinea) : (d.cantidad * Number(d.precioUnitario));
         const util = subVenta - (d.cantidad * costoUnit);
 
         finalDetallesCreate.push({
@@ -142,6 +142,9 @@ export class SalesRepository {
           cantidad: d.cantidad,
           precioUnitario: d.precioUnitario,
           descuento: d.descuento || 0,
+          tarifaIva: d.tarifaIva !== undefined ? Number(d.tarifaIva) : 0,
+          baseGravable: d.baseGravable !== undefined ? Number(d.baseGravable) : (d.cantidad * Number(d.precioUnitario)),
+          montoIva: d.montoIva !== undefined ? Number(d.montoIva) : 0,
           totalLinea: subVenta,
           costoUnitario: costoUnit,
           utilidadUnitaria: Number(d.precioUnitario) - costoUnit,
@@ -158,6 +161,11 @@ export class SalesRepository {
           canalVenta: data.canalVenta,
           tipoPago: data.tipoPago,
           fechaLimitePago: data.fechaLimitePago ? new Date(data.fechaLimitePago) : null,
+          aplicaIva: Boolean(data.aplicaIva),
+          subtotal: data.subtotal !== undefined ? Number(data.subtotal) : Number(data.totalVenta),
+          descuentoTotal: data.descuentoTotal !== undefined ? Number(data.descuentoTotal) : 0,
+          baseImponible: data.baseImponible !== undefined ? Number(data.baseImponible) : Number(data.totalVenta),
+          ivaTotal: data.ivaTotal !== undefined ? Number(data.ivaTotal) : 0,
           totalVenta: data.totalVenta,
           valorPagado: data.valorPagado,
           saldoPendiente: data.saldoPendiente,
@@ -167,8 +175,28 @@ export class SalesRepository {
             create: finalDetallesCreate
           }
         },
-        include: { detalles: true }
+        include: {
+          detalles: {
+            include: { producto: true }
+          },
+          cliente: true
+        }
       });
+
+      // Si la venta tiene un abono o pago inicial, registrarlo en la tabla Pagos
+      if (Number(data.valorPagado || 0) > 0) {
+        await prisma.pago.create({
+          data: {
+            fechaPago: new Date(data.fechaVenta),
+            idCliente: data.idCliente,
+            idVenta: venta.id,
+            valorPagado: data.valorPagado,
+            metodoPago: data.metodoPago || 'EFECTIVO',
+            referencia: data.referenciaPago || 'Abono Inicial Venta',
+            observaciones: data.observacionesPago || 'Registro automático de pago/abono en venta'
+          }
+        });
+      }
 
       // Crear movimientosInventario
       for (const d of finalDetallesCreate) {

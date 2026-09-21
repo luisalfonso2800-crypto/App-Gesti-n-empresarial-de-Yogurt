@@ -21,6 +21,7 @@ import { ExpensesModule } from './expenses/expenses.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { UploadsModule } from './uploads/uploads.module';
 import { SystemModule } from './system/system.module';
+import { CompanyConfigModule } from './company-config/company-config.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { SystemModule } from './system/system.module';
     ExpensesModule,
     DashboardModule,
     SystemModule,
+    CompanyConfigModule,
   ],
   controllers: [AppController],
   providers: [AppService],

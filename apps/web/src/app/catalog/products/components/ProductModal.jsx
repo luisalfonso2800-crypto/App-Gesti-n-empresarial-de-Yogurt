@@ -13,6 +13,7 @@ import styles from './product-modal.module.css';
 import { ProductBasicFields } from './modal-parts/ProductBasicFields';
 import { ProductImageAndDescriptionFields } from './modal-parts/ProductImageAndDescriptionFields';
 import { ProductPricingAndMarginFields } from './modal-parts/ProductPricingAndMarginFields';
+import { ProductTaxFields } from './modal-parts/ProductTaxFields';
 import { ProductWholesaleSection } from './modal-parts/ProductWholesaleSection';
 import { ProductModalActions } from './modal-parts/ProductModalActions';
 import { useProductFormState } from './modal-parts/useProductFormState';
@@ -70,6 +71,11 @@ export function ProductModal({
           isGranel={isGranel} showPricingFields={showPricingFields} formData={formData} handleChange={handleChange} precioVentaNum={precioVentaNum} margenObjetivoNum={margenObjetivoNum} 
           costoMaximoPermitido={costoMaximoPermitido} gananciaEsperada={gananciaEsperada}
           isPrecioVentaError={hasSubmitted && isPrecioVentaInvalid} isMargenObjetivoError={hasSubmitted && isMargenObjetivoInvalid}
+        />
+        <ProductTaxFields
+          formData={formData}
+          handleChange={handleChange}
+          showPricingFields={showPricingFields}
         />
         {showPricingFields && (
           <ProductWholesaleSection

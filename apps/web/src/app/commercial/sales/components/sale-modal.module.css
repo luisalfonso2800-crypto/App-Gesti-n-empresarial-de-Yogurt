@@ -27,6 +27,41 @@
   text-transform: uppercase;
 }
 
+.taxToggleBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.95rem;
+  border-radius: 8px;
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+}
+
+.taxToggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #182622;
+  cursor: pointer;
+  user-select: none;
+}
+
+.taxToggleBadge {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  background-color: #ECFDF5;
+  color: #065F46;
+  font-weight: 700;
+}
+
+.settlementIvaAmount {
+  font-weight: 700;
+  color: #B45309;
+}
+
 /* Products section */
 .productsSectionCard {
   background-color: #FAFAF9;
