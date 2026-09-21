@@ -54,3 +54,17 @@ pnpm --filter api run db:clean:test
 ```bash
 pnpm install
 ```
+
+Si solo quieres ver los resultados sin la ventana emergente
+Si no deseas ver la ventana del navegador y prefieres que el robot trabaje en segundo plano en silencio mientras tú sigues trabajando en la computadora:
+
+Abre apps/web/playwright.config.js.
+
+Cambia headless: false por headless: true.
+
+Vuelve a ejecutar:
+
+PowerShell
+pnpm --filter web exec playwright test all-modules-exhaustive.spec.js
+
+pnpm --filter web exec playwright test all-modules-exhaustive.spec.js
