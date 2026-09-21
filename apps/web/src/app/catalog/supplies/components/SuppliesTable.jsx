@@ -60,6 +60,7 @@ export function SuppliesTable({
           <TH>Código</TH>
           <TH>Nombre</TH>
           <TH>Categoría</TH>
+          <TH>Subcategoría</TH>
           <TH>Marca</TH>
           <TH>Unidad Base</TH>
           <TH>Stock Mínimo</TH>
@@ -74,6 +75,7 @@ export function SuppliesTable({
             <TD>{generateCode(item)}</TD>
             <TD>{item.nombre}</TD>
             <TD>{item.categoria}</TD>
+            <TD>{item.subcategoria || 'N/A'}</TD>
             <TD>{item.marca || 'N/A'}</TD>
             <TD>{item.unidadBase}</TD>
             <TD>

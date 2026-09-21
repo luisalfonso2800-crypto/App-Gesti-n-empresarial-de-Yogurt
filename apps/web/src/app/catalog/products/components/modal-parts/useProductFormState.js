@@ -4,7 +4,7 @@
  * @description Hook de gestión de estado, tipo de producto y validaciones Poka-Yoke para ProductModal.
  * @responsibility Aislar el cálculo de validación y sincronización de tipo de producto respetando SRP < 150.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { cleanCurrency } from '@/lib/formatters';
 import { CATEGORIAS_WIP, CATEGORIAS_COMERCIALES } from '../productConstants';
 
@@ -30,28 +30,35 @@ export function useProductFormState({
   const initialWipMode = isBaseIntermedia || isEditingWip;
   const [productType, setProductType] = useState(initialWipMode ? 'WIP' : 'COMERCIAL');
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const prevFormId = useRef(formData?.id);
+
+  const prevIsOpen = useRef(false);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && (!prevIsOpen.current || formData?.id !== prevFormId.current)) {
       setProductType(initialWipMode ? 'WIP' : 'COMERCIAL');
       setHasSubmitted(false);
     }
-  }, [isOpen, initialWipMode]);
+    prevIsOpen.current = isOpen;
+    prevFormId.current = formData?.id;
+  }, [isOpen, formData?.id]);
 
   const isWipMode = productType === 'WIP';
-  const filteredPresentations = presentations.filter((pres) => {
-    const tipo = pres.tipoEnvase?.toUpperCase() || '';
-    const nombre = pres.nombre?.toUpperCase() || '';
-    const esGranel = tipo === 'BALDE' || tipo === 'TANQUE_GRANEL' || nombre.includes('GRANEL');
-    const esAuxiliarWip = tipo === 'PORCIONADO_WIP' || nombre.includes('WIP') || nombre.includes('CEREAL');
+  
+  const filteredPresentations = useMemo(() => {
+    return presentations.filter((pres) => {
+      const tipo = pres.tipoEnvase?.toUpperCase() || '';
+      const nombre = pres.nombre?.toUpperCase() || '';
+      const esGranel = tipo === 'BALDE' || tipo === 'TANQUE_GRANEL' || nombre.includes('GRANEL');
+      const esAuxiliarWip = tipo === 'PORCIONADO_WIP' || nombre.includes('WIP') || nombre.includes('CEREAL');
 
-    if (isWipMode) {
-      return esGranel || esAuxiliarWip;
-    } else {
-      // En modo comercial, solo envases de venta terminada
-      return !esGranel;
-    }
-  });
+      if (isWipMode) {
+        return esGranel || esAuxiliarWip;
+      } else {
+        return !esGranel;
+      }
+    });
+  }, [presentations, isWipMode]);
 
   const selectedPres = presentations.find(p => String(p.id) === String(formData.idPresentacion));
   const isGranel = productType === 'WIP' || selectedPres?.tipoEnvase === 'TANQUE_GRANEL' || selectedPres?.tipoEnvase === 'BALDE' || selectedPres?.nombre?.toUpperCase().includes('GRANEL');

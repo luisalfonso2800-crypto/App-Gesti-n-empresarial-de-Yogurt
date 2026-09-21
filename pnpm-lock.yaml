@@ -42,7 +42,7 @@ importers:
         version: 17.4.2
       express:
         specifier: ^5.2.1
-        version: 5.2.1
+        version: 5.2.1(supports-color@5.5.0)
       joi:
         specifier: ^18.2.6
         version: 18.2.6

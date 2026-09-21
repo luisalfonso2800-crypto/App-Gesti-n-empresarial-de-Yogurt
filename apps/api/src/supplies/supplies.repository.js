@@ -35,6 +35,16 @@ export class SuppliesRepository {
     });
   }
 
+  async findBrands() {
+    const brands = await this.prisma.insumo.findMany({
+      where: { activo: true, marca: { not: '' } },
+      select: { marca: true },
+      distinct: ['marca'],
+      orderBy: { marca: 'asc' }
+    });
+    return brands.map(b => b.marca).filter(Boolean);
+  }
+
   async findById(id) {
     return this.prisma.insumo.findUnique({
       where: { id },

@@ -16,6 +16,10 @@ export class SuppliesService {
     return this.repository.findActive();
   }
 
+  async findBrands() {
+    return this.repository.findBrands();
+  }
+
   async findOne(id) {
     const supply = await this.repository.findById(id);
     if (!supply) {

@@ -60,11 +60,19 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
     }
   }, [isOpen, editingItem, initialData.nombre, initialData.categoria, initialData.subcategoria, initialData.marca, initialData.unidadBase, initialData.empaque]);
 
+  const [brands, setBrands] = useState([]);
+
+  useEffect(() => {
+    apiClient.get('/supplies/brands')
+      .then(data => setBrands(Array.isArray(data) ? data : []))
+      .catch(console.error);
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     let parsedValue = value;
     if (type === 'checkbox') parsedValue = checked;
-    if (['nombre', 'marca', 'subcategoria', 'observaciones'].includes(name)) {
+    if (['nombre', 'marca', 'observaciones'].includes(name)) {
       parsedValue = value.toUpperCase();
     }
     if (name === 'stockMinimo' || name === 'costoBase') {
@@ -153,6 +161,7 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
     isUnidadBaseError: hasSubmitted && isUnidadBaseInvalid,
     isStockMinimoError: hasSubmitted && isStockMinimoInvalid,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    brands
   };
 }

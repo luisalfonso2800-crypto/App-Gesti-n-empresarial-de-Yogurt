@@ -14,7 +14,8 @@ export default function SupplyFormFields({
   isCategoriaError,
   isMarcaError,
   isUnidadBaseError,
-  isStockMinimoError
+  isStockMinimoError,
+  brands = []
 }) {
   const selectedUnitName = UNIT_NAMES[formData.unidadBase] || formData.unidadBase;
 
@@ -30,7 +31,6 @@ export default function SupplyFormFields({
           onChange={handleChange} 
           placeholder="Ej: LECHE ENTERA"
           className={`${modalStyles.input} ${styles.uppercaseInput} ${isNombreError ? styles.inputErrorBorder : ''}`} 
-          required 
         />
         {isNombreError && (
           <span className={styles.fieldErrorText}>Este campo es requerido</span>
@@ -45,7 +45,6 @@ export default function SupplyFormFields({
             value={formData.categoria ?? ''}
             onChange={handleChange}
             options={Object.entries(CATEGORIAS_INSUMOS).map(([key, val]) => ({ id: key, label: val.label }))}
-            required
             placeholder="Seleccione categoría"
             className={isCategoriaError ? styles.inputErrorBorder : ''}
           />
@@ -75,8 +74,13 @@ export default function SupplyFormFields({
             value={formData.marca ?? ''} 
             onChange={handleChange} 
             className={`${modalStyles.input} ${styles.uppercaseInput} ${isMarcaError ? styles.inputErrorBorder : ''}`} 
-            required 
+            list="brands-list"
           />
+          <datalist id="brands-list">
+            {brands.map(b => (
+              <option key={b} value={b} />
+            ))}
+          </datalist>
           {isMarcaError && (
             <span className={styles.fieldErrorText}>Este campo es requerido</span>
           )}
@@ -100,7 +104,6 @@ export default function SupplyFormFields({
             value={formData.unidadBase ?? ''}
             onChange={handleChange}
             options={UNIDAD_BASE_OPTIONS}
-            required
             placeholder="Seleccione unidad"
             className={isUnidadBaseError ? styles.inputErrorBorder : ''}
           />
@@ -119,7 +122,6 @@ export default function SupplyFormFields({
             onChange={handleChange} 
             placeholder="0"
             className={`${modalStyles.input} ${styles.numberRightInput} ${isStockMinimoError ? styles.inputErrorBorder : ''}`} 
-            required 
           />
           {isStockMinimoError && (
             <span className={styles.fieldErrorText}>Este campo es requerido</span>

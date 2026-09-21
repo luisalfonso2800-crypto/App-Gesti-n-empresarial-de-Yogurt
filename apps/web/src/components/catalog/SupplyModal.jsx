@@ -31,7 +31,8 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
     isUnidadBaseError,
     isStockMinimoError,
     handleChange,
-    handleSubmit
+    handleSubmit,
+    brands
   } = useSupplyForm({ isOpen, editingItem, initialData, onSuccess, onClose });
 
   const selectedUnitName = UNIT_NAMES[formData.unidadBase] || formData.unidadBase;
@@ -51,7 +52,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className={styles.formContainer}>
+      <form onSubmit={handleSubmit} className={styles.formContainer} noValidate>
         <SupplyFormFields
           formData={formData}
           handleChange={handleChange}
@@ -62,6 +63,7 @@ export function SupplyModal({ isOpen, onClose, editingItem, onSuccess, initialDa
           isMarcaError={isMarcaError}
           isUnidadBaseError={isUnidadBaseError}
           isStockMinimoError={isStockMinimoError}
+          brands={brands}
         />
 
         {formData.nombre && (

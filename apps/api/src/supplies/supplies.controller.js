@@ -32,6 +32,11 @@ export class SuppliesController {
     return this.suppliesService.findActive();
   }
 
+  @Get('brands')
+  findBrands() {
+    return this.suppliesService.findBrands();
+  }
+
   @Get(':id')
   @Bind(Param('id'))
   findOne(id) {
