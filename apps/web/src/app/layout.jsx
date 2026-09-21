@@ -9,6 +9,7 @@
 import { Shell } from "@/components/shell/Shell";
 import { CartProvider } from "@/context/CartContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { PrivacyProvider } from "@/context/PrivacyContext";
 import "./globals.css";
 
 export const metadata = {
@@ -20,11 +21,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="es">
       <body>
-        <NotificationProvider>
-          <CartProvider>
-            <Shell>{children}</Shell>
-          </CartProvider>
-        </NotificationProvider>
+        <PrivacyProvider>
+          <NotificationProvider>
+            <CartProvider>
+              <Shell>{children}</Shell>
+            </CartProvider>
+          </NotificationProvider>
+        </PrivacyProvider>
       </body>
     </html>
   );
