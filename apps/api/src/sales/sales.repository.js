@@ -120,8 +120,14 @@ export class SalesRepository {
         }
       }
 
-      // Descontar InventarioProducto y crear Movimientos
+      // Descontar InventarioProducto y crear Movimientos con recálculo server-side
       const finalDetallesCreate = [];
+      let serverSubtotal = 0;
+      let serverDescuentoTotal = 0;
+      let serverBaseImponible = 0;
+      let serverIvaTotal = 0;
+      let serverTotalVenta = 0;
+
       for (const d of processedDetalles) {
         const inv = await prisma.inventarioProducto.findUnique({ where: { idProducto: d.idProducto } });
         const stockAnterior = inv ? Number(inv.cantidadActual) : 0;
@@ -133,26 +139,56 @@ export class SalesRepository {
         });
 
         const costoUnit = d.costoUnitarioLote || (inv ? Number(inv.costoPromedio) : 0);
-        const subVenta = d.totalLinea !== undefined ? Number(d.totalLinea) : (d.cantidad * Number(d.precioUnitario));
-        const util = subVenta - (d.cantidad * costoUnit);
+        
+        // Recálculo server-side estricto de cada detalle (HAL-F10-02)
+        const cantidadNum = Number(d.cantidad);
+        const precioUnitNum = Number(d.precioUnitario);
+        const subtotalLinea = cantidadNum * precioUnitNum;
+        const descuentoLinea = Number(d.descuento || 0);
+        const subtotalConDesc = Math.max(0, subtotalLinea - descuentoLinea);
+
+        let tarifaIva = Number(d.tarifaIva || 0);
+        if (data.aplicaIva && tarifaIva === 0) {
+          tarifaIva = 0.19; // Tarifa general IVA si aplicaIva está activo y no vino específica
+        }
+
+        let baseLinea = subtotalConDesc;
+        let montoIva = 0;
+        let totalLinea = subtotalConDesc;
+
+        if (tarifaIva > 0) {
+          // Por regla general del sistema comercial actual: subtotal es base y se adiciona IVA
+          baseLinea = subtotalConDesc;
+          montoIva = Math.round(baseLinea * tarifaIva);
+          totalLinea = baseLinea + montoIva;
+        }
+
+        const util = totalLinea - (cantidadNum * costoUnit);
+
+        serverSubtotal += subtotalLinea;
+        serverDescuentoTotal += descuentoLinea;
+        serverBaseImponible += baseLinea;
+        serverIvaTotal += montoIva;
+        serverTotalVenta += totalLinea;
 
         finalDetallesCreate.push({
           idProducto: d.idProducto,
           idLote: d.idLote,
           cantidad: d.cantidad,
           precioUnitario: d.precioUnitario,
-          descuento: d.descuento || 0,
-          tarifaIva: d.tarifaIva !== undefined ? Number(d.tarifaIva) : 0,
-          baseGravable: d.baseGravable !== undefined ? Number(d.baseGravable) : (d.cantidad * Number(d.precioUnitario)),
-          montoIva: d.montoIva !== undefined ? Number(d.montoIva) : 0,
-          totalLinea: subVenta,
+          descuento: descuentoLinea,
+          tarifaIva: tarifaIva,
+          baseGravable: baseLinea,
+          montoIva: montoIva,
+          totalLinea: totalLinea,
           costoUnitario: costoUnit,
-          utilidadUnitaria: Number(d.precioUnitario) - costoUnit,
+          utilidadUnitaria: precioUnitNum - costoUnit,
           utilidadTotal: util
         });
-
-        // Este await requiere Venta ID pero la Venta aun no existe, lo hacemos despues de crear Venta
       }
+
+      const valorPagadoNum = Number(data.valorPagado || 0);
+      const saldoPendienteCalc = Math.max(0, serverTotalVenta - valorPagadoNum);
 
       const venta = await prisma.venta.create({
         data: {
@@ -162,14 +198,14 @@ export class SalesRepository {
           tipoPago: data.tipoPago,
           fechaLimitePago: data.fechaLimitePago ? new Date(data.fechaLimitePago) : null,
           aplicaIva: Boolean(data.aplicaIva),
-          subtotal: data.subtotal !== undefined ? Number(data.subtotal) : Number(data.totalVenta),
-          descuentoTotal: data.descuentoTotal !== undefined ? Number(data.descuentoTotal) : 0,
-          baseImponible: data.baseImponible !== undefined ? Number(data.baseImponible) : Number(data.totalVenta),
-          ivaTotal: data.ivaTotal !== undefined ? Number(data.ivaTotal) : 0,
-          totalVenta: data.totalVenta,
-          valorPagado: data.valorPagado,
-          saldoPendiente: data.saldoPendiente,
-          estado: data.estado || 'COMPLETADA',
+          subtotal: serverSubtotal,
+          descuentoTotal: serverDescuentoTotal,
+          baseImponible: serverBaseImponible,
+          ivaTotal: serverIvaTotal,
+          totalVenta: serverTotalVenta,
+          valorPagado: valorPagadoNum,
+          saldoPendiente: saldoPendienteCalc,
+          estado: data.estado || (saldoPendienteCalc <= 0 ? 'COMPLETADA' : 'PENDIENTE'),
           observaciones: data.observaciones,
           detalles: {
             create: finalDetallesCreate
