@@ -222,7 +222,8 @@ export class SalesRepository {
       const serverTotalVentaFinal = Number(serverTotalVenta.toFixed(2));
 
       const valorPagadoNum = Number(data.valorPagado || 0);
-      const saldoPendienteCalc = Math.max(0, serverTotalVentaFinal - valorPagadoNum);
+      // HAL-F9-04 + HAL-F4-08: saldo negativo = saldo a favor del cliente (anticipo)
+      const saldoPendienteCalc = serverTotalVentaFinal - valorPagadoNum;
 
       const venta = await prisma.venta.create({
         data: {

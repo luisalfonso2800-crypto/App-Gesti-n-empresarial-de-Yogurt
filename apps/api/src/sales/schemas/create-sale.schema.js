@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+/**
+ * HAL-F7-03: Porcentaje máximo de descuento comercial permitido sin autorización.
+ * Configurable según política de negocio de la empresa.
+ */
+const MAX_DESCUENTO_PORCENTAJE = 0.50; // 50%
+
 export const createSaleDetailSchema = z.object({
   idProducto: z.string().min(1, 'idProducto es requerido'),
   idLote: z.string().optional().nullable(),
@@ -13,7 +19,16 @@ export const createSaleDetailSchema = z.object({
   baseGravable: z.number().optional(),
   montoIva: z.number().optional(),
   totalLinea: z.number().optional()
-}).strict();
+}).strict().refine(
+  (data) => {
+    const bruto = data.cantidad * data.precioUnitario;
+    return bruto === 0 || data.descuento <= bruto * MAX_DESCUENTO_PORCENTAJE;
+  },
+  {
+    message: `El descuento no puede exceder el ${MAX_DESCUENTO_PORCENTAJE * 100}% del valor bruto de la línea (HAL-F7-03)`,
+    path: ['descuento']
+  }
+);
 
 export const createSaleSchema = z.object({
   idCliente: z.string().min(1, 'idCliente es requerido'),

@@ -57,7 +57,7 @@ describe('SalesController & Server-Side Security (Bloque 1 Remediación)', () =>
           ivaTotal: serverIvaTotal,
           totalVenta: serverTotalVenta,
           valorPagado: Number(data.valorPagado || 0),
-          saldoPendiente: Math.max(0, serverTotalVenta - Number(data.valorPagado || 0))
+          saldoPendiente: serverTotalVenta - Number(data.valorPagado || 0)
         };
       })
     };

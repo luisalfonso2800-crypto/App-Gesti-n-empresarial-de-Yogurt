@@ -34,9 +34,8 @@ export class PaymentsRepository {
       const pagoMonto = Number(data.valorPagado);
       const saldoActual = Number(venta.saldoPendiente);
 
-      if (pagoMonto > saldoActual) {
-        throw new Error(`El valor del pago (${pagoMonto}) no puede exceder el saldo pendiente (${saldoActual})`);
-      }
+      // HAL-F9-04: Permitir pagos que excedan el saldo — generan saldo a favor del cliente
+      // (Antes se bloqueaba con throw Error, impidiendo anticipos y pagos excedentes)
 
       const pago = await tx.pago.create({
         data: {
@@ -46,18 +45,21 @@ export class PaymentsRepository {
           valorPagado: data.valorPagado,
           metodoPago: data.metodoPago,
           referencia: data.referencia,
-          observaciones: data.observaciones
+          observaciones: pagoMonto > saldoActual
+            ? `${data.observaciones || ''} [SALDO A FAVOR: $${(pagoMonto - saldoActual).toFixed(2)}]`.trim()
+            : (data.observaciones || null)
         },
         include: { cliente: true, venta: true }
       });
 
       const nuevoValorPagado = Number(venta.valorPagado) + pagoMonto;
-      const nuevoSaldo = Math.max(0, Number(venta.totalVenta) - nuevoValorPagado);
+      // HAL-F4-08 + HAL-F9-04: NO truncar a 0 — saldo negativo = crédito/saldo a favor del cliente
+      const nuevoSaldo = Number(venta.totalVenta) - nuevoValorPagado;
 
       const updateData = {
         valorPagado: nuevoValorPagado,
         saldoPendiente: nuevoSaldo,
-        estado: nuevoSaldo === 0 ? 'COMPLETADO' : (venta.estado === 'COMPLETADO' ? 'PENDIENTE' : venta.estado)
+        estado: nuevoSaldo <= 0 ? 'COMPLETADA' : (venta.estado === 'COMPLETADA' ? 'PENDIENTE' : venta.estado)
       };
 
       if (data.nuevaFechaLimite) {
