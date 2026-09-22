@@ -140,35 +140,63 @@ export class SalesRepository {
 
         const costoUnit = d.costoUnitarioLote || (inv ? Number(inv.costoPromedio) : 0);
         
-        // Recálculo server-side estricto de cada detalle (HAL-F10-02)
+        // Recálculo server-side estricto de cada detalle (HAL-F10-02, HAL-F7-02, HAL-F7-03, HAL-F7-04, HAL-F4-06)
         const cantidadNum = Number(d.cantidad);
         const precioUnitNum = Number(d.precioUnitario);
-        const subtotalLinea = cantidadNum * precioUnitNum;
-        const descuentoLinea = Number(d.descuento || 0);
-        const subtotalConDesc = Math.max(0, subtotalLinea - descuentoLinea);
+        const brutoLinea = cantidadNum * precioUnitNum;
+        const descuentoTotalLinea = Number(d.descuento || 0);
+        const tipoDesc = d.tipoDescuento || 'COMERCIAL';
 
-        let tarifaIva = Number(d.tarifaIva || 0);
+        // Descuento comercial reduce base gravable; descuento financiero no la reduce (HAL-F7-03, HAL-F7-04)
+        const descComercial = tipoDesc === 'COMERCIAL' ? descuentoTotalLinea : 0;
+        const descFinanciero = tipoDesc === 'FINANCIERO' ? descuentoTotalLinea : 0;
+
+        const baseDespuesComercial = Math.max(0, brutoLinea - descComercial);
+
+        // Consultar configuración de IVA del producto si no viene explícita en detalle
+        const prodDb = await prisma.producto.findUnique({
+          where: { id: d.idProducto },
+          select: { precioIncluyeIva: true, tarifaIva: true }
+        });
+
+        const precioIncluyeIva = d.precioIncluyeIva !== undefined 
+          ? Boolean(d.precioIncluyeIva) 
+          : (prodDb?.precioIncluyeIva ?? true);
+
+        let tarifaIva = Number(d.tarifaIva !== undefined ? d.tarifaIva : (prodDb?.tarifaIva || 0));
+        // Normalizar si viene en porcentaje (ej 19) o decimal (0.19)
+        if (tarifaIva > 1) {
+          tarifaIva = tarifaIva / 100;
+        }
         if (data.aplicaIva && tarifaIva === 0) {
-          tarifaIva = 0.19; // Tarifa general IVA si aplicaIva está activo y no vino específica
+          tarifaIva = 0.19;
         }
 
-        let baseLinea = subtotalConDesc;
-        let montoIva = 0;
-        let totalLinea = subtotalConDesc;
+        let baseGravableLinea = baseDespuesComercial;
+        let montoIvaLinea = 0;
 
         if (tarifaIva > 0) {
-          // Por regla general del sistema comercial actual: subtotal es base y se adiciona IVA
-          baseLinea = subtotalConDesc;
-          montoIva = Math.round(baseLinea * tarifaIva);
-          totalLinea = baseLinea + montoIva;
+          if (precioIncluyeIva) {
+            // HAL-F7-02: Precio incluye IVA -> Base = Bruto / (1 + IVA)
+            baseGravableLinea = baseDespuesComercial / (1 + tarifaIva);
+            montoIvaLinea = baseDespuesComercial - baseGravableLinea;
+          } else {
+            // Precio NO incluye IVA -> Base = Bruto; IVA se adiciona
+            baseGravableLinea = baseDespuesComercial;
+            montoIvaLinea = baseGravableLinea * tarifaIva;
+          }
         }
+
+        // Total de la línea considerando descuento financiero posterior (HAL-F7-03)
+        const totalLineaBruto = baseGravableLinea + montoIvaLinea;
+        const totalLinea = Math.max(0, totalLineaBruto - descFinanciero);
 
         const util = totalLinea - (cantidadNum * costoUnit);
 
-        serverSubtotal += subtotalLinea;
-        serverDescuentoTotal += descuentoLinea;
-        serverBaseImponible += baseLinea;
-        serverIvaTotal += montoIva;
+        serverSubtotal += brutoLinea;
+        serverDescuentoTotal += descuentoTotalLinea;
+        serverBaseImponible += baseGravableLinea;
+        serverIvaTotal += montoIvaLinea;
         serverTotalVenta += totalLinea;
 
         finalDetallesCreate.push({
@@ -176,19 +204,25 @@ export class SalesRepository {
           idLote: d.idLote,
           cantidad: d.cantidad,
           precioUnitario: d.precioUnitario,
-          descuento: descuentoLinea,
+          descuento: descuentoTotalLinea,
           tarifaIva: tarifaIva,
-          baseGravable: baseLinea,
-          montoIva: montoIva,
-          totalLinea: totalLinea,
+          baseGravable: Number(baseGravableLinea.toFixed(4)),
+          montoIva: Number(montoIvaLinea.toFixed(4)),
+          totalLinea: Number(totalLinea.toFixed(2)),
           costoUnitario: costoUnit,
           utilidadUnitaria: precioUnitNum - costoUnit,
-          utilidadTotal: util
+          utilidadTotal: Number(util.toFixed(2))
         });
       }
 
+      const serverSubtotalFinal = Number(serverSubtotal.toFixed(2));
+      const serverDescuentoFinal = Number(serverDescuentoTotal.toFixed(2));
+      const serverBaseFinal = Number(serverBaseImponible.toFixed(2));
+      const serverIvaFinal = Number(serverIvaTotal.toFixed(2));
+      const serverTotalVentaFinal = Number(serverTotalVenta.toFixed(2));
+
       const valorPagadoNum = Number(data.valorPagado || 0);
-      const saldoPendienteCalc = Math.max(0, serverTotalVenta - valorPagadoNum);
+      const saldoPendienteCalc = Math.max(0, serverTotalVentaFinal - valorPagadoNum);
 
       const venta = await prisma.venta.create({
         data: {
@@ -198,11 +232,11 @@ export class SalesRepository {
           tipoPago: data.tipoPago,
           fechaLimitePago: data.fechaLimitePago ? new Date(data.fechaLimitePago) : null,
           aplicaIva: Boolean(data.aplicaIva),
-          subtotal: serverSubtotal,
-          descuentoTotal: serverDescuentoTotal,
-          baseImponible: serverBaseImponible,
-          ivaTotal: serverIvaTotal,
-          totalVenta: serverTotalVenta,
+          subtotal: serverSubtotalFinal,
+          descuentoTotal: serverDescuentoFinal,
+          baseImponible: serverBaseFinal,
+          ivaTotal: serverIvaFinal,
+          totalVenta: serverTotalVentaFinal,
           valorPagado: valorPagadoNum,
           saldoPendiente: saldoPendienteCalc,
           estado: data.estado || (saldoPendienteCalc <= 0 ? 'COMPLETADA' : 'PENDIENTE'),

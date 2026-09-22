@@ -6,7 +6,9 @@ export const createSaleDetailSchema = z.object({
   cantidad: z.number().positive('cantidad debe ser mayor a 0'),
   precioUnitario: z.number().nonnegative('precioUnitario debe ser mayor o igual a 0'),
   descuento: z.number().nonnegative().optional().default(0),
+  tipoDescuento: z.enum(['COMERCIAL', 'FINANCIERO']).optional().default('COMERCIAL'),
   tarifaIva: z.number().nonnegative().optional().default(0),
+  precioIncluyeIva: z.boolean().optional(),
   // Campos calculados por el cliente que se descartan o validan opcionalmente
   baseGravable: z.number().optional(),
   montoIva: z.number().optional(),
