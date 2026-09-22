@@ -28,3 +28,21 @@ Se revisarán al finalizar los 7 bloques de remediación.
 - **Descripción:** Ausencia de campo `densidad` en base de datos.
 - **Severidad estimada:** MEDIO
 - **Estado:** **RESUELTO EN BLOQUE 4** (Añadido `densidad Decimal? @default(1.0) @db.Decimal(6,4)` a Insumo y Producto en `schema.prisma` y regenerado cliente Prisma).
+
+### [BLOQUE-5] DEUDA-BLOQUE5-01: `utilidadTotal` en DetalleVenta incluye IVA
+- **Detectado en:** `apps/api/src/sales/sales.repository.js`: L194
+- **Descripción:** `utilidadTotal = totalLinea - (cantidadNum * costoUnit)` — `totalLinea` incluye IVA, inflando la utilidad registrada por línea.
+- **Severidad estimada:** ALTO
+- **Estado:** PENDIENTE
+
+### [BLOQUE-5] DEUDA-BLOQUE5-02: No se valida correspondencia Cliente-Venta en pagos
+- **Detectado en:** `apps/api/src/payments/payments.repository.js`: L24-73
+- **Descripción:** Un operador puede registrar un pago a nombre del Cliente A pero abonar a la factura del Cliente B.
+- **Severidad estimada:** MEDIO
+- **Estado:** PENDIENTE
+
+### [BLOQUE-5] DEUDA-BLOQUE5-03: KPI `totalCobrado` no respeta filtros de fecha/cliente
+- **Detectado en:** `apps/api/src/payments/payments.repository.js`: L168-171
+- **Descripción:** `totalCobrado` calcula suma histórica global de todos los pagos, ignorando filtros activos.
+- **Severidad estimada:** BAJO
+- **Estado:** PENDIENTE
