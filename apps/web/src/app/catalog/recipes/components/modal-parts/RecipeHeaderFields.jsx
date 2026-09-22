@@ -8,6 +8,7 @@ import { Package } from 'lucide-react';
 import ProductAvatar from '@/components/ui/ProductAvatar';
 import { resolveProductImage } from '@/lib/presetImages';
 import { RecipeHeaderWarnings } from './RecipeHeaderWarnings';
+import { UNIT_OPTIONS, toCanonicalUnit } from '@/utils/unitNormalizer';
 import styles from '../recipe-modal.module.css';
 
 export function RecipeHeaderFields({
@@ -55,19 +56,9 @@ export function RecipeHeaderFields({
               <label className={styles.label}>PRODUCTO A FABRICAR *</label>
               <select className={styles.select} name="idProducto" value={formData.idProducto} onChange={onChange} required>
                 <option value="">Seleccione el producto a fabricar...</option>
-                {Array.from(
-                  new Map(
-                    products
-                      .filter(p => !p.idItem && p.tipoItem !== 'INOCULO_WIP' && p.tipoItem !== 'BASE_GRANEL')
-                      .map(p => [p.id, p])
-                  ).values()
-                ).map((p) => {
+                {Array.from(new Map(products.filter(p => !p.idItem && p.tipoItem !== 'INOCULO_WIP' && p.tipoItem !== 'BASE_GRANEL').map(p => [p.id, p])).values()).map((p) => {
                   const presLabel = p.presentacion?.nombre ? ` (${p.presentacion.nombre})` : '';
-                  return (
-                    <option key={`header-prod-${p.id}`} value={p.id}>
-                      {p.nombre}{presLabel}
-                    </option>
-                  );
+                  return <option key={`header-prod-${p.id}`} value={p.id}>{p.nombre}{presLabel}</option>;
                 })}
               </select>
             </div>
@@ -80,28 +71,28 @@ export function RecipeHeaderFields({
             <div>
               <label className={styles.label}>CANTIDAD BASE *</label>
               <input
-                className={styles.input}
-                type="number"
-                step="1"
-                min="1"
-                name="rendimientoBase"
-                value={formData.rendimientoBase ? Math.round(Number(formData.rendimientoBase)) : ''}
-                placeholder="Ej: 100"
+                className={styles.input} type="number"
+                step={toCanonicalUnit(formData.unidadRendimiento) === 'und' ? '1' : '0.1'}
+                min="0.1" name="rendimientoBase"
+                value={formData.rendimientoBase === '' ? '' : formData.rendimientoBase}
+                placeholder="Ej: 100.5"
                 onChange={e => {
-                  const val = e.target.value === '' ? '' : String(Math.max(1, parseInt(e.target.value, 10) || 1));
+                  const val = e.target.value === '' ? '' : parseFloat(e.target.value) || '';
                   onChange({ target: { name: 'rendimientoBase', value: val } });
-                }}
-                required
+                }} required
               />
             </div>
             <div>
               <label className={styles.label}>UNIDAD *</label>
-              <select className={styles.select} name="unidadRendimiento" value={formData.unidadRendimiento || 'Litros'} onChange={onChange}>
-                <option value="Litros">Litros (L)</option>
-                <option value="Kilogramos">Kilogramos (kg)</option>
-                <option value="Gramos">Gramos (g)</option>
-                <option value="Mililitros">Mililitros (ml)</option>
-                <option value="Unidades">Unidades (und)</option>
+              <select 
+                className={styles.select} 
+                name="unidadRendimiento" 
+                value={toCanonicalUnit(formData.unidadRendimiento || 'l')} 
+                onChange={e => onChange({ target: { name: 'unidadRendimiento', value: toCanonicalUnit(e.target.value) } })}
+              >
+                {UNIT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
               </select>
             </div>
           </div>

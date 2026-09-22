@@ -6,6 +6,8 @@
  * @usedBy apps/web/src/app/catalog/recipes/components/*
  */
 
+import { getUnitConversionFactor } from '@/utils/unitNormalizer';
+
 /**
  * Genera dinámicamente un párrafo descriptivo en lenguaje natural de planta para una etapa.
  */
@@ -536,15 +538,8 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           String(p.id) === String(rawId)
         );
 
-        const isInoculo = String(rawId).includes('INOCULO') ||
-          det.unidad === 'g' ||
-          det.unidad === 'GRAMOS' ||
-          det.unidadMedida === 'g' ||
-          matchedWip?.tipoItem === 'INOCULO_WIP';
-
-        const unidadDet = String(det.unidad || det.unidadMedida || '').toLowerCase().trim();
-        const isSmallUnit = unidadDet === 'g' || unidadDet === 'gramos' || unidadDet === 'ml' || unidadDet === 'mililitros';
-        const factorUnidad = isSmallUnit ? 0.001 : 1;
+        const baseYieldUnit = String(baseRecipe?.unidadRendimiento || matchedWip?.unidadMedida || '');
+        const factorUnidad = getUnitConversionFactor(det.unidad || det.unidadMedida, baseYieldUnit);
 
         if (baseRecipe && Number(baseRecipe.rendimientoBase) > 0) {
           // 2. Costo unitario proyectado de la receta base (Costo Total Receta Base / Rendimiento Base)
@@ -564,12 +559,7 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           );
 
           if (prodCost > 0) {
-            // Si el producto ya está valorizado por gramo (ej. <= 10 COP/g) y la unidad requerida es g/ml
-            if (isSmallUnit && prodCost <= 10) {
-              unitCostWip = prodCost * 1000; // Normalizar a costo por Litro/Kg
-            } else {
-              unitCostWip = prodCost;
-            }
+            unitCostWip = prodCost;
           } else {
             unitCostWip = 4390; // Costo referencial estándar por Litro de base láctea
           }
@@ -589,15 +579,13 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
         const priceFromMap = parseFloat(priceMap[det.idInsumo]);
         const unitCostRaw = !isNaN(priceFromMap) && priceFromMap > 0
           ? priceFromMap
-          : Number(insumoRecord?.costoBase || 0);
+          : Number(insumoRecord?.costoReferencial || insumoRecord?.costoBase || 0);
 
-        const unidadDet = String(det.unidad || det.unidadMedida || '').toLowerCase().trim();
-        const isSmallUnit = unidadDet === 'g' || unidadDet === 'gramos' || unidadDet === 'ml' || unidadDet === 'mililitros';
-        const insumoUnidadBase = String(insumoRecord?.unidadBase || '').toLowerCase().trim();
-        const isBaseBig = insumoUnidadBase === 'kg' || insumoUnidadBase === 'kilogramos' || insumoUnidadBase === 'l' || insumoUnidadBase === 'litros';
-        const factorUnidad = (isSmallUnit && isBaseBig) ? 0.001 : 1;
+        const contenido = parseFloat(insumoRecord?.contenidoReferencial) || (['g', 'ml'].includes(insumoRecord?.unidadBase) ? 1000 : 1);
+        const costoUnitarioBase = unitCostRaw / (contenido > 0 ? contenido : 1);
 
-        costRawSupplies += (totalReq * factorUnidad * unitCostRaw);
+        const factorUnidad = getUnitConversionFactor(det.unidad || det.unidadMedida, insumoRecord?.unidadBase);
+        costRawSupplies += (totalReq * factorUnidad * costoUnitarioBase);
       }
     });
   });

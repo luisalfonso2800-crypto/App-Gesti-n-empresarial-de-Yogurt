@@ -91,6 +91,9 @@ export default function FormPhaseRowInsumoSelector({
                     if (i.marca && i.marca !== 'N/A') {
                       updateDetalle(row.id, 'marca', i.marca);
                     }
+                    updateDetalle(row.id, 'empaque', i.empaque || 'UNIDAD');
+                    updateDetalle(row.id, 'empaqueTipo', i.empaque ? 'OTRO' : 'UNIDAD');
+                    updateDetalle(row.id, 'contenidoNeto', i.contenidoReferencial || (['g', 'ml'].includes(i.unidadBase?.toLowerCase()) ? 1000 : 1));
                     
                     let preloaded = false;
                     if (row.proveedor?.id && supplierPrices?.length > 0) {

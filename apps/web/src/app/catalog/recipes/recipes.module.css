@@ -668,3 +668,16 @@
   font-size: 1rem;
   cursor: pointer;
 }
+.bomSection { margin-top: 1rem; }
+.bomHeader { display: flex; justify-content: space-between; align-items: center; }
+.bomTitle { margin: 0; }
+.bomHint { margin: 4px 0 8px 0; color: #6B7280; font-size: 0.75rem; font-style: italic; }
+.bomInputRow { display: flex; align-items: center; gap: 0.4rem; }
+.bomInputSmall { min-width: 70px; }
+.bomUnitBadge { font-size: 0.75rem; font-weight: 600; color: #4B5563; white-space: nowrap; }
+.bomBadgeCol { display: flex; flex-direction: column; gap: 0.25rem; }
+.badgeWip { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; background-color: #DBEAFE; color: #1E40AF; }
+.badgePkg { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; background-color: #FEF3C7; color: #92400E; }
+.badgeComp { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; background-color: #F3E8FF; color: #6B21A8; }
+.badgeRaw { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; background-color: #F3F4F6; color: #374151; }
+.textCenter { text-align: center; }

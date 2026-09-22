@@ -35,6 +35,7 @@ export function RecipeStagesList({
 }) {
   const [selectedStageIndex, setSelectedStageIndex] = useState(0);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { presentations } = usePresentationsData();
 
   useEffect(() => {
@@ -92,9 +93,10 @@ export function RecipeStagesList({
   const isCommercial = Boolean(selectedProduct && !isGranel);
 
   return (
-    <div className={styles.splitLayout}>
+    <div className={`${styles.splitLayout} ${!isSidebarOpen ? styles.splitLayoutCollapsed : ''}`}>
       <RecipeStagesTimeline
         etapas={etapas} selectedIndex={selectedStageIndex} isCommercial={isCommercial}
+        isSidebarOpen={isSidebarOpen} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onSelectStage={setSelectedStageIndex} onAddEtapa={handleAddStage} onApplyTemplate={handleApplyTemplate}
         onMoveEtapa={handleMove} onRemoveEtapa={onRemoveEtapa}
       />

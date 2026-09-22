@@ -958,10 +958,11 @@
   padding: 0.85rem 1.25rem;
   margin-top: 1.25rem;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
   gap: 1.25rem;
+  width: 100%;
   box-sizing: border-box;
   box-shadow: 0 -4px 12px rgba(24, 38, 34, 0.08);
 }
@@ -969,7 +970,10 @@
 .balanceInfoCol {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
   gap: 0.25rem;
+  width: 100%;
 }
 
 .balanceTitle {
@@ -984,16 +988,20 @@
   font-size: 0.8rem;
   color: #57534E;
   display: flex;
+  justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .balanceCostBreakdownRow {
   display: flex;
+  justify-content: flex-end;
   gap: 0.85rem;
   font-size: 0.76rem;
   color: #78716C;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .breakdownBadgeRaw {
@@ -1020,8 +1028,10 @@
 
 .balanceMetricsRow {
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  gap: 1.25rem;
+  gap: 1rem;
+  width: 100%;
   flex-wrap: wrap;
 }
 
@@ -1491,6 +1501,37 @@
   font-size: 13px;
   color: #6B7280;
   margin: 0;
+}
+
+.balanceBarCollapsed {
+  padding: 0.5rem 1rem !important;
+  height: auto !important;
+  flex-direction: row !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+.collapseToggleBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78716C;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.collapseToggleBtn:hover {
+  background-color: #EFECE4;
+  color: #182622;
+}
+
+.collapsedNoBorder {
+  border-left: none !important;
+  padding-left: 0 !important;
 }
 
 

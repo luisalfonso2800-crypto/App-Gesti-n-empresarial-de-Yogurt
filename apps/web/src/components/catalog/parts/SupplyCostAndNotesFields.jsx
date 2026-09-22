@@ -28,10 +28,15 @@ export function SupplyCostAndNotesFields({
           />
           {rawCostoBase > 0 && (
             <span className={styles.costBaseBadge}>
-              ✦ {montoATextoPesos(rawCostoBase)}
+              o {montoATextoPesos(rawCostoBase)}
             </span>
           )}
         </div>
+        {rawCostoBase > 0 && (
+          <div className={styles.unitCostIndicator}>
+            Costo por unidad base: ${(rawCostoBase / (parseFloat(formData.contenidoReferencial) || (['g', 'ml'].includes(formData.unidadBase?.toLowerCase()) ? 1000 : 1))).toLocaleString('es-CO', {maximumFractionDigits: 2})} / {formData.unidadBase || 'ud'}
+          </div>
+        )}
       </div>
 
       <div className={modalStyles.inputGroup}>

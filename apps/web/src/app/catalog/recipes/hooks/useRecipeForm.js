@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { createCommercialBaseStage, isCommercialProduct, PLANTILLA_JALEA_FRUTA, calculateRecipeCosts } from '../components/recipeHelpers';
+import { toCanonicalUnit } from '@/utils/unitNormalizer';
 
 export function useRecipeForm({ supplies = [], products = [], prices = [], recipes = [], onSaveSuccess }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -75,7 +76,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
         nombre: selectedProd ? `Fórmula - ${selectedProd.nombre}` : '',
         idProducto: prodId,
         rendimientoBase: '',
-        unidadRendimiento: suggestedUnit,
+        unidadRendimiento: toCanonicalUnit(suggestedUnit),
         observaciones: '',
         activo: true,
         etapas: initialEtapas
@@ -131,7 +132,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
           ...prev,
           idProducto: value,
           nombre: shouldUpdateNombre ? autoNombre : prev.nombre,
-          unidadRendimiento: suggestedUnit,
+          unidadRendimiento: toCanonicalUnit(suggestedUnit),
           etapas: prev.etapas || []
         };
       });
@@ -342,7 +343,7 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
         const ins = supplies.find(s => s.id === insumoId);
         det.idInsumo = insumoId;
         det.idProductoIntermedio = null;
-        det.unidad = ins ? ins.unidadBase : 'Unidades';
+        det.unidad = toCanonicalUnit(ins ? ins.unidadBase : 'und');
 
         // Detección automática de insumos de empaque vs materias primas
         const cat = (ins?.categoria || '').toUpperCase();
@@ -361,11 +362,11 @@ export function useRecipeForm({ supplies = [], products = [], prices = [], recip
         const chosenProd = products.find(p => (isInoculo ? p.tipoItem === 'INOCULO_WIP' && String(p.id) === String(prodId) : String(p.id) === String(prodId)));
         det.idProductoIntermedio = prodId;
         det.idInsumo = null;
-        det.unidad = isInoculo ? 'g' : (chosenProd?.unidadMedida || 'Litros');
+        det.unidad = toCanonicalUnit(isInoculo ? 'g' : (chosenProd?.unidadMedida || 'l'));
         det.tipoInsumo = 'INTERMEDIO_WIP';
       }
     } else {
-      det[field] = value;
+      det[field] = field === 'unidad' ? toCanonicalUnit(value) : value;
     }
 
     newEtapas[etapaIndex].detalles[detalleIndex] = det;

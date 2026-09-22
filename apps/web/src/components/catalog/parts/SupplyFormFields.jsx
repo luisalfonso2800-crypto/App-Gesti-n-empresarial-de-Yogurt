@@ -4,7 +4,6 @@ import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from '../supply-modal.module.css';
 import { CATEGORIAS_INSUMOS, EMPAQUE_OPTIONS, UNIDAD_BASE_OPTIONS, UNIT_NAMES } from './supplyConstants';
 import { SupplyCostAndNotesFields } from './SupplyCostAndNotesFields';
-
 export default function SupplyFormFields({
   formData,
   handleChange,
@@ -18,7 +17,6 @@ export default function SupplyFormFields({
   brands = []
 }) {
   const selectedUnitName = UNIT_NAMES[formData.unidadBase] || formData.unidadBase;
-
   return (
     <>
       <div className={modalStyles.inputGroup}>
@@ -36,7 +34,6 @@ export default function SupplyFormFields({
           <span className={styles.fieldErrorText}>Este campo es requerido</span>
         )}
       </div>
-
       <div className={modalStyles.twoColumns}>
         <div>
           <SmartSelect
@@ -52,18 +49,8 @@ export default function SupplyFormFields({
             <span className={styles.fieldErrorText}>Este campo es requerido</span>
           )}
         </div>
-        
-        <SmartSelect
-          label="Subcategoría"
-          name="subcategoria"
-          value={formData.subcategoria ?? ''}
-          onChange={handleChange}
-          options={(CATEGORIAS_INSUMOS[formData.categoria]?.subcategorias || []).map(s => ({ id: s, label: s }))}
-          placeholder="Seleccione subcategoría"
-          disabled={!formData.categoria}
-        />
+        <SmartSelect label="Subcategora" name="subcategoria" value={formData.subcategoria ?? ''} onChange={handleChange} options={(CATEGORIAS_INSUMOS[formData.categoria]?.subcategorias || []).map(s => ({ id: s, label: s }))} placeholder="Seleccione subcategora" disabled={!formData.categoria} />
       </div>
-
       <div className={modalStyles.twoColumns}>
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>
@@ -85,17 +72,30 @@ export default function SupplyFormFields({
             <span className={styles.fieldErrorText}>Este campo es requerido</span>
           )}
         </div>
-
-        <SmartSelect
-          label="Empaque"
-          name="empaque"
-          value={formData.empaque ?? ''}
-          onChange={handleChange}
-          options={EMPAQUE_OPTIONS}
-          placeholder="Seleccione empaque"
-        />
+        <SmartSelect label="Empaque" name="empaque" value={formData.empaque ?? ''} onChange={handleChange} options={EMPAQUE_OPTIONS} placeholder="Seleccione empaque" />
+        <div className={modalStyles.inputGroup}>
+          <label className={modalStyles.label}>
+            Contenido por Empaque / Presentacin
+          </label>
+          <div className={styles.costBaseContainer}>
+            <input 
+              name="contenidoReferencial" 
+              type="number"
+              min="0.01"
+              step="any"
+              value={formData.contenidoReferencial ?? ''} 
+              onChange={handleChange} 
+              placeholder="Ej: 1000"
+              className={`${modalStyles.input} ${styles.numberRightInput}`} 
+            />
+            {formData.unidadBase && (
+              <span className={`${styles.costBaseBadge} ${styles.badgePadded}`}>
+                {formData.unidadBase}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
-
       <div className={modalStyles.twoColumns}>
         <div>
           <SmartSelect
@@ -111,7 +111,6 @@ export default function SupplyFormFields({
             <span className={styles.fieldErrorText}>Este campo es requerido</span>
           )}
         </div>
-
         <div className={modalStyles.inputGroup}>
           <label className={modalStyles.label}>
             Stock Mínimo <span className={styles.requiredAsterisk}>*</span>
@@ -133,7 +132,6 @@ export default function SupplyFormFields({
           )}
         </div>
       </div>
-
       <SupplyCostAndNotesFields 
         formData={formData} 
         handleChange={handleChange} 
@@ -141,4 +139,4 @@ export default function SupplyFormFields({
       />
     </>
   );
-}
+}

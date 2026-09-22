@@ -7,9 +7,10 @@
  * @dependencies react, @/lib/formatters, ../recipe-modal.module.css
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { formatCurrency } from '@/lib/formatters';
 import styles from '../recipe-modal.module.css';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 export function RecipeBalanceFooter({
   formData,
@@ -28,57 +29,69 @@ export function RecipeBalanceFooter({
   onSummarize,
   isButtonReady = false
 }) {
+  const [isBalanceCollapsed, setIsBalanceCollapsed] = useState(false);
+
   return (
-    <div className={styles.balanceBar}>
-      {/* Lado Izquierdo: Resumen de insumos, desglose de costos y rendimiento */}
-      <div className={styles.balanceInfoCol}>
-        <strong className={styles.balanceTitle}>
-          Balance General de Materiales y Costos
-        </strong>
-        <div className={styles.balanceSubtextRow}>
-          <span>
-            <strong>Rendimiento:</strong> {formData.rendimientoBase || 0} {formData.unidadRendimiento || 'Litros'}
-          </span>
-          <span>•</span>
-          <span>
-            <strong>Composición:</strong> {totalMateriasPrimas} materias primas/empaques
-            {totalBasesWip > 0 ? ` + ${totalBasesWip} bases WIP` : ''}
-          </span>
-          <span>•</span>
-          <span>
-            <strong>Etapas activas:</strong> {activeStagesCount}
-          </span>
-        </div>
-
-        {/* Desglose Reactivo de Costos: Insumos directos vs Bases WIP */}
-        <div className={styles.balanceCostBreakdownRow}>
-          <span>
-            Materias primas/empaques: <strong className={styles.breakdownBadgeRaw}>{formatCurrency(costRawSupplies)}</strong>
-          </span>
-          <span>•</span>
-          <span>
-            Bases intermedias (WIP): <strong className={styles.breakdownBadgeWip}>{formatCurrency(costWipBases)}</strong>
-          </span>
-          {hasWipFallback && (
-            <span className={styles.balanceWarningBadge} title="Una o más bases WIP no cuentan con receta activa calculada. Se usó costo de referencia o $0.">
-              ⚠️ Base WIP sin receta activa
+    <div className={`${styles.balanceBar} ${isBalanceCollapsed ? styles.balanceBarCollapsed : ''}`}>
+      {!isBalanceCollapsed && (
+        <div className={styles.balanceInfoCol}>
+          <strong className={styles.balanceTitle}>
+            Balance General de Materiales y Costos
+          </strong>
+          <div className={styles.balanceSubtextRow}>
+            <span>
+              <strong>Rendimiento:</strong> {formData.rendimientoBase || 0} {formData.unidadRendimiento || 'Litros'}
             </span>
-          )}
-        </div>
-      </div>
+            <span>•</span>
+            <span>
+              <strong>Composición:</strong> {totalMateriasPrimas} materias primas/empaques
+              {totalBasesWip > 0 ? ` + ${totalBasesWip} bases WIP` : ''}
+            </span>
+            <span>•</span>
+            <span>
+              <strong>Etapas activas:</strong> {activeStagesCount}
+            </span>
+          </div>
 
-      {/* Lado Derecho: Valores destacados y Semáforo Financiero */}
+          <div className={styles.balanceCostBreakdownRow}>
+            <span>
+              Materias primas/empaques: <strong className={styles.breakdownBadgeRaw}>{formatCurrency(costRawSupplies)}</strong>
+            </span>
+            <span>•</span>
+            <span>
+              Bases intermedias (WIP): <strong className={styles.breakdownBadgeWip}>{formatCurrency(costWipBases)}</strong>
+            </span>
+            {hasWipFallback && (
+              <span className={styles.balanceWarningBadge} title="Una o más bases WIP no cuentan con receta activa calculada. Se usó costo de referencia o $0.">
+                ⚠️ Base WIP sin receta activa
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className={styles.balanceMetricsRow}>
-        <div className={styles.balanceMetricBlock}>
-          <div className={styles.balanceMetricLabel}>
-            Costo Unitario Proyectado
-          </div>
-          <div className={styles.balanceMetricValueUnit}>
-            {formatCurrency(costPerUnit)} <span className={styles.balanceMetricUnitSpan}>/ {formData.unidadRendimiento || 'Und'}</span>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={() => setIsBalanceCollapsed(!isBalanceCollapsed)}
+          className={styles.collapseToggleBtn}
+          title={isBalanceCollapsed ? 'Desplegar balance' : 'Contraer balance'}
+        >
+          {isBalanceCollapsed ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
 
-        <div className={styles.balanceMetricBlockWithBorder}>
+        {!isBalanceCollapsed && (
+          <div className={styles.balanceMetricBlock}>
+            <div className={styles.balanceMetricLabel}>
+              Costo Unitario Proyectado
+            </div>
+            <div className={styles.balanceMetricValueUnit}>
+              {formatCurrency(costPerUnit)} <span className={styles.balanceMetricUnitSpan}>/ {formData.unidadRendimiento || 'Und'}</span>
+            </div>
+          </div>
+        )}
+
+        <div className={`${styles.balanceMetricBlockWithBorder} ${isBalanceCollapsed ? styles.collapsedNoBorder : ''}`}>
           <div className={styles.balanceMetricLabel}>
             Costo Total Batch
           </div>
@@ -87,8 +100,7 @@ export function RecipeBalanceFooter({
           </div>
         </div>
 
-        {/* Semáforo Financiero Compacto */}
-        {selectedProduct && (
+        {!isBalanceCollapsed && selectedProduct && (
           <div>
             {isInternoOrBulk ? (
               <span className={styles.profitBadgeInternal}>⚙️ Costo Interno</span>
@@ -100,7 +112,6 @@ export function RecipeBalanceFooter({
           </div>
         )}
 
-        {/* Botones de acción alineados a la derecha */}
         {(onCancel || onSummarize) && (
           <div className={styles.headerActions}>
             {onCancel && (<button type="button" className={styles.btnCancelHeader} onClick={onCancel}>Cancelar</button>)}

@@ -96,7 +96,7 @@ export function RecipeStageBomTable({
                   </td>
                   <td>
                     <div className={styles.qtyWrapper}>
-                      <input className={`${styles.input} ${isOverCapacity ? styles.inputErrorBorder : ''}`} type="number" step="0.0001" min="0" value={det.cantidadRequerida === '' ? '' : det.cantidadRequerida} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'cantidadRequerida', e.target.value === '' ? '' : parseFloat(e.target.value))} required />
+                      <input className={`${styles.input} ${isOverCapacity ? styles.inputErrorBorder : ''}`} type="number" step={String(det.unidad || '').toLowerCase().includes('und') || String(det.unidad || '').toLowerCase().includes('unidades') ? '1' : '0.1'} min="0" value={det.cantidadRequerida === '' ? '' : det.cantidadRequerida} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'cantidadRequerida', e.target.value === '' ? '' : parseFloat(e.target.value))} required />
                       <span className={styles.unitBadge}>{det.unidad || '-'}</span>
                     </div>
                     {isOverCapacity && (

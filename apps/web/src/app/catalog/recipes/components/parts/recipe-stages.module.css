@@ -1,26 +1,30 @@
 /* recipe-stages.module.css - Estilos modulares para Master-Detail (Split View) de Etapas de Recetas */
 
 .splitLayout {
-  display: grid;
-  grid-template-columns: 340px 1fr;
+  display: flex;
   gap: 1.25rem;
-  align-items: start;
+  align-items: flex-start;
+  transition: all 0.2s ease-in-out;
 }
 
 @media (max-width: 900px) {
   .splitLayout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
 
 /* Panel Izquierdo: Hoja de Ruta / Pipeline */
 .timelineCol {
+  width: 340px;
+  min-width: 340px;
   max-height: 70vh;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding-right: 0.25rem;
+  transition: all 0.2s ease-in-out;
 }
 
 .sidebarTemplatesCard, .sidebarStagesCard {
@@ -209,6 +213,10 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  flex: 1;
+  width: 100%;
+  transition: all 0.2s ease-in-out;
+  min-width: 0;
 }
 
 .emptyWorkspace {
@@ -912,4 +920,102 @@
 }
 
 
+
+
+/* Toggle Sidebar Styles */
+.timelineColCollapsed {
+  width: 48px !important;
+  min-width: 48px !important;
+  max-width: 48px !important;
+  overflow: hidden;
+  align-items: center;
+  padding-right: 0 !important;
+}
+
+.sidebarToggleBtn {
+  position: absolute;
+  top: 1rem;
+  right: -1rem; /* Borde divisorio */
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  color: #78716C;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+.sidebarToggleBtn:hover {
+  background-color: #EFECE4;
+  color: #182622;
+}
+.sidebarToggleBtn > span {
+  display: none;
+}
+.timelineHeaderBar {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+.sidebarToggleBtnCollapsed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 1px solid #E5DFD5;
+  color: #182622;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+.sidebarToggleBtnCollapsed:hover {
+  background: #EFECE4;
+}
+.collapsedVerticalIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  background: #F7F4EE;
+  border: 1px solid #E5DFD5;
+  padding: 1rem 0.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  width: 100%;
+}
+.collapsedVerticalIndicator:hover {
+  background: #EFECE4;
+}
+.collapsedBadge {
+  background: #182622;
+  color: #FFFFFF;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.collapsedText {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #78716C;
+  letter-spacing: 0.1em;
+}
 

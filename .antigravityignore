@@ -1,0 +1,44 @@
+# Dependencias y paquetes
+node_modules/
+**/node_modules/
+.pnpm-store/
+**/.pnpm-store/
+
+# Artefactos de compilación y empaquetado
+.next/
+**/.next/
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+
+# Cachés y temporales
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+*.tsbuildinfo
+.eslintcache
+
+# Archivos de bloqueo masivos (consumen miles de tokens innecesarios)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Logs y bases de datos locales
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.sqlite
+*.sqlite3
+
+# Git y sistema
+.git/
+**/.git/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

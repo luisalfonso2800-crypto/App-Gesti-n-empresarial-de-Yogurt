@@ -31,6 +31,7 @@ model Insumo {
   marca              String                 @map("Marca")
   empaque            String?                @map("Empaque")
   unidadBase         String                 @map("Unidad_Base")
+  contenidoReferencial Decimal              @default(1)
   stockMinimo        Decimal                @map("Stock_Minimo")
   costoBase          Decimal?               @map("Costo_Base") @db.Decimal(12, 2)
   activo             Boolean                @default(true) @map("Activo")

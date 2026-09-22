@@ -16,6 +16,7 @@ const INITIAL_FORM = {
   marca: '',
   unidadBase: '',
   empaque: '',
+  contenidoReferencial: '',
   stockMinimo: '',
   costoBase: '',
   observaciones: '',
@@ -50,6 +51,7 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
           marca: initialData.marca || '',
           unidadBase: initialData.unidadBase || '', 
           empaque: initialData.empaque || '', 
+          contenidoReferencial: initialData.contenidoReferencial || '',
           stockMinimo: '', 
           costoBase: '', 
           observaciones: '', 
@@ -126,6 +128,7 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
         ...formData,
         nombre: (formData.nombre || '').trim(),
         marca: (formData.marca || '').trim(),
+        contenidoReferencial: formData.contenidoReferencial ? parseFloat(formData.contenidoReferencial) : 1,
         stockMinimo: formData.stockMinimo ? Number(String(formData.stockMinimo).replace(/\./g, '')) : 0,
         costoBase: formData.costoBase ? Number(String(formData.costoBase).replace(/\./g, '')) : null
       };
