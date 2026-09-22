@@ -17,6 +17,21 @@ import { UnitConverter } from '../common/utils/unit-converter';
  */
 const UNIDADES_DISCRETAS = ['UNIDAD', 'UNIDADES', 'UND', 'PZA', 'PIEZA', 'VASO', 'BOTELLA', 'TAPA', 'ETIQUETA'];
 
+/**
+ * Normaliza la cantidad consumida a la unidad base de costo ($/L o $/kg).
+ * Corrige el factor 1000x catastrófico (HAL-F8-01).
+ * @param {number} qty - Cantidad consumida
+ * @param {string} unit - Unidad de medida del detalle
+ * @returns {number} Cantidad escalada a litros o kilogramos
+ */
+export function normalizeQtyToUnitCost(qty, unit) {
+  const u = (unit || '').toLowerCase().trim();
+  if (u === 'ml' || u === 'g' || u === 'gramos' || u === 'mililitros') {
+    return Number(qty) / 1000;
+  }
+  return Number(qty);
+}
+
 const includeProduction = {
   detalles: {
     include: {
@@ -874,14 +889,16 @@ export class ProductionRepository {
               }
             }
 
-            costoTotalLote += qtyReal * costoUnitarioIntermedio;
+            const qtyNormalizadaCosto = normalizeQtyToUnitCost(qtyReal, det.unidad);
+            const costoRealIntermedio = Number(qtyNormalizadaCosto * costoUnitarioIntermedio);
+            costoTotalLote += costoRealIntermedio;
 
             await prisma.detalleProduccion.update({
               where: { id: det.id },
               data: {
                 cantidadRealUtilizada: Number(qtyReal),
                 diferencia: Number(diferencia),
-                costoReal: Number(qtyReal * costoUnitarioIntermedio)
+                costoReal: costoRealIntermedio
               }
             });
           }
