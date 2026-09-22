@@ -47,7 +47,27 @@ export class DashboardService {
     });
     const accountsReceivable = Number(receivablesAggr._sum.saldoPendiente || 0);
 
-    const netProfitCurrentMonth = salesCurrentMonth - expensesCurrentMonth;
+    // HAL-F9-02: Segregar Devengado vs Flujo de Caja Real
+    // Ventas sin IVA del mes actual (base imponible = ingreso operativo real)
+    const salesBaseAggr = await this.prisma.venta.aggregate({
+      _sum: { baseImponible: true },
+      where: { fechaVenta: { gte: startOfMonth, lte: endOfMonth } }
+    });
+    const ventasBaseSinIvaCurrentMonth = Number(salesBaseAggr._sum.baseImponible || 0);
+
+    // Cobros efectivamente recaudados en el mes actual
+    const cashReceivedAggr = await this.prisma.pago.aggregate({
+      _sum: { valorPagado: true },
+      where: { fechaPago: { gte: startOfMonth, lte: endOfMonth } }
+    });
+    const cashReceivedCurrentMonth = Number(cashReceivedAggr._sum.valorPagado || 0);
+
+    // Utilidad Devengada: ingresos facturados (sin IVA) - gastos operativos
+    const utilidadDevengada = ventasBaseSinIvaCurrentMonth - expensesCurrentMonth;
+    // Flujo de Caja Real: cobros efectivos - gastos (liquidez real)
+    const flujoCajaReal = cashReceivedCurrentMonth - expensesCurrentMonth;
+    // Mantener netProfitCurrentMonth por retrocompatibilidad (ahora = utilidadDevengada)
+    const netProfitCurrentMonth = utilidadDevengada;
 
     // Valorización de Inventario (Materia Prima)
     const invInsumos = await this.prisma.inventario.findMany({
@@ -174,7 +194,11 @@ export class DashboardService {
         salesPreviousMonth: Number(salesPreviousMonth.toFixed(2)),
         expensesCurrentMonth: Number(expensesCurrentMonth.toFixed(2)),
         accountsReceivable: Number(accountsReceivable.toFixed(2)),
-        netProfitCurrentMonth: Number(netProfitCurrentMonth.toFixed(2))
+        netProfitCurrentMonth: Number(netProfitCurrentMonth.toFixed(2)),
+        // HAL-F9-02: Métricas segregadas devengado vs recaudado
+        utilidadDevengada: Number(utilidadDevengada.toFixed(2)),
+        flujoCajaReal: Number(flujoCajaReal.toFixed(2)),
+        cashReceivedCurrentMonth: Number(cashReceivedCurrentMonth.toFixed(2))
       },
       inventoryValuation: {
         rawMaterialsValue: Number(rawMaterialsValue.toFixed(2)),
