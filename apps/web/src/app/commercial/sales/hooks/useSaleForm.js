@@ -194,11 +194,19 @@ export function useSaleForm({ onSuccess }) {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
+      // HAL-F5-03: Enviar payload sin recálculos redundantes ni casteos cruzados distorsionantes
       const response = await apiClient.post('/sales', {
         ...formData,
         fechaVenta: new Date(formData.fechaVenta).toISOString(),
         valorPagado: formData.tipoPago === 'CONTADO' ? formData.totalVenta : formData.valorPagado,
-        saldoPendiente: formData.tipoPago === 'CONTADO' ? 0 : formData.totalVenta - formData.valorPagado
+        saldoPendiente: formData.tipoPago === 'CONTADO' ? 0 : formData.totalVenta - formData.valorPagado,
+        detalles: formData.detalles.map(d => ({
+          idProducto: d.idProducto,
+          cantidad: d.cantidad,
+          precioUnitario: d.precioUnitario,
+          descuento: d.descuento || 0,
+          tarifaIva: d.tarifaIva ?? 19
+        }))
       });
       const saleResult = response?.data || response;
       const clientObj = clients.find(c => c.id === formData.idCliente);
