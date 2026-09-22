@@ -11,55 +11,26 @@ import { Injectable, Dependencies, NotFoundException, BadRequestException, Confl
 import { RecipesRepository } from './recipes.repository';
 import { PrismaService } from '../database/prisma.service';
 
+import { normalizeUnit, getMagnitude, areCompatible } from '../common/units/unit-registry';
+
 /**
- * Normaliza y extrae la unidad canónica de una cadena de texto (ej. "1 Litro" -> "LITROS", "Kg" -> "KILOGRAMOS").
+ * Normaliza y extrae la unidad canónica delegando en el registro canónico único (HAL-F1-05).
  * @param {string} str - Cadena de texto que representa una unidad de medida.
- * @returns {string} Unidad normalizada o cadena original en mayúsculas.
+ * @returns {string} Clave canónica o cadena original en minúsculas.
  */
 function extractCanonicalUnit(str) {
   if (!str || typeof str !== 'string') return '';
-  const s = str.trim().toUpperCase();
-
-  // Patrones de volumen
-  if (/\b(LITRO|LITROS|LT|LTS|L)\b/.test(s)) return 'LITROS';
-  if (/\b(MILILITRO|MILILITROS|ML)\b/.test(s)) return 'MILILITROS';
-
-  // Patrones de masa
-  if (/\b(KILOGRAMO|KILOGRAMOS|KG|KGS|KILO|KILOS)\b/.test(s)) return 'KILOGRAMOS';
-  if (/\b(GRAMO|GRAMOS|G|GR|GRS)\b/.test(s)) return 'GRAMOS';
-
-  // Patrones de conteo discreto
-  if (/\b(UNIDAD|UNIDADES|UND|UNDS|PZA|PZAS|UNID|UNIDS)\b/.test(s)) return 'UNIDADES';
-
-  // Patrones de masa/volumen anglosajón
-  if (/\b(ONZA|ONZAS|OZ)\b/.test(s)) return 'ONZAS';
-
-  return s;
+  return normalizeUnit(str) || str.trim().toLowerCase();
 }
 
 /**
- * Comprueba si dos unidades de medida son dimensionalmente compatibles entre sí.
+ * Comprueba si dos unidades de medida son dimensionalmente compatibles entre sí (HAL-F1-06, HAL-F2-01, HAL-F2-04).
  * @param {string} unitA - Primera unidad de medida a comparar.
  * @param {string} unitB - Segunda unidad de medida a comparar.
- * @returns {boolean} Verdadero si ambas unidades representan la misma magnitud dimensional.
+ * @returns {boolean} Verdadero si ambas unidades representan la misma magnitud dimensional (MASA, VOLUMEN, CONTEO).
  */
 function areUnitsCompatible(unitA, unitB) {
-  if (!unitA || !unitB) return false;
-  const a = String(unitA).trim().toUpperCase();
-  const b = String(unitB).trim().toUpperCase();
-
-  // Coincidencia exacta directa
-  if (a === b) return true;
-
-  // Comparación canónica por familias dimensionales
-  const canA = extractCanonicalUnit(a);
-  const canB = extractCanonicalUnit(b);
-
-  if (canA && canB && canA === canB) {
-    return true;
-  }
-
-  return false;
+  return areCompatible(unitA, unitB);
 }
 
 @Injectable()
