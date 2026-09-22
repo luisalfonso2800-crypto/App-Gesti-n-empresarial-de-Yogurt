@@ -166,10 +166,10 @@ export class GoalsRepository {
         estado: { not: 'CANCELADO' }
       },
       _sum: {
-        cantidadProducida: true
+        cantidadProducidaReal: true
       }
     });
-    return Number(result._sum.cantidadProducida || 0);
+    return Number(result._sum.cantidadProducidaReal || 0);
   }
 
   async getSumGastos(fechaInicio, fechaFin) {
