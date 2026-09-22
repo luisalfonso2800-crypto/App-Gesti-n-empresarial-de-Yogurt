@@ -1,5 +1,6 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { toDecimal, sub, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -131,7 +132,8 @@ export class SalesRepository {
       for (const d of processedDetalles) {
         const inv = await prisma.inventarioProducto.findUnique({ where: { idProducto: d.idProducto } });
         const stockAnterior = inv ? Number(inv.cantidadActual) : 0;
-        const stockNuevo = stockAnterior - d.cantidad;
+        // HAL-F4-07: Resta exacta con Decimal preservando saldo real
+        const stockNuevo = toNumber(sub(stockAnterior, d.cantidad));
         
         await prisma.inventarioProducto.update({
           where: { idProducto: d.idProducto },

@@ -11,6 +11,7 @@ import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UnitConverter } from '../common/utils/unit-converter';
 import { convertVolumeToMass } from '../common/units/unit-registry';
+import { toDecimal, sub, toNumber } from '../common/decimal/decimal-utils';
 
 /**
  * Familias de unidades de medida discretas e indivisibles en planta.
@@ -759,8 +760,9 @@ export class ProductionRepository {
             const stockActual = insumo?.inventario?.cantidadActual
               ? Number(insumo.inventario.cantidadActual)
               : 0;
-            // HAL-F4-08: NO truncar a 0 — preservar saldo real para evidencia de desajustes
-            const stockFinal = stockActual - qtyReal;
+            // HAL-F4-08 + HAL-F4-07: Operar con Decimal y preservar saldo real sin truncar
+            const stockFinalDecimal = sub(stockActual, qtyReal);
+            const stockFinal = toNumber(stockFinalDecimal);
 
             await prisma.inventario.upsert({
               where: { idInsumo: det.idInsumo },
@@ -990,7 +992,8 @@ export class ProductionRepository {
         cantInoculoSolicitada <= qtyProducida
       );
       const cantInoculo = tieneReserva ? cantInoculoSolicitada : 0;
-      const cantPrincipal = Math.max(0, qtyProducida - cantInoculo);
+      // HAL-F4-07: Operar resta con Decimal para cálculo exacto de WIP / Lote comercial
+      const cantPrincipal = Math.max(0, toNumber(sub(qtyProducida, cantInoculo)));
 
       let lotePrincipalId = null;
 

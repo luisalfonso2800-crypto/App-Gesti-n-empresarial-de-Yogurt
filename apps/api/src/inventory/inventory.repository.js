@@ -1,6 +1,7 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { normalizeUnit, areCompatible, convert } from '../common/units/unit-registry.js';
+import { toDecimal, add, mul, div, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -153,18 +154,20 @@ export class InventoryRepository {
           costoUnitario = 0;
         }
 
-        const stockNuevo = stockAnterior + cantidadNormalizada;
+        const stockNuevoDecimal = add(stockAnterior, cantidadNormalizada);
+        const stockNuevo = toNumber(stockNuevoDecimal);
 
-        // Calcular nuevo costo promedio
+        // Calcular nuevo costo promedio usando Decimal (HAL-F4-07)
         let nuevoCostoPromedio = costoAnterior;
         if (!inv || stockAnterior <= 0) {
           // Caso en frío o existencia previa en cero
           nuevoCostoPromedio = costoUnitario > 0 ? costoUnitario : Number(insumoRecord.costoBase || 0);
         } else if ((tipo === 'CARGA_INICIAL' || tipo === 'AJUSTE_POSITIVO') && cantidadNormalizada > 0 && costoUnitario > 0) {
-          // Ponderación de costo promedio
-          const valorAnterior = stockAnterior * costoAnterior;
-          const valorAjuste = cantidadNormalizada * costoUnitario;
-          nuevoCostoPromedio = stockNuevo > 0 ? (valorAnterior + valorAjuste) / stockNuevo : costoUnitario;
+          // Ponderación de costo promedio: (stockAnt * costoAnt + cant * costoUnitario) / stockNuevo
+          const valorAnteriorDec = mul(stockAnterior, costoAnterior);
+          const valorAjusteDec = mul(cantidadNormalizada, costoUnitario);
+          const valorTotalDec = add(valorAnteriorDec, valorAjusteDec);
+          nuevoCostoPromedio = stockNuevo > 0 ? toNumber(div(valorTotalDec, stockNuevoDecimal)) : costoUnitario;
         }
 
         await tx.inventario.upsert({

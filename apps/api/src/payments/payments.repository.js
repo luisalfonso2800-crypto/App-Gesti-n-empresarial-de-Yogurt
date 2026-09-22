@@ -1,5 +1,6 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { toDecimal, add, sub, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -52,9 +53,11 @@ export class PaymentsRepository {
         include: { cliente: true, venta: true }
       });
 
-      const nuevoValorPagado = Number(venta.valorPagado) + pagoMonto;
-      // HAL-F4-08 + HAL-F9-04: NO truncar a 0 — saldo negativo = crédito/saldo a favor del cliente
-      const nuevoSaldo = Number(venta.totalVenta) - nuevoValorPagado;
+      // HAL-F4-07: Suma y resta financiera exacta con Decimal
+      const nuevoValorPagadoDec = add(venta.valorPagado, pagoMonto);
+      const nuevoSaldoDec = sub(venta.totalVenta, nuevoValorPagadoDec);
+      const nuevoValorPagado = toNumber(nuevoValorPagadoDec);
+      const nuevoSaldo = toNumber(nuevoSaldoDec);
 
       const updateData = {
         valorPagado: nuevoValorPagado,
