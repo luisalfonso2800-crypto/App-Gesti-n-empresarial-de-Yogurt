@@ -1,5 +1,6 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, BadRequestException } from '@nestjs/common';
 import { LotsRepository } from './lots.repository';
+import { discardLotSchema } from './schemas/discard-lot.schema';
 
 @Injectable()
 @Dependencies(LotsRepository)
@@ -19,6 +20,12 @@ export class LotsService {
   }
 
   async discardLot(id, data) {
-    return this.repository.discardLot(id, data);
+    const parseResult = discardLotSchema.safeParse(data);
+    if (!parseResult.success) {
+      const issues = parseResult.error.issues || [];
+      const errorMsg = issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+      throw new BadRequestException(`Validación de descarte de lote fallida: ${errorMsg}`);
+    }
+    return this.repository.discardLot(id, parseResult.data);
   }
 }

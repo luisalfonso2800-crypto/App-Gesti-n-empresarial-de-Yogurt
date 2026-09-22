@@ -1,5 +1,6 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PurchasesRepository } from './purchases.repository';
+import { createPurchaseSchema } from './schemas/create-purchase.schema';
 
 @Injectable()
 @Dependencies(PurchasesRepository)
@@ -19,9 +20,13 @@ export class PurchasesService {
   }
 
   async create(createDto) {
-    // Executing transaction via repository
-    return this.repository.createWithTransaction(createDto);
-
+    const parseResult = createPurchaseSchema.safeParse(createDto);
+    if (!parseResult.success) {
+      const issues = parseResult.error.issues || [];
+      const errorMsg = issues.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+      throw new BadRequestException(`Validación de compra fallida: ${errorMsg}`);
+    }
+    return this.repository.createWithTransaction(parseResult.data);
   }
 
   async simulate(simulateDto) {
