@@ -208,12 +208,15 @@ export class PurchasesRepository {
               }
             });
 
-            // Record MovimientoInventario
+            // Record MovimientoInventario (HAL-F9-03: incluir stockAnterior/stockNuevo para trazabilidad DIAN)
             await prisma.movimientoInventario.create({
               data: {
                 idInsumo: detalle.idInsumo,
                 tipoMovimiento: 'ENTRADA_COMPRA',
                 cantidad: incrementStock,
+                stockAnterior: stockAnterior,
+                stockNuevo: stockNuevo,
+                costoUnitario: precioUnitarioStock > 0 ? precioUnitarioStock : null,
                 motivo: 'Compra Directa',
                 operacionOrigen: newCompra.id
               }

@@ -1037,11 +1037,17 @@ export class ProductionRepository {
           lotePrincipalId = subLoteInoculo.id;
         }
 
+        // HAL-F9-03: capturar stockAnterior/stockNuevo para trazabilidad en recirculación de inóculo
+        const invInoculo = await prisma.inventarioProducto.findUnique({ where: { idProducto: produccion.idProducto } });
+        const stockAntInoculo = invInoculo ? Number(invInoculo.cantidadActual) : 0;
+
         await prisma.movimientoInventario.create({
           data: {
             idProducto: produccion.idProducto,
             tipoMovimiento: 'ENTRADA_RECIRCULACION_INOCULO',
             cantidad: cantInoculo,
+            stockAnterior: stockAntInoculo,
+            stockNuevo: stockAntInoculo + cantInoculo,
             costoUnitario: costoUnitarioFabricacion,
             motivo: `Reserva interna de inóculo de producción ${produccion.id}`,
             operacionOrigen: produccion.id
