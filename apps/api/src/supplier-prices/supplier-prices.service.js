@@ -49,13 +49,14 @@ export class SupplierPricesService {
       precioTotalConIva = precioCompra;
     }
 
-    const costoUnidadBase = cantidadEquivalenteBase > 0 ? (precioTotalConIva / cantidadEquivalenteBase) : 0;
+    // HAL-F4-04 / HAL-F7-04: El costo contable de inventario debe calcularse sobre el valor neto sin IVA descontable
+    const costoUnidadBase = cantidadEquivalenteBase > 0 ? (costoBaseSinIva / cantidadEquivalenteBase) : 0;
 
     data.tieneIva = tieneIva;
     data.porcentajeIva = porcentajeIva;
     data.precioIncluyeIva = precioIncluyeIva;
-    data.costoBaseSinIva = costoBaseSinIva;
-    data.costoUnidadBase = costoUnidadBase;
+    data.costoBaseSinIva = Number(costoBaseSinIva.toFixed(4));
+    data.costoUnidadBase = Number(costoUnidadBase.toFixed(4));
 
     return data;
   }

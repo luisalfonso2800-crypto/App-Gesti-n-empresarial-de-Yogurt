@@ -557,9 +557,17 @@ export class DashboardService {
     return productos.map(p => {
       const costoUnitario = Number(p.inventario?.costoPromedio || 0);
       const precioVenta = Number(p.precioVenta || 0);
+      const tarifaIvaDecimal = Number(p.tarifaIva || 19) / 100;
+      const precioIncluyeIva = p.precioIncluyeIva !== false;
+
+      // HAL-F7-01: El margen comercial gerencial se calcula sobre la base antes de IVA
+      const precioSinIva = (precioIncluyeIva && tarifaIvaDecimal > 0)
+        ? precioVenta / (1 + tarifaIvaDecimal)
+        : precioVenta;
+
       let margenPorcentaje = 0;
-      if (precioVenta > 0) {
-        margenPorcentaje = ((precioVenta - costoUnitario) / precioVenta) * 100;
+      if (precioSinIva > 0) {
+        margenPorcentaje = ((precioSinIva - costoUnitario) / precioSinIva) * 100;
       }
 
       // Min days for expiration

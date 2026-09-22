@@ -19,14 +19,12 @@ Se revisarán al finalizar los 7 bloques de remediación.
 
 ### [BLOQUE-1] DEUDA-BLOQUE1-01: Asunción de precioIncluyeIva y redondeo por línea en recálculo de ventas
 - **Detectado en:** `apps/api/src/sales/sales.repository.js`: L148-158
-- **Descripción:** El recálculo forzoso server-side del Bloque 1 asume tarifa estándar del 19% si aplicaIva es true sin evaluar si el precio base de catálogo ya incluía IVA (`precioIncluyeIva`), y liquida el IVA redondeando por línea (`Math.round`) en lugar de base imponible agrupada.
+- **Descripción:** El recálculo forzoso server-side del Bloque 1 asumía tarifa estándar y redondeo por línea.
 - **Severidad estimada:** ALTO
-- **Bloque donde se detectó:** Bloque 1 (Acción previa Bloque 3)
-- **Acción sugerida:** Resolver en Bloque 4 (Costos, IVA y Descuentos).
+- **Estado:** **RESUELTO EN BLOQUE 4** (Soporta `precioIncluyeIva` dinámico, distingue descuentos comerciales/financieros y aplica redondeo global de factura).
 
-### [BLOQUE-3] DEUDA-BLOQUE3-01: Ausencia de columna de densidad en modelo Insumo
+### [BLOQUE-3] DEUDA-BLOQUE3-01: Ausencia de columna de densidad en modelo Insumo y Producto
 - **Detectado en:** `apps/api/src/common/units/unit-registry.js`: L160-170
-- **Descripción:** La conversión automática masa ↔ volumen no puede generalizarse a nivel de base de datos sin un campo `densidad` por insumo en `schema.prisma`.
+- **Descripción:** Ausencia de campo `densidad` en base de datos.
 - **Severidad estimada:** MEDIO
-- **Bloque donde se detectó:** Bloque 3
-- **Acción sugerida:** Mantener función defensiva `convertVolumeToMass(qty, density)` con densidad obligatoria. Evaluar migración de schema en bloque futuro si el negocio lo demanda.
+- **Estado:** **RESUELTO EN BLOQUE 4** (Añadido `densidad Decimal? @default(1.0) @db.Decimal(6,4)` a Insumo y Producto en `schema.prisma` y regenerado cliente Prisma).
