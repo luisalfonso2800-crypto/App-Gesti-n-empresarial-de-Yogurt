@@ -10,6 +10,7 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UnitConverter } from '../common/utils/unit-converter';
+import { convertVolumeToMass } from '../common/units/unit-registry';
 
 /**
  * Familias de unidades de medida discretas e indivisibles en planta.
@@ -219,10 +220,21 @@ export class ProductionRepository {
             const isLoteInLiters = loteUnidad === 'litros' || loteUnidad === 'l' || (!loteUnidad && rawLoteQty <= 100);
 
             let qtyConvertida = rawLoteQty;
+            const densidadWip = Number(det.productoIntermedio?.densidad || lw.producto?.densidad || 1.0);
+
             if (isReqSmallUnit && isLoteInLiters) {
-              qtyConvertida = rawLoteQty * 1000;
+              // Si se requiere en gramos y el lote está en litros, aplicar densidad explícita (HAL-F2-03)
+              if (detUnidad === 'g' || detUnidad === 'gramos') {
+                qtyConvertida = convertVolumeToMass(rawLoteQty, densidadWip) * 1000;
+              } else {
+                qtyConvertida = rawLoteQty * 1000;
+              }
             } else if (!isReqSmallUnit && (loteUnidad === 'g' || loteUnidad === 'ml')) {
-              qtyConvertida = rawLoteQty / 1000;
+              if (loteUnidad === 'g') {
+                qtyConvertida = (rawLoteQty / 1000) / densidadWip;
+              } else {
+                qtyConvertida = rawLoteQty / 1000;
+              }
             }
 
             totalStockCalculado += qtyConvertida;
