@@ -956,10 +956,12 @@ export class ProductionRepository {
         }
       });
 
-      // Determinar si es producto intermedio o producto terminado
+      // Determinar si es producto intermedio o producto terminado y su unidad canónica (HAL-F3-02)
       const esIntermedio = produccion.producto?.categoria === 'INTERMEDIO_WIP';
       const tipoLoteGenerado = esIntermedio ? 'SEMIELABORADO_WIP' : 'PRODUCTO_TERMINADO';
-      const unidadLote = esIntermedio ? 'Litros' : 'UNIDAD';
+      const unidadLote = produccion.receta?.unidadRendimiento ||
+                         produccion.producto?.presentacion?.unidadMedida ||
+                         (esIntermedio ? 'Litros' : 'UNIDAD');
 
       // Poka-Yoke Límite F4: si generacion >= 4, forzar litrosAReservar = 0 y rechazar sub-lote de inóculo
       const limiteF4Alcanzado = generacion >= 4;

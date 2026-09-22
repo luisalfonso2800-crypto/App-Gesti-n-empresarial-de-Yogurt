@@ -1,5 +1,6 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
+import { getFactor } from '../common/units/unit-registry';
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -168,10 +169,12 @@ export class PurchasesRepository {
             const contenidoUnidad = Number(detalle.contenidoBase) || 1;
             const cantidadBaseTotal = Number(detalle.cantidadBaseTotal) || (cantidadEmpaques * contenidoUnidad);
 
-            // 4.1 Update Inventario Stock (ya está en unidad base o necesita x1000 si es L/Kg vs g/ml?)
-            // Según la regla del negocio actual en el código anterior:
-            const isLtsOrKgs = ['Lt', 'Lts', 'Kg', 'Kgs'].includes(currentInsumo.unidadBase);
-            const incrementStock = isLtsOrKgs ? cantidadBaseTotal * 1000 : cantidadBaseTotal;
+            // 4.1 Update Inventario Stock escalado canónicamente (HAL-F1-04)
+            // Si la unidad base del insumo es 'l' o 'kg', escala a ml o g multiplicando por su factor relativo
+            const factorEscala = getFactor(currentInsumo.unidadBase, 'g') ||
+                                 getFactor(currentInsumo.unidadBase, 'ml') ||
+                                 1;
+            const incrementStock = cantidadBaseTotal * factorEscala;
 
             // 4.1 Update Inventario Stock y Costo Promedio Ponderado (CPP) (HAL-F4-01)
             const currentInv = await prisma.inventario.findUnique({
