@@ -1,3 +1,7 @@
+Prompt completo del Bloque 5 (Kardex, Ventas, Finanzas)
+Aquí está el prompt íntegro para lanzar en Antigravity:
+
+text
 # BLOQUE 5 DE REMEDIACIÓN — KARDEX, VENTAS Y FINANZAS
 
 ## Contexto

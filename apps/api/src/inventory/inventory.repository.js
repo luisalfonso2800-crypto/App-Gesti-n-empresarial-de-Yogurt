@@ -59,9 +59,10 @@ export class InventoryRepository {
     return records.map((item) => {
       const prod = item.producto || {};
       const lotesActivos = prod.lotes || [];
-      const stockRealLotes = Math.max(0, lotesActivos.length > 0
+      // HAL-F4-08: no truncar stock real — si hay desajuste, debe ser visible
+      const stockRealLotes = lotesActivos.length > 0
         ? lotesActivos.reduce((acc, l) => acc + Number(l.cantidadDisponible || 0), 0)
-        : Number(item.cantidadActual || 0));
+        : Number(item.cantidadActual || 0);
 
       let costoRef = Number(item.costoPromedio || prod.costoEstandar || 0);
       const unidadReceta = prod.recetas?.[0]?.unidadRendimiento;

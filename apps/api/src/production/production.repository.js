@@ -759,7 +759,8 @@ export class ProductionRepository {
             const stockActual = insumo?.inventario?.cantidadActual
               ? Number(insumo.inventario.cantidadActual)
               : 0;
-            const stockFinal = Math.max(0, stockActual - qtyReal);
+            // HAL-F4-08: NO truncar a 0 — preservar saldo real para evidencia de desajustes
+            const stockFinal = stockActual - qtyReal;
 
             await prisma.inventario.upsert({
               where: { idInsumo: det.idInsumo },
@@ -814,7 +815,8 @@ export class ProductionRepository {
               where: { idProducto: det.idProductoIntermedio }
             });
             const stockAnt = invInter ? Number(invInter.cantidadActual) : 0;
-            const stockPost = Math.max(0, stockAnt - decrementoLts);
+            // HAL-F4-08: NO truncar a 0 — preservar saldo real de producto intermedio
+            const stockPost = stockAnt - decrementoLts;
 
             if (invInter) {
               await prisma.inventarioProducto.update({
@@ -856,7 +858,8 @@ export class ProductionRepository {
                   const targetLote = await prisma.lote.findUnique({ where: { id: asignacion.idLote } });
                   if (targetLote) {
                     if (!idLotePadreDetectado) idLotePadreDetectado = targetLote.id;
-                    const nuevaCant = Math.max(0, Number(targetLote.cantidadDisponible) - cantLitros);
+                    // HAL-F4-08: saldo real del lote sin truncar
+                    const nuevaCant = Number(targetLote.cantidadDisponible) - cantLitros;
                     await prisma.lote.update({
                       where: { id: asignacion.idLote },
                       data: {
@@ -888,7 +891,8 @@ export class ProductionRepository {
                 if (!idLotePadreDetectado) idLotePadreDetectado = lote.id;
                 const cantDisponible = Number(lote.cantidadDisponible);
                 const aDescontar = Math.min(cantDisponible, remQty);
-                const nuevaCant = Math.max(0, cantDisponible - aDescontar);
+                // HAL-F4-08: saldo real del lote FEFO sin truncar
+                const nuevaCant = cantDisponible - aDescontar;
                 remQty -= aDescontar;
 
                 await prisma.lote.update({
