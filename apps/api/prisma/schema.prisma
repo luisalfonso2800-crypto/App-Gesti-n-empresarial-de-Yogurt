@@ -34,6 +34,7 @@ model Insumo {
   contenidoReferencial Decimal              @default(1)
   stockMinimo        Decimal                @map("Stock_Minimo")
   costoBase          Decimal?               @map("Costo_Base") @db.Decimal(12, 2)
+  densidad           Decimal?               @default(1.0) @map("Densidad") @db.Decimal(6, 4)
   activo             Boolean                @default(true) @map("Activo")
   observaciones      String?                @map("Observaciones")
   detallesCompra     DetalleCompra[]
@@ -107,6 +108,7 @@ model Producto {
   tipoImpuesto                  String   @default("GRAVADO") @map("Tipo_Impuesto")
   tarifaIva                     Decimal  @default(19.00) @map("Tarifa_Iva") @db.Decimal(5, 2)
   precioIncluyeIva              Boolean  @default(true) @map("Precio_Incluye_Iva")
+  densidad                      Decimal? @default(1.0) @map("Densidad") @db.Decimal(6, 4)
   imagenUrl      String?        @map("Imagen_Url")
   activo         Boolean        @default(true) @map("Activo")
   observaciones  String?        @map("Observaciones")
