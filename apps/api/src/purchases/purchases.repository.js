@@ -173,14 +173,35 @@ export class PurchasesRepository {
             const isLtsOrKgs = ['Lt', 'Lts', 'Kg', 'Kgs'].includes(currentInsumo.unidadBase);
             const incrementStock = isLtsOrKgs ? cantidadBaseTotal * 1000 : cantidadBaseTotal;
 
+            // 4.1 Update Inventario Stock y Costo Promedio Ponderado (CPP) (HAL-F4-01)
+            const currentInv = await prisma.inventario.findUnique({
+              where: { idInsumo: detalle.idInsumo }
+            });
+
+            const stockAnterior = currentInv ? Number(currentInv.cantidadActual || 0) : 0;
+            const costoAnterior = currentInv ? Number(currentInv.costoPromedio || 0) : 0;
+            const cantidadComprada = incrementStock;
+
+            // Precio unitario por la unidad de stock comprada
+            const precioUnitarioCompra = Number(detalle.precioUnitario) || 0;
+            const factorReal = cantidadComprada > 0 && cantidadEmpaques > 0 ? (cantidadComprada / cantidadEmpaques) : 1;
+            const precioUnitarioStock = factorReal > 0 ? (precioUnitarioCompra / factorReal) : precioUnitarioCompra;
+
+            const stockNuevo = stockAnterior + cantidadComprada;
+            const costoNuevo = stockNuevo > 0
+              ? ((stockAnterior * costoAnterior) + (cantidadComprada * precioUnitarioStock)) / stockNuevo
+              : precioUnitarioStock;
+
             await prisma.inventario.upsert({
               where: { idInsumo: detalle.idInsumo },
               update: {
-                cantidadActual: { increment: incrementStock }
+                cantidadActual: stockNuevo,
+                costoPromedio: costoNuevo
               },
               create: {
                 idInsumo: detalle.idInsumo,
-                cantidadActual: incrementStock
+                cantidadActual: stockNuevo,
+                costoPromedio: costoNuevo
               }
             });
 
