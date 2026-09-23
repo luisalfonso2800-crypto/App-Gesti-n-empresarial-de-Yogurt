@@ -100,7 +100,7 @@ export class SimulationEngineService {
         stockDisponible: Number(req.stockDisponible.toFixed(2)),
         deficit: Number(deficit.toFixed(2)),
         alcanza: deficit === 0,
-        subtotalCosto: Math.round(req.subtotalCosto),
+        subtotalCosto: Number(req.subtotalCosto.toFixed(2)),
         costoUnitario: req.costoUnitario
       };
     });
