@@ -52,24 +52,41 @@ export function PresentationCapacityFields({
 
       {isGranel ? (
         <>
-          <div className={modalStyles.inputGroup}>
-            <label className={modalStyles.label}>Unidad de Medida Base</label>
-            <select
-              name="unidadMedida"
-              value={formData.unidadMedida ?? 'L'}
-              onChange={handleChange}
-              className={modalStyles.input}
-            >
-              <option value="L">Litros (L) - Bases Líquidas / Tanque</option>
-              <option value="kg">Kilogramos (kg) - Jaleas / Dulces / Marmita</option>
-              <option value="g">Gramos (g) - Porcionados / Copitas</option>
-              <option value="und">Unidades (und) - Piezas / Empaques auxiliares</option>
-            </select>
+          <div className={modalStyles.twoColumns}>
+            <div className={modalStyles.inputGroup}>
+              <label className={modalStyles.label}>Unidad de Medida Base</label>
+              <select
+                name="unidadMedida"
+                value={formData.unidadMedida ?? 'L'}
+                onChange={handleChange}
+                className={modalStyles.input}
+              >
+                <option value="L">Litros (L) - Bases Líquidas / Tanque</option>
+                <option value="kg">Kilogramos (kg) - Jaleas / Dulces / Marmita</option>
+                <option value="g">Gramos (g) - Porcionados / Copitas</option>
+                <option value="und">Unidades (und) - Piezas / Empaques auxiliares</option>
+              </select>
+            </div>
+            <div className={modalStyles.inputGroup}>
+              <label className={modalStyles.label}>Volumen / Capacidad (Ml) <span className={styles.requiredAsterisk}>*</span></label>
+              <input 
+                name="cantidadMl" 
+                type="text" 
+                inputMode="decimal" 
+                value={formData.cantidadMl ? String(formData.cantidadMl).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''} 
+                onChange={e => handleChange({ target: { name: 'cantidadMl', value: e.target.value.replace(/\D/g, '') } })} 
+                onKeyDown={e => e.key === '-' && e.preventDefault()} 
+                placeholder="Ej: 1000" 
+                className={`${modalStyles.input} ${hasSubmitted && isCantidadMlInvalid ? styles.inputErrorBorder : ''}`} 
+                required 
+              />
+              {hasSubmitted && isCantidadMlInvalid && <span className={styles.fieldErrorText}>Debe especificar el volumen real</span>}
+            </div>
           </div>
           <div className={styles.bulkInfoCard}>
             <span className={styles.bulkInfoIcon}>💡</span>
             <div className={styles.bulkInfoContent}>
-              <strong>Formato a Granel / Tanque:</strong> La capacidad se controlará en <strong>{formData.unidadMedida === 'kg' ? 'Kilogramos (kg)' : formData.unidadMedida === 'g' ? 'Gramos (g)' : formData.unidadMedida === 'und' ? 'Unidades (und)' : 'Litros (L)'}</strong> en cada bache de producción.
+              <strong>Formato a Granel / Tanque:</strong> La capacidad se controlará en <strong>{formData.unidadMedida === 'kg' ? 'Kilogramos (kg)' : formData.unidadMedida === 'g' ? 'Gramos (g)' : formData.unidadMedida === 'und' ? 'Unidades (und)' : 'Litros (L)'}</strong> en cada bache de producción ({formData.cantidadMl || 0} ml).
             </div>
           </div>
         </>

@@ -47,18 +47,24 @@ export function PresentationModal({
   const isGranel = formData.tipoEnvase === 'BALDE' || formData.tipoEnvase === 'TANQUE_GRANEL';
   const isNombreInvalid = !formData.nombre?.trim();
   const isCantidadOzInvalid = !isGranel && (formData.cantidadOz === '' || formData.cantidadOz === null || formData.cantidadOz === undefined);
-  const isCantidadMlInvalid = !isGranel && (formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined);
+  const isCantidadMlInvalid = isGranel 
+    ? (!formData.cantidadMl || Number(formData.cantidadMl) <= 0) 
+    : (formData.cantidadMl === '' || formData.cantidadMl === null || formData.cantidadMl === undefined);
   const isTipoEnvaseInvalid = !formData.tipoEnvase;
 
   const missingFields = [];
   if (isNombreInvalid) missingFields.push('Nombre de la presentación');
   if (isCantidadOzInvalid) missingFields.push('Cantidad en Oz');
-  if (isCantidadMlInvalid) missingFields.push('Cantidad en Ml');
+  if (isCantidadMlInvalid) missingFields.push(isGranel ? 'Volumen real (Ml/L) para granel' : 'Cantidad en Ml');
   if (isTipoEnvaseInvalid) missingFields.push('Tipo de envase');
 
   const hasErrors = missingFields.length > 0;
-  const isSubmitDisabled = isSubmitting || isUploading;
-  const submitTitle = isUploading ? 'Espere mientras se completa la subida...' : hasSubmitted && hasErrors ? `Complete: ${missingFields.join(', ')}` : 'Guardar cambios de la presentación';
+  const isSubmitDisabled = isSubmitting || isUploading || hasErrors;
+  const submitTitle = isUploading 
+    ? 'Espere mientras se completa la subida...' 
+    : hasErrors 
+      ? `Complete: ${missingFields.join(', ')}` 
+      : 'Guardar cambios de la presentación';
 
   const onSubmit = (e) => {
     e.preventDefault();
