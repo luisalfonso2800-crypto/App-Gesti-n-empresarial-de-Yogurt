@@ -55,16 +55,67 @@ pnpm --filter api run db:clean:test
 pnpm install
 ```
 
-Si solo quieres ver los resultados sin la ventana emergente
-Si no deseas ver la ventana del navegador y prefieres que el robot trabaje en segundo plano en silencio mientras tú sigues trabajando en la computadora:
+---
 
-Abre apps/web/playwright.config.js.
+## 🧪 4. Ejecución de Tests E2E (Playwright)
 
-Cambia headless: false por headless: true.
+Los tests se ejecutan desde la raíz del proyecto. Asegúrate de tener levantados el backend (puerto 3000) y el frontend (puerto 3001).
 
-Vuelve a ejecutar:
+### Comandos Generales
+```bash
+# Ejecutar todos los tests (con interfaz/navegador visible)
+pnpm --filter web exec playwright test
 
-PowerShell
-pnpm --filter web exec playwright test all-modules-exhaustive.spec.js
+# Ejecutar todos los tests en segundo plano (headless)
+pnpm --filter web exec playwright test --headed=false
 
-pnpm --filter web exec playwright test all-modules-exhaustive.spec.js
+# Ver reporte visual interactivo en navegador del último resultado
+pnpm --filter web exec playwright show-report apps/web/playwright-report
+```
+
+### Suite Modularizada de Insumos (44 Tests - 100% Passing)
+```bash
+# Ejecutar toda la suite modular de Insumos (44 tests)
+pnpm --filter web exec playwright test supplies/ --reporter=list
+
+# Ejecutar por sub-suites individuales (<150 líneas cada una)
+pnpm --filter web exec playwright test supplies/supplies-basics.spec.js --reporter=list       # T01-T14: Validaciones básicas
+pnpm --filter web exec playwright test supplies/supplies-advanced.spec.js --reporter=list     # T15-T25: Validaciones avanzadas
+pnpm --filter web exec playwright test supplies/supplies-validations.spec.js --reporter=list    # T26-T36: Casos extremos y límites
+pnpm --filter web exec playwright test supplies/supplies-duplicates.spec.js --reporter=list     # T37-T43: Duplicados y unicidad
+pnpm --filter web exec playwright test supplies/supplies-chain.spec.js --reporter=list          # T44: Insumo Maestro Cadena de Valor
+
+# Ejecutar únicamente un test por patrón de nombre (-g)
+pnpm --filter web exec playwright test supplies/ -g "T44" --reporter=list
+
+# Verificar estándares arquitecturales E2E (<150 líneas, tests explícitos, sin bucles)
+pnpm --filter web run test:e2e:lint
+```
+
+### Ejecutar Tests E2E de Otros Módulos
+```bash
+# Presentaciones (Modularizado)
+pnpm --filter web exec playwright test presentations/ --reporter=list
+
+# Suite Exhaustiva Todos los Módulos (Modularizada)
+pnpm --filter web exec playwright test exhaustive/ --reporter=list
+
+# Proveedores (Cobertura completa)
+pnpm --filter web exec playwright test suppliers-complete.spec.js --reporter=list
+
+# Cadena de Valor Completa
+pnpm --filter web exec playwright test value-chain-complete.spec.js --reporter=list
+```
+
+### Opciones Útiles para Depurar Tests
+```bash
+# Ejecutar con salida en lista detallada y timeout ampliado (recomendado)
+pnpm --filter web exec playwright test supplies/ --reporter=list --timeout=20000
+
+# Ejecutar con navegador visible (headed mode)
+pnpm --filter web exec playwright test supplies/ --headed
+
+# Modo Debug paso a paso con inspector de Playwright
+pnpm --filter web exec playwright test supplies/supplies-chain.spec.js --debug
+```
+

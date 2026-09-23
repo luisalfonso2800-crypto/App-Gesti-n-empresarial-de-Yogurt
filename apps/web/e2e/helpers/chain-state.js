@@ -32,8 +32,40 @@ function clearChainState(moduleName) {
   }
 }
 
+/**
+ * Limpieza preventiva de entidades E2E_ antes o después de cada corrida.
+ */
+async function cleanupByPrefix(request, resource, prefix = 'E2E_') {
+  try {
+    const res = await request.get(`/api/v1/${resource}`).catch(() => null);
+    if (!res || !res.ok()) return { deleted: 0, failed: 0 };
+    
+    const body = await res.json();
+    const allItems = Array.isArray(body) ? body : (body.data || []);
+    const items = allItems.filter(item => {
+      const name = item.nombre || item.nombreInsumo || item.nombrePresentacion || item.name || '';
+      return name.startsWith(prefix);
+    });
+
+    let deleted = 0;
+    let failed = 0;
+    for (const item of items) {
+      const id = item.id || item.idInsumo || item.idPresentacion;
+      if (!id) continue;
+      const delRes = await request.delete(`/api/v1/${resource}/${id}`).catch(() => null);
+      if (delRes && delRes.ok()) deleted++;
+      else failed++;
+    }
+    return { deleted, failed };
+  } catch {
+    return { deleted: 0, failed: 0 };
+  }
+}
+
 module.exports = {
   saveChainState,
   loadChainState,
   clearChainState,
+  cleanupByPrefix,
 };
+

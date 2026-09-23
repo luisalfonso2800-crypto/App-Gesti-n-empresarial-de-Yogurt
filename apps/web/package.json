@@ -6,7 +6,8 @@
         "dev": "next dev",
         "build": "next build",
         "lint": "eslint",
-        "test:e2e": "playwright test"
+        "test:e2e": "playwright test",
+        "test:e2e:lint": "node e2e/helpers/check-e2e-limits.js"
     },
     "dependencies": {
         "lucide-react": "^1.41.0",
