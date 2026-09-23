@@ -271,3 +271,52 @@
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
+
+.requiredAsterisk {
+  color: #e11d48;
+}
+
+.currencyWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.currencySymbol {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #78716c;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.inputWithSymbol {
+  padding-left: 2rem !important;
+}
+
+.inputError {
+  border-color: #e11d48 !important;
+}
+
+.assistContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.75rem;
+  font-family: monospace;
+  color: #78716c;
+  margin-top: 0.25rem;
+  user-select: none;
+}
+
+.assistFormat {
+  color: #44403c;
+  font-weight: 600;
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: #e11d48;
+}
+
