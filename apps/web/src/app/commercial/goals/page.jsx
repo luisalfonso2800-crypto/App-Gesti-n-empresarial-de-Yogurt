@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Sprout, Plus, Wallet } from 'lucide-react';
-import { apiClient } from '@/lib/api-client';
 import { formatCurrency } from '@/lib/formatters';
 import { PurposeDedicationSection } from './components/PurposeDedicationSection';
 import { GoalCard } from './components/GoalCard';
 import { GoalFormModal } from './components/GoalFormModal';
 import { ContributeModal } from './components/ContributeModal';
+import { useGoalsPageData } from './hooks/useGoalsPageData';
 import styles from './goals.module.css';
 
 /**
@@ -15,52 +15,11 @@ import styles from './goals.module.css';
  * @description Vista principal del módulo Rumbo MANNÁ (Metas, Sueños y Propósito) (< 120 líneas).
  */
 export default function GoalsPage() {
-  const [goals, setGoals] = useState([]);
-  const [availableFunds, setAvailableFunds] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [goalToEdit, setGoalToEdit] = useState(null);
-  const [contributeGoal, setContributeGoal] = useState(null);
-
-  const fetchGoalsAndFunds = async () => {
-    try {
-      setLoading(true);
-      const [goalsData, fundsData] = await Promise.all([
-        apiClient.get('/goals'),
-        apiClient.get('/goals/available-funds').catch(() => null)
-      ]);
-      setGoals(Array.isArray(goalsData) ? goalsData : []);
-      setAvailableFunds(fundsData);
-    } catch (err) {
-      console.error('Error fetching goals data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchGoalsAndFunds();
-  }, []);
-
-  const handleSaveGoal = async (payload) => {
-    if (goalToEdit) {
-      await apiClient.put(`/goals/${goalToEdit.id}`, payload);
-    } else {
-      await apiClient.post('/goals', payload);
-    }
-    fetchGoalsAndFunds();
-  };
-
-  const handleContribute = async (goalId, payload) => {
-    await apiClient.post(`/goals/${goalId}/contribute`, payload);
-    fetchGoalsAndFunds();
-  };
-
-  const handleDeleteGoal = async (id) => {
-    if (!window.confirm('¿Deseas archivar esta meta?')) return;
-    await apiClient.delete(`/goals/${id}`);
-    fetchGoalsAndFunds();
-  };
+  const {
+    goals, availableFunds, loading, isModalOpen, goalToEdit, contributeGoal,
+    setContributeGoal, openNewGoalModal, openEditGoalModal, closeModal,
+    handleSaveGoal, handleContribute, handleDeleteGoal
+  } = useGoalsPageData();
 
   return (
     <div className={styles.container}>
@@ -72,13 +31,8 @@ export default function GoalsPage() {
           </div>
           <p className={styles.subtitle}>Metas tangibles, sueños familiares y ritmo de cosecha en tiempo real.</p>
         </div>
-        <button
-          type="button"
-          className={styles.newGoalBtn}
-          onClick={() => { setGoalToEdit(null); setIsModalOpen(true); }}
-        >
-          <Plus size={16} />
-          Sembrar Nuevo Sueño
+        <button type="button" className={styles.newGoalBtn} onClick={openNewGoalModal}>
+          <Plus size={16} /> Sembrar Nuevo Sueño
         </button>
       </header>
 
@@ -105,9 +59,8 @@ export default function GoalsPage() {
           <Sprout size={40} color="#2D5A43" />
           <h3 className={styles.emptyTitle}>Aún no hay metas sembradas</h3>
           <p className={styles.emptyDesc}>Siembra hoy el primer objetivo para tu familia o para la empresa.</p>
-          <button type="button" className={styles.newGoalBtn} onClick={() => { setGoalToEdit(null); setIsModalOpen(true); }}>
-            <Plus size={16} />
-            Sembrar Primera Meta
+          <button type="button" className={styles.newGoalBtn} onClick={openNewGoalModal}>
+            <Plus size={16} /> Sembrar Primera Meta
           </button>
         </div>
       ) : (
@@ -116,7 +69,7 @@ export default function GoalsPage() {
             <GoalCard
               key={goal.id}
               goal={goal}
-              onEdit={(g) => { setGoalToEdit(g); setIsModalOpen(true); }}
+              onEdit={openEditGoalModal}
               onDelete={handleDeleteGoal}
               onOpenContribute={(g) => setContributeGoal(g)}
             />
@@ -126,7 +79,7 @@ export default function GoalsPage() {
 
       <GoalFormModal
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setGoalToEdit(null); }}
+        onClose={closeModal}
         onSubmit={handleSaveGoal}
         goalToEdit={goalToEdit}
       />
