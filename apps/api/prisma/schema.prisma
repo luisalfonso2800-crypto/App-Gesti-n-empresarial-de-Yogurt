@@ -283,6 +283,7 @@ model Produccion {
   producto              Producto            @relation(fields: [idProducto], references: [id])
   cantidadPlanificada   Decimal             @map("Cantidad_Planificada")
   cantidadProducidaReal Decimal?            @map("Cantidad_Producida_Real")
+  unidadCantidadProducida String            @default("UNIDAD") @map("Unidad_Cantidad_Producida")
   estado                String              @map("Estado")
   fechaVencimiento      DateTime?           @map("Fecha_Vencimiento")
   idLote                String?             @map("ID_Lote")
