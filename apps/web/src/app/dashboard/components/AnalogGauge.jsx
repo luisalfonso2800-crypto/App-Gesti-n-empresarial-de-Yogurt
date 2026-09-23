@@ -1,5 +1,6 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
+import styles from './canvas-widgets.module.css';
 
 export default function AnalogGauge({ value, label }) {
   const canvasRef = useRef(null);
@@ -99,9 +100,9 @@ export default function AnalogGauge({ value, label }) {
   }, [value]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      <canvas ref={canvasRef} style={{ width: '140px', height: '80px', display: 'block' }} />
-      <span style={{ fontSize: '0.65rem', color: '#A8A29E', fontFamily: 'monospace', textTransform: 'uppercase', marginTop: '4px' }}>
+    <div className={styles.gaugeContainer}>
+      <canvas ref={canvasRef} className={styles.gaugeCanvas} />
+      <span className={styles.gaugeLabel}>
         {label}
       </span>
     </div>

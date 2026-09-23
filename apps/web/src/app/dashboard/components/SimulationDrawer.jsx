@@ -2,16 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './SimulationDrawer.module.css';
-import { X, Play, AlertTriangle, CheckCircle, Settings } from 'lucide-react';
+import { X, Play, Settings } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { SimulationResultSection } from './SimulationResultSection';
 
 /**
  * @file SimulationDrawer.jsx
  * @module Dashboard/Simulation
- * @description Drawer lateral táctico para simulaciones predictivas "what-if" de producción.
- * @responsibility Consultar API de simulación y mostrar balance de requerimientos, costos e ingresos.
- * @usedBy apps/web/src/app/dashboard/page.jsx
- * @dependencies lucide-react, apiClient, CSS Modules
+ * @description Drawer lateral táctico para simulaciones predictivas "what-if" de producción (SRP < 150 líneas).
  */
 export default function SimulationDrawer({ isOpen, onClose, telemetryData }) {
   const [loading, setLoading] = useState(false);
@@ -31,13 +29,11 @@ export default function SimulationDrawer({ isOpen, onClose, telemetryData }) {
 
   const handleSimulate = async () => {
     if (!productoId || cantidad <= 0) return;
-    
     setLoading(true);
     setError(null);
     setResultado(null);
 
     try {
-      // Calcular precio simulado si hay variación
       const prodSelect = telemetryData.plant.productsTelemetry.find(p => p.idProducto === productoId);
       let precioSimulado = null;
       if (prodSelect && prodSelect.precioVentaActual && precioVar !== 0) {
@@ -58,15 +54,14 @@ export default function SimulationDrawer({ isOpen, onClose, telemetryData }) {
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
-      <div className={styles.overlay} onClick={onClose} />
+      {isOpen && <div className={styles.overlay} onClick={onClose} />}
       <div className={`${styles.drawer} ${isOpen ? styles.drawerOpen : styles.drawerClosed}`}>
         <div className={styles.header}>
           <div className={styles.title}>
-            <Settings size={20} /> SIMULADOR TÁCTICO DE PRODUCCIÓN
+            <Settings size={20} />
+            <span>SIMULADOR PREDICTIVO "WHAT-IF"</span>
           </div>
           <button className={styles.closeBtn} onClick={onClose}>
             <X size={24} />
@@ -86,8 +81,8 @@ export default function SimulationDrawer({ isOpen, onClose, telemetryData }) {
               </select>
             </div>
             
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <div className={styles.formGroup} style={{ flex: 1 }}>
+            <div className={styles.formRowFlex}>
+              <div className={`${styles.formGroup} ${styles.formGroupFlex}`}>
                 <label className={styles.label}>Cantidad (Unds)</label>
                 <input 
                   type="number" 
@@ -101,7 +96,7 @@ export default function SimulationDrawer({ isOpen, onClose, telemetryData }) {
                   placeholder="Ej: 100"
                 />
               </div>
-              <div className={styles.formGroup} style={{ flex: 1 }}>
+              <div className={`${styles.formGroup} ${styles.formGroupFlex}`}>
                 <label className={styles.label}>Var. Precio Venta (%)</label>
                 <input 
                   type="number" 
@@ -113,72 +108,18 @@ export default function SimulationDrawer({ isOpen, onClose, telemetryData }) {
               </div>
             </div>
 
-            <button className={styles.btnPri} style={{ width: '100%', marginTop: '0.5rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }} onClick={handleSimulate} disabled={loading}>
+            <button className={`${styles.btnPri} ${styles.btnSimulateFull}`} onClick={handleSimulate} disabled={loading}>
               <Play size={16} /> {loading ? 'SIMULANDO...' : 'EJECUTAR SIMULACIÓN'}
             </button>
           </div>
 
           {error && (
-            <div style={{ padding: '1rem', background: '#fee2e2', color: '#991b1b', borderRadius: '4px', border: '1px solid #ef4444' }}>
+            <div className={styles.errorMessageBanner}>
               {error}
             </div>
           )}
 
-          {resultado && (
-            <>
-              <div className={styles.section}>
-                <div className={styles.sectionTitle}>IMPACTO Y RENTABILIDAD PROYECTADA</div>
-                <div className={`${styles.viabilityBadge} ${resultado.escenario.esViable ? styles.viable : styles.notViable}`} style={{ marginBottom: '1.5rem' }}>
-                  {resultado.escenario.esViable ? <><CheckCircle size={18}/> PRODUCCIÓN FACTIBLE (STOCK OK)</> : <><AlertTriangle size={18}/> QUIEBRE DE STOCK DETECTADO</>}
-                </div>
-                
-                <div className={styles.impactGrid}>
-                  <div className={styles.impactCard}>
-                    <div className={styles.impactLabel}>Ingreso Proy.</div>
-                    <div className={styles.impactValue} style={{ color: '#10b981' }}>{formatCurrency(resultado.escenario.ingresoProyectado)}</div>
-                  </div>
-                  <div className={styles.impactCard}>
-                    <div className={styles.impactLabel}>Costo Lote</div>
-                    <div className={styles.impactValue} style={{ color: '#f59e0b' }}>{formatCurrency(resultado.escenario.costoTotalSimulado)}</div>
-                  </div>
-                  <div className={styles.impactCard}>
-                    <div className={styles.impactLabel}>Utilidad Neta</div>
-                    <div className={styles.impactValue}>{formatCurrency(resultado.escenario.utilidadProyectada)}</div>
-                  </div>
-                  <div className={styles.impactCard}>
-                    <div className={styles.impactLabel}>Margen Real</div>
-                    <div className={styles.impactValue}>{resultado.escenario.margenProyectado}%</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.section}>
-                <div className={styles.sectionTitle}>BALANCE DE INSUMOS REQUERIDOS</div>
-                <table className={styles.dataTable}>
-                  <thead>
-                    <tr>
-                      <th>Insumo</th>
-                      <th>Req.</th>
-                      <th>Stock</th>
-                      <th>Déficit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {resultado.requerimientos.map(req => (
-                      <tr key={req.insumoId}>
-                        <td>{req.nombre} ({req.unidad})</td>
-                        <td>{req.cantidadNecesaria}</td>
-                        <td>{req.stockDisponible}</td>
-                        <td className={req.deficit > 0 ? styles.deficit : styles.ok}>
-                          {req.deficit > 0 ? `-${req.deficit}` : 'OK'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+          <SimulationResultSection resultado={resultado} formatCurrency={formatCurrency} />
         </div>
 
         <div className={styles.footer}>

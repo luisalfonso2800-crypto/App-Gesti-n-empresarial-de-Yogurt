@@ -1,5 +1,6 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
+import styles from './canvas-widgets.module.css';
 
 /**
  * @file OscilloscopeCanvas.jsx
@@ -120,8 +121,8 @@ export default function OscilloscopeCanvas({ trendSales = [], trendExpenses = []
   }, [trendSales, trendExpenses]);
 
   return (
-    <div style={{ width: '100%', position: 'relative', borderRadius: '4px', overflow: 'hidden' }}>
-      <canvas ref={canvasRef} style={{ display: 'block' }} />
+    <div className={styles.canvasWrapper}>
+      <canvas ref={canvasRef} className={styles.canvasBlock} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 import React, { useRef, useEffect } from 'react';
+import styles from './canvas-widgets.module.css';
 
 export default function SeismographChart({ sales, expenses }) {
   const canvasRef = useRef(null);
@@ -103,8 +104,8 @@ export default function SeismographChart({ sales, expenses }) {
   }, [sales, expenses]);
 
   return (
-    <div style={{ width: '100%', position: 'relative', borderRadius: '4px', overflow: 'hidden' }}>
-      <canvas ref={canvasRef} style={{ display: 'block' }} />
+    <div className={styles.canvasWrapper}>
+      <canvas ref={canvasRef} className={styles.canvasBlock} />
     </div>
   );
 }
