@@ -11,18 +11,16 @@
 - [x] F7 — Dashboard — COMPLETADA — 2026-09-22
 - [x] F8 — Formato números — COMPLETADA — 2026-09-22
 - [x] F9 — Contratos API — COMPLETADA — 2026-09-22
-- [ ] F10 — Feedback/Estados — PENDIENTE
+- [x] F10 — Feedback/Estados — COMPLETADA — 2026-09-22
 - [ ] F11 — Tests E2E + Cierre — PENDIENTE
 
 ## Última fase ejecutada
-F9 — Contratos API frontend ↔ Zod backend — finalizada 2026-09-22 20:18
+F10 — Estados de carga y feedback — finalizada 2026-09-22 20:19
 
 ## Próxima fase
-F10 — Estados de carga y feedback de usuario
+F11 — Tests E2E y cierre consolidado
 
 ## Informe parcial de la fase actual (si aplica)
-Fase F9 completada y documentada en INFORME-AUD-F9.md.
-Riesgos identificados con esquemas Zod .strict():
-1. useSaleForm.js envía ...formData en la raíz pudiendo contaminar con keys extra que Zod .strict() rechaza.
-2. Zod impone límite de descuento comercial máx 50% de la línea (HAL-F7-03); el frontend no tiene guarda preventiva UI para este tope.
-3. useFormPhaseData.js (compras) debe sanitizar propiedades de estado UI antes de enviar a POST /purchases.
+Fase F10 completada y documentada en INFORME-AUD-F10.md.
+AssistedEmptyState cuenta con 100% de cobertura en todas las tablas y páginas. LoadingState y ServerOfflineCanvas implementados de manera uniforme. SmartModal previene pérdida de datos con confirmOverlay ante cierre accidental.
+Recomendación menor: spinner overlay global dentro de SmartModal durante isSubmitting.
