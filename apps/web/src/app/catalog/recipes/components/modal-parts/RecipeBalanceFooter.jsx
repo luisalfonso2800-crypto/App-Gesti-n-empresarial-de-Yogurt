@@ -62,8 +62,8 @@ export function RecipeBalanceFooter({
               Bases intermedias (WIP): <strong className={styles.breakdownBadgeWip}>{formatCurrency(costWipBases)}</strong>
             </span>
             {hasWipFallback && (
-              <span className={styles.balanceWarningBadge} title="Una o más bases WIP no cuentan con receta activa calculada. Se usó costo de referencia o $0.">
-                ⚠️ Base WIP sin receta activa
+              <span className={styles.balanceWarningBadge} title="Una o más bases WIP no cuentan con costo configurado ni receta activa calculada.">
+                ⚠️ Base láctea sin costo — Requerida para costeo real
               </span>
             )}
           </div>

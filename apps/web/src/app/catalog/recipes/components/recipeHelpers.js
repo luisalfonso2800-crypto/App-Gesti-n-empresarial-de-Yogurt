@@ -561,7 +561,7 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
           if (prodCost > 0) {
             unitCostWip = prodCost;
           } else {
-            unitCostWip = 4390; // Costo referencial estándar por Litro de base láctea
+            unitCostWip = 0; // Sin costo configurado
           }
         }
 
