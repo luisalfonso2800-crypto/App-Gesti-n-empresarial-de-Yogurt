@@ -1,7 +1,13 @@
 import { test, expect } from '@playwright/test';
+import { saveChainState } from './helpers/chain-state.js';
 
 const TEST_PREFIX = `E2E_TEST_PRES_${Date.now()}`;
 const createdNames = [];
+
+const CHAIN_STATE = {
+  presentacionesCreadas: {},
+  timestamp: new Date().toISOString(),
+};
 
 test.describe('Presentaciones - Validación de inputs', () => {
   test.beforeEach(async ({ page }) => {
@@ -10,6 +16,10 @@ test.describe('Presentaciones - Validación de inputs', () => {
   });
 
   test.afterAll(async ({ request }) => {
+    // 1. Guardar el estado para la cadena ANTES del cleanup
+    saveChainState('presentations', CHAIN_STATE);
+
+    // 2. Cleanup: solo borrar las que empiezan con E2E_TEST_PRES_ (NO borrar las E2E_CHAIN_)
     try {
       const res = await request.get('/api/v1/presentations');
       if (res.ok()) {
@@ -19,7 +29,7 @@ test.describe('Presentaciones - Validación de inputs', () => {
           for (const item of items) {
             const name = item.nombre || '';
             const id = item.id || item.idPresentacion;
-            if (id && (name.includes(TEST_PREFIX) || createdNames.includes(name))) {
+            if (id && !name.startsWith('E2E_CHAIN_') && (name.includes(TEST_PREFIX) || createdNames.includes(name))) {
               await request.delete(`/api/v1/presentations/${id}`).catch(() => {});
             }
           }
@@ -35,6 +45,25 @@ test.describe('Presentaciones - Validación de inputs', () => {
     const btnNueva = page.locator('button:has-text("Nueva Presentación")').first();
     await btnNueva.click();
     await expect(page.locator('text=Nueva Presentación Comercial')).toBeVisible();
+  };
+
+  // Helper para crear presentación esperando la respuesta y capturando el ID
+  const submitAndCapture = async (page, keyName) => {
+    const [response] = await Promise.all([
+      page.waitForResponse(
+        (resp) => resp.url().includes('/presentation') && (resp.status() === 201 || resp.status() === 200),
+        { timeout: 10000 }
+      ),
+      page.locator('button:has-text("Crear Presentación")').click(),
+    ]);
+    let id = null;
+    try {
+      const body = await response.json();
+      id = body.id || body.data?.id || body.data?.idPresentacion || body.idPresentacion;
+    } catch {
+      // No-op
+    }
+    return id;
   };
 
   // --- Bloque 1: Nombre ---
@@ -124,7 +153,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadOz"]').fill('10');
     await page.locator('input[name="cantidadMl"]').fill('300');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'ENVASE');
+    CHAIN_STATE.presentacionesCreadas['ENVASE'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -137,7 +168,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadOz"]').fill('8');
     await page.locator('input[name="cantidadMl"]').fill('250');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'BOTELLA');
+    CHAIN_STATE.presentacionesCreadas['BOTELLA'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -150,7 +183,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadOz"]').fill('16');
     await page.locator('input[name="cantidadMl"]').fill('500');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'BOLSA');
+    CHAIN_STATE.presentacionesCreadas['BOLSA'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -163,7 +198,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadOz"]').fill('6');
     await page.locator('input[name="cantidadMl"]').fill('180');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'VASO');
+    CHAIN_STATE.presentacionesCreadas['VASO'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -177,7 +214,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     // BALDE muestra input cantidadMl bajo granel
     await page.locator('input[name="cantidadMl"]').fill('4000');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'BALDE');
+    CHAIN_STATE.presentacionesCreadas['BALDE'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -190,7 +229,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadOz"]').fill('3');
     await page.locator('input[name="cantidadMl"]').fill('90');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'COPITA');
+    CHAIN_STATE.presentacionesCreadas['COPITA'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -203,7 +244,9 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadOz"]').fill('12');
     await page.locator('input[name="cantidadMl"]').fill('350');
 
-    await page.locator('button:has-text("Crear Presentación")').click();
+    const id = await submitAndCapture(page, 'OTRO');
+    CHAIN_STATE.presentacionesCreadas['OTRO'] = { id, nombre: name };
+
     await expect(page.locator(`text=${name}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(name);
   });
@@ -369,11 +412,27 @@ test.describe('Presentaciones - Validación de inputs', () => {
     await page.locator('input[name="cantidadMl"]').fill('250');
     await page.locator('input[name="observaciones"]').fill('PRUEBA HAPPY PATH E2E');
 
-    const submitBtn = page.locator('button:has-text("Crear Presentación")');
-    await submitBtn.click();
+    const id = await submitAndCapture(page, 'HAPPY_250ML');
+    CHAIN_STATE.presentacionesCreadas['HAPPY_250ML'] = { id, nombre: happyName };
 
     // Debe cerrarse el modal y aparecer en la tabla
     await expect(page.locator(`text=${happyName}`).first()).toBeVisible({ timeout: 10000 });
     createdNames.push(happyName);
+  });
+
+  // --- Bloque 6: Cadena de Valor ---
+  test('TEST 26 - Crear presentación maestra para cadena', async ({ page }) => {
+    await openModal(page);
+    const nombre = `E2E_CHAIN_PRES_BOTELLA_250_${Date.now()}`;
+
+    await page.locator('input[name="nombre"]').fill(nombre);
+    await page.locator('select[name="tipoEnvase"]').selectOption('BOTELLA');
+    await page.locator('input[name="cantidadOz"]').fill('8');
+    await page.locator('input[name="cantidadMl"]').fill('250');
+
+    const id = await submitAndCapture(page, 'MASTER_BOTELLA_250');
+    CHAIN_STATE.presentacionesCreadas['MASTER_BOTELLA_250'] = { id, nombre };
+
+    await expect(page.locator(`text=${nombre}`).first()).toBeVisible({ timeout: 10000 });
   });
 });
