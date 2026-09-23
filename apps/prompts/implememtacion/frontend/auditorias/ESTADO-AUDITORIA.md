@@ -7,7 +7,7 @@
 - [x] F3 — Manejo de errores — COMPLETADA — 2026-09-22
 - [x] F4 — Validaciones preventivas — COMPLETADA — 2026-09-22
 - [x] F5 — Unidades de medida — COMPLETADA — 2026-09-22
-- [ ] F6 — Campos nuevos — PENDIENTE
+- [x] F6 — Campos nuevos — COMPLETADA — 2026-09-22
 - [ ] F7 — Dashboard — PENDIENTE
 - [ ] F8 — Formato números — PENDIENTE
 - [ ] F9 — Contratos API — PENDIENTE
@@ -15,12 +15,16 @@
 - [ ] F11 — Tests E2E + Cierre — PENDIENTE
 
 ## Última fase ejecutada
-F5 — Unidades de medida en frontend — finalizada 2026-09-22 20:13
+F6 — Campos nuevos del backend — finalizada 2026-09-22 20:15
 
 ## Próxima fase
-F6 — Campos nuevos del backend (densidad, unidadCantidadProducida, etc.)
+F7 — Dashboard y métricas analíticas
 
 ## Informe parcial de la fase actual (si aplica)
-Fase F5 completada y documentada en INFORME-AUD-F5.md.
-unitNormalizer.js está sincronizado con unit-registry de backend (mg, oz=29.5735 ml, paq).
-Detectados usos ad-hoc en RecipeStageBomTable.jsx y ProductionOrderCompleteModal.jsx con String.includes('und') ignorando familias discretas de planta (tapa, botella, vaso). En compras (useFormPhaseData.js) persiste fallback hardcodeado a 'kg'.
+Fase F6 completada y documentada en INFORME-AUD-F6.md.
+costoBaseSinIva está completamente expuesto y editable en Precios Proveedor.
+Campos nuevos no expuestos en frontend:
+1. densidad en Insumos/Productos (no editable en UI).
+2. unidadCantidadProducida en liquidación de producción (no se envía en payload).
+3. stockAnterior y stockNuevo no visibles en la tabla de movimientos de inventario.
+4. Saldo negativo en cartera carece de badge explícito de "ANTICIPO / SALDO A FAVOR".
