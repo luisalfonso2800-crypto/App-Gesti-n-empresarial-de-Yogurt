@@ -43,3 +43,7 @@ apps/api/skills-lock.json
 apps/api/uploads/*
 !apps/api/uploads/.gitkeep
 
+
+# Playwright test artifacts
+apps/web/test-results/
+apps/web/playwright-report/
