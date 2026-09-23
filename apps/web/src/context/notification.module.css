@@ -1,0 +1,38 @@
+/**
+ * @file notification.module.css
+ * @module context/NotificationContext
+ * @description Estilos del sistema de toasts de notificación global.
+ * Paleta MANNÁ: Bosque Profundo (#182622), Pergamino (#F7F4EE), Oro (#B8860B).
+ */
+
+/* Contenedor base del toast — posición fija inferior-derecha */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 1rem;
+  border-radius: 6px;
+  z-index: 9999;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  min-width: 280px;
+  cursor: default;
+  user-select: none;
+}
+
+/* Variantes por tipo de notificación */
+.toastError {
+  background-color: #f44336;
+}
+
+.toastWarning {
+  background-color: #ff9800;
+}
+
+.toastSuccess {
+  background-color: #4caf50;
+}
+
+.toastInfo {
+  background-color: #2196f3;
+}

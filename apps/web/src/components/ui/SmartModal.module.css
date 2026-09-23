@@ -320,3 +320,27 @@
   color: #e11d48;
 }
 
+/* SmartSelect — estado vacío (sin opciones disponibles) */
+.emptySelectState {
+  padding: 0.75rem;
+  border: 1px dashed #d6d3d1;
+  border-radius: 6px;
+  background-color: #fafaf9;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.emptySelectText {
+  color: #78716c;
+  margin: 0 0 0.5rem 0;
+}
+
+.emptySelectAction {
+  background: none;
+  border: none;
+  color: #1c1917;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+

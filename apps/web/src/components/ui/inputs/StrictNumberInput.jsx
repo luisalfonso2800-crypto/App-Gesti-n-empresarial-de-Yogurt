@@ -37,7 +37,7 @@ export default function StrictNumberInput({
     <div className={styles.inputGroup}>
       {label && (
         <label className={styles.label}>
-          {label} {required && <span style={{color: '#e11d48'}}>*</span>}
+          {label} {required && <span className={styles.requiredAsterisk}>*</span>}
         </label>
       )}
       <input
@@ -49,10 +49,9 @@ export default function StrictNumberInput({
         placeholder={placeholder}
         required={required}
         maxLength={maxLength}
-        className={styles.input}
-        style={error ? { borderColor: '#e11d48' } : {}}
+        className={`${styles.input} ${error ? styles.inputError : ''}`}
       />
-      {error && <span style={{ fontSize: '0.75rem', color: '#e11d48' }}>{error}</span>}
+      {error && <span className={styles.errorText}>{error}</span>}
     </div>
   );
 }

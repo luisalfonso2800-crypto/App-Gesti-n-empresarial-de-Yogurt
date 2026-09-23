@@ -10,6 +10,8 @@
  */
 'use client';
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import styles from './notification.module.css';
+
 
 const NotificationContext = createContext();
 
@@ -91,13 +93,13 @@ export function NotificationProvider({ children }) {
     return () => window.removeEventListener('showNotification', handleEvent);
   }, [showNotification]);
 
-  // Mapa de colores por tipo
-  const bgColor = {
-    error: '#f44336',
-    warning: '#ff9800',
-    success: '#4caf50',
-    info: '#2196f3',
-  }[notification?.type] || '#2196f3';
+  // Mapa de clases CSS por tipo de notificación
+  const TYPE_CLASS = {
+    error: styles.toastError,
+    warning: styles.toastWarning,
+    success: styles.toastSuccess,
+    info: styles.toastInfo,
+  };
 
   return (
     <NotificationContext.Provider value={{ showNotification, pauseNotification, resumeNotification }}>
@@ -106,16 +108,7 @@ export function NotificationProvider({ children }) {
         <div
           onMouseEnter={pauseNotification}
           onMouseLeave={resumeNotification}
-          style={{
-            position: 'fixed', bottom: '20px', right: '20px',
-            padding: '1rem', borderRadius: '6px', zIndex: 9999,
-            backgroundColor: bgColor,
-            color: 'white',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
-            minWidth: '280px',
-            cursor: 'default',
-            userSelect: 'none',
-          }}
+          className={`${styles.toast} ${TYPE_CLASS[notification.type] || styles.toastInfo}`}
         >
           {notification.message}
         </div>

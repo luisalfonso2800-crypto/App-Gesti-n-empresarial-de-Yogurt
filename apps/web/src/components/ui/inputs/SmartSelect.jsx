@@ -23,7 +23,7 @@ export default function SmartSelect({
     <div className={styles.inputGroup}>
       {label && (
         <label className={styles.label}>
-          {label} {required && <span style={{color: '#e11d48'}}>*</span>}
+          {label} {required && <span className={styles.requiredAsterisk}>*</span>}
         </label>
       )}
       
@@ -33,8 +33,7 @@ export default function SmartSelect({
           value={value ?? ''}
           onChange={onChange}
           required={required}
-          className={styles.select}
-          style={error ? { borderColor: '#e11d48' } : {}}
+          className={`${styles.select} ${error ? styles.inputError : ''}`}
         >
           <option value="" disabled>{placeholder}</option>
           {options.map((opt) => (
@@ -44,13 +43,13 @@ export default function SmartSelect({
           ))}
         </select>
       ) : (
-        <div style={{ padding: '0.75rem', border: '1px dashed #d6d3d1', borderRadius: '6px', backgroundColor: '#fafaf9', textAlign: 'center', fontSize: '0.875rem' }}>
-          <p style={{ color: '#78716c', margin: '0 0 0.5rem 0' }}>No hay registros disponibles.</p>
+        <div className={styles.emptySelectState}>
+          <p className={styles.emptySelectText}>No hay registros disponibles.</p>
           {emptyActionLabel && onEmptyAction && (
             <button
               type="button"
               onClick={onEmptyAction}
-              style={{ background: 'none', border: 'none', color: '#1c1917', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+              className={styles.emptySelectAction}
             >
               + {emptyActionLabel}
             </button>
@@ -58,7 +57,7 @@ export default function SmartSelect({
         </div>
       )}
       
-      {error && <span style={{ fontSize: '0.75rem', color: '#e11d48' }}>{error}</span>}
+      {error && <span className={styles.errorText}>{error}</span>}
     </div>
   );
 }
