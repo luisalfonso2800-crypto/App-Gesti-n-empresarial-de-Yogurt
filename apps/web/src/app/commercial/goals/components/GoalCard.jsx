@@ -48,6 +48,9 @@ export function GoalCard({ goal, onEdit, onDelete, onOpenContribute }) {
     return formatCurrency(val);
   };
 
+  /** Estilo dinámico de la barra de progreso — valor porcentual calculado en runtime */
+  const progressBarStyle = { width: `${progreso}%` };
+
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
@@ -99,7 +102,7 @@ export function GoalCard({ goal, onEdit, onDelete, onOpenContribute }) {
           <strong>{progreso}%</strong>
         </div>
         <div className={styles.progressTrack}>
-          <div className={styles.progressBar} style={{ width: `${progreso}%` }} />
+          <div className={styles.progressBar} style={progressBarStyle} />
         </div>
       </div>
 

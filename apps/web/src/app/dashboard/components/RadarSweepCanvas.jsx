@@ -45,22 +45,23 @@ export default function RadarSweepCanvas({ radarLots = [] }) {
         onMouseLeave={() => setTooltip(null)}
         className={`${styles.radarCanvas} ${tooltip ? styles.radarCanvasPointer : styles.radarCanvasDefault}`} 
       />
-      {tooltip && (
-        <div 
-          className={styles.radarTooltip}
-          style={{
-            left: `${tooltip.x + 15}px`,
-            top: `${tooltip.y + 15}px`,
-            borderColor: tooltip.item.color
-          }}
-        >
-          <strong style={{ color: tooltip.item.color }}>{tooltip.item.producto}</strong><br />
-          Lote: {tooltip.item.codigo}<br />
-          Cant: {tooltip.item.cantidad}<br />
-          Estado: {tooltip.item.severidad}<br />
-          Vence en: {tooltip.item.diasRestantes} días
-        </div>
-      )}
+      {tooltip && (() => {
+        /** Estilos dinámicos del tooltip: posición y color calculados en runtime desde datos del lote */
+        const tooltipStyle = { left: `${tooltip.x + 15}px`, top: `${tooltip.y + 15}px`, borderColor: tooltip.item.color };
+        const labelStyle = { color: tooltip.item.color };
+        return (
+          <div 
+            className={styles.radarTooltip}
+            style={tooltipStyle}
+          >
+            <strong style={labelStyle}>{tooltip.item.producto}</strong><br />
+            Lote: {tooltip.item.codigo}<br />
+            Cant: {tooltip.item.cantidad}<br />
+            Estado: {tooltip.item.severidad}<br />
+            Vence en: {tooltip.item.diasRestantes} días
+          </div>
+        );
+      })()}
     </div>
   );
 }
