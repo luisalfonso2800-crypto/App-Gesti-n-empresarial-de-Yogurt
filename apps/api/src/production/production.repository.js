@@ -728,6 +728,7 @@ export class ProductionRepository {
           producto: {
             include: { presentacion: true }
           },
+          receta: true,
           lotes: true
         }
       });
