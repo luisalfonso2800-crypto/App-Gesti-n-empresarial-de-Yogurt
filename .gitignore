@@ -47,3 +47,6 @@ apps/api/uploads/*
 # Playwright test artifacts
 apps/web/test-results/
 apps/web/playwright-report/
+
+# E2E test data
+apps/web/e2e/.test-data/
