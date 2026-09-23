@@ -6,7 +6,7 @@
 - [x] F2 — Cálculos locales — COMPLETADA — 2026-09-22
 - [x] F3 — Manejo de errores — COMPLETADA — 2026-09-22
 - [x] F4 — Validaciones preventivas — COMPLETADA — 2026-09-22
-- [ ] F5 — Unidades de medida — PENDIENTE
+- [x] F5 — Unidades de medida — COMPLETADA — 2026-09-22
 - [ ] F6 — Campos nuevos — PENDIENTE
 - [ ] F7 — Dashboard — PENDIENTE
 - [ ] F8 — Formato números — PENDIENTE
@@ -15,14 +15,12 @@
 - [ ] F11 — Tests E2E + Cierre — PENDIENTE
 
 ## Última fase ejecutada
-F4 — Validaciones preventivas — finalizada 2026-09-22 20:13
+F5 — Unidades de medida en frontend — finalizada 2026-09-22 20:13
 
 ## Próxima fase
-F5 — Unidades de medida en frontend
+F6 — Campos nuevos del backend (densidad, unidadCantidadProducida, etc.)
 
 ## Informe parcial de la fase actual (si aplica)
-Fase F4 completada y documentada en INFORME-AUD-F4.md.
-Brechas Poka-Yoke críticas identificadas:
-1. RecipeStageBomTable.jsx permite ingresar merma max=100 (backend rechaza >= 100 con BadRequestException).
-2. PresentationModal.jsx no exige obligatoriedad en cantidadMl para envases a granel (BALDE/TANQUE_GRANEL), detonando error 400 de HAL-F3-03.
-3. Falta de indicador visual cuando un producto intermedio WIP tiene costo $0.
+Fase F5 completada y documentada en INFORME-AUD-F5.md.
+unitNormalizer.js está sincronizado con unit-registry de backend (mg, oz=29.5735 ml, paq).
+Detectados usos ad-hoc en RecipeStageBomTable.jsx y ProductionOrderCompleteModal.jsx con String.includes('und') ignorando familias discretas de planta (tapa, botella, vaso). En compras (useFormPhaseData.js) persiste fallback hardcodeado a 'kg'.
