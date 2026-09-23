@@ -23,23 +23,10 @@ export default function ReceivableClientRow({
   const { cliente, facturas, saldoTotalCliente, totalFacturadoCliente, totalAbonadoCliente } = clientGroup;
 
   const getBadge = (item) => {
-    if (item.saldoPendiente === 0) {
-      return <span className={styles.badgeSaldado}>SALDADO</span>;
-    }
-    if (item.estadoVencimiento === 'VENCIDO') {
-      return (
-        <span className={styles.badgeVencido}>
-          VENCIDO ({item.diasVencido} d)
-        </span>
-      );
-    }
-    if (item.estadoVencimiento === 'POR_VENCER') {
-      return (
-        <span className={styles.badgePorVencer}>
-          POR VENCER ({item.diasPorVencer} d)
-        </span>
-      );
-    }
+    if (item.saldoPendiente < 0) return <span className={styles.badgeSaldado}>ANTICIPO: {formatCurrency(Math.abs(item.saldoPendiente))}</span>;
+    if (item.saldoPendiente === 0) return <span className={styles.badgeSaldado}>SALDADO</span>;
+    if (item.estadoVencimiento === 'VENCIDO') return <span className={styles.badgeVencido}>VENCIDO ({item.diasVencido} d)</span>;
+    if (item.estadoVencimiento === 'POR_VENCER') return <span className={styles.badgePorVencer}>POR VENCER ({item.diasPorVencer} d)</span>;
     return <span className={styles.badgeAlDia}>AL DÍA</span>;
   };
 

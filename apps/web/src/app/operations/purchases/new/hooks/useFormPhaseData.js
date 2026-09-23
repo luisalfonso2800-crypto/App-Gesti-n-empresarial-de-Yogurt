@@ -149,7 +149,7 @@ export function useFormPhaseData({
       empaque: 'UNIDAD',
       empaqueTipo: 'UNIDAD',
       contenidoNeto: '1',
-      unidadMedida: supply?.unidadBase || supply?.unidadMedida || 'kg',
+      unidadMedida: supply?.unidadBase || supply?.unidadMedida || '',
       marca: (supply?.marca && supply.marca !== 'N/A') ? supply.marca : '',
       empaques: '',
       precioUnitario: supply?.costoBase ? String(supply.costoBase) : '',

@@ -31,6 +31,17 @@ export const formatCurrency = (val) => {
 };
 
 /**
+ * Formatea costos unitarios y micro-costos preservando precisión decimal.
+ * @param {string|number} value - El valor a formatear.
+ * @returns {string} Valor con 4 decimales si < 100, o 2 decimales si >= 100.
+ */
+export function formatUnitCost(value) {
+  const num = Number(value) || 0;
+  return num < 100 ? `$${num.toFixed(4)}` : `$${num.toFixed(2)}`;
+}
+
+
+/**
  * Remueve el símbolo $ y todos los puntos o comas dejando solo dígitos.
  * @param {string|number} str - La cadena a limpiar.
  * @returns {number} Número entero puro o 0 si está vacío.

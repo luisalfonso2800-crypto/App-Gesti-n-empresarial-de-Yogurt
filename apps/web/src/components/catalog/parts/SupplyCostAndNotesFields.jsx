@@ -17,6 +17,24 @@ export function SupplyCostAndNotesFields({
   return (
     <>
       <div className={modalStyles.inputGroup}>
+        <label className={modalStyles.label}>Densidad (g/ml)</label>
+        <input 
+          name="densidad" 
+          type="number"
+          step="0.01"
+          min="0.5"
+          max="2.5"
+          value={formData.densidad ?? '1.0'} 
+          onChange={handleChange} 
+          placeholder="1.0"
+          className={`${modalStyles.input} ${styles.numberRightInput}`} 
+        />
+        <span className={styles.stockHelperText}>
+          Ej: Leche 1.03, Miel 1.42, Agua 1.0
+        </span>
+      </div>
+
+      <div className={modalStyles.inputGroup}>
         <label className={modalStyles.label}>Costo Base Referencial ($)</label>
         <div className={styles.costBaseContainer}>
           <input 

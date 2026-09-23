@@ -524,9 +524,15 @@ export function DashboardOperationalView({
           <div className={styles.kpiValue} style={{ color: '#B91C1C' }}>{formatScada(financial?.expensesCurrentMonth)}</div>
         </div>
         <div className={styles.kpiCard}>
-          <div className={styles.kpiLabel}>UTILIDAD NETA</div>
+          <div className={styles.kpiLabel}>UTILIDAD DEVENGADA</div>
           <div className={styles.kpiValue} style={{ color: (financial?.netProfitCurrentMonth || 0) >= 0 ? '#1C3F35' : '#B91C1C' }}>
             {formatScada(financial?.netProfitCurrentMonth)}
+          </div>
+        </div>
+        <div className={styles.kpiCard}>
+          <div className={styles.kpiLabel}>CAJA LÍQUIDA REAL</div>
+          <div className={styles.kpiValue} style={{ color: (financial?.flujoCajaReal || 0) >= 0 ? '#1C3F35' : '#B91C1C' }}>
+            {formatScada(financial?.flujoCajaReal)}
           </div>
         </div>
         <div className={styles.kpiCard} style={{ cursor: 'pointer', borderLeft: '3px solid #D97706' }} onClick={handleCarteraClick}>

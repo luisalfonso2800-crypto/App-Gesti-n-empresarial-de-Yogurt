@@ -19,6 +19,7 @@ const INITIAL_FORM = {
   contenidoReferencial: '',
   stockMinimo: '',
   costoBase: '',
+  densidad: '1.0',
   observaciones: '',
   activo: true
 };
@@ -41,7 +42,8 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
         setFormData({
           ...editingItem,
           stockMinimo: formatThousands(editingItem.stockMinimo || ''),
-          costoBase: formatThousands(editingItem.costoBase || '')
+          costoBase: formatThousands(editingItem.costoBase || ''),
+          densidad: editingItem.densidad != null ? String(editingItem.densidad) : '1.0'
         });
       } else {
         setFormData({
@@ -54,6 +56,7 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
           contenidoReferencial: initialData.contenidoReferencial || '',
           stockMinimo: '', 
           costoBase: '', 
+          densidad: initialData.densidad != null ? String(initialData.densidad) : '1.0',
           observaciones: '', 
           activo: true
         });
@@ -130,7 +133,8 @@ export function useSupplyForm({ isOpen, editingItem, initialData = {}, onSuccess
         marca: (formData.marca || '').trim(),
         contenidoReferencial: formData.contenidoReferencial ? parseFloat(formData.contenidoReferencial) : 1,
         stockMinimo: formData.stockMinimo ? Number(String(formData.stockMinimo).replace(/\./g, '')) : 0,
-        costoBase: formData.costoBase ? Number(String(formData.costoBase).replace(/\./g, '')) : null
+        costoBase: formData.costoBase ? Number(String(formData.costoBase).replace(/\./g, '')) : null,
+        densidad: formData.densidad ? parseFloat(formData.densidad) : 1.0
       };
 
       let result;
