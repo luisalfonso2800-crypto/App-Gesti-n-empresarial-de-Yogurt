@@ -3,7 +3,7 @@
 ## Fases completadas
 - [x] F0 — Ingesta y reconciliación — COMPLETADA — 2026-09-22
 - [x] F1 — Mapa actualizado — COMPLETADA — 2026-09-22
-- [ ] F2 — Cálculos locales — PENDIENTE
+- [x] F2 — Cálculos locales — COMPLETADA — 2026-09-22
 - [ ] F3 — Manejo de errores — PENDIENTE
 - [ ] F4 — Validaciones preventivas — PENDIENTE
 - [ ] F5 — Unidades de medida — PENDIENTE
@@ -15,11 +15,11 @@
 - [ ] F11 — Tests E2E + Cierre — PENDIENTE
 
 ## Última fase ejecutada
-F1 — Mapa actualizado del frontend — finalizada 2026-09-22 20:09
+F2 — Cálculos locales duplicados — finalizada 2026-09-22 20:11
 
 ## Próxima fase
-F2 — Cálculos locales duplicados (delta)
+F3 — Manejo de errores (Nuevos BadRequestException del backend)
 
 ## Informe parcial de la fase actual (si aplica)
-Fase F1 completada. 17 páginas mapeadas (15 conformes con < 120 lín).
-Auditados 227 archivos con verify-srp.js: 22 infracciones documentadas (6 componentes > 150 lín, 1 page > 120 lín en /commercial/goals y 15 archivos con estilos en línea prohibidos).
+Fase F2 completada y documentada en INFORME-AUD-F2.md.
+Hallazgo crítico detectado: recipeHelpers.js L564 mantiene fallback hardcodeado unitCostWip = 4390 incompatible con la remediación HAL-F4-02 del backend (que rechaza costos <= 0 con BadRequestException). Redondeo de preview en compras/ventas sufre discrepancia de +/- 1 COP respecto al cálculo Decimal.js del backend.
