@@ -87,8 +87,10 @@ export function useSaleForm({ onSuccess }) {
     const computedDetalles = (detalles || []).map(d => {
       const cant = Number(d.cantidad || 0);
       const precio = Number(d.precioUnitario || 0);
-      const desc = Number(d.descuento || 0);
       const brutoLinea = cant * precio;
+      const rawDesc = Number(d.descuento || 0);
+      const maxDescPermitido = brutoLinea * 0.50;
+      const desc = Math.min(rawDesc, maxDescPermitido);
       const subLinea = Math.max(0, brutoLinea - desc);
 
       subtotalBruto += brutoLinea;
@@ -194,20 +196,26 @@ export function useSaleForm({ onSuccess }) {
     setIsSubmitting(true);
     setErrorMsg('');
     try {
-      // HAL-F5-03: Enviar payload sin recálculos redundantes ni casteos cruzados distorsionantes
-      const response = await apiClient.post('/sales', {
-        ...formData,
+      // HAL-F9-02: Whitelist estricta compatible con DTO Zod .strict()
+      const payload = {
+        idCliente: formData.idCliente,
         fechaVenta: new Date(formData.fechaVenta).toISOString(),
-        valorPagado: formData.tipoPago === 'CONTADO' ? formData.totalVenta : formData.valorPagado,
-        saldoPendiente: formData.tipoPago === 'CONTADO' ? 0 : formData.totalVenta - formData.valorPagado,
+        tipoPago: formData.tipoPago || 'CONTADO',
+        canalVenta: formData.canalVenta || 'DIRECTA',
+        aplicaIva: Boolean(formData.aplicaIva),
+        observaciones: formData.observaciones || null,
+        valorPagado: Number(formData.tipoPago === 'CONTADO' ? formData.totalVenta : (formData.valorPagado || 0)),
         detalles: formData.detalles.map(d => ({
           idProducto: d.idProducto,
-          cantidad: d.cantidad,
-          precioUnitario: d.precioUnitario,
-          descuento: d.descuento || 0,
-          tarifaIva: d.tarifaIva ?? 19
+          cantidad: Number(d.cantidad),
+          precioUnitario: Number(d.precioUnitario),
+          descuento: Math.min(Number(d.descuento || 0), (Number(d.cantidad) * Number(d.precioUnitario)) * 0.50),
+          tipoDescuento: d.tipoDescuento || 'COMERCIAL',
+          tarifaIva: Number(d.tarifaIva ?? (formData.aplicaIva ? 19 : 0))
         }))
-      });
+      };
+
+      const response = await apiClient.post('/sales', payload);
       const saleResult = response?.data || response;
       const clientObj = clients.find(c => c.id === formData.idCliente);
       const saleWithMeta = {

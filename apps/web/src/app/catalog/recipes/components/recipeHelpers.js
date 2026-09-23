@@ -599,7 +599,9 @@ export function calculateRecipeCosts(formData, supplies = [], products = [], pri
     costRawSupplies,
     costWipBases,
     costPerUnit,
-    hasWipFallback
+    hasWipFallback,
+    costoInvalido: hasWipFallback,
+    motivo: hasWipFallback ? 'WIP sin costo configurado' : null
   };
 }
 
@@ -637,9 +639,12 @@ export function getPackagingPhysicalLimit(selectedProduct, rendimientoBase) {
 /**
  * Valida los prerrequisitos Poka-Yoke antes de abrir el modal resumen o enviar la receta.
  */
-export function validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging, selectedProduct) {
+export function validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging, selectedProduct, costRollup = null) {
   if (!formData.idProducto) return 'Debe seleccionar el producto a fabricar.';
   if (!formData.rendimientoBase || Number(formData.rendimientoBase) <= 0) return 'Debe ingresar un rendimiento base mayor a cero.';
+  if (costRollup && (costRollup.costoInvalido || costRollup.hasWipFallback)) {
+    return 'Existen bases intermedias (WIP) sin costo configurado. Configure el costo antes de continuar.';
+  }
   if (isCommercialWithoutBulk) return 'Debe existir al menos un producto base a granel en el catálogo.';
   if (isMissingCommercialPackaging) return 'Debe agregar al menos un insumo de empaque primario a la receta.';
 

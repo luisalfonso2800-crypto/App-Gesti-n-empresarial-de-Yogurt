@@ -105,7 +105,7 @@ export function useProductionPageData() {
       await apiClient.post(`/production/${id}/start`);
       fetchOrders();
     } catch (e) {
-      alert(e.message);
+      showNotification(`Error al iniciar orden: ${e.message}`, 'error');
     }
   };
 

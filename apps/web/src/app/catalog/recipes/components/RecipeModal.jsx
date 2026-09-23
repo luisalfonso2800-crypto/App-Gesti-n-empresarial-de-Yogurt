@@ -57,9 +57,10 @@ export function RecipeModal({
   const precioVentaNum = Number(selectedProduct?.precioVenta) || 0, margenObjetivoNum = Number(selectedProduct?.margenObjetivo) || 0;
   const costoTopePermitido = precioVentaNum > 0 && margenObjetivoNum > 0 ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100))) : 0;
   const isInternoOrBulk = precioVentaNum === 0 || isSelectedProductBulk;
-  const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging && !hasCapacityOverflow;
+  const hasWipSinCosto = Boolean(rollup.hasWipFallback || rollup.costoInvalido);
+  const canSubmit = !isCommercialWithoutBulk && !isMissingCommercialPackaging && !hasCapacityOverflow && !hasWipSinCosto;
   const handleOpenSummaryModal = () => {
-    const err = validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging, selectedProduct);
+    const err = validateRecipeSubmission(formData, isCommercialWithoutBulk, isMissingCommercialPackaging, selectedProduct, rollup);
     if (err) return setValidationError(err);
     setValidationError('');
     setShowSummaryModal(true);
