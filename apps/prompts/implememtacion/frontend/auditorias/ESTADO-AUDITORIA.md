@@ -8,23 +8,21 @@
 - [x] F4 — Validaciones preventivas — COMPLETADA — 2026-09-22
 - [x] F5 — Unidades de medida — COMPLETADA — 2026-09-22
 - [x] F6 — Campos nuevos — COMPLETADA — 2026-09-22
-- [ ] F7 — Dashboard — PENDIENTE
+- [x] F7 — Dashboard — COMPLETADA — 2026-09-22
 - [ ] F8 — Formato números — PENDIENTE
 - [ ] F9 — Contratos API — PENDIENTE
 - [ ] F10 — Feedback/Estados — PENDIENTE
 - [ ] F11 — Tests E2E + Cierre — PENDIENTE
 
 ## Última fase ejecutada
-F6 — Campos nuevos del backend — finalizada 2026-09-22 20:15
+F7 — Dashboard y métricas analíticas — finalizada 2026-09-22 20:16
 
 ## Próxima fase
-F7 — Dashboard y métricas analíticas
+F8 — Formato de números, fechas y unidades
 
 ## Informe parcial de la fase actual (si aplica)
-Fase F6 completada y documentada en INFORME-AUD-F6.md.
-costoBaseSinIva está completamente expuesto y editable en Precios Proveedor.
-Campos nuevos no expuestos en frontend:
-1. densidad en Insumos/Productos (no editable en UI).
-2. unidadCantidadProducida en liquidación de producción (no se envía en payload).
-3. stockAnterior y stockNuevo no visibles en la tabla de movimientos de inventario.
-4. Saldo negativo en cartera carece de badge explícito de "ANTICIPO / SALDO A FAVOR".
+Fase F7 completada y documentada en INFORME-AUD-F7.md.
+Hallazgos en Dashboard:
+1. flujoCajaReal (liquidez de caja) no está expuesto en las tarjetas del frontend, ocultando los recaudos efectivos frente a la facturación a crédito.
+2. utilidadDevengada está etiquetada ambiguamente como "UTILIDAD NETA".
+3. Heurística quemada en ficha técnica de producto: margen Venta Directa = margenPorcentaje + 15%.
