@@ -9,10 +9,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
+import { useNotification } from '@/context/NotificationContext';
 
 export function useProductionPageData() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showNotification } = useNotification();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,7 +128,7 @@ export function useProductionPageData() {
       setCreating(false);
       fetchOrders();
     } catch (e) {
-      alert(e.message);
+      showNotification(`Orden rechazada: ${e.message}`, 'error');
     }
   };
 
@@ -141,7 +143,7 @@ export function useProductionPageData() {
         router.push('/operations/purchases');
       }
     } catch (e) {
-      alert(e.message);
+      showNotification(`Error al crear orden de compra: ${e.message}`, 'error');
     }
   };
 
@@ -195,7 +197,7 @@ export function useProductionPageData() {
       }
       fetchOrders();
     } catch (e) {
-      alert(e.message);
+      showNotification(`Error al finalizar orden: ${e.message}`, 'error');
     }
   };
 
@@ -213,7 +215,7 @@ export function useProductionPageData() {
       });
       fetchOrders();
     } catch (e) {
-      alert(e.message);
+      showNotification(`Error al reportar incidente: ${e.message}`, 'error');
     }
   };
 
