@@ -28,8 +28,8 @@ export class CreateRecipeDetailDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  @Max(100, { message: 'El porcentaje de merma no puede exceder el 100%' })
+  @Min(0, { message: 'El porcentaje de merma no puede ser negativo' })
+  @Max(99.9999, { message: 'El porcentaje de merma debe ser estrictamente menor al 100%' })
   mermaPorcentaje;
 
   @IsOptional()

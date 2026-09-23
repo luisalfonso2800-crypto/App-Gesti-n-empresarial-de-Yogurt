@@ -7,7 +7,7 @@
  * @dependencies @nestjs/common, apps/api/src/database/prisma.service.js
  */
 
-import { Injectable, Dependencies } from '@nestjs/common';
+import { Injectable, Dependencies, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { UnitConverter } from '../common/utils/unit-converter';
 import { convertVolumeToMass } from '../common/units/unit-registry';
@@ -169,9 +169,15 @@ export class ProductionRepository {
     });
 
     if (!receta) throw new Error("Receta no encontrada");
+    
+    // HAL-F4-03: Validar que rendimientoBase sea estrictamente > 0
+    const rendimiento = Number(receta.rendimientoBase);
+    if (!rendimiento || rendimiento <= 0) {
+      throw new BadRequestException('El rendimientoBase de la receta debe ser estrictamente mayor a 0');
+    }
 
     const variantes = variantesQuery ? variantesQuery.split(',') : [];
-    const factorEscala = cantidadProduccion / (Number(receta.rendimientoBase) || 1);
+    const factorEscala = cantidadProduccion / rendimiento;
 
     const bom = [];
 
@@ -181,12 +187,19 @@ export class ProductionRepository {
           continue; // Skip optional items not in active variants
         }
 
-        let reqTeorico = Number(det.cantidadRequerida) * factorEscala;
+        // HAL-F8-02: Validar rango estricto de merma 0 <= merma < 100
         const merma = Number(det.mermaPorcentaje) || 0;
+        if (merma < 0 || merma >= 100) {
+          throw new BadRequestException(`Porcentaje de merma inválido (${merma}%). Debe estar entre 0% y menos de 100%`);
+        }
+
+        let reqTeorico = Number(det.cantidadRequerida) * factorEscala;
         reqTeorico = reqTeorico * (1 + (merma / 100));
 
+        // HAL-F6-01: Preservar cantidadTeoricaOriginal con precisión Decimal antes de redondear
+        const cantidadTeoricaOriginal = Number(reqTeorico.toFixed(4));
         const esUnidadDiscreta = UNIDADES_DISCRETAS.includes((det.unidad || '').toUpperCase().trim());
-        const cantidadFinal = esUnidadDiscreta ? Math.ceil(reqTeorico) : Number(reqTeorico.toFixed(4));
+        const cantidadFinal = esUnidadDiscreta ? Math.ceil(reqTeorico) : cantidadTeoricaOriginal;
         reqTeorico = cantidadFinal;
 
         if (det.idProductoIntermedio) {
@@ -275,9 +288,9 @@ export class ProductionRepository {
             costoUnitario = costoUnitario / Number(loteWip.cantidadInicial);
           }
 
-          // Sanity check para bases lácteas si viene en cero o corrupto:
+          // HAL-F4-02: Eliminar hardcoding $3,400 — lanzar BadRequestException si costo es inválido o corrupto
           if (costoUnitario <= 0 || costoUnitario > 50000) {
-            costoUnitario = 3400; // Valor de referencia estándar por litro de base de yogurt
+            throw new BadRequestException(`Costo unitario inválido ($${costoUnitario}) para el producto intermedio ${det.idProductoIntermedio}. Configure un costo válido en el lote o inventario.`);
           }
 
           if (isReqSmallUnit && costoUnitario > 100) {
@@ -538,7 +551,17 @@ export class ProductionRepository {
         });
       }
 
-      // 4. Crear orden de producción con cantidades discretas redondeadas y snapshot inmutable
+      // 4. Determinar unidad explícita de producción (HAL-F8-04)
+      const productoTarget = await prisma.producto.findUnique({
+        where: { id: data.idProducto },
+        include: { presentacion: true }
+      });
+      const unidadExplícita = data.unidadCantidadProducida ||
+        recetaActiva?.unidadRendimiento ||
+        productoTarget?.presentacion?.unidadMedida ||
+        (productoTarget?.categoria === 'INTERMEDIO_WIP' ? 'Litros' : 'UNIDAD');
+
+      // 5. Crear orden de producción con unidad explícita y snapshot inmutable
       const produccion = await prisma.produccion.create({
         data: {
           fechaPlanificada: data.fechaPlanificada ? new Date(data.fechaPlanificada) : null,
@@ -546,13 +569,15 @@ export class ProductionRepository {
           idProducto: data.idProducto,
           cantidadPlanificada: data.cantidadPlanificada,
           cantidadProducidaReal: data.cantidadProducidaReal || 0,
+          unidadCantidadProducida: unidadExplícita,
           estado: data.estado || 'PLANIFICADA',
           fechaVencimiento: data.fechaVencimiento ? new Date(data.fechaVencimiento) : null,
           observaciones: observacionesPayload,
           detalles: {
             create: data.detalles.map(d => {
+              const rawTeorica = Number(d.cantidadTeorica);
               const esUnidadDiscreta = UNIDADES_DISCRETAS.includes((d.unidad || '').toUpperCase().trim());
-              const cantTeorica = esUnidadDiscreta ? Math.ceil(Number(d.cantidadTeorica)) : Number(Number(d.cantidadTeorica).toFixed(4));
+              const cantTeorica = esUnidadDiscreta ? Math.ceil(rawTeorica) : Number(rawTeorica.toFixed(4));
               return {
                 idInsumo: d.idInsumo || null,
                 idProductoIntermedio: d.idProductoIntermedio || null,
@@ -561,7 +586,8 @@ export class ProductionRepository {
                 costoTeorico: d.costoTeorico,
                 cantidadRealUtilizada: null,
                 costoReal: null,
-                diferencia: null
+                diferencia: null,
+                observaciones: rawTeorica !== cantTeorica ? `[TEORICA_ORIGINAL: ${rawTeorica}]` : null
               };
             })
           }
