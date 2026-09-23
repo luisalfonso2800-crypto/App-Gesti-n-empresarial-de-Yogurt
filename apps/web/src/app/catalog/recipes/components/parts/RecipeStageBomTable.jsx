@@ -106,7 +106,21 @@ export function RecipeStageBomTable({
                     )}
                   </td>
                   <td>
-                    <input className={styles.input} type="number" step="0.1" min="0" max="100" value={det.mermaPorcentaje === '' ? '' : det.mermaPorcentaje} placeholder="0" onChange={e => onUpdateDetalle(stageIndex, dIdx, 'mermaPorcentaje', e.target.value === '' ? '' : parseFloat(e.target.value))} />
+                    <input
+                      className={`${styles.input} ${Number(det.mermaPorcentaje) >= 100 ? styles.inputErrorBorder : ''}`}
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="99.9"
+                      value={det.mermaPorcentaje === '' ? '' : det.mermaPorcentaje}
+                      placeholder="0"
+                      onChange={e => onUpdateDetalle(stageIndex, dIdx, 'mermaPorcentaje', e.target.value === '' ? '' : parseFloat(e.target.value))}
+                    />
+                    {Number(det.mermaPorcentaje) >= 100 && (
+                      <span className={styles.packagingOverflowError}>
+                        ⚠️ La merma debe ser menor a 100%
+                      </span>
+                    )}
                   </td>
                   <td>
                     {isWip ? (<span className={styles.itemTypeTagWip}>Base WIP</span>) : isPackaging ? (<span className={styles.itemTypeTagPkg}>📦 Empaque</span>) : isComplement ? (<span className={styles.itemTypeTagComplement}>Complemento</span>) : (<span className={styles.itemTypeTagRaw}>Materia Prima</span>)}
