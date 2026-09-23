@@ -6,28 +6,19 @@ import { formatCurrency } from '@/lib/formatters';
 import styles from '../goals.module.css';
 
 const RITMO_CLASSES = {
-  ADELANTADA: styles.ritmoAdelantada,
-  EN_RITMO: styles.ritmoEnRitmo,
-  EN_RIESGO: styles.ritmoEnRiesgo,
-  ATRASADA: styles.ritmoAtrasada,
-  CUMPLIDA: styles.ritmoCumplida,
+  ADELANTADA: styles.ritmoAdelantada, EN_RITMO: styles.ritmoEnRitmo,
+  EN_RIESGO: styles.ritmoEnRiesgo, ATRASADA: styles.ritmoAtrasada, CUMPLIDA: styles.ritmoCumplida,
 };
 
 const BOTANICO_LABELS = {
-  SEMILLA: '🌱 Semilla (0-25%)',
-  EN_CRECIMIENTO: '🌿 En Crecimiento (26-70%)',
-  FLORACION: '🌸 Floración (71-99%)',
-  COSECHADA: '🍇 Cosechada (100%)',
+  SEMILLA: '🌱 Semilla (0-25%)', EN_CRECIMIENTO: '🌿 En Crecimiento (26-70%)',
+  FLORACION: '🌸 Floración (71-99%)', COSECHADA: '🍇 Cosechada (100%)',
 };
 
 function getStrategyBadge(goal) {
   const est = goal.estrategiaAsignacion || 'MANUAL';
-  if (est === 'PORCENTAJE') {
-    return `📊 ${goal.porcentajeFlujo || 0}% Flujo`;
-  }
-  if (est === 'CASCADA') {
-    return `🌊 Cascada #${goal.ordenPrioridad || 1}`;
-  }
+  if (est === 'PORCENTAJE') return `📊 ${goal.porcentajeFlujo || 0}% Flujo`;
+  if (est === 'CASCADA') return `🌊 Cascada #${goal.ordenPrioridad || 1}`;
   return '🏺 Alcancía Manual';
 }
 
