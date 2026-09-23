@@ -1,6 +1,7 @@
 import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
 import { InventoryRepository } from './inventory.repository';
 import { UnitConverter } from '../common/utils/unit-converter';
+import { normalizeUnit, getFactor } from '../common/units/unit-registry.js';
 
 @Injectable()
 @Dependencies(InventoryRepository)
@@ -20,21 +21,9 @@ export class InventoryService {
         costoUnitario = Number(sortedPrices[0].costoUnidadBase) || 0;
       }
 
-      const unidadBase = (item.insumo?.unidadBase || item.unidadMedida || '').toUpperCase().trim();
-      const isSmallUnit = ['G', 'GRAMO', 'GRAMOS', 'ML', 'MILILITRO', 'MILILITROS'].includes(unidadBase);
-
-      let costoPorUnidadBase = costoUnitario;
       const stockActual = Number(item.cantidadActual) || 0;
-      let valorTotal = 0;
-
-      if (isSmallUnit && costoUnitario > 100) {
-        costoPorUnidadBase = costoUnitario / 1000;
-        valorTotal = Math.round(stockActual * costoPorUnidadBase);
-      } else {
-        valorTotal = Math.round(stockActual * costoUnitario);
-      }
-
-      costoUnitario = costoPorUnidadBase;
+      // HAL-F1-03: Eliminar heurística monetaria 'costoUnitario > 100'. El costo ya representa el valor por unidad base.
+      const valorTotal = Math.round(stockActual * costoUnitario);
 
       const stockMinimo = Number(item.insumo?.stockMinimo) || 0;
       
