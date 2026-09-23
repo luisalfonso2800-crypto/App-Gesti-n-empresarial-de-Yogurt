@@ -1,6 +1,6 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { toDecimal, sub, toNumber } from '../common/decimal/decimal-utils.js';
+import { toDecimal, add, sub, mul, div, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -24,15 +24,15 @@ export class SalesRepository {
 
     return ventas.map(venta => {
       const costoTotal = (venta.detalles || []).reduce((acc, d) => {
-        const cUnit = Number(d.costoUnitario || 0);
-        return acc + (cUnit * Number(d.cantidad || 0));
-      }, 0);
+        const cUnit = toDecimal(d.costoUnitario || 0);
+        return add(acc, mul(cUnit, d.cantidad || 0));
+      }, toDecimal(0));
 
       return {
         ...venta,
         clienteNombre: venta.cliente?.nombre || 'Cliente Ocasional',
         clienteTipo: venta.cliente?.tipoCliente || 'MINORISTA',
-        costoTotal
+        costoTotal: toNumber(costoTotal.toDecimalPlaces(2))
       };
     });
   }
@@ -53,15 +53,15 @@ export class SalesRepository {
     if (!venta) return null;
 
     const costoTotal = (venta.detalles || []).reduce((acc, d) => {
-      const cUnit = Number(d.costoUnitario || 0);
-      return acc + (cUnit * Number(d.cantidad || 0));
-    }, 0);
+      const cUnit = toDecimal(d.costoUnitario || 0);
+      return add(acc, mul(cUnit, d.cantidad || 0));
+    }, toDecimal(0));
 
     return {
       ...venta,
       clienteNombre: venta.cliente?.nombre || 'Cliente Ocasional',
       clienteTipo: venta.cliente?.tipoCliente || 'MINORISTA',
-      costoTotal
+      costoTotal: toNumber(costoTotal.toDecimalPlaces(2))
     };
   }
 
@@ -142,18 +142,18 @@ export class SalesRepository {
 
         const costoUnit = d.costoUnitarioLote || (inv ? Number(inv.costoPromedio) : 0);
         
-        // Recálculo server-side estricto de cada detalle (HAL-F10-02, HAL-F7-02, HAL-F7-03, HAL-F7-04, HAL-F4-06)
-        const cantidadNum = Number(d.cantidad);
-        const precioUnitNum = Number(d.precioUnitario);
-        const brutoLinea = cantidadNum * precioUnitNum;
-        const descuentoTotalLinea = Number(d.descuento || 0);
+        // Recálculo server-side estricto de cada detalle (HAL-F10-02, HAL-F7-02, HAL-F7-03, HAL-F7-04, HAL-F4-06, HAL-F4-07)
+        const cantidadDec = toDecimal(d.cantidad);
+        const precioUnitDec = toDecimal(d.precioUnitario);
+        const brutoLineaDec = mul(cantidadDec, precioUnitDec);
+        const descuentoTotalLineaDec = toDecimal(d.descuento || 0);
         const tipoDesc = d.tipoDescuento || 'COMERCIAL';
 
         // Descuento comercial reduce base gravable; descuento financiero no la reduce (HAL-F7-03, HAL-F7-04)
-        const descComercial = tipoDesc === 'COMERCIAL' ? descuentoTotalLinea : 0;
-        const descFinanciero = tipoDesc === 'FINANCIERO' ? descuentoTotalLinea : 0;
+        const descComercialDec = tipoDesc === 'COMERCIAL' ? descuentoTotalLineaDec : toDecimal(0);
+        const descFinancieroDec = tipoDesc === 'FINANCIERO' ? descuentoTotalLineaDec : toDecimal(0);
 
-        const baseDespuesComercial = Math.max(0, brutoLinea - descComercial);
+        const baseDespuesComercialDec = Decimal.max(0, sub(brutoLineaDec, descComercialDec));
 
         // Consultar configuración de IVA del producto si no viene explícita en detalle
         const prodDb = await prisma.producto.findUnique({
@@ -165,67 +165,67 @@ export class SalesRepository {
           ? Boolean(d.precioIncluyeIva) 
           : (prodDb?.precioIncluyeIva ?? true);
 
-        let tarifaIva = Number(d.tarifaIva !== undefined ? d.tarifaIva : (prodDb?.tarifaIva || 0));
+        let tarifaIvaDec = toDecimal(d.tarifaIva !== undefined ? d.tarifaIva : (prodDb?.tarifaIva || 0));
         // Normalizar si viene en porcentaje (ej 19) o decimal (0.19)
-        if (tarifaIva > 1) {
-          tarifaIva = tarifaIva / 100;
+        if (tarifaIvaDec.gt(1)) {
+          tarifaIvaDec = div(tarifaIvaDec, 100);
         }
-        if (data.aplicaIva && tarifaIva === 0) {
-          tarifaIva = 0.19;
+        if (data.aplicaIva && tarifaIvaDec.isZero()) {
+          tarifaIvaDec = toDecimal(0.19);
         }
 
-        let baseGravableLinea = baseDespuesComercial;
-        let montoIvaLinea = 0;
+        let baseGravableLineaDec = baseDespuesComercialDec;
+        let montoIvaLineaDec = toDecimal(0);
 
-        if (tarifaIva > 0) {
+        if (tarifaIvaDec.gt(0)) {
           if (precioIncluyeIva) {
-            // HAL-F7-02: Precio incluye IVA -> Base = Bruto / (1 + IVA)
-            baseGravableLinea = baseDespuesComercial / (1 + tarifaIva);
-            montoIvaLinea = baseDespuesComercial - baseGravableLinea;
+            // HAL-F7-02 / HAL-F4-07: Precio incluye IVA -> Base = Bruto / (1 + IVA) con Decimal
+            baseGravableLineaDec = div(baseDespuesComercialDec, add(1, tarifaIvaDec));
+            montoIvaLineaDec = sub(baseDespuesComercialDec, baseGravableLineaDec);
           } else {
             // Precio NO incluye IVA -> Base = Bruto; IVA se adiciona
-            baseGravableLinea = baseDespuesComercial;
-            montoIvaLinea = baseGravableLinea * tarifaIva;
+            baseGravableLineaDec = baseDespuesComercialDec;
+            montoIvaLineaDec = mul(baseGravableLineaDec, tarifaIvaDec);
           }
         }
 
         // Total de la línea considerando descuento financiero posterior (HAL-F7-03)
-        const totalLineaBruto = baseGravableLinea + montoIvaLinea;
-        const totalLinea = Math.max(0, totalLineaBruto - descFinanciero);
+        const totalLineaBrutoDec = add(baseGravableLineaDec, montoIvaLineaDec);
+        const totalLineaDec = Decimal.max(0, sub(totalLineaBrutoDec, descFinancieroDec));
 
-        const util = totalLinea - (cantidadNum * costoUnit);
+        const utilDec = sub(totalLineaDec, mul(cantidadDec, costoUnit));
 
-        serverSubtotal += brutoLinea;
-        serverDescuentoTotal += descuentoTotalLinea;
-        serverBaseImponible += baseGravableLinea;
-        serverIvaTotal += montoIvaLinea;
-        serverTotalVenta += totalLinea;
+        serverSubtotal += toNumber(brutoLineaDec);
+        serverDescuentoTotal += toNumber(descuentoTotalLineaDec);
+        serverBaseImponible += toNumber(baseGravableLineaDec);
+        serverIvaTotal += toNumber(montoIvaLineaDec);
+        serverTotalVenta += toNumber(totalLineaDec);
 
         finalDetallesCreate.push({
           idProducto: d.idProducto,
           idLote: d.idLote,
           cantidad: d.cantidad,
           precioUnitario: d.precioUnitario,
-          descuento: descuentoTotalLinea,
-          tarifaIva: tarifaIva,
-          baseGravable: Number(baseGravableLinea.toFixed(4)),
-          montoIva: Number(montoIvaLinea.toFixed(4)),
-          totalLinea: Number(totalLinea.toFixed(2)),
+          descuento: toNumber(descuentoTotalLineaDec),
+          tarifaIva: toNumber(tarifaIvaDec),
+          baseGravable: toNumber(baseGravableLineaDec.toDecimalPlaces(4)),
+          montoIva: toNumber(montoIvaLineaDec.toDecimalPlaces(4)),
+          totalLinea: toNumber(totalLineaDec.toDecimalPlaces(2)),
           costoUnitario: costoUnit,
-          utilidadUnitaria: precioUnitNum - costoUnit,
-          utilidadTotal: Number(util.toFixed(2))
+          utilidadUnitaria: toNumber(sub(precioUnitDec, costoUnit)),
+          utilidadTotal: toNumber(utilDec.toDecimalPlaces(2))
         });
       }
 
-      const serverSubtotalFinal = Number(serverSubtotal.toFixed(2));
-      const serverDescuentoFinal = Number(serverDescuentoTotal.toFixed(2));
-      const serverBaseFinal = Number(serverBaseImponible.toFixed(2));
-      const serverIvaFinal = Number(serverIvaTotal.toFixed(2));
-      const serverTotalVentaFinal = Number(serverTotalVenta.toFixed(2));
+      const serverSubtotalFinal = toNumber(toDecimal(serverSubtotal).toDecimalPlaces(2));
+      const serverDescuentoFinal = toNumber(toDecimal(serverDescuentoTotal).toDecimalPlaces(2));
+      const serverBaseFinal = toNumber(toDecimal(serverBaseImponible).toDecimalPlaces(2));
+      const serverIvaFinal = toNumber(toDecimal(serverIvaTotal).toDecimalPlaces(2));
+      const serverTotalVentaFinal = toNumber(toDecimal(serverTotalVenta).toDecimalPlaces(2));
 
-      const valorPagadoNum = Number(data.valorPagado || 0);
-      // HAL-F9-04 + HAL-F4-08: saldo negativo = saldo a favor del cliente (anticipo)
-      const saldoPendienteCalc = serverTotalVentaFinal - valorPagadoNum;
+      const valorPagadoNum = toNumber(toDecimal(data.valorPagado || 0));
+      // HAL-F9-04 + HAL-F4-08 + HAL-F4-07: saldo con Decimal exacto
+      const saldoPendienteCalc = toNumber(sub(serverTotalVentaFinal, valorPagadoNum).toDecimalPlaces(2));
 
       const venta = await prisma.venta.create({
         data: {

@@ -1,6 +1,7 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { getFactor } from '../common/units/unit-registry';
+import { toDecimal, add, div, mul, sub, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(PrismaService)
@@ -244,8 +245,8 @@ export class PurchasesRepository {
             const empaqueFormateado = (String(rawEmpaque) || 'UNIDAD').trim().toUpperCase();
             const presentacionComercial = `${empaqueFormateado} x ${contenido.toLocaleString('es-CO')} ${unidad}`;
 
-            // Costo real unitario por gramo / mililitro / unidad base
-            const cUnidad = contenido > 0 ? Number((pCompra / contenido).toFixed(4)) : pCompra;
+            // Costo real unitario por gramo / mililitro / unidad base con Decimal.js (HAL-F4-07)
+            const cUnidad = contenido > 0 ? toNumber(div(pCompra, contenido).toDecimalPlaces(4)) : toNumber(toDecimal(pCompra));
 
             if (provLink) {
               await prisma.precioProveedor.update({
@@ -278,8 +279,8 @@ export class PurchasesRepository {
           }
         }
 
-        // 5. Registrar Egreso Financiero Consolidado
-        const totalEgreso = Number((totalNetoCompra + flete).toFixed(2));
+        // 5. Registrar Egreso Financiero Consolidado con Decimal.js (HAL-F4-07)
+        const totalEgreso = toNumber(add(totalNetoCompra, flete).toDecimalPlaces(2));
         if (totalEgreso > 0) {
           await prisma.gasto.create({
             data: {
@@ -324,43 +325,47 @@ export class PurchasesRepository {
         }
       }
 
-      const cantidad = Number(item.cantidadEmpaques) || 0;
-      const precioUnitario = Number(item.precioEmpaque) || 0;
+      const cantidad = toDecimal(item.cantidadEmpaques || 0);
+      const precioUnitario = toDecimal(item.precioEmpaque || 0);
       const tieneIva = item.tieneIva !== undefined ? Boolean(item.tieneIva) : true;
-      const porcentajeIva = tieneIva ? (Number(item.porcentajeIva !== undefined ? item.porcentajeIva : 19.0) || 0) : 0;
+      const porcentajeIva = tieneIva ? toDecimal(item.porcentajeIva !== undefined ? item.porcentajeIva : 19.0) : toDecimal(0);
       const precioIncluyeIva = item.precioIncluyeIva !== undefined ? Boolean(item.precioIncluyeIva) : true;
 
-      let subtotalSinIva = 0;
-      let montoIva = 0;
-      let subtotalConIva = 0;
+      let subtotalSinIva = toDecimal(0);
+      let montoIva = toDecimal(0);
+      let subtotalConIva = toDecimal(0);
+
+      const brutoItem = mul(precioUnitario, cantidad);
 
       if (!tieneIva) {
-        subtotalSinIva = precioUnitario * cantidad;
-        montoIva = 0;
+        subtotalSinIva = brutoItem;
+        montoIva = toDecimal(0);
         subtotalConIva = subtotalSinIva;
       } else if (tieneIva && precioIncluyeIva) {
-        subtotalConIva = precioUnitario * cantidad;
-        subtotalSinIva = porcentajeIva > 0 ? (subtotalConIva / (1 + (porcentajeIva / 100))) : subtotalConIva;
-        montoIva = subtotalConIva - subtotalSinIva;
+        subtotalConIva = brutoItem;
+        const factorIva = add(1, div(porcentajeIva, 100));
+        subtotalSinIva = porcentajeIva.gt(0) ? div(subtotalConIva, factorIva) : subtotalConIva;
+        montoIva = sub(subtotalConIva, subtotalSinIva);
       } else {
-        subtotalSinIva = precioUnitario * cantidad;
-        montoIva = subtotalSinIva * (porcentajeIva / 100);
-        subtotalConIva = subtotalSinIva + montoIva;
+        subtotalSinIva = brutoItem;
+        montoIva = mul(subtotalSinIva, div(porcentajeIva, 100));
+        subtotalConIva = add(subtotalSinIva, montoIva);
       }
 
-      const ingresoNetoBodega = cantidad * factorReal;
-      const costoBaseUnitario = factorReal > 0 ? (precioUnitario / factorReal) : precioUnitario;
+      const factorRealDec = toDecimal(factorReal);
+      const ingresoNetoBodega = toNumber(mul(cantidad, factorRealDec));
+      const costoBaseUnitario = factorRealDec.gt(0) ? toNumber(div(precioUnitario, factorRealDec)) : toNumber(precioUnitario);
 
-      subtotalGlobal += Number(subtotalConIva.toFixed(2));
-      totalSinIvaGlobal += Number(subtotalSinIva.toFixed(2));
-      totalIvaGlobal += Number(montoIva.toFixed(2));
+      subtotalGlobal += toNumber(subtotalConIva.toDecimalPlaces(2));
+      totalSinIvaGlobal += toNumber(subtotalSinIva.toDecimalPlaces(2));
+      totalIvaGlobal += toNumber(montoIva.toDecimalPlaces(2));
 
       itemsLiquidados.push({
         idPrecioProveedor: item.idPrecioProveedor,
-        subtotal: Number(subtotalConIva.toFixed(2)),
-        subtotalSinIva: Number(subtotalSinIva.toFixed(2)),
-        montoIva: Number(montoIva.toFixed(2)),
-        porcentajeIva,
+        subtotal: toNumber(subtotalConIva.toDecimalPlaces(2)),
+        subtotalSinIva: toNumber(subtotalSinIva.toDecimalPlaces(2)),
+        montoIva: toNumber(montoIva.toDecimalPlaces(2)),
+        porcentajeIva: toNumber(porcentajeIva),
         tieneIva,
         precioIncluyeIva,
         ingresoNetoBodega,
@@ -370,9 +375,9 @@ export class PurchasesRepository {
     }
 
     return {
-      subtotalGlobal: Number(subtotalGlobal.toFixed(2)),
-      totalSinIvaGlobal: Number(totalSinIvaGlobal.toFixed(2)),
-      totalIvaGlobal: Number(totalIvaGlobal.toFixed(2)),
+      subtotalGlobal: toNumber(toDecimal(subtotalGlobal).toDecimalPlaces(2)),
+      totalSinIvaGlobal: toNumber(toDecimal(totalSinIvaGlobal).toDecimalPlaces(2)),
+      totalIvaGlobal: toNumber(toDecimal(totalIvaGlobal).toDecimalPlaces(2)),
       itemsLiquidados
     };
   }

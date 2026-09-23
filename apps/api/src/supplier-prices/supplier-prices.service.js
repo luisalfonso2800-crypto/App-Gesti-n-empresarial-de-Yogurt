@@ -1,5 +1,6 @@
-import { Injectable, Dependencies, NotFoundException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, BadRequestException } from '@nestjs/common';
 import { SupplierPricesRepository } from './supplier-prices.repository';
+import { toDecimal, add, div, mul, sub, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(SupplierPricesRepository)
@@ -27,36 +28,36 @@ export class SupplierPricesService {
   _computePriceFields(dto) {
     const data = { ...dto };
     const tieneIva = data.tieneIva !== undefined ? Boolean(data.tieneIva) : true;
-    const porcentajeIva = data.porcentajeIva !== undefined ? Number(data.porcentajeIva) : 19.0;
+    const porcentajeIva = tieneIva ? toDecimal(data.porcentajeIva !== undefined ? data.porcentajeIva : 19.0) : toDecimal(0);
     const precioIncluyeIva = data.precioIncluyeIva !== undefined ? Boolean(data.precioIncluyeIva) : true;
-    const precioCompra = Number(data.precioCompra || 0);
-    const cantidadEquivalenteBase = Number(data.cantidadEquivalenteBase || 1);
+    const precioCompra = toDecimal(data.precioCompra || 0);
+    const cantidadEquivalenteBase = toDecimal(data.cantidadEquivalenteBase || 1);
 
-    let costoBaseSinIva = 0;
+    let costoBaseSinIva = toDecimal(0);
     let precioTotalConIva = precioCompra;
 
-    if (tieneIva && porcentajeIva > 0) {
-      const factor = 1 + (porcentajeIva / 100);
+    if (tieneIva && porcentajeIva.gt(0)) {
+      const factor = add(1, div(porcentajeIva, 100));
       if (precioIncluyeIva) {
-        costoBaseSinIva = precioCompra / factor;
+        costoBaseSinIva = div(precioCompra, factor);
         precioTotalConIva = precioCompra;
       } else {
         costoBaseSinIva = precioCompra;
-        precioTotalConIva = precioCompra * factor;
+        precioTotalConIva = mul(precioCompra, factor);
       }
     } else {
       costoBaseSinIva = precioCompra;
       precioTotalConIva = precioCompra;
     }
 
-    // HAL-F4-04 / HAL-F7-04: El costo contable de inventario debe calcularse sobre el valor neto sin IVA descontable
-    const costoUnidadBase = cantidadEquivalenteBase > 0 ? (costoBaseSinIva / cantidadEquivalenteBase) : 0;
+    // HAL-F4-04 / HAL-F7-04 / HAL-F4-07: Costo contable con Decimal.js exacto
+    const costoUnidadBase = cantidadEquivalenteBase.gt(0) ? div(costoBaseSinIva, cantidadEquivalenteBase) : toDecimal(0);
 
     data.tieneIva = tieneIva;
-    data.porcentajeIva = porcentajeIva;
+    data.porcentajeIva = toNumber(porcentajeIva);
     data.precioIncluyeIva = precioIncluyeIva;
-    data.costoBaseSinIva = Number(costoBaseSinIva.toFixed(4));
-    data.costoUnidadBase = Number(costoUnidadBase.toFixed(4));
+    data.costoBaseSinIva = toNumber(costoBaseSinIva.toDecimalPlaces(4));
+    data.costoUnidadBase = toNumber(costoUnidadBase.toDecimalPlaces(4));
 
     return data;
   }
