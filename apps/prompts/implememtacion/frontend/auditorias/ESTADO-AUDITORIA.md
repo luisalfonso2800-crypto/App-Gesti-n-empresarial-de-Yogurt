@@ -2,7 +2,7 @@
 
 ## Fases completadas
 - [x] F0 — Ingesta y reconciliación — COMPLETADA — 2026-09-22
-- [ ] F1 — Mapa actualizado — PENDIENTE
+- [x] F1 — Mapa actualizado — COMPLETADA — 2026-09-22
 - [ ] F2 — Cálculos locales — PENDIENTE
 - [ ] F3 — Manejo de errores — PENDIENTE
 - [ ] F4 — Validaciones preventivas — PENDIENTE
@@ -15,11 +15,11 @@
 - [ ] F11 — Tests E2E + Cierre — PENDIENTE
 
 ## Última fase ejecutada
-F0 — Ingesta y reconciliación — finalizada 2026-09-22 20:08
+F1 — Mapa actualizado del frontend — finalizada 2026-09-22 20:09
 
 ## Próxima fase
-F1 — Mapa actualizado del frontend
+F2 — Cálculos locales duplicados (delta)
 
 ## Informe parcial de la fase actual (si aplica)
-Fase F0 cerrada exitosamente con informe consolidado en INFORME-AUD-F0.md.
-Matriz clasificada: 10 Resueltos, 6 Vigentes, 1 Obsoleto, 2 Reagravados (PRD-04 por endurecimiento de API y SRP-01 con 22 infracciones en verify-srp.js).
+Fase F1 completada. 17 páginas mapeadas (15 conformes con < 120 lín).
+Auditados 227 archivos con verify-srp.js: 22 infracciones documentadas (6 componentes > 150 lín, 1 page > 120 lín en /commercial/goals y 15 archivos con estilos en línea prohibidos).
