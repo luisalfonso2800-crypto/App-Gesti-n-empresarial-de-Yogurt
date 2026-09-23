@@ -87,12 +87,12 @@ export function RecipeOperationalSummaryModal({
           />
 
           {/* Balance Resumido de Costos y Rentabilidad */}
-          <div className={styles.balanceBar} style={{ margin: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ fontSize: '1.25rem' }}>💰</div>
+          <div className={`${styles.balanceBar} ${styles.balanceBarModalSummary}`}>
+            <div className={styles.balanceTitleRow}>
+              <div className={styles.balanceIcon}>💰</div>
               <div>
                 <div className={styles.balanceTitle}>Balance Económico Proyectado</div>
-                <div style={{ fontSize: '0.8rem', color: '#57534E' }}>Costeo dinámico basado en materias primas y bases WIP</div>
+                <div className={styles.balanceSubtitle}>Costeo dinámico basado en materias primas y bases WIP</div>
               </div>
             </div>
 
@@ -130,7 +130,7 @@ export function RecipeOperationalSummaryModal({
             <span>✕</span> Descartar Receta Completa
           </button>
 
-          <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          <div className={styles.summaryFooterActions}>
             <button type="button" onClick={onClose} disabled={isSubmitting} className={styles.btnContinueEditing} title="Cerrar resumen y volver al formulario para realizar ajustes">
               <span>✏️</span> Corregir / Seguir Editando
             </button>

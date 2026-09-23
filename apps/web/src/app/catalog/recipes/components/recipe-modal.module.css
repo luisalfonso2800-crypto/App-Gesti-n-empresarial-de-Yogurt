@@ -1534,4 +1534,46 @@
   padding-left: 0 !important;
 }
 
+.balanceBarModalSummary {
+  margin: 0 !important;
+}
+
+.balanceTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.balanceIcon {
+  font-size: 1.25rem;
+}
+
+.balanceSubtitle {
+  font-size: 0.8rem;
+  color: #57534E;
+}
+
+.summaryFooterActions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.summaryStagesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.summaryStageTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.collapsedBadgeLight {
+  background-color: #F7F4EE !important;
+}
+
+
 

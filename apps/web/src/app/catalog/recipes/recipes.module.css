@@ -681,3 +681,28 @@
 .badgeComp { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; background-color: #F3E8FF; color: #6B21A8; }
 .badgeRaw { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.68rem; font-weight: 600; background-color: #F3F4F6; color: #374151; }
 .textCenter { text-align: center; }
+
+.btnNewRecipeHeader {
+  background-color: #182622;
+  border-color: #182622;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0.65rem 1.4rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  opacity: 1;
+  cursor: pointer;
+}
+
+.btnNewRecipeHeaderDisabled {
+  background-color: #A8A29E;
+  border-color: #A8A29E;
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 8px;
+  padding: 0.65rem 1.4rem;
+  box-shadow: none;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

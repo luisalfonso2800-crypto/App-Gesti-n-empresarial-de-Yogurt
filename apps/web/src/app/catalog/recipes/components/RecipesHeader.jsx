@@ -21,17 +21,7 @@ export function RecipesHeader({ onNewRecipe, canCreate = true, disabledTooltip =
         onClick={() => { if (canCreate) onNewRecipe(null); }}
         disabled={!canCreate}
         title={!canCreate ? disabledTooltip : 'Registrar nueva receta'}
-        style={{
-          backgroundColor: canCreate ? '#182622' : '#A8A29E',
-          borderColor: canCreate ? '#182622' : '#A8A29E',
-          color: '#FFFFFF',
-          fontWeight: '700',
-          borderRadius: '8px',
-          padding: '0.65rem 1.4rem',
-          boxShadow: canCreate ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-          opacity: canCreate ? 1 : 0.5,
-          cursor: canCreate ? 'pointer' : 'not-allowed'
-        }}
+        className={canCreate ? styles.btnNewRecipeHeader : styles.btnNewRecipeHeaderDisabled}
       >
         + Nueva Receta
       </Button>

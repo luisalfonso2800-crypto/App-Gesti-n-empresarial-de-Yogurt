@@ -76,3 +76,18 @@
   box-shadow: 0 0 0 2px #D1FAE5;
 }
 
+.searchFiltersRow {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.categorySelect {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  color: #182622;
+}
+
+

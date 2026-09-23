@@ -17,7 +17,7 @@ export function SummaryStagesNarrativeList({
   generateStageSummaryText
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+    <div className={styles.summaryStagesContainer}>
       <div className={styles.balanceMetricLabel}>
         Secuencia Cronológica de Proceso (Paso a Paso)
       </div>
@@ -36,7 +36,7 @@ export function SummaryStagesNarrativeList({
           return (
             <div key={idx} className={styles.summaryStageCard}>
               <div className={styles.summaryStageHead}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className={styles.summaryStageTitleRow}>
                   <span className={styles.summaryStageStepBadge}>
                     Paso {etapa.orden || idx + 1}
                   </span>
@@ -47,12 +47,12 @@ export function SummaryStagesNarrativeList({
 
                 <div className={styles.collapsedBadgesRow}>
                   {tEst > 0 && (
-                    <span className={styles.collapsedBadge} style={{ backgroundColor: '#F7F4EE' }}>
+                    <span className={`${styles.collapsedBadge} ${styles.collapsedBadgeLight}`}>
                       ⏱️ {tEst}m
                     </span>
                   )}
                   {(tempMin !== null || tempMax !== null) && (
-                    <span className={styles.collapsedBadge} style={{ backgroundColor: '#F7F4EE' }}>
+                    <span className={`${styles.collapsedBadge} ${styles.collapsedBadgeLight}`}>
                       🌡️ {tempMin ?? 0}°C - {tempMax ?? 0}°C
                     </span>
                   )}

@@ -22,7 +22,7 @@ export function SuppliesHeader({ onNew, searchTerm, setSearchTerm, categoryFilte
       </div>
       <ContextBanner title="Concepto Técnico" description="Aquí se registran los materiales que compras (ingredientes y empaques). Todo se maneja en unidades de medida estándar para facilitar el control en la fábrica." />
       
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      <div className={styles.searchFiltersRow}>
         <Input 
           placeholder="Buscar por código o nombre..." 
           value={searchTerm} 
@@ -31,7 +31,7 @@ export function SuppliesHeader({ onNew, searchTerm, setSearchTerm, categoryFilte
         <select 
           value={categoryFilter} 
           onChange={(e) => setCategoryFilter(e.target.value)}
-          style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
+          className={styles.categorySelect}
         >
           <option value="">Todas las categorías</option>
           {categories.map(cat => (
