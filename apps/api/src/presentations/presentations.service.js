@@ -1,4 +1,4 @@
-import { Injectable, Dependencies, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Dependencies, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PresentationsRepository } from './presentations.repository';
 import { UploadsService } from '../uploads/uploads.service';
 
@@ -29,10 +29,16 @@ export class PresentationsService {
   async create(createDto) {
     const isGranel = createDto.tipoEnvase === 'BALDE' || createDto.tipoEnvase === 'TANQUE_GRANEL';
     const payload = { ...createDto };
+    
+    // HAL-F3-03: Rechazar granel sin cantidad explícita; eliminar inyección forzada de 1000ml / 33.81oz
     if (isGranel && (payload.cantidadMl === undefined || payload.cantidadMl === null || payload.cantidadMl === 0)) {
-      payload.cantidadMl = 1000;
-      payload.cantidadOz = payload.cantidadOz || 33.81;
+      throw new BadRequestException('Debe especificar el volumen real (cantidadMl) para presentaciones a granel (BALDE o TANQUE_GRANEL)');
     }
+
+    if (payload.cantidadMl && !payload.cantidadOz) {
+      payload.cantidadOz = Number((payload.cantidadMl / 29.5735).toFixed(2));
+    }
+
     return this.repository.create(payload);
   }
 
