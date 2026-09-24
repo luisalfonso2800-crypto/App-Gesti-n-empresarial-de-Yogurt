@@ -6,40 +6,51 @@ test.describe('Catálogos: Insumos canónicos', () => {
     await page.goto('/catalog/supplies');
     await waitForLoad(page);
 
-    const btnNuevo = page.locator('button:has-text("Nuevo Insumo"), button:has-text("Nuevo insumo")').first();
+    const btnNuevo = page.getByRole('button', { name: /(nuevo registro|nuevo insumo)/i }).or(page.locator('button:has-text("Nuevo Registro"), button:has-text("Nuevo Insumo")')).first();
     await expect(btnNuevo).toBeVisible({ timeout: 10000 });
 
     // Fuzzing: abrir modal vacío y cerrar
     await btnNuevo.click();
     await page.waitForTimeout(500);
     await closeModal(page);
+    await page.locator('[role="dialog"], [class*="modalCard"]').waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+    await page.waitForTimeout(200);
 
     // Creación de insumo canónico
-    await btnNuevo.click();
+    await btnNuevo.click({ timeout: 5000 });
     await page.waitForTimeout(500);
-    const nombreIn = page.locator('input[name="nombre"]').first();
-    if (await nombreIn.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await nombreIn.fill('LECHE CRUDA DE VACA');
-    }
-    const unidadSel = page.locator('select[name="unidadBase"], input[name="unidadBase"]').first();
-    if (await unidadSel.isVisible({ timeout: 2000 }).catch(() => false)) {
-      const tag = await unidadSel.evaluate(el => el.tagName);
-      if (tag === 'SELECT') {
-        await unidadSel.selectOption({ label: 'Litros' }).catch(async () => {
-          await unidadSel.selectOption({ index: 1 }).catch(() => {});
-        });
-      } else {
-        await unidadSel.fill('Litros');
-      }
-    }
 
-    const saveBtn = page.locator('button[type="submit"]:has-text("Guardar"), button:has-text("Guardar")').first();
-    const enabled = await saveBtn.isEnabled({ timeout: 2000 }).catch(() => false);
-    if (enabled) {
-      await saveBtn.click({ timeout: 5000 });
-    } else {
-      await closeModal(page);
-    }
-    await page.waitForTimeout(1000);
+    const timestamp = Date.now();
+    const supplyName = `CANONICAL_SUPPLY_${timestamp}`;
+    await page.locator('input[name="nombre"]').fill(supplyName);
+
+    // Cascada habilitada: categoria -> subcategoria
+    const catSelect = page.locator('select[name="categoria"]');
+    await catSelect.waitFor({ state: 'visible', timeout: 2000 });
+    await catSelect.selectOption({ index: 1 });
+
+    const subSelect = page.locator('select[name="subcategoria"]');
+    await subSelect.waitFor({ state: 'visible', timeout: 2000 });
+    await subSelect.selectOption({ index: 1 });
+
+    // Campos secundarios
+    await page.locator('input[name="marca"]').fill('CANONICAL_BRAND');
+    await page.locator('select[name="empaque"]').selectOption({ index: 1 });
+    await page.locator('select[name="unidadBase"]').selectOption({ index: 1 });
+
+    const contenidoInput = page.locator('input[name="contenidoReferencial"]');
+    await expect(contenidoInput).toBeVisible({ timeout: 3000 });
+    await expect(contenidoInput).toBeEnabled({ timeout: 3000 });
+    await contenidoInput.fill('1000');
+
+    const stockMinimoInput = page.locator('input[name="stockMinimo"]');
+    await expect(stockMinimoInput).toBeVisible({ timeout: 3000 });
+    await expect(stockMinimoInput).toBeEnabled({ timeout: 3000 });
+    await stockMinimoInput.fill('10');
+
+    const saveBtn = page.getByRole('button', { name: /guardar insumo/i }).first();
+    await expect(saveBtn).toBeEnabled({ timeout: 3000 });
+    await saveBtn.click({ timeout: 3000 });
+    await page.waitForTimeout(500);
   });
 });

@@ -5,14 +5,14 @@ export default defineConfig({
   fullyParallel: false,
   retries: 0,
   workers: 1,
-  timeout: 300000, // 5 minutos de tiempo límite para que no se cierre por lentitud
+  timeout: 30000, // 30 segundos estándar para evitar cuelgues prolongados
   reporter: 'list',
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    headless: false, // Abre la ventana del navegador automáticamente
+    headless: true, // Modo desatendido ultra-rápido sin ventana GUI
     launchOptions: {
-      slowMo: 1500, // Pausa de 1.5 segundos entre cada acción (clic, tipeo, modal)
+      slowMo: 0,
     },
   },
   projects: [

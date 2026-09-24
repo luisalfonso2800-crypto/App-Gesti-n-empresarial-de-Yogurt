@@ -20,26 +20,24 @@ export async function tryClick(page, ...selectors) {
 }
 
 export async function closeModal(page) {
-  const closeSelectors = [
-    'button:has-text("Cancelar")',
-    'button[aria-label="Cerrar modal"]',
-    'button[aria-label="Cerrar"]',
-    'button:has-text("✕")',
-    'button:has-text("Cerrar")',
-  ];
-  for (const sel of closeSelectors) {
-    const loc = page.locator(sel).first();
-    const visible = await loc.isVisible({ timeout: 1500 }).catch(() => false);
-    if (!visible) continue;
-    const enabled = await loc.isEnabled({ timeout: 500 }).catch(() => false);
-    if (!enabled) continue;
-    try {
-      await loc.click({ timeout: 4000 });
-      await page.waitForTimeout(400);
-      return;
-    } catch { /* Sigue intentando */ }
+  try {
+    const modalHeading = page.getByRole('heading', { name: /nuevo insumo/i });
+    const isOpen = await modalHeading.isVisible({ timeout: 500 }).catch(() => false);
+    if (!isOpen) return;
+
+    const closeBtn = page.getByRole('button', { name: /(cancelar|cerrar)/i })
+      .or(page.locator('button[aria-label*="cerrar"], button[class*="close"]'))
+      .first();
+
+    if (await closeBtn.isVisible({ timeout: 500 }).catch(() => false)) {
+      await closeBtn.click({ timeout: 1000, force: true }).catch(() => {});
+    } else {
+      await page.keyboard.press('Escape').catch(() => {});
+    }
+  } catch {
+    // Ignorar errores si el modal ya cerró
   }
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(150).catch(() => {});
 }
 
 export async function waitForLoad(page) {

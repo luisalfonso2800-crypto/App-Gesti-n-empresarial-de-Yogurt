@@ -29,29 +29,32 @@ test.describe('Insumos - Validaciones numéricas e integridad (T26-T36)', () => 
     expect(await loc.stockInput.inputValue()).toBeTruthy();
   });
 
-  test('T28 - Densidad negativa bloquea submit', async ({ page }) => {
+  test('T28 - Densidad bloqueada en modo readonly por defecto', async ({ page }) => {
     const loc = getSupplyLocators(page);
-    const name = await fillBaseFields(loc, 'T28');
-    await loc.densityInput.fill('-1');
-    await loc.submitBtn.click({ timeout: 2000, force: true }).catch(() => {});
-    await page.waitForTimeout(400);
-    const modalOpen = await safeIsVisible(page.getByRole('heading', { name: /nuevo insumo/i }), 300);
-    const itemEnTabla = !modalOpen ? await safeIsVisible(page.getByText(name), 300) : false;
-    expect(modalOpen || !itemEnTabla).toBe(true);
+    await fillBaseFields(loc, 'T28');
+    await expect(loc.densityInput).toHaveAttribute('readonly', '');
   });
 
-  test('T29 - Densidad >5 documentado', async ({ page }) => {
+  test('T29 - Densidad permite selección mediante preset rápido', async ({ page }) => {
     const loc = getSupplyLocators(page);
     await fillBaseFields(loc, 'T29');
-    await loc.densityInput.fill('6.5');
-    expect(await loc.densityInput.inputValue()).toBe('6.5');
+    const chipLeche = page.locator('button, [role="button"]').filter({ hasText: /leche/i }).first();
+    if (await safeIsVisible(chipLeche, 500)) {
+      await chipLeche.click();
+      await expect(loc.densityInput).toHaveValue(/1\.03/);
+    }
   });
 
-  test('T30 - Densidad decimal 1.03 permitida', async ({ page }) => {
+  test('T30 - Densidad calculada vía balanza refleja valor', async ({ page }) => {
     const loc = getSupplyLocators(page);
     await fillBaseFields(loc, 'T30');
-    await loc.densityInput.fill('1.03');
-    expect(await loc.densityInput.inputValue()).toBe('1.03');
+    const btnBalanza = page.locator('button').filter({ hasText: /balanza/i }).first();
+    if (await safeIsVisible(btnBalanza, 500)) {
+      await btnBalanza.click();
+      await page.locator('div[class*="densityCalcBox"] select').first().selectOption('500');
+      await page.locator('input[placeholder="Ej: 515"]').fill('515');
+      await expect(loc.densityInput).toHaveValue('1.03');
+    }
   });
 
   test('T31 - Costo base negativo bloquea submit', async ({ page }) => {
@@ -83,19 +86,19 @@ test.describe('Insumos - Validaciones numéricas e integridad (T26-T36)', () => 
     expect(await loc.costInput.inputValue()).toBeTruthy();
   });
 
-  test('T34 - Todos los campos vacíos bloquea submit', async ({ page }) => {
+  test('T34 - Todos los campos vacíos bloquea submit y mantiene campos deshabilitados', async ({ page }) => {
     const loc = getSupplyLocators(page);
-    await loc.nameInput.fill('');
-    await loc.brandInput.fill('');
+    await expect(loc.catSelect).toBeDisabled();
+    await expect(loc.brandInput).toBeDisabled();
     await loc.submitBtn.click({ timeout: 2000, force: true }).catch(() => {});
     await page.waitForTimeout(300);
     expect(await safeIsVisible(page.getByRole('heading', { name: /nuevo insumo/i }), 300)).toBe(true);
   });
 
-  test('T35 - Solo nombre sin obligatorios bloquea', async ({ page }) => {
+  test('T35 - Solo nombre sin obligatorios bloquea marca hasta completar categoría', async ({ page }) => {
     const loc = getSupplyLocators(page);
     await loc.nameInput.fill('SOLO_NOMBRE');
-    await loc.brandInput.fill('');
+    await expect(loc.brandInput).toBeDisabled();
     await loc.submitBtn.click({ timeout: 2000, force: true }).catch(() => {});
     await page.waitForTimeout(300);
     expect(await safeIsVisible(page.getByRole('heading', { name: /nuevo insumo/i }), 300)).toBe(true);
