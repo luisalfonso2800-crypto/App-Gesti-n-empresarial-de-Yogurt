@@ -5,10 +5,14 @@
  * @returns {Promise<number>} Nuevo valor entero del badge del carrito
  */
 export async function toggleCartItem(page, insumoNombre) {
-  const row = page.locator('tr').filter({ hasText: insumoNombre }).first();
+  // Limpiar insumoNombre por si viene con saltos de línea
+  const cleanName = (insumoNombre || '').split('\n')[0].trim();
+  const row = page.locator('tr').filter({
+    has: page.locator('strong[class*="insumoTitle"], td').filter({ hasText: cleanName })
+  }).first();
   await row.waitFor({ state: 'visible', timeout: 4000 });
 
-  const badge = page.locator('button[aria-label="Abrir carrito de compras"] span[class*="cartBadge"]');
+  const badge = page.locator('button[aria-label="Abrir carrito de compras"] span[class*="cartBadge"], span[class*="cartBadge"]').first();
   const initialText = await badge.innerText().catch(() => '0');
   const initialCount = parseInt(initialText, 10) || 0;
 
@@ -26,7 +30,7 @@ export async function toggleCartItem(page, insumoNombre) {
       const btn = document.querySelector(rowLocator)?.querySelector('button');
       return btn && btn.textContent && !btn.textContent.includes(prev);
     },
-    { rowLocator: `tr:has-text("${insumoNombre}")`, prev: previousText },
+    { rowLocator: `tr:has-text("${cleanName}")`, prev: previousText },
     { timeout: 3000 }
   ).catch(() => {});
 
