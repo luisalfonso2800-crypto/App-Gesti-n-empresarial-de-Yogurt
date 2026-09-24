@@ -102,7 +102,9 @@ export function useFormPhaseData({
 
   useEffect(() => {
     const handler = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      // Si el clic no ocurre dentro de un contenedor relativo de campo o dropdown, cerrar dropdown activo
+      const isInsideDropdownField = Boolean(e.target.closest('[class*="fieldRelWrapper"]') || e.target.closest('[class*="dropdown"]'));
+      if (!isInsideDropdownField) {
         setActiveDropdown({ rowId: null, type: null });
       }
     };
@@ -162,14 +164,78 @@ export function useFormPhaseData({
     showNotification(`Insumo "${supply?.nombre}" agregado. Complete proveedor, empaque y precio.`, 'info');
   };
 
-  const removeRow = (id) => {
-    setDetalles(prev => prev.filter(d => d.id !== id));
-  };
+  const selectInsumoRow = async (rowId, insumo) => {
+    if (!insumo) {
+      clearInsumo(rowId);
+      return;
+    }
 
-  const updateDetalle = (id, field, value) => {
+    const uBase = insumo.unidadBase || 'kg';
+    const esMedible = ['kg', 'g', 'l', 'ml'].includes(uBase.toLowerCase());
+    let defaultEmpaque = insumo.empaque || (esMedible ? 'BOLSA' : 'UNIDAD');
+    let defaultEmpaqueTipo = 'UNIDAD';
+    if (insumo.empaque && insumo.empaque !== 'UNIDAD') {
+      defaultEmpaqueTipo = 'OTRO';
+    } else if (esMedible) {
+      defaultEmpaqueTipo = 'BOLSA / PAQUETE';
+      defaultEmpaque = 'BOLSA';
+    }
+
+    const contReferencial = Number(insumo.contenidoReferencial) > 0
+      ? Number(insumo.contenidoReferencial)
+      : (['g', 'ml'].includes(uBase.toLowerCase()) ? 1000 : 1);
+
+    let patch = {
+      insumo,
+      insumoSearch: insumo.nombre || '',
+      unidadMedida: uBase,
+      marca: (insumo.marca && insumo.marca !== 'N/A') ? insumo.marca : '',
+      empaque: defaultEmpaque,
+      empaqueTipo: defaultEmpaqueTipo,
+      contenidoNeto: String(contReferencial),
+      precioUnitario: insumo.costoBase ? String(insumo.costoBase) : '',
+      fromCotizacion: false,
+      availablePresentations: []
+    };
+
+    const targetRow = detalles.find(d => d.id === rowId);
+    const idProveedor = targetRow?.proveedor?.id;
+
+    if (idProveedor && insumo.id) {
+      try {
+        const res = await apiClient.get(`/supplier-prices/lookup?idProveedor=${idProveedor}&idInsumo=${insumo.id}`);
+        const prices = (res?.data && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : []);
+        patch.availablePresentations = prices;
+
+        if (prices.length === 1) {
+          const tarifa = prices[0];
+          const pParts = (tarifa.presentacionCompra || '').split(' ');
+          const firstPart = pParts[0]?.toUpperCase() || 'OTRO';
+          const allowed = ['UNIDAD', 'BOLSA', 'CAJA', 'BULTO', 'BOTELLA', 'BIDÓN', 'CANASTILLA', 'ENVASE'];
+          let tipo = 'OTRO';
+          if (firstPart === 'PAQUETE' || firstPart === 'BOLSA') tipo = 'BOLSA / PAQUETE';
+          else if (firstPart === 'SACO' || firstPart === 'BULTO') tipo = 'BULTO / SACO';
+          else if (firstPart === 'FRASCO' || firstPart === 'BOTELLA') tipo = 'BOTELLA / FRASCO';
+          else if (firstPart === 'GARRAFA' || firstPart === 'BIDÓN') tipo = 'BIDÓN / GARRAFA';
+          else if (allowed.includes(firstPart)) tipo = firstPart;
+
+          patch.empaqueTipo = tipo;
+          patch.empaque = (tarifa.presentacionCompra || 'UNIDAD').toUpperCase();
+          patch.contenidoNeto = String(tarifa.cantidadEquivalenteBase || 1);
+          patch.unidadMedida = tarifa.unidadPresentacion || uBase;
+          if (tarifa.precioCompra) {
+            patch.precioUnitario = String(tarifa.precioCompra);
+          }
+          patch.fromCotizacion = true;
+        }
+      } catch (e) {
+        console.warn('Error al consultar cotización para insumo seleccionado:', e);
+      }
+    }
+
     setDetalles(prev => prev.map(d => {
-      if (d.id !== id) return d;
-      const updated = { ...d, [field]: value };
+      if (d.id !== rowId) return d;
+      const updated = { ...d, ...patch };
       const hasProv = Boolean(updated.proveedor?.id);
       const hasQty = (parseInt(updated.empaques, 10) || 0) > 0;
       const hasPrice = (parseInt(updated.precioUnitario, 10) || 0) > 0;
@@ -178,6 +244,83 @@ export function useFormPhaseData({
       }
       return updated;
     }));
+  };
+
+  const removeRow = (id) => {
+    setDetalles(prev => prev.filter(d => d.id !== id));
+  };
+
+  const fetchLookupPrices = async (rowId, idProveedor, idInsumo, currentDetalles) => {
+    if (!idProveedor || !idInsumo) return;
+    try {
+      const res = await apiClient.get(`/supplier-prices/lookup?idProveedor=${idProveedor}&idInsumo=${idInsumo}`);
+      const prices = (res?.data && Array.isArray(res.data)) ? res.data : (Array.isArray(res) ? res : []);
+      
+      setDetalles(prev => prev.map(d => {
+        if (d.id !== rowId) return d;
+        const updated = { ...d, availablePresentations: prices };
+
+        // Capa 1: Si hay exactamente 1 cotización activa, autocompletar automáticamente
+        if (prices.length === 1) {
+          const tarifa = prices[0];
+          const pParts = (tarifa.presentacionCompra || '').split(' ');
+          const firstPart = pParts[0]?.toUpperCase() || 'OTRO';
+          const allowed = ['UNIDAD', 'BOLSA', 'CAJA', 'BULTO', 'BOTELLA', 'BIDÓN', 'CANASTILLA', 'ENVASE'];
+          let tipo = 'OTRO';
+          if (firstPart === 'PAQUETE' || firstPart === 'BOLSA') tipo = 'BOLSA / PAQUETE';
+          else if (firstPart === 'SACO' || firstPart === 'BULTO') tipo = 'BULTO / SACO';
+          else if (firstPart === 'FRASCO' || firstPart === 'BOTELLA') tipo = 'BOTELLA / FRASCO';
+          else if (firstPart === 'GARRAFA' || firstPart === 'BIDÓN') tipo = 'BIDÓN / GARRAFA';
+          else if (allowed.includes(firstPart)) tipo = firstPart;
+
+          updated.empaqueTipo = tipo;
+          updated.empaque = (tarifa.presentacionCompra || 'UNIDAD').toUpperCase();
+          updated.contenidoNeto = String(tarifa.cantidadEquivalenteBase || 1);
+          updated.unidadMedida = tarifa.unidadPresentacion || d.insumo?.unidadBase || 'kg';
+          if (tarifa.precioCompra) {
+            updated.precioUnitario = String(tarifa.precioCompra);
+          }
+          updated.fromCotizacion = true;
+        }
+
+        const hasProv = Boolean(updated.proveedor?.id);
+        const hasQty = (parseInt(updated.empaques, 10) || 0) > 0;
+        const hasPrice = (parseInt(updated.precioUnitario, 10) || 0) > 0;
+        if (hasProv && hasQty && hasPrice) {
+          updated.isUnconfigured = false;
+        }
+        return updated;
+      }));
+    } catch (e) {
+      console.warn('No se pudieron consultar precios específicos de proveedor:', e);
+    }
+  };
+
+  const updateDetalle = (id, field, value) => {
+    setDetalles(prev => {
+      const nextDetalles = prev.map(d => {
+        if (d.id !== id) return d;
+        const updated = { ...d, [field]: value };
+        const hasProv = Boolean(updated.proveedor?.id);
+        const hasQty = (parseInt(updated.empaques, 10) || 0) > 0;
+        const hasPrice = (parseInt(updated.precioUnitario, 10) || 0) > 0;
+        if (hasProv && hasQty && hasPrice) {
+          updated.isUnconfigured = false;
+        }
+        return updated;
+      });
+
+      const targetRow = nextDetalles.find(d => d.id === id);
+      if (targetRow) {
+        if (field === 'proveedor' && value?.id && targetRow.insumo?.id) {
+          fetchLookupPrices(id, value.id, targetRow.insumo.id, nextDetalles);
+        } else if (field === 'insumo' && value?.id && targetRow.proveedor?.id) {
+          fetchLookupPrices(id, targetRow.proveedor.id, value.id, nextDetalles);
+        }
+      }
+
+      return nextDetalles;
+    });
   };
 
   const clearInsumo = (rowId) => {
@@ -383,6 +526,7 @@ export function useFormPhaseData({
     clearDraft,
     removeRow,
     updateDetalle,
+    selectInsumoRow,
     clearInsumo,
     activeDropdown,
     setActiveDropdown,

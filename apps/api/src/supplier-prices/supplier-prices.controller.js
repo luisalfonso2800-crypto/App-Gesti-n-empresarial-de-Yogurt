@@ -1,4 +1,4 @@
-import { Controller, Dependencies, Get, Post, Body, Patch, Param, Delete, Bind } from '@nestjs/common';
+import { Controller, Dependencies, Get, Post, Body, Patch, Param, Delete, Query, Res, Bind } from '@nestjs/common';
 import { SupplierPricesService } from './supplier-prices.service';
 
 @Controller('supplier-prices')
@@ -6,6 +6,16 @@ import { SupplierPricesService } from './supplier-prices.service';
 export class SupplierPricesController {
   constructor(service) {
     this.service = service;
+  }
+
+  @Get('lookup')
+  @Bind(Query('idProveedor'), Query('idInsumo'), Res())
+  async lookup(idProveedor, idInsumo, res) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    const result = await this.service.lookup(idProveedor, idInsumo);
+    return res.status(200).json(result);
   }
 
   @Post()

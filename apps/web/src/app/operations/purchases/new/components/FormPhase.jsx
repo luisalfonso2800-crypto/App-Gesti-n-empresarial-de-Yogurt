@@ -32,7 +32,7 @@ export function FormPhase({
   const {
     isDirectPurchase, detalles, flete, setFlete, isSubmitting, containerRef,
     totalConFlete, totalSinIvaCompra, totalIvaCompra, addRow, addRowFromStock,
-    clearDraft, removeRow, updateDetalle, clearInsumo, activeDropdown,
+    clearDraft, removeRow, updateDetalle, selectInsumoRow, clearInsumo, activeDropdown,
     setActiveDropdown, openDropdown, dropdownSearch, setDropdownSearch,
     filteredProveedores, filteredInsumosByRow, showNewProvModal, setShowNewProvModal,
     setNewProvTargetRow, initialProvData, setInitialProvData, showNewInsumoModal,
@@ -101,6 +101,7 @@ export function FormPhase({
             idx={idx}
             removeRow={removeRow}
             updateDetalle={updateDetalle}
+            selectInsumoRow={selectInsumoRow}
             clearInsumo={clearInsumo}
             activeDropdown={activeDropdown}
             setActiveDropdown={setActiveDropdown}

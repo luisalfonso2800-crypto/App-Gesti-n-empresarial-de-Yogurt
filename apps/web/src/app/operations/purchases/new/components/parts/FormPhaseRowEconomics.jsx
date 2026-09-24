@@ -15,7 +15,8 @@ export default function FormPhaseRowEconomics({
   precioUnitarioNum,
   ingresoNeto,
   unidadLabel,
-  subtotalRow
+  subtotalRow,
+  hasPokaYokeWarning
 }) {
   return (
     <div className={styles.line2Grid}>
@@ -55,9 +56,9 @@ export default function FormPhaseRowEconomics({
       </div>
 
       <div className={styles.line2SummaryPanel}>
-        <div className={styles.summaryColRight}>
+        <div className={`${styles.summaryColRight} ${hasPokaYokeWarning ? styles.netIngresoColWarning : ''}`}>
           <span className={styles.summaryMicroLabel}>Ingreso Neto</span>
-          <strong className={styles.netIngresoVal}>
+          <strong className={`${styles.netIngresoVal} ${hasPokaYokeWarning ? styles.netIngresoValWarning : ''}`}>
             {ingresoNeto.toLocaleString('es-CO')} {unidadLabel}
           </strong>
           <span className={styles.netIngresoFormula}>

@@ -30,31 +30,33 @@ export default function FormPhaseRowSelectors(props) {
     <>
       <div className={styles.fieldRelWrapper}>
         <label className={styles.fieldLabel}>Proveedor</label>
-        <input
-          type="text"
-          placeholder="Ej: Colanta, Disar..."
-          value={isProvDropOpen ? dropdownSearch : (row.proveedor?.nombre || row.provSearch || '')}
-          onFocus={() => openDropdown(row.id, 'proveedor', row.proveedor?.nombre || row.provSearch || '')}
-          onChange={e => {
-            setDropdownSearch(e.target.value);
-            if (row.proveedor) updateDetalle(row.id, 'proveedor', null);
-            updateDetalle(row.id, 'provSearch', e.target.value);
-          }}
-          className={styles.provInput}
-        />
-        {(row.proveedor || row.provSearch) && (
-          <button
-            type="button"
-            onClick={() => {
-              updateDetalle(row.id, 'proveedor', null);
-              updateDetalle(row.id, 'provSearch', '');
+        <div className={styles.inputControlWrapper}>
+          <input
+            type="text"
+            placeholder="Ej: Colanta, Disar..."
+            value={isProvDropOpen ? dropdownSearch : (row.proveedor?.nombre || row.provSearch || '')}
+            onFocus={() => openDropdown(row.id, 'proveedor', row.proveedor?.nombre || row.provSearch || '')}
+            onChange={e => {
+              setDropdownSearch(e.target.value);
+              if (row.proveedor) updateDetalle(row.id, 'proveedor', null);
+              updateDetalle(row.id, 'provSearch', e.target.value);
             }}
-            className={styles.clearFieldBtn}
-            title="Limpiar proveedor"
-          >
-            ✕
-          </button>
-        )}
+            className={styles.provInput}
+          />
+          {(row.proveedor || row.provSearch) && (
+            <button
+              type="button"
+              onClick={() => {
+                updateDetalle(row.id, 'proveedor', null);
+                updateDetalle(row.id, 'provSearch', '');
+              }}
+              className={styles.clearFieldBtn}
+              title="Limpiar proveedor"
+            >
+              ✕
+            </button>
+          )}
+        </div>
         {isProvDropOpen && (
           <div className={styles.dropdown}>
             <div className={styles.dropdownAction} onClick={() => {

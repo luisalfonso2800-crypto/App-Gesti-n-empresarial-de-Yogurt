@@ -38,6 +38,18 @@ export class SupplierPricesRepository {
     });
   }
 
+  async findBySupplierAndSupply(idProveedor, idInsumo) {
+    return this.prisma.precioProveedor.findMany({
+      where: {
+        idProveedor,
+        idInsumo,
+        activo: true,
+      },
+      orderBy: { fechaRegistro: 'desc' },
+      include: { insumo: true, proveedor: true },
+    });
+  }
+
   async create(data) {
     return this.prisma.precioProveedor.create({
       data,

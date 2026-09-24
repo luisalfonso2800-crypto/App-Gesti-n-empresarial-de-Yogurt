@@ -10,6 +10,7 @@ import React from 'react';
 import styles from '../../new-purchase.module.css';
 import FormPhaseRowSelectors from './FormPhaseRowSelectors';
 import FormPhaseRowPackaging from './FormPhaseRowPackaging';
+import FormPhaseRowPokaYokeAlerts from './FormPhaseRowPokaYokeAlerts';
 import FormPhaseRowEconomics from './FormPhaseRowEconomics';
 import FormPhaseRowIvaSection from './FormPhaseRowIvaSection';
 
@@ -56,6 +57,15 @@ export default function FormPhaseRowItem(props) {
     )
   );
 
+  const uBase = (row.insumo?.unidadBase || '').toLowerCase();
+  const esMedible = ['kg', 'g', 'l', 'ml'].includes(uBase);
+  const esUnidad = (row.empaqueTipo === 'UNIDAD' || row.empaque === 'UNIDAD');
+  const esContenidoUno = parseFloat(row.contenidoNeto || '1') === 1;
+  const emp = (row.empaque || row.empaqueTipo || '').toUpperCase();
+  const esMultiEmpaque = ['BOLSA', 'BULTO', 'CAJA', 'BIDÓN', 'CANASTILLA', 'ENVASE'].some(k => emp.includes(k));
+  const cont = parseFloat(row.contenidoNeto || '0');
+  const hasPokaYokeWarning = Boolean((esMedible && esUnidad && esContenidoUno) || (esMultiEmpaque && cont === 1));
+
   const cardBorderClass = isUnconfigured
     ? styles.formRowCardUnconfigured
     : (idx === 0 ? styles.formRowCardFirst : styles.formRowCardNormal);
@@ -65,6 +75,11 @@ export default function FormPhaseRowItem(props) {
       <div className={styles.rowCardTopBar}>
         <div className={styles.rowCardTagGroup}>
           {idx === 0 && !isUnconfigured && <span className={styles.lastAddedBadge}>✦ ÚLTIMA ADICIÓN</span>}
+          {row.fromCotizacion && (
+            <span className={styles.cotizacionBadge}>
+              ✓ Cotización activa
+            </span>
+          )}
           {isUnconfigured && (
             <span className={styles.unconfiguredPill}>
               ⚠️ Insumo añadido desde stock — Complete proveedor, empaque y precio
@@ -86,8 +101,10 @@ export default function FormPhaseRowItem(props) {
 
       <div className={styles.line1Grid}>
         <FormPhaseRowSelectors {...props} />
-        <FormPhaseRowPackaging row={row} updateDetalle={updateDetalle} />
+        <FormPhaseRowPackaging row={row} updateDetalle={updateDetalle} hasPokaYokeWarning={hasPokaYokeWarning} />
       </div>
+
+      <FormPhaseRowPokaYokeAlerts row={row} />
 
       <FormPhaseRowEconomics
         row={row}
@@ -96,6 +113,7 @@ export default function FormPhaseRowItem(props) {
         ingresoNeto={ingresoNeto}
         unidadLabel={unidadLabel}
         subtotalRow={subtotalRow}
+        hasPokaYokeWarning={hasPokaYokeWarning}
       />
 
       <FormPhaseRowIvaSection

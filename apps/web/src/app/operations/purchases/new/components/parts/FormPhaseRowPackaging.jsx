@@ -8,7 +8,7 @@
 import React from 'react';
 import styles from '../../new-purchase.module.css';
 
-export default function FormPhaseRowPackaging({ row, updateDetalle }) {
+export default function FormPhaseRowPackaging({ row, updateDetalle, hasPokaYokeWarning }) {
   return (
     <>
       <div>
@@ -65,7 +65,7 @@ export default function FormPhaseRowPackaging({ row, updateDetalle }) {
               if ((raw.match(/\./g) || []).length > 1) raw = raw.replace(/\.+$/, '');
               updateDetalle(row.id, 'contenidoNeto', raw);
             }}
-            className={`${styles.netContentField} ${row.empaqueTipo === 'UNIDAD' ? styles.netContentDisabled : styles.netContentEnabled}`}
+            className={`${styles.netContentField} ${row.empaqueTipo === 'UNIDAD' ? styles.netContentDisabled : styles.netContentEnabled} ${hasPokaYokeWarning ? styles.netContentFieldWarning : ''}`}
           />
           <select
             value={row.unidadMedida || 'kg'}
@@ -89,6 +89,41 @@ export default function FormPhaseRowPackaging({ row, updateDetalle }) {
             value={row.empaque || ''} 
             onChange={e => updateDetalle(row.id, 'empaque', e.target.value.toUpperCase())} 
           />
+        )}
+
+        {Array.isArray(row.availablePresentations) && row.availablePresentations.length > 1 && (
+          <div className={styles.presentationsRow}>
+            <span>Presentaciones:</span>
+            {row.availablePresentations.map((p, pIdx) => {
+              const isActive = (row.empaque === p.presentacionCompra?.toUpperCase() || (row.empaqueTipo === 'UNIDAD' && p.presentacionCompra?.toUpperCase() === 'UNIDAD')) && Number(row.contenidoNeto) === Number(p.cantidadEquivalenteBase);
+              return (
+                <button
+                  key={p.id || pIdx}
+                  type="button"
+                  onClick={() => {
+                    const parts = (p.presentacionCompra || '').split(' ');
+                    const firstPart = parts[0]?.toUpperCase() || 'OTRO';
+                    const allowed = ['UNIDAD', 'BOLSA', 'CAJA', 'BULTO', 'BOTELLA', 'BIDÓN', 'CANASTILLA', 'ENVASE'];
+                    let tipo = 'OTRO';
+                    if (firstPart === 'PAQUETE' || firstPart === 'BOLSA') tipo = 'BOLSA / PAQUETE';
+                    else if (firstPart === 'SACO' || firstPart === 'BULTO') tipo = 'BULTO / SACO';
+                    else if (firstPart === 'FRASCO' || firstPart === 'BOTELLA') tipo = 'BOTELLA / FRASCO';
+                    else if (firstPart === 'GARRAFA' || firstPart === 'BIDÓN') tipo = 'BIDÓN / GARRAFA';
+                    else if (allowed.includes(firstPart)) tipo = firstPart;
+
+                    updateDetalle(row.id, 'empaqueTipo', tipo);
+                    updateDetalle(row.id, 'empaque', (p.presentacionCompra || 'UNIDAD').toUpperCase());
+                    updateDetalle(row.id, 'contenidoNeto', String(p.cantidadEquivalenteBase || 1));
+                    updateDetalle(row.id, 'unidadMedida', p.unidadPresentacion || row.insumo?.unidadBase || 'kg');
+                    if (p.precioCompra) updateDetalle(row.id, 'precioUnitario', String(p.precioCompra));
+                  }}
+                  className={`${styles.presentationPill} ${isActive ? styles.presentationPillActive : ''}`}
+                >
+                  {p.presentacionCompra} (${Number(p.precioCompra || 0).toLocaleString('es-CO')})
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </>

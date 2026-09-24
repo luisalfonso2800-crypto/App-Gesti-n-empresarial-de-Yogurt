@@ -15,6 +15,13 @@ export const apiClient = {
     const url = `${API_URL}${endpoint}`;
     
     const headers = new Headers(options.headers);
+    if (!headers.has('Cache-Control')) {
+      headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+    if (!headers.has('Pragma')) {
+      headers.set('Pragma', 'no-cache');
+    }
+
     const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     if (!headers.has('Content-Type') && !isFormData) {
       headers.set('Content-Type', 'application/json');
@@ -27,7 +34,7 @@ export const apiClient = {
     let response;
     const isGet = !options.method || options.method.toUpperCase() === 'GET';
     try {
-      response = await fetch(url, { ...options, headers });
+      response = await fetch(url, { ...options, headers, cache: options.cache || 'no-store' });
     } catch (networkError) {
       this._isOffline = true;
       if (typeof window !== 'undefined') {

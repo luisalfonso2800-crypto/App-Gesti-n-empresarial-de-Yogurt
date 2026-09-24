@@ -25,6 +25,13 @@ export class SupplierPricesService {
     return item;
   }
 
+  async lookup(idProveedor, idInsumo) {
+    if (!idProveedor || !idInsumo) {
+      throw new BadRequestException('idProveedor e idInsumo son requeridos para la consulta');
+    }
+    return this.repository.findBySupplierAndSupply(idProveedor, idInsumo);
+  }
+
   _computePriceFields(dto) {
     const data = { ...dto };
     const tieneIva = data.tieneIva !== undefined ? Boolean(data.tieneIva) : true;
