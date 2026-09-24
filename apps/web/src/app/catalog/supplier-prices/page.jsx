@@ -96,6 +96,8 @@ function SupplierPricesContent() {
       <SupplierPriceModal 
         isOpen={isModalOpen} onClose={handleCloseModal} editingItem={editingItem}
         onSubmit={handleSubmitForm} allInsumos={allInsumos} allProveedores={allProveedores}
+        onSupplyCreated={(newS) => setAllInsumos(prev => [newS, ...prev])}
+        onSupplierCreated={(newP) => setAllProveedores(prev => [newP, ...prev])}
       />
       {MoveListModal}
     </div>

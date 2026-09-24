@@ -53,16 +53,85 @@ export function useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, a
     const { name, value, type, checked } = e.target;
     let parsedValue = value;
     if (type === 'checkbox') parsedValue = checked;
-    if (['presentacionCompra', 'unidadPresentacion', 'observaciones'].includes(name)) {
+    if (['presentacionCompra', 'observaciones'].includes(name)) {
       parsedValue = value.toUpperCase();
     }
-    if (name === 'tieneIva' && !checked) {
+    if (name === 'tieneIva') {
+      if (!checked) {
+        setFormData(prev => ({
+          ...prev,
+          tieneIva: false,
+          porcentajeIva: 0,
+          precioIncluyeIva: true
+        }));
+        return;
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          tieneIva: true,
+          porcentajeIva: prev.porcentajeIva && Number(prev.porcentajeIva) > 0 ? prev.porcentajeIva : '19'
+        }));
+        return;
+      }
+    }
+    // Cascada Poka-Yoke: si se limpia proveedor
+    if (name === 'idProveedor' && !value) {
       setFormData(prev => ({
         ...prev,
-        tieneIva: false,
-        porcentajeIva: 0,
-        precioIncluyeIva: true
+        idProveedor: '',
+        presentacionCompra: '',
+        unidadPresentacion: '',
+        cantidadPresentacion: '',
+        cantidadEquivalenteBase: '',
+        precioCompra: '',
+        costoUnidadBase: '',
+        costoBaseSinIva: '',
+        montoIvaCalculado: 0
       }));
+      return;
+    }
+    // Cascada Poka-Yoke: si se limpia presentación
+    if (name === 'presentacionCompra' && !value) {
+      setFormData(prev => ({
+        ...prev,
+        presentacionCompra: '',
+        unidadPresentacion: '',
+        cantidadPresentacion: '',
+        cantidadEquivalenteBase: '',
+        precioCompra: '',
+        costoUnidadBase: '',
+        costoBaseSinIva: '',
+        montoIvaCalculado: 0
+      }));
+      return;
+    }
+    // Cascada Poka-Yoke: unidad de medida
+    if (name === 'unidadPresentacion') {
+      if (!value) {
+        setFormData(prev => ({
+          ...prev,
+          unidadPresentacion: '',
+          cantidadPresentacion: '',
+          cantidadEquivalenteBase: '',
+          precioCompra: '',
+          costoUnidadBase: '',
+          costoBaseSinIva: '',
+          montoIvaCalculado: 0
+        }));
+        return;
+      }
+      // Al cambiar la unidad, NO borrar la cantidad: recalcular la equivalencia base con la cantidad que ya tiene puesta
+      setFormData(prev => {
+        const qty = Number(prev.cantidadPresentacion) || 0;
+        let factor = qty;
+        const uLower = value.toLowerCase();
+        if (uLower === 'kg' || uLower === 'l') factor = qty * 1000;
+        return {
+          ...prev,
+          unidadPresentacion: value,
+          cantidadEquivalenteBase: factor > 0 ? factor : prev.cantidadEquivalenteBase
+        };
+      });
       return;
     }
     setFormData(prev => ({ ...prev, [name]: parsedValue }));
@@ -94,19 +163,24 @@ export function useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, a
         }
       }
 
-      const costoUnd = cb > 0 ? totalConIva / cb : 0;
+      const costoUndSinIva = cb > 0 ? baseSinIva / cb : 0;
+      const costoUndConIva = cb > 0 ? totalConIva / cb : 0;
 
       setFormData(prev => ({
         ...prev,
         costoBaseSinIva: baseSinIva,
         montoIvaCalculado: ivaMonto,
-        costoUnidadBase: costoUnd
+        costoUnitarioSinIva: costoUndSinIva,
+        costoUnitarioConIva: costoUndConIva,
+        costoUnidadBase: costoUndConIva
       }));
     } else {
       setFormData(prev => ({
         ...prev,
         costoBaseSinIva: 0,
         montoIvaCalculado: 0,
+        costoUnitarioSinIva: 0,
+        costoUnitarioConIva: 0,
         costoUnidadBase: ''
       }));
     }

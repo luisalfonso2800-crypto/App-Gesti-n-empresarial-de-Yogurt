@@ -13,7 +13,7 @@
   color: #B91C1C;
   padding: 0.6rem 0.85rem;
   border-radius: 6px;
-  fontSize: 0.8rem;
+  font-size: 0.8rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -27,26 +27,277 @@
   text-transform: uppercase;
 }
 
-.presentationGrid {
+/* Combobox interactivo */
+.comboboxWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.comboboxHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comboboxLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.comboboxInput {
+  width: 100%;
+  padding: 0.55rem 2rem 0.55rem 0.75rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #1F2937;
+  background-color: #FFFFFF;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.comboboxInput:focus {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+}
+
+.innerClearBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #9CA3AF;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.innerClearBtn:hover {
+  color: #DC2626;
+}
+
+.comboboxDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+  padding: 0.35rem;
+}
+
+.dropdownAction {
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #047857;
+  background-color: #ECFDF5;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.dropdownAction:hover {
+  background-color: #D1FAE5;
+}
+
+.dropdownItem {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+
+.dropdownItem:hover {
+  background-color: #F3F4F6;
+}
+
+.dropdownItemSelected {
+  background-color: #ECFDF5;
+  color: #065F46;
+}
+
+.itemTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.itemSubtitle {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.dropdownEmpty {
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #9CA3AF;
+}
+
+/* Cascada y pleca */
+.inputDisabled {
+  background-color: #F3F4F6 !important;
+  color: #9CA3AF !important;
+  cursor: not-allowed !important;
+  border-color: #E5E7EB !important;
+}
+
+.presentationCascadeContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.twoColumnsRow {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
+}
+
+.otraInputRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.backToSelectBtn {
+  background-color: #F3F4F6;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  color: #6B7280;
+  padding: 0.45rem 0.65rem;
+  cursor: pointer;
+}
+
+.backToSelectBtn:hover {
+  color: #DC2626;
+  background-color: #FEE2E2;
+}
+
+.plecaInputContainer {
+  display: flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.plecaInputContainer:focus-within {
+  border-color: #059669;
+  box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+}
+
+.plecaInputField {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.875rem;
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.plecaBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1.15rem;
+  background-color: #F8FAFC;
+  border-left: 1px solid #E2E8F0;
+  color: #334155;
+  font-weight: 700;
+  font-size: 0.875rem;
+  user-select: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.priceInputField {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.quantityWords {
+  font-size: 0.75rem;
+  color: #0369A1;
+  background-color: #F0F9FF;
+  border: 1px solid #BAE6FD;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.35rem;
+  display: block;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Paso 6 y Costo */
+.step6Container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .priceWords {
   font-size: 0.75rem;
   color: #065F46;
-  margin-top: 0.25rem;
+  background-color: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  margin-top: 0.35rem;
   display: block;
   font-weight: 600;
+  text-transform: capitalize;
+}
+
+.costGridDual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
 }
 
 .costCard {
   background-color: #FAFAF9;
   border: 1px solid #E7E5E4;
   border-radius: 8px;
-  padding: 1rem;
-  margin-top: 0.5rem;
+  padding: 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.costCardHighlight {
+  background-color: #F0FDF4;
+  border-color: #BBF7D0;
 }
 
 .costHeaderRow {
@@ -56,20 +307,27 @@
 }
 
 .costLabel {
-  color: #57534E;
-  font-weight: 500;
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .costValue {
-  font-size: 1.125rem;
-  font-weight: bold;
-  color: #1C1917;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.costValueHighlight {
+  color: #047857;
 }
 
 .costHelperText {
-  font-size: 0.75rem;
-  color: #78716C;
-  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: #64748B;
+  margin-top: 0.15rem;
 }
 
 .checkboxLabel {
@@ -86,7 +344,7 @@
 }
 
 .summaryCard {
-  margin-top: 0.75rem;
+  margin-top: 0.5rem;
   padding: 0.5rem 0.75rem;
   background-color: #F0FDF4;
   border: 1px solid #BBF7D0;
@@ -164,4 +422,88 @@
   border-radius: 4px;
   padding: 0.35rem 0.5rem;
   margin-top: 0.25rem;
+}
+
+/* =========================================================
+   ADAPTABILIDAD RESPONSIVA TOTAL (Móvil, Tablet, Desktop, UltraWide)
+   ========================================================= */
+
+/* Dispositivos Móviles (≤ 640px) */
+@media (max-width: 640px) {
+  .formContainer {
+    gap: 1rem;
+  }
+
+  .twoColumnsRow {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .costGridDual {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .taxInputsGrid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .taxHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.65rem;
+  }
+
+  .costHeaderRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .costValue {
+    font-size: 1.05rem;
+  }
+
+  .plecaBadge {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+  }
+
+  .plecaInputField {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Tablets y Pantallas Medianas (641px a 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .twoColumnsRow {
+    gap: 0.85rem;
+  }
+
+  .plecaBadge {
+    padding: 0.55rem 0.9rem;
+  }
+}
+
+/* Monitores de Escritorio y Pantallas Ultra-Anchas (≥ 1440px) */
+@media (min-width: 1440px) {
+  .formContainer {
+    gap: 1.35rem;
+  }
+
+  .costValue {
+    font-size: 1.25rem;
+  }
+
+  .plecaBadge {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.25rem;
+  }
+
+  .plecaInputField {
+    font-size: 0.9375rem;
+    padding: 0.6rem 0.9rem;
+  }
 }
