@@ -48,7 +48,7 @@ export default function SupplierPriceEquivalenceFields({
               onChange={(e) => {
                 let val = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '');
                 handleChange({ target: { name: 'cantidadPresentacion', value: val } });
-                if (['kg', 'g', 'L', 'ml', 'und'].includes(formData.unidadPresentacion?.toLowerCase())) {
+                if (['kg', 'g', 'l', 'ml', 'und'].includes(formData.unidadPresentacion?.toLowerCase())) {
                   let factor = Number(val) || 0;
                   if (formData.unidadPresentacion?.toLowerCase() === 'kg') factor = factor * 1000;
                   if (formData.unidadPresentacion?.toLowerCase() === 'l') factor = factor * 1000;

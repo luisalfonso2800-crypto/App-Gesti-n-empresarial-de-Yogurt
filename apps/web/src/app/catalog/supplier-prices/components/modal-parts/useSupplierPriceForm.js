@@ -214,8 +214,15 @@ export function useSupplierPriceForm({ isOpen, editingItem, onSubmit, onClose, a
     
     try {
       const pc = cleanCurrency(formData.precioCompra);
+      const {
+        montoIvaCalculado,
+        costoUnitarioSinIva,
+        costoUnitarioConIva,
+        ...restData
+      } = formData;
+
       const payload = {
-        ...formData,
+        ...restData,
         presentacionCompra: (formData.presentacionCompra || '').trim().toUpperCase(),
         unidadPresentacion: (formData.unidadPresentacion || '').trim().toUpperCase(),
         observaciones: (formData.observaciones || '').trim().toUpperCase(),
