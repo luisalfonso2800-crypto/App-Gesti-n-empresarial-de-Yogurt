@@ -73,6 +73,14 @@ pnpm run verify:srp
 
 # Verificación de límites de líneas en archivos E2E (<140 líneas)
 pnpm --filter web run test:e2e:lint
+
+# Limpiar caché de compilación de Next.js (PowerShell)
+Remove-Item -Recurse -Force apps/web/.next
+# o desde la carpeta web:
+# Remove-Item -Recurse -Force .next
+
+# Matar procesos de Node colgados o zombis (liberar puertos 3000 / 3001)
+Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force
 ```
 
 ---

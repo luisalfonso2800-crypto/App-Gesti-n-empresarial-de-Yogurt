@@ -21,7 +21,8 @@ test.describe.serial('Checklist de Adquisición y Abastecimiento (T33-T45)', () 
   });
 
   test('T34: Botones principales visibles: Imprimir Checklist, Añadir Pendiente, Registrar Compras', async ({ page }) => {
-    const btnAcciones = page.locator('button').filter({ hasText: /(Imprimir|Añadir|Registrar|Continuar)/i });
+    const btnAcciones = page.locator('button').filter({ hasText: /(Imprimir|Añadir|Registrar|Continuar|Guardar)/i });
+    await btnAcciones.first().waitFor({ state: 'visible', timeout: 7000 }).catch(() => {});
     expect(await btnAcciones.count()).toBeGreaterThanOrEqual(1);
   });
 

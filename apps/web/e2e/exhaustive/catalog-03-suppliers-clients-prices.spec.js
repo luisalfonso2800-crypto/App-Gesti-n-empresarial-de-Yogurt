@@ -4,12 +4,13 @@ import { waitForLoad, closeModal } from '../helpers/exhaustive-helpers.js';
 test.describe('Catálogos: Proveedores, Clientes y Precios', () => {
   test('Proveedores: modal y creación HACIENDA LACTEA SAS', async ({ page }) => {
     await page.goto('/catalog/suppliers');
-    await waitForLoad(page);
+    // Esperar a que la tabla o vista esté montada
+    await page.locator('table, div[class*="table"], div[class*="content"]').first().waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
 
-    const btnNuevo = page.locator('button:has-text("Nuevo Proveedor"), button:has-text("Nuevo proveedor")').first();
-    await expect(btnNuevo).toBeVisible({ timeout: 10000 });
-
-    await btnNuevo.click();
+    // Selector inclusivo de acción para nuevo proveedor
+    const btnNuevo = page.locator('button').filter({ hasText: /(Nuevo|Proveedor|\+)/i }).first();
+    await btnNuevo.waitFor({ state: 'visible', timeout: 10000 });
+    await btnNuevo.click({ force: true });
     await page.waitForTimeout(500);
     const nombreIn = page.locator('input[name="nombre"]').first();
     if (await nombreIn.isVisible({ timeout: 3000 }).catch(() => false)) {

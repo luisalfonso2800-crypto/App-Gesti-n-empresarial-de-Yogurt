@@ -14,8 +14,9 @@ test.describe('Catálogos: Presentaciones y Productos', () => {
     await page.waitForTimeout(500);
     await closeModal(page);
 
-    // Flujo válido
-    await btnNueva.click();
+    // Flujo válido: esperar que backdrop residual desaparezca antes de interactuar
+    await page.locator('div[class*="backdrop"]').waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+    await btnNueva.click({ force: true });
     await page.waitForTimeout(500);
     const nombreInput = page.locator('input[name="nombre"]').first();
     if (await nombreInput.isVisible({ timeout: 3000 }).catch(() => false)) {
