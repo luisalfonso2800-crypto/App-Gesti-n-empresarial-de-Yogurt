@@ -128,6 +128,24 @@ pnpm --filter web exec playwright test exhaustive/ --reporter=list
 pnpm --filter web exec playwright test value-chain-complete.spec.js --reporter=list
 ```
 
+#### 7. Suite Completa de Precios de Proveedores y Carrito Global (`supplier-prices/`)
+```bash
+# Ejecutar los 40 tests: tabla comparativa, modal poka-yoke, cálculos IVA y carrito del header
+pnpm --filter web exec playwright test supplier-prices/ --reporter=list
+```
+
+#### 8. Suite de Operaciones: Checklist Operativo y Fusión de Listas (`operations/`)
+```bash
+# Ejecutar los 23 tests de operaciones: checklist en planta (T33-T45) y tablero/fusión de órdenes (T46-T55)
+pnpm --filter web exec playwright test operations/checklist-operativo.spec.js operations/listas-fusion.spec.js --reporter=list
+```
+
+#### 9. Suite Integral: Precios → Carrito → Checklist → Fusión (Ciclo Completo)
+```bash
+# Ejecutar el ciclo completo integrado entre catálogo, carrito, checklist y fusión (T01-T60)
+pnpm --filter web exec playwright test supplier-prices/ operations/checklist-operativo.spec.js operations/listas-fusion.spec.js exhaustive/flow-precios-carrito-checklist.spec.js --reporter=list
+```
+
 ---
 
 ### 🌐 C. Ejecución Global de Todos los Tests E2E
