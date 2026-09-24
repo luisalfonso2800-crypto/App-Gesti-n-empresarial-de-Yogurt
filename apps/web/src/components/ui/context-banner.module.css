@@ -39,3 +39,11 @@
   color: #495057;
   line-height: 1.4;
 }
+
+.actionWrapper {
+  margin-left: 1rem;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+

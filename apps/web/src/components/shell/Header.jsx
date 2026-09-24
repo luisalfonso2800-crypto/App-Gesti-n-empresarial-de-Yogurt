@@ -19,10 +19,12 @@ import { PlantToolsModal } from '@/components/common/tools/PlantToolsModal';
 import { useHeaderCart } from './parts/useHeaderCart';
 import HeaderCartDropdown from './parts/HeaderCartDropdown';
 import HeaderCartModals from './parts/HeaderCartModals';
+import { getModuleInfo } from './parts/headerModuleTitles';
 
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
+  const { title: moduleTitle, subtitle: moduleSubtitle } = getModuleInfo(pathname);
 
   const handleQuickSale = () => {
     if (pathname === '/commercial/sales') {
@@ -44,10 +46,15 @@ export function Header() {
 
   return (
     <header className={shellStyles.header}>
+      <div className={styles.moduleTitleGroup}>
+        <h1 className={styles.moduleTitle}>{moduleTitle}</h1>
+        {moduleSubtitle && <p className={styles.moduleSubtitle}>{moduleSubtitle}</p>}
+      </div>
+
       <div className={shellStyles.scadaInstrumentation}>
         <div className={shellStyles.scadaStatus}>
           <span className={shellStyles.scadaStatusLed}></span>
-          SISTEMA EN LÍNEA
+          <span className={shellStyles.scadaStatusText}>SISTEMA EN LÍNEA</span>
         </div>
         <div className={shellStyles.scadaClock}>
           {new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
@@ -61,8 +68,9 @@ export function Header() {
         <OnboardingWizardWidget />
 
         {activeList && (
-          <div className={styles.activeListBadge}>
-            <Layers size={16} /> Lista Activa: {activeList.customName}
+          <div className={styles.activeListBadge} title={`Lista Activa: ${activeList.customName}`}>
+            <Layers size={16} /> 
+            <span className={styles.responsiveBtnText}>Lista: {activeList.customName}</span>
           </div>
         )}
 
@@ -73,7 +81,8 @@ export function Header() {
           title="Registrar nueva venta rápida"
           aria-label="Registrar nueva venta"
         >
-          <PlusCircle size={14} /> Nueva Venta
+          <PlusCircle size={14} /> 
+          <span className={styles.responsiveBtnText}>Nueva Venta</span>
         </button>
 
         <PlantToolsModal />

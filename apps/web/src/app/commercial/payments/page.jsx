@@ -52,15 +52,6 @@ export default function PaymentsPage() {
 
   return (
     <div>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Centro de Cartera y Recaudos</h1>
-          <p className={styles.subtitle}>
-            Control de ingresos por cartera de clientes, recaudos efectivos y saldos pendientes por cobrar.
-          </p>
-        </div>
-      </div>
-
       <ReceivablesKpis kpis={kpis} />
 
       <ReceivablesFilters

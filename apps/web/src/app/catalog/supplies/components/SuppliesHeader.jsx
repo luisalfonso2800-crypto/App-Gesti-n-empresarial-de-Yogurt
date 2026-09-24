@@ -15,12 +15,11 @@ import styles from '../supplies.module.css';
 export function SuppliesHeader({ onNew, searchTerm, setSearchTerm, categoryFilter, setCategoryFilter, categories }) {
   return (
     <div>
-      <div className={styles.header}>
-        <h1 className={styles.title}>Insumos</h1>
-        <p className={styles.subtitle}>Catálogo maestro de materias primas, envases y suministros.</p>
-        <Button onClick={() => onNew()}>Nuevo Registro</Button>
-      </div>
-      <ContextBanner title="Concepto Técnico" description="Aquí se registran los materiales que compras (ingredientes y empaques). Todo se maneja en unidades de medida estándar para facilitar el control en la fábrica." />
+      <ContextBanner 
+        title="Concepto Técnico" 
+        description="Aquí se registran los materiales que compras (ingredientes y empaques). Todo se maneja en unidades de medida estándar para facilitar el control en la fábrica." 
+        action={<Button onClick={() => onNew()}>Nuevo Registro</Button>}
+      />
       
       <div className={styles.searchFiltersRow}>
         <Input 

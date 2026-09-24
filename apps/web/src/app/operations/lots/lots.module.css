@@ -126,10 +126,19 @@
 
 .tabsBar {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
   border-bottom: 1px solid #e7e5e4;
   padding-bottom: 0.5rem;
+}
+
+.tabsGroup {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .tabBtn {

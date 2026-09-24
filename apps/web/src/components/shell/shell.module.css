@@ -412,6 +412,14 @@
 .cartItemRemove:hover { color: #ef4444; background-color: #fee2e2; }
 .cartFooter { padding: 1rem; border-top: 1px solid #e5e7eb; background-color: #f9fafb; display: flex; justify-content: space-between; gap: 1rem; }
 
+@media (max-width: 1024px) {
+  .scadaClock,
+  .scadaOperator,
+  .scadaStatusText {
+    display: none !important;
+  }
+}
+
 @media print {
   .header, .sidebar, .cartContainer { display: none !important; }
   .layout { display: block; }

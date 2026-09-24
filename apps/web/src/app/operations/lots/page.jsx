@@ -39,22 +39,14 @@ export default function LotsPage() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <div className={styles.titleWrapper}>
-          <Package size={32} className={styles.icon} />
-          <div>
-            <h1 className={styles.title}>Trazabilidad de Lotes (Cava)</h1>
-            <p className={styles.subtitle}>Monitoreo de caducidad, linaje generacional y existencias FEFO</p>
-          </div>
+      <div className={styles.tabsBar}>
+        <div className={styles.tabsGroup}>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'EXISTENCIA' ? styles.tabBtnActive : ''}`} onClick={() => setTab('EXISTENCIA')}>🟢 En Existencia ({counts.act})</button>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'CEPAS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('CEPAS')}>🧫 Cepas Disponibles ({counts.cep})</button>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'AGOTADOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('AGOTADOS')}>📁 Archivo / Agotados ({counts.ago})</button>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'TODOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('TODOS')}>Ver Todos ({counts.all})</button>
         </div>
         <Button variant="secondary" onClick={fetchLots}><RefreshCw size={16}/> Actualizar</Button>
-      </header>
-
-      <div className={styles.tabsBar}>
-        <button type="button" className={`${styles.tabBtn} ${tab === 'EXISTENCIA' ? styles.tabBtnActive : ''}`} onClick={() => setTab('EXISTENCIA')}>🟢 En Existencia ({counts.act})</button>
-        <button type="button" className={`${styles.tabBtn} ${tab === 'CEPAS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('CEPAS')}>🧫 Cepas Disponibles ({counts.cep})</button>
-        <button type="button" className={`${styles.tabBtn} ${tab === 'AGOTADOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('AGOTADOS')}>📁 Archivo / Agotados ({counts.ago})</button>
-        <button type="button" className={`${styles.tabBtn} ${tab === 'TODOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('TODOS')}>Ver Todos ({counts.all})</button>
       </div>
 
       {displayedLots.length === 0 ? (

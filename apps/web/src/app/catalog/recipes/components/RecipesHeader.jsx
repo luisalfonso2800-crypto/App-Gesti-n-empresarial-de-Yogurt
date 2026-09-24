@@ -13,10 +13,7 @@ import styles from '../recipes.module.css';
 export function RecipesHeader({ onNewRecipe, canCreate = true, disabledTooltip = '' }) {
   return (
     <div className={styles.header}>
-      <div className={styles.headerTitle}>
-        <h1 className={styles.title}>Recetas Técnicas</h1>
-        <p className={styles.subtitle}>Fórmulas estándar de elaboración con BOM (Lista de Materiales y Fórmula) y Etapas (Ruta de proceso).</p>
-      </div>
+      <div />
       <Button 
         onClick={() => { if (canCreate) onNewRecipe(null); }}
         disabled={!canCreate}

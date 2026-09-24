@@ -70,16 +70,10 @@ function SupplierPricesContent() {
 
   return (
     <div>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Precios de Proveedores</h1>
-          <p className={styles.subtitle}>Histórico y lista de tarifas vigentes cotizadas por cada proveedor.</p>
-        </div>
-        <Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>
-      </div>
       <ContextBanner 
         title="Concepto Técnico" 
         description="Permite comparar cuánto cuesta cada insumo dependiendo del proveedor." 
+        action={<Button onClick={() => handleOpenModal()}>Nuevo Registro</Button>}
       />
 
       <PricesFilterBar 

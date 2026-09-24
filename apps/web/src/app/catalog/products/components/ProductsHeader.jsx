@@ -17,23 +17,8 @@ export function ProductsHeader({
   onFilterChange = () => {}
 }) {
   return (
-    <>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Productos</h1>
-          <p className={styles.subtitle}>Catálogo de productos terminados listos para distribución comercial.</p>
-        </div>
-        <Button 
-          onClick={() => { if (canCreate) onNew(); }}
-          disabled={!canCreate}
-          title={!canCreate ? 'Debe registrar al menos una Presentación antes de crear productos' : 'Registrar nuevo producto'}
-          className={!canCreate ? styles.btnNewProductDisabled : ''}
-        >
-          Nuevo Registro
-        </Button>
-      </div>
-
-      <div className={styles.channelFilterBar} role="tablist" aria-label="Filtrar por canal de venta">
+    <div className={styles.channelFilterBar} role="tablist" aria-label="Filtrar por canal de venta">
+      <div className={styles.channelTabsGroup}>
         <button
           type="button"
           className={`${styles.channelTabBtn} ${channelFilter === 'TODOS' ? styles.channelTabActive : ''}`}
@@ -56,6 +41,15 @@ export function ProductsHeader({
           Bases de Planta (WIP)
         </button>
       </div>
-    </>
+
+      <Button 
+        onClick={() => { if (canCreate) onNew(); }}
+        disabled={!canCreate}
+        title={!canCreate ? 'Debe registrar al menos una Presentación antes de crear productos' : 'Registrar nuevo producto'}
+        className={!canCreate ? styles.btnNewProductDisabled : ''}
+      >
+        Nuevo Registro
+      </Button>
+    </div>
   );
 }

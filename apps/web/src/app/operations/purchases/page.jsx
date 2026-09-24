@@ -33,24 +33,19 @@ export default function PurchasesPage() {
 
   return (
     <div>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Compras</h1>
-          <p className={styles.subtitle}>Registro y control de órdenes de adquisición y consolidación de listas.</p>
-        </div>
-        <div className={styles.actions}>
-          <Button onClick={() => router.push('/catalog/supplier-prices')} variant="secondary">
-            <ListPlus size={16} /> Crear / Gestionar Lista
-          </Button>
-          <Button onClick={() => router.push('/operations/purchases/new?mode=direct')}>
-            <ShoppingCart size={16} /> Nueva Compra Directa
-          </Button>
-        </div>
-      </div>
-
       <ContextBanner
         title="Concepto Técnico"
         description="Aquí se documenta la llegada de insumos. Registra listas en ruta, consolida compras finalizadas y permite unificar órdenes."
+        action={
+          <div className={styles.actions}>
+            <Button onClick={() => router.push('/catalog/supplier-prices')} variant="secondary">
+              <ListPlus size={16} /> Crear / Gestionar Lista
+            </Button>
+            <Button onClick={() => router.push('/operations/purchases/new?mode=direct')}>
+              <ShoppingCart size={16} /> Nueva Compra Directa
+            </Button>
+          </div>
+        }
       />
 
       <PurchasesActiveOrdersSection

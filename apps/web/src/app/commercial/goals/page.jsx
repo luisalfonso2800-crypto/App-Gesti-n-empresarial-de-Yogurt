@@ -24,13 +24,7 @@ export default function GoalsPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <div className={styles.titleRow}>
-            <Sprout size={28} className={styles.sproutIcon} />
-            <h1 className={styles.title}>Rumbo MANNÁ</h1>
-          </div>
-          <p className={styles.subtitle}>Metas tangibles, sueños familiares y ritmo de cosecha en tiempo real.</p>
-        </div>
+        <div />
         <button type="button" className={styles.newGoalBtn} onClick={openNewGoalModal}>
           <Plus size={16} /> Sembrar Nuevo Sueño
         </button>

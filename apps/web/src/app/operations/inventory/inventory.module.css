@@ -19,6 +19,20 @@
   gap: 1rem;
 }
 
+.tabsHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+  gap: 1rem;
+}
+
+.tabsGroup {
+  display: flex;
+  gap: 1rem;
+}
+
 .titleSection {
   display: flex;
   align-items: center;

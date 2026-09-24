@@ -9,10 +9,18 @@
 
 .channelFilterBar {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 0.5rem;
   margin-bottom: 1.25rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid #E8E2D7;
+}
+
+.channelTabsGroup {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .channelTabBtn {

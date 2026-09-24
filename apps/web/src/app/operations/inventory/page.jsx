@@ -35,21 +35,13 @@ export default function InventoryPage() {
   return (
     <div className={styles.container}>
       <header className={styles.headerPanel}>
-        <div className={styles.headerTopRow}>
-          <div className={styles.titleSection}>
-            <LayoutGrid size={28} className={styles.titleIcon} />
-            <div>
-              <h1 className={styles.mainTitle}>Bitácora de Inventario</h1>
-              <p className={styles.subTitle}>Control maestro de almacén y cava. Valorización en tiempo real.</p>
-            </div>
+        <div className={styles.tabsHeaderRow}>
+          <div className={styles.tabsGroup}>
+            <button className={`${styles.tabBtn} ${activeTab === 'INSUMOS' ? styles.tabActive : ''}`} onClick={() => setActiveTab('INSUMOS')}>Bodega (Insumos)</button>
+            <button className={`${styles.tabBtn} ${activeTab === 'PRODUCTOS' ? styles.tabActive : ''}`} onClick={() => setActiveTab('PRODUCTOS')}>Cava (Prod. Terminado)</button>
+            <button className={`${styles.tabBtn} ${activeTab === 'WIP' ? styles.tabActiveWip : ''}`} onClick={() => setActiveTab('WIP')}>🧫 Semielaborados & Cepas (WIP)</button>
           </div>
           <Button variant="primary" onClick={() => setIsGlobalAdjustmentOpen(true)}>+ Saldo Inicial / Ajuste Global</Button>
-        </div>
-
-        <div className={styles.tabs}>
-          <button className={`${styles.tabBtn} ${activeTab === 'INSUMOS' ? styles.tabActive : ''}`} onClick={() => setActiveTab('INSUMOS')}>Bodega (Insumos)</button>
-          <button className={`${styles.tabBtn} ${activeTab === 'PRODUCTOS' ? styles.tabActive : ''}`} onClick={() => setActiveTab('PRODUCTOS')}>Cava (Prod. Terminado)</button>
-          <button className={`${styles.tabBtn} ${activeTab === 'WIP' ? styles.tabActiveWip : ''}`} onClick={() => setActiveTab('WIP')}>🧫 Semielaborados & Cepas (WIP)</button>
         </div>
 
         {activeTab === 'PRODUCTOS' && (

@@ -14,14 +14,11 @@ import styles from '../suppliers.module.css';
 export function SuppliersHeader({ onNew }) {
   return (
     <div>
-      <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Proveedores</h1>
-          <p className={styles.subtitle}>Directorio de fabricantes y distribuidores autorizados de insumos, empaques y servicios.</p>
-        </div>
-        <Button onClick={onNew}>Nuevo Registro</Button>
-      </div>
-      <ContextBanner title="Concepto Técnico" description="Directorio de todas las personas y empresas que nos venden los insumos necesarios para operar. Funciona como un directorio centralizado de compras." />
+      <ContextBanner 
+        title="Concepto Técnico" 
+        description="Directorio de todas las personas y empresas que nos venden los insumos necesarios para operar. Funciona como un directorio centralizado de compras." 
+        action={<Button onClick={onNew}>Nuevo Registro</Button>}
+      />
     </div>
   );
 }

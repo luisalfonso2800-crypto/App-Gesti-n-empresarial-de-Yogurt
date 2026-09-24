@@ -39,10 +39,7 @@ export default function ClientsPage() {
   return (
     <div>
       <div className={styles.header}>
-        <div className={styles.headerTitle}>
-          <h1 className={styles.title}>Clientes</h1>
-          <p className={styles.subtitle}>Directorio de compradores comerciales (supermercados, tiendas, cafeterías) y personas naturales.</p>
-        </div>
+        <div />
         <Button onClick={handleOpenModal}>Nuevo Cliente</Button>
       </div>
 

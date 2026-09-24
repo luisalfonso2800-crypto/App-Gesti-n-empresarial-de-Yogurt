@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './context-banner.module.css';
 
-export function ContextBanner({ title, description, icon }) {
+export function ContextBanner({ title, description, icon, action }) {
   return (
     <div className={styles.bannerContainer}>
       <div className={styles.iconWrapper}>
@@ -11,6 +11,11 @@ export function ContextBanner({ title, description, icon }) {
         {title && <h4 className={styles.title}>{title}</h4>}
         <p className={styles.description}>{description}</p>
       </div>
+      {action && (
+        <div className={styles.actionWrapper}>
+          {action}
+        </div>
+      )}
     </div>
   );
 }

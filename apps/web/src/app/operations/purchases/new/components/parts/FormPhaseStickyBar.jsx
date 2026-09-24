@@ -25,66 +25,70 @@ export default function FormPhaseStickyBar({
 }) {
   return (
     <div className={styles.stickyTopBar}>
-      <button 
-        type="button" 
-        onClick={() => isDirectPurchase ? router.push('/operations/purchases') : setPhase(1)} 
-        className={`${styles.cancelBtn} ${styles.stickyCancelBtn}`}
-      >
-        {isDirectPurchase ? '← Volver a Compras' : '← Volver a Checklist'}
-      </button>
-
-      {isDirectPurchase && (
-        <button
-          type="button"
-          onClick={onClearDraft}
-          className={styles.clearDraftBtn}
-          title="Vaciar borrador local guardado"
-        >
-          🗑️ Limpiar Borrador
-        </button>
-      )}
-
-      <h2 className={styles.stickyTitle}>
+      <h2 className={`${styles.stickyTitle} ${styles.visuallyHidden}`}>
         {isDirectPurchase ? 'Nueva Compra Directa' : `Registro de Compras Adicionales (En Ruta) — ${generatedId}`}
       </h2>
 
-      <div className={styles.stickyTotalBox}>
-        <div className={styles.stickyTotalAmount}>
-          Total: ${totalConFlete.toLocaleString('es-CO')}
-        </div>
-        {totalConFlete > 0 && (
-          <div className={styles.stickyTotalInWords}>
-            ✦ {montoATextoPesos(totalConFlete)}
-          </div>
+      <div className={styles.stickyLeftGroup}>
+        <button 
+          type="button" 
+          onClick={() => isDirectPurchase ? router.push('/operations/purchases') : setPhase(1)} 
+          className={`${styles.cancelBtn} ${styles.stickyCancelBtn}`}
+        >
+          {isDirectPurchase ? '← Volver a Compras' : '← Volver a Checklist'}
+        </button>
+
+        {isDirectPurchase && (
+          <button
+            type="button"
+            onClick={onClearDraft}
+            className={styles.clearDraftBtn}
+            title="Vaciar borrador local guardado"
+          >
+            🗑️ Limpiar Borrador
+          </button>
         )}
+
+        <button
+          type="button"
+          className={styles.stockLookupTriggerBtn}
+          onClick={onOpenStockDrawer}
+          title="Consultar existencias en almacén"
+        >
+          📦 Consultar Stock
+        </button>
       </div>
 
-      <button
-        type="button"
-        className={styles.stockLookupTriggerBtn}
-        onClick={onOpenStockDrawer}
-        title="Consultar existencias en almacén"
-      >
-        📦 Consultar Stock
-      </button>
+      <div className={styles.stickyRightGroup}>
+        <div className={styles.stickyTotalBox}>
+          <div className={styles.stickyTotalAmount}>
+            Total: ${totalConFlete.toLocaleString('es-CO')}
+          </div>
+          {totalConFlete > 0 && (
+            <div className={styles.stickyTotalInWords}>
+              ✦ {montoATextoPesos(totalConFlete)}
+            </div>
+          )}
+        </div>
 
-      <button 
-        type="button" 
-        className={`${styles.addBtn} ${styles.stickyAddBtn}`} 
-        onClick={addRow}
-      >
-        + Añadir Fila
-      </button>
-      <button
-        type="button"
-        className={`${styles.saveBtn} ${styles.stickySaveBtn} ${detallesCount === 0 ? styles.stickySaveBtnDisabled : ''}`}
-        onClick={handleConfirmar}
-        disabled={isSubmitting || detallesCount === 0}
-      >
-        {isSubmitting 
-          ? (isDirectPurchase ? 'Guardando...' : 'Confirmando...') 
-          : (isDirectPurchase ? 'Guardar y Registrar Compra' : 'Confirmar e Incorporar a la Orden')}
-      </button>
+        <button 
+          type="button" 
+          className={`${styles.addBtn} ${styles.stickyAddBtn}`} 
+          onClick={addRow}
+        >
+          + Añadir Fila
+        </button>
+        <button
+          type="button"
+          className={`${styles.saveBtn} ${styles.stickySaveBtn} ${detallesCount === 0 ? styles.stickySaveBtnDisabled : ''}`}
+          onClick={handleConfirmar}
+          disabled={isSubmitting || detallesCount === 0}
+        >
+          {isSubmitting 
+            ? (isDirectPurchase ? 'Guardando...' : 'Confirmando...') 
+            : (isDirectPurchase ? 'Guardar y Registrar Compra' : 'Confirmar e Incorporar a la Orden')}
+        </button>
+      </div>
     </div>
   );
 }

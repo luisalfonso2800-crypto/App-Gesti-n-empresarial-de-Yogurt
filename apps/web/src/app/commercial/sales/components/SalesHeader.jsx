@@ -14,10 +14,7 @@ import styles from '../sales.module.css';
 export function SalesHeader({ onNew, mostrarCifras, onTogglePrivacy }) {
   return (
     <div className={styles.header}>
-      <div className={styles.headerTitle}>
-        <h1 className={styles.title}>Ventas</h1>
-        <p className={styles.subtitle}>Facturación, pedidos y despachos de productos terminados a clientes.</p>
-      </div>
+      <div />
       <div className={styles.headerActions}>
         <button
           type="button"
