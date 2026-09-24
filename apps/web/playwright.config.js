@@ -6,10 +6,7 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   timeout: 30000, // 30 segundos estándar para evitar cuelgues prolongados
-  reporter: [
-    ['list'],
-    ['./e2e/reporters/live-summary-reporter.js']
-  ],
+  reporter: 'list',
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
