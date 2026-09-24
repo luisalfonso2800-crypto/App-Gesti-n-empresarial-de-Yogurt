@@ -124,7 +124,7 @@ test.describe.serial('Checklist de Adquisición y Abastecimiento (T33-T45)', () 
     const btnAdd = page.locator('button').filter({ hasText: /Añadir Pendiente/i }).first();
     if (await btnAdd.isVisible().catch(() => false)) {
       await btnAdd.click();
-      const modal = page.locator('div[class*="modal"], role="dialog"').first();
+      const modal = page.locator('div[class*="modal"], [role="dialog"], div[class*="backdrop"]').first();
       await expect(modal).toBeVisible({ timeout: 3000 });
     }
   });

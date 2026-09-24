@@ -50,3 +50,6 @@ apps/web/playwright-report/
 
 # E2E test data
 apps/web/e2e/.test-data/
+
+test-results/
+playwright-report/
