@@ -49,10 +49,11 @@ export default function FormPhaseRowItem(props) {
   const ivaRow = Math.round(montoIva);
 
   const isUnconfigured = Boolean(
-    row.isUnconfigured ||
-    !row.proveedor?.id ||
-    empaquesNum <= 0 ||
-    precioUnitarioNum <= 0
+    row.isUnconfigured && (
+      !row.proveedor?.id ||
+      empaquesNum <= 0 ||
+      precioUnitarioNum <= 0
+    )
   );
 
   const cardBorderClass = isUnconfigured

@@ -310,13 +310,6 @@ export function useFormPhaseData({
           observaciones: 'Compra Directa',
           condicion: 'CONTADO',
           detalles: detalles.map(d => {
-            let empaqueNom = d.empaque || 'UNIDAD';
-            if (String(empaqueNom).includes(' x ') || String(empaqueNom).includes(' X ')) {
-              empaqueNom = String(empaqueNom).split(/\s+[xX]\s+/)[0];
-            }
-            const contNeto = parseFloat(d.contenidoNeto) || 1;
-            const uMed = d.unidadMedida || 'Unidad';
-            const presComercial = `${String(empaqueNom).trim().toUpperCase()} x ${contNeto.toLocaleString('es-CO')} ${uMed}`;
             const fin = calculateRowFinancials(d);
 
             return {
@@ -324,20 +317,12 @@ export function useFormPhaseData({
               idProveedor: d.proveedor?.id || null,
               cantidad: parseInt(d.empaques, 10),
               precioUnitario: parseInt(d.precioUnitario, 10),
-              subtotal: fin.subtotal,
-              subtotalSinIva: Number(fin.subtotalSinIva.toFixed(2)),
-              montoIva: Number(fin.montoIva.toFixed(2)),
               tieneIva: fin.tieneIva,
               porcentajeIva: fin.porcentajeIva,
               precioIncluyeIva: fin.precioIncluyeIva,
-              empaque: String(empaqueNom).trim().toUpperCase(),
-              presentacion: presComercial,
-              empaques: parseInt(d.empaques, 10),
-              contenidoBase: contNeto,
-              unidadEmpaque: uMed,
-              cantidadBaseTotal: parseInt(d.empaques, 10) * contNeto,
-              costoBase: parseInt(d.precioUnitario, 10) / contNeto,
-              marca: d.marca || ''
+              subtotal: fin.subtotal,
+              montoIva: Number(fin.montoIva.toFixed(2)),
+              subtotalSinIva: Number(fin.subtotalSinIva.toFixed(2))
             };
           })
         });
