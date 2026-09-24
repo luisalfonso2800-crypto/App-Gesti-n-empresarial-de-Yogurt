@@ -1,66 +1,61 @@
-TAREA CONTROLADA — AUDITORÍA FORENSE FULLSTACK: PRECIOS DE PROVEEDORES, CHECKLIST Y LISTAS DE COMPRA (PRE-TEST E2E)
+TAREA CONTROLADA — AUDITORÍA FORENSE FULLSTACK (5 FOCOS): PRECIOS, CARRITO GLOBAL, CHECKLIST, GESTIÓN DE LISTAS Y PERSISTENCIA
 
 OBJETIVO TÉCNICO:
-Levantar el mapa forense de selectores, contratos de datos y endpoints antes de redactar los tests E2E para los 3 flujos interconectados:
-1. Catálogo de Precios de Proveedores (`/catalog/supplier-prices`): Comparador, desglose de IVA (gravado vs exento), mejor precio y botón "Comprar" (añadir al carrito/storage).
-2. Carrito y Transferencia (`sessionStorage` -> `selectedForPurchase`): Estructura del payload serializado (`cantidadEquivalenteBase`, insumos, proveedores e IVA).
-3. Checklist de Adquisición en Campo y Órdenes (`/operations/purchases/new` y `/operations/purchases`):
-   - Tarjetas de insumo con estados [✓ Conseguido] / [✕ No Conseguido].
-   - Simulación matemática oficial (`POST /api/v1/purchases/simulate`).
-   - Asiento final en inventario físico y consolidación multi-proveedor.
+Levantar el mapa forense de selectores exactos, contratos de datos, ciclo de vida del carrito y reglas Poka-Yoke antes de redactar los tests E2E para los 5 focos interconectados:
+- Foco A: Modal "Nuevo Precio de Proveedor" en `/catalog/supplier-prices` (comboboxes, reactividad de IVA, cascada).
+- Foco B: Carrito de Compras Global (`CartContext.jsx`, Drawer del Header, badge numérico reactivo y persistencia en storage).
+- Foco C: Checklist de Adquisición en Campo en `/operations/purchases/new` (`ChecklistPhase.jsx`, estados Conseguido/Descartar, simulación matemática).
+- Foco D: Modal "Crear / Gestionar Lista", cambio de lista activa y selección múltiple de fusión en `/operations/purchases`.
+- Foco E: Sincronización de Órdenes Activas (`ORD-2026-XXXX`), advertencias de duplicados cruzados y liquidación en base de datos.
+CERO modificaciones de código: 100% lectura, análisis y reporte.
 
-RESTRICCIONES ESTRICTAS ANTI-QUEMA DE CUOTA (NIVEL 1 — SOLO LECTURA):
-- PROHIBIDO modificar o crear archivos de código (.jsx, .js, .prisma, .css) — 0 ediciones.
-- PROHIBIDO ejecutar Playwright, builds, dev servers o migraciones.
-- PROHIBIDO lanzar búsquedas globales abiertas (`grep -r`, `find .`, `Get-ChildItem -Recurse` sin filtro).
-- LÍMITE DURO: Máximo 7 lecturas directas dirigidas. Escribir ÚNICAMENTE el informe final en Markdown.
+REGLAS DE CUOTA ESTRICTA (TOOL BUDGET: MÁXIMO 8 LECTURAS DIRIGIDAS, 0 EDICIONES DE CÓDIGO):
+- PROHIBIDO modificar o crear archivos de código (.js, .jsx, .ts, .prisma, .css) — 0 ediciones.
+- PROHIBIDO ejecutar Playwright, builds, dev servers o scripts temporales.
+- CERO búsquedas recursivas ciegas (`Get-ChildItem -Recurse`, `find .`). Usa lecturas puntuales a los archivos listados.
+- Si tras las lecturas dirigidas falta algún dato secundario, repórtalo en "Huecos detectados" y NO consumas más cuota.
 
-FUENTES DE VERDAD A INSPECCIONAR (RUTAS EXACTAS):
-1. UI Precios: `apps/web/src/app/catalog/supplier-prices/components/PricesComparisonTable.jsx` y `SupplierPriceModal.jsx`.
-2. UI Checklist Compras: `apps/web/src/app/operations/purchases/new/components/` (o `page.jsx` si contiene el Checklist).
-3. Backend Compras y Simulación: `apps/api/src/purchases/purchases.controller.js` (inspeccionar ruta `/simulate` y creación).
-4. Backend Precios: `apps/api/src/supplier-prices/supplier-prices.controller.js` (o service).
-5. Base de Datos: `apps/api/prisma/schema.prisma` (Modelos exactos: `PrecioProveedor`, `Compra`, `DetalleCompra`).
-6. Helpers E2E existentes: `apps/web/e2e/helpers/` (revisar nombres de helpers disponibles para compras/catálogos).
+FUENTES DE VERDAD A INSPECCIONAR (RUTAS EXACTAS DIRIGIDAS):
+1. Foco A (Precios UI): `apps/web/src/app/catalog/supplier-prices/components/SupplierPriceModal.jsx` y `PricesComparisonTable.jsx`.
+2. Foco B (Carrito Global): `apps/web/src/context/CartContext.jsx` y `apps/web/src/components/shell/Header.jsx` (o `HeaderCart.jsx`).
+3. Foco C (Checklist UI): `apps/web/src/app/operations/purchases/new/components/ChecklistPhase.jsx` (o `ChecklistItemRow.jsx` / `page.jsx`).
+4. Foco D y E (Listas y Compras): `apps/web/src/app/operations/purchases/page.jsx` y `apps/api/src/purchases/purchases.controller.js` (buscar `/orders/active`, `/items/move`, `/simulate`).
+5. Base de Datos (Modelos): `apps/api/prisma/schema.prisma` (inspeccionar únicamente modelos: `PrecioProveedor`, `Compra`, `DetalleCompra`, `Insumo`, `Proveedor`, `OrdenCompra`, `OrdenCompraItem`).
+6. Helpers E2E actuales: `apps/web/e2e/helpers/` (inventario de utilidades reutilizables).
 
-ACCIONES OBLIGATORIAS DE AUDITORÍA:
+ACCIONES ESPECÍFICAS DE INSPECCIÓN (POR FOCO):
 
-1. MAPA DE SELECTORES REALES EN DOM:
-   - Para `/catalog/supplier-prices`:
-     * Selector del modal de cotización (`heading`, botón de apertura).
-     * Selectores de IVA: Checkbox `Aplica IVA`, selector de modalidad fiscal (`precioIncluyeIva`).
-     * Selectores de tabla: Botón "Comprar", botón "Editar Tarifa", badges de estado fiscal.
-   - Para `/operations/purchases/new` (Checklist):
-     * Selector de las tarjetas de checklist.
-     * Botones gemelos: [✓ Conseguido] y [✕ No Conseguido].
-     * Input de cantidad solicitada (min="1") y precio editable.
-     * Botón de confirmación/transferencia final a bodega.
+1. MAPA DE SELECTORES REALES EN EL DOM:
+   - Foco A: Selector del botón "Nuevo Registro", inputs/combos de Insumo y Proveedor, checkbox `Aplica IVA`, selector de modalidad fiscal, input de cantidad con pleca, botón submit.
+   - Foco B (Carrito): Disparador del carrito en el Header, badge de conteo (`styles.cartBadge`), ítems en el drawer, botón "Preparar Orden de Compra", botón "Limpiar lista".
+   - Foco C (Checklist): Tarjetas de insumo, botones gemelos [✓ Conseguido] / [✕ No Conseguido], dropdown de motivos al descartar, input de cantidad (min="1"), desglose oficial devuelto por `/purchases/simulate`.
+   - Foco D (Gestión de Listas): Botón "Crear / Gestionar Lista", inputs del modal, botón "Fusionar Seleccionadas", checkboxes por orden activa `ORD-XXXX`.
+   - Foco E (Sincronización): Toast flotante tras añadir ítem, botón "Cambiar de lista", banner de advertencia de ítem duplicado en otra orden activa.
 
-2. CONTRATO DE TRANSFERENCIA Y STORAGE:
-   - Extraer la estructura exacta del JSON guardado en `sessionStorage.getItem('selectedForPurchase')`.
-   - Verificar si usa `cantidadEquivalenteBase` o `contenidoBase` para calcular el factor de conversión.
+2. CONTRATOS DE DATOS, PERSISTENCIA Y CICLO DE VIDA DEL CARRITO:
+   - Contrato del Storage: Estructura JSON guardada en `sessionStorage.getItem('selectedForPurchase')`. ¿Se utiliza `cantidadEquivalenteBase` o `cantidadPresentacion`?
+   - Reactividad del Carrito: ¿Cómo se propaga la mutación? ¿Evento `cartUpdated`, `storage` nativo o estado puro de React en `CartContext`?
+   - API de Órdenes: Endpoints `GET /purchases/orders/active`, `POST /purchases/orders`, `PATCH /purchases/orders/:id` y `POST /purchases/items/move`.
+   - Campos del modelo Prisma vs campos proyectados en la UI (identificar campos huérfanos no editables en la interfaz).
 
-3. CONTRATO DE API Y CÁLCULOS MATEMÁTICOS:
-   - Endpoint `/purchases/simulate`: payload que espera (`idPrecioProveedor`, `cantidadEmpaques`, `precioEmpaque`) y qué campos devuelve (`subtotal`, `ingresoNetoBodega`, `costoBaseUnitario`).
-   - Endpoint de guardado final (`POST /purchases`): validar si la cabecera admite multi-proveedor directo.
-
-4. INVENTARIO DE DATOS SEED / ESTABLES:
-   - Identificar proveedores e insumos canónicos ya existentes en la BD para utilizarlos en los tests sin romper la base de datos.
+3. AUDITORÍA POKA-YOKE ("PRUEBA DE FALLOS"):
+   - Foco A: ¿Qué inputs inician en `disabled`? ¿Qué validaciones impiden enviar precios <= 0 o tasas en blanco?
+   - Foco B: ¿Qué ocurre si se pulsa "Comprar" en el catálogo sin tener ninguna lista creada? ¿Crea la lista por defecto automáticamente o arroja error?
+   - Foco C: ¿El sistema impide marcar "Conseguido" con cantidad 0? ¿Qué opciones de motivo ofrece al descartar? ¿Cómo se retira del carrito al asentar?
+   - Foco D: ¿Se bloquea crear lista sin nombre o sin ítems? ¿Cómo previene duplicados idénticos en la fusión? ¿Qué confirmación modal reemplaza a `window.confirm`?
+   - Foco E: ¿El toast flotante de adición se mantiene al hacer hover (`onMouseEnter`) o se cierra automáticamente interrumpiendo el cambio de lista?
 
 SALIDA REQUERIDA:
-Generar el informe consolidado en:  
-`apps/prompts/testing/INFORME-AUDITORIA-PRECIOS-Y-CHECKLIST.md`
+Generar el informe técnico consolidado exclusivamente en:
+`apps/prompts/testing/INFORME-AUDITORIA-PRECIOS-CHECKLIST-LISTAS.md`
 
-Estructura obligatoria del reporte:
-1. **Mapa de Selectores Listos para Playwright:** Tabla con `Elemento`, `Ubicación`, `Selector Estable Recomendado` (`getByRole`, `getByLabel`, `locator('input[name="..."]')`).
-2. **Estructura del Storage `selectedForPurchase`:** JSON real de ejemplo.
-3. **Contratos API Verificados:** Métodos, URLs y payloads de `/supplier-prices`, `/purchases/simulate` y `/purchases`.
-4. **Campos Fiscales y Conversiones:** Cómo maneja IVA (`tieneIva`, `porcentajeIva`) y equivalencia técnica.
-5. **Casos Clave a Cubrir en Tests E2E:**
-   - Happy path de cotización con y sin IVA.
-   - Envío a carrito y recepción en el checklist.
-   - Marcado de "Conseguido" con simulación matemática.
-   - Descarte con motivo en "No Conseguido".
+Estructura obligatoria del informe:
+1. **Mapa de Rutas y Componentes:** Tabla `Foco | Ruta URL | Archivo Físico | Componente Clave`.
+2. **Matriz de Selectores Estables para Playwright:** Tabla `Foco | Elemento | Selector Recomendado (role/label/name) | Estabilidad (Estable/Frágil)`.
+3. **Contrato de Integración, Storage y Carrito:** Estructura JSON real de `selectedForPurchase`, eventos de sincronización y endpoints `/purchases/orders/*`.
+4. **Matriz Poka-Yoke por Foco:** Validaciones existentes vs validaciones faltantes vs riesgos de rotura por usuario.
+5. **Seeds e IDs Estables:** Lista de insumos, proveedores y órdenes utilizables para los tests.
+6. **Huecos Detectados y Helpers a Crear:** Qué flujos carecen de tests E2E y qué helpers hacen falta para el carrito y compras.
 
 DETENCIÓN:
-Al guardar el informe Markdown, DETENTE inmediatamente sin realizar ninguna otra acción.
+Al guardar el informe Markdown, DETENTE inmediatamente sin modificar ningún archivo de código.
