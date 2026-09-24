@@ -98,3 +98,247 @@
 
 .unitCostIndicator { font-size: 0.8rem; color: #666; margin-top: 4px; }
 .badgePadded { margin-left: 8px; padding: 0 12px; }
+
+/* Density Assistant */
+.densityAssistantCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: #FBFBF9;
+  border: 1px solid #E7E5E4;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.densityHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.densityToggleBtn {
+  background: none;
+  border: none;
+  color: #065F46;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}
+
+.densityToggleBtn:hover {
+  text-decoration: underline;
+  background-color: #E6F4EA;
+}
+
+.densityPresetsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.densityPresetsLabel {
+  font-size: 0.75rem;
+  color: #78716C;
+  font-weight: 500;
+}
+
+.densityPresetChip {
+  background-color: #FFFFFF;
+  border: 1px solid #D6D3D1;
+  color: #44403C;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.densityPresetChip:hover {
+  background-color: #F5F5F4;
+  border-color: #A8A29E;
+}
+
+.densityPresetChipActive {
+  background-color: #065F46;
+  color: #FFFFFF;
+  border-color: #065F46;
+  font-weight: 600;
+}
+
+.densityCalcBox {
+  margin-top: 0.4rem;
+  padding: 0.65rem;
+  background-color: #FFFFFF;
+  border: 1px dashed #CAD5B5;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.densityCalcGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.densityCalcLabel {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #292524;
+  margin-bottom: 0.2rem;
+  display: block;
+}
+
+.densityCustomMlInput {
+  margin-top: 0.3rem;
+  text-align: right;
+}
+
+.densityCalcResult {
+  padding: 0.45rem 0.6rem;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #166534;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.densityEquivHint {
+  font-size: 0.7rem;
+  color: #15803D;
+  font-style: italic;
+}
+
+.densityContextFoot {
+  font-size: 0.72rem;
+  color: #78716C;
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+/* Desbloqueo progresivo y estilos auxiliares */
+.fieldDisabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.inputReadOnly {
+  background-color: #F5F5F4 !important;
+  color: #57534E !important;
+  cursor: default;
+}
+
+.contentWithUnitContainer {
+  display: flex;
+  align-items: center;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  overflow: hidden;
+}
+
+.contentWithUnitInput {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  flex: 1;
+}
+
+.unitPlecaBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4B5563;
+  background-color: #F9FAFB;
+  border-left: 1px solid #E5E7EB;
+  height: 100%;
+  user-select: none;
+}
+
+.densityInputGroupContainer {
+  display: flex;
+  align-items: center;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background-color: #FFFFFF;
+  overflow: hidden;
+}
+
+.densityInputField {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  flex: 1;
+}
+
+.densityEditBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #065F46;
+  background-color: #F9FAFB;
+  border: none;
+  border-left: 1px solid #E5E7EB;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  user-select: none;
+}
+
+.densityEditBtn:hover {
+  background-color: #E6F4EA;
+  color: #044E39;
+}
+
+.densityConfirmModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.densityWarningBox {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: #FFFBEB;
+  border: 1px solid #FCD34D;
+  border-radius: 6px;
+  color: #92400E;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.densityConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.densityConfirmQuestion {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+
+
+

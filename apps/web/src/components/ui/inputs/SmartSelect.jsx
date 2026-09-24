@@ -17,6 +17,7 @@ export default function SmartSelect({
   onEmptyAction,
   error,
   required = false,
+  disabled = false,
   name
 }) {
   return (
@@ -32,6 +33,7 @@ export default function SmartSelect({
           name={name}
           value={value ?? ''}
           onChange={onChange}
+          disabled={disabled}
           required={required}
           className={`${styles.select} ${error ? styles.inputError : ''}`}
         >
