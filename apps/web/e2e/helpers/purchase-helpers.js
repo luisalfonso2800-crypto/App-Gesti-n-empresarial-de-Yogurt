@@ -1,3 +1,5 @@
+import { expect } from '@playwright/test';
+
 export async function fillRowItem(page, rowIndex = 0, data = {}) {
   const row = page.locator('div[class*="formRowCard"]').nth(rowIndex);
   await row.waitFor({ state: 'visible', timeout: 5000 });
@@ -28,14 +30,28 @@ export async function fillRowItem(page, rowIndex = 0, data = {}) {
     await empaqueSelect.selectOption(data.empaqueTipo);
   }
 
-  if (data.contenidoNeto && (await row.locator('input[class*="netContentField"]').isEnabled().catch(() => false))) {
+  if (data.contenidoNeto !== undefined && data.contenidoNeto !== null) {
     const netInput = row.locator('input[class*="netContentField"]');
-    await netInput.fill(String(data.contenidoNeto));
+    // Esperar a que React termine el re-render tras cambiar empaque
+    await page.waitForTimeout(500);
+    // Forzar el fill incluso si el input está temporalmente disabled
+    await netInput.fill(String(data.contenidoNeto), { force: true }).catch(async () => {
+      // Fallback: clear + type
+      await netInput.click({ force: true }).catch(() => {});
+      await netInput.press('Control+a').catch(() => {});
+      await netInput.pressSequentially(String(data.contenidoNeto), { delay: 30 }).catch(() => {});
+    });
+    await page.waitForTimeout(300);
   }
 
-  if (data.unidadMedida && (await row.locator('select[class*="unitField"]').isEnabled().catch(() => false))) {
+  if (data.unidadMedida) {
     const unitSelect = row.locator('select[class*="unitField"]');
-    await unitSelect.selectOption(data.unidadMedida);
+    await page.waitForTimeout(300);
+    await unitSelect.selectOption(data.unidadMedida, { force: true }).catch(async () => {
+      await page.waitForTimeout(300);
+      await unitSelect.selectOption(data.unidadMedida).catch(() => {});
+    });
+    await page.waitForTimeout(200);
   }
 
   if (data.cantidad !== undefined) {

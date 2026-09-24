@@ -19,7 +19,8 @@ export default function FormPhaseRowItem(props) {
 
   const empaquesNum = parseInt(row.empaques, 10) || 0;
   const precioUnitarioNum = parseInt(row.precioUnitario, 10) || 0;
-  const contNetoNum = parseFloat(row.contenidoNeto) || 1;
+  const parsedCont = parseFloat(row.contenidoNeto);
+  const contNetoNum = isNaN(parsedCont) ? 1 : parsedCont;
   const ingresoNeto = Math.round(empaquesNum * contNetoNum);
   const unidadLabel = row.unidadMedida === 'Unidades' ? 'und' : (row.unidadMedida || 'ml');
 

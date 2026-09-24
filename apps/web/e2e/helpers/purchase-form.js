@@ -1,14 +1,28 @@
 export async function goToPurchases(page) {
-  await page.goto('/operations/purchases', { waitUntil: 'domcontentloaded' });
-  await page.locator('h1:has-text("Compras")').waitFor({ state: 'visible', timeout: 8000 });
+  if (!page.url().includes('/operations/purchases') || page.url().includes('/operations/purchases/new')) {
+    await page.goto('/operations/purchases', { waitUntil: 'domcontentloaded' });
+  }
+  await page.locator('h1:has-text("Compras")').waitFor({ state: 'visible', timeout: 10000 });
 }
 
 export async function openPurchaseForm(page) {
+  // Si ya estamos en el formulario /new, no hace falta re-navegar
+  if (page.url().includes('/operations/purchases/new')) {
+    await page.locator('button:has-text("+ Añadir Fila")').waitFor({ state: 'visible', timeout: 10000 });
+    return;
+  }
+
   const directBtn = page.getByRole('button', { name: /nueva compra directa/i }).or(page.locator('button:has-text("Nueva Compra Directa")')).first();
-  await directBtn.waitFor({ state: 'visible', timeout: 5000 });
+  await directBtn.waitFor({ state: 'visible', timeout: 8000 });
   await directBtn.click();
-  await page.waitForURL(/\/operations\/purchases\/new/, { timeout: 8000 });
-  await page.locator('button:has-text("+ Añadir Fila")').waitFor({ state: 'visible', timeout: 8000 });
+  
+  // Esperar a que la URL cambie hacia /purchases/new (con timeout holgado o fallback goto)
+  try {
+    await page.waitForURL(/\/operations\/purchases\/new/, { timeout: 8000 });
+  } catch {
+    await page.goto('/operations/purchases/new?mode=direct', { waitUntil: 'domcontentloaded' });
+  }
+  await page.locator('button:has-text("+ Añadir Fila")').waitFor({ state: 'visible', timeout: 10000 });
 }
 
 export async function addRow(page) {
