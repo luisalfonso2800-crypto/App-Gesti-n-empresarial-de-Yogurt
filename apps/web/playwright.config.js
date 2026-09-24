@@ -6,19 +6,26 @@ export default defineConfig({
   retries: 0,
   workers: 1,
   timeout: 30000, // 30 segundos estándar para evitar cuelgues prolongados
-  reporter: 'list',
+  reporter: [
+    ['list'],
+    ['./e2e/reporters/live-summary-reporter.js']
+  ],
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
-    headless: true, // Modo desatendido ultra-rápido sin ventana GUI
+    headless: true, // Modo desatendido 100% en segundo plano sin ventana GUI
     launchOptions: {
       slowMo: 0,
+      args: ['--headless=new', '--disable-gpu', '--no-sandbox']
     },
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        headless: true
+      },
     },
   ],
 });
