@@ -20,7 +20,8 @@ export function useProductForm({ onSuccess }) {
     nombre: '', idPresentacion: '', categoria: '', descripcion: '',
     canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true,
     precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: '',
-    tipoImpuesto: 'GRAVADO', tarifaIva: 19, precioIncluyeIva: true
+    tipoImpuesto: 'GRAVADO', tarifaIva: 19, precioIncluyeIva: true,
+    codigo: '', costoEstimado: '', unidadVenta: 'UND', stockMinimo: '5'
   });
 
   const loadPresentations = async () => {
@@ -47,7 +48,11 @@ export function useProductForm({ onSuccess }) {
         descuentoMayoristaPorcentaje: item.descuentoMayoristaPorcentaje ?? '',
         tipoImpuesto: item.tipoImpuesto || 'GRAVADO',
         tarifaIva: item.tarifaIva !== undefined && item.tarifaIva !== null ? Number(item.tarifaIva) : 19,
-        precioIncluyeIva: item.precioIncluyeIva ?? true
+        precioIncluyeIva: item.precioIncluyeIva ?? true,
+        codigo: item.codigo || '',
+        costoEstimado: item.costoEstimado || '',
+        unidadVenta: item.unidadVenta || 'UND',
+        stockMinimo: item.inventario?.stockMinimo ?? item.stockMinimo ?? '5'
       });
     } else {
       setEditingItem(null);
@@ -55,7 +60,8 @@ export function useProductForm({ onSuccess }) {
         nombre: '', idPresentacion: '', categoria: '', descripcion: '',
         canalVenta: '', precioVenta: '', margenObjetivo: '', observaciones: '', activo: true,
         precioMayorista: '', cantidadMinimaMayorista: 12, descuentoMayoristaPorcentaje: '',
-        tipoImpuesto: 'GRAVADO', tarifaIva: 19, precioIncluyeIva: true
+        tipoImpuesto: 'GRAVADO', tarifaIva: 19, precioIncluyeIva: true,
+        codigo: '', costoEstimado: '', unidadVenta: 'UND', stockMinimo: '5'
       });
     }
     setErrorMsg('');
@@ -69,9 +75,20 @@ export function useProductForm({ onSuccess }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    let parsedValue = type === 'checkbox' ? checked : value;
+
+    if (name === 'stockMinimo') {
+      const num = parseInt(value, 10);
+      if (isNaN(num) || num < 0) {
+        parsedValue = '0';
+      } else {
+        parsedValue = String(num);
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: parsedValue
     }));
   };
 

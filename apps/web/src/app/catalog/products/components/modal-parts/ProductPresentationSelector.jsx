@@ -47,7 +47,10 @@ export function ProductPresentationSelector({
         name="idPresentacion"
         value={formData.idPresentacion ?? ''}
         onChange={handleChange}
-        options={presentations.map(p => ({ id: p.id, label: p.nombre }))}
+        options={presentations.map(p => ({
+          id: p.id,
+          label: p.nombre && p.nombre.length > 60 ? `${p.nombre.slice(0, 57)}...` : p.nombre
+        }))}
         required
         placeholder="Seleccione presentación"
         className={isPresentacionError ? styles.inputErrorBorder : ''}

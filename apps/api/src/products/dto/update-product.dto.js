@@ -42,4 +42,22 @@ export class UpdateProductDto {
   @IsOptional()
   @IsString()
   observaciones;
+
+  @IsOptional()
+  @IsString()
+  codigo;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  costoEstimado;
+
+  @IsOptional()
+  @IsString()
+  unidadVenta;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  stockMinimo;
 }

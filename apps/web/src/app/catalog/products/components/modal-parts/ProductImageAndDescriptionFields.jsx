@@ -17,10 +17,23 @@ export function ProductImageAndDescriptionFields({
   handleInputChange
 }) {
   const fileInputRef = useRef(null);
+  const [imageError, setImageError] = React.useState('');
 
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setImageError('');
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setImageError('Formato no válido. Use PNG, JPG o WebP.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setImageError('La imagen excede el límite máximo de 2 MB.');
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -48,6 +61,7 @@ export function ProductImageAndDescriptionFields({
   };
 
   const handleRemoveImage = () => {
+    setImageError('');
     handleChange({ target: { name: 'imagenUrl', value: '' } });
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -75,12 +89,15 @@ export function ProductImageAndDescriptionFields({
               🗑 Quitar Imagen
             </button>
           )}
+          {imageError && (
+            <div className={styles.imageError}>⚠️ {imageError}</div>
+          )}
           <p className={styles.imageHelpText}>
-            Formatos: PNG, JPG, WebP. Resolución óptima recomendada: 400x400 o superior.
+            Máx 2MB (PNG, JPG, WebP). 400x400 recomendado.
           </p>
           <input 
             type="file" 
-            accept="image/*" 
+            accept="image/png,image/jpeg,image/webp" 
             ref={fileInputRef} 
             className={styles.hiddenFileInput} 
             onChange={handleImageUpload} 
@@ -105,15 +122,17 @@ export function ProductImageAndDescriptionFields({
 
       <div className={modalStyles.inputGroup}>
         <label className={modalStyles.label}>
-          Descripción <span className={styles.requiredAsterisk}>*</span>
+          Descripción del Producto
         </label>
-        <input 
+        <textarea 
           name="descripcion" 
+          rows="2"
           value={formData.descripcion ?? ''} 
           onChange={handleInputChange} 
+          placeholder="Ej: Yogurt artesanal con leche entera pasteurizada, endulzado con panela orgánica y trozos de fruta natural. Conservar refrigerado entre 2°C y 4°C."
           className={`${modalStyles.input} ${styles.uppercaseInput}`} 
-          required 
         />
+        <span className={styles.helperText}>Plantilla sugerida con ingredientes, sabor y conservación.</span>
       </div>
     </>
   );

@@ -1,14 +1,10 @@
 /**
  * @file ProductTableRow.jsx
  * @module catalog/products/components
- * @description Fila individual del listado de productos terminados (SRP < 150 líneas).
- * @responsibility Renderizado de avatar compacto, nombre con presentación, chip de categoría, precio formateado y acciones.
- * @usedBy apps/web/src/app/catalog/products/components/ProductsTable.jsx
- * @dependencies @/components/ui/Table, @/components/ui/Badge, @/components/ui/ProductAvatar, @/lib/presetImages, @/lib/formatters
+ * @description Fila individual del listado de productos terminados con semáforo M8.
  */
 import React from 'react';
 import { TR, TD } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
 import { resolveProductImage } from '@/lib/presetImages';
 import { formatCurrency } from '@/lib/formatters';
 import ProductAvatar from '@/components/ui/ProductAvatar';
@@ -33,6 +29,13 @@ const CHANNEL_MAP = {
   AMBOS: { label: 'Mixto', className: styles.chanAmbos }
 };
 
+const getEstadoProducto = (producto, numPrice) => {
+  if (producto.activo === false) return { label: 'DESACTIVADO', className: styles.statusRed, dot: '🔴' };
+  const hasPresentation = Boolean(producto.idPresentacion || producto.presentacionId || producto.presentacion?.id);
+  if (numPrice > 0 && hasPresentation) return { label: 'LISTO', className: styles.statusGreen, dot: '🟢' };
+  return { label: 'INCOMPLETO', className: styles.statusYellow, dot: '🟡' };
+};
+
 export function ProductTableRow({
   item,
   isSelected = false,
@@ -42,19 +45,12 @@ export function ProductTableRow({
   onEdit,
   onDelete
 }) {
-  const categoryConfig = CATEGORY_MAP[item.categoria] || {
-    label: item.categoria || 'Sin Categoría',
-    className: styles.catDefault
-  };
-
+  const categoryConfig = CATEGORY_MAP[item.categoria] || { label: item.categoria || 'Sin Categoría', className: styles.catDefault };
   const channelKey = item.canalVenta || (item.categoria?.includes('WIP') ? 'SOLO_PLANTA' : 'AMBOS');
-  const channelConfig = CHANNEL_MAP[channelKey] || {
-    label: item.canalVenta || 'Comercial',
-    className: styles.chanDefault
-  };
-
+  const channelConfig = CHANNEL_MAP[channelKey] || { label: item.canalVenta || 'Comercial', className: styles.chanDefault };
   const presentationText = item.presentacion?.nombre || (item.categoria?.includes('WIP') ? 'A Granel' : null);
   const numPrice = Number(item.precioVenta) || 0;
+  const statusConfig = getEstadoProducto(item, numPrice);
 
   const handleDoubleClick = (e) => {
     // Evitar disparar si se hizo doble clic dentro de un botón o input
@@ -112,9 +108,10 @@ export function ProductTableRow({
         )}
       </TD>
       <TD className={styles.statusCell}>
-        <Badge status={item.activo ? 'active' : 'inactive'}>
-          {item.activo ? 'Activo' : 'Inactivo'}
-        </Badge>
+        <span className={`${styles.statusBadge} ${statusConfig.className}`}>
+          <span>{statusConfig.dot}</span>
+          <span>{statusConfig.label}</span>
+        </span>
       </TD>
       <TD className={styles.actionsCell}>
         <div className={styles.actions}>

@@ -27,6 +27,78 @@
   text-transform: uppercase;
 }
 
+.costWrapper {
+  margin-top: 0.6rem;
+}
+
+.marginFeedback {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.marginGood {
+  color: #166534;
+}
+
+.marginBad {
+  color: #991b1b;
+}
+
+.suggestedPriceBox {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #F8FAFC;
+  border: 1px dashed #CBD5E1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.suggestedLabel {
+  font-size: 0.78rem;
+  color: #64748B;
+}
+
+.suggestedValue {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.useSuggestedBtn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  background-color: #182622;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.useSuggestedBtn:hover {
+  opacity: 0.9;
+}
+
+.imageError {
+  margin-top: 0.35rem;
+  color: #991b1b;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: #64748B;
+  margin-top: 0.25rem;
+}
+
 /* Selector de tipo de producto (Comercial vs WIP) */
 .productTypeToggle {
   display: grid;

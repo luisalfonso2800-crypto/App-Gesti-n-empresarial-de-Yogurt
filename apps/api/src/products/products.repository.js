@@ -228,12 +228,18 @@ export class ProductsRepository {
   }
 
   async create(data) {
-    const cleanData = { ...data };
+    const { stockMinimo, ...productPayload } = data || {};
+    const cleanData = { ...productPayload };
     if (cleanData.precioVenta !== undefined) {
       cleanData.precioVenta = Number(cleanData.precioVenta);
     }
     if (cleanData.margenObjetivo !== undefined) {
       cleanData.margenObjetivo = Number(cleanData.margenObjetivo);
+    }
+    if (cleanData.costoEstimado !== undefined && cleanData.costoEstimado !== null && cleanData.costoEstimado !== '') {
+      cleanData.costoEstimado = Number(cleanData.costoEstimado);
+    } else if (cleanData.costoEstimado === '') {
+      cleanData.costoEstimado = null;
     }
     if (cleanData.precioMayorista !== undefined) {
       cleanData.precioMayorista = cleanData.precioMayorista !== null && cleanData.precioMayorista !== '' ? Number(cleanData.precioMayorista) : null;
@@ -244,8 +250,27 @@ export class ProductsRepository {
     if (cleanData.descuentoMayoristaPorcentaje !== undefined) {
       cleanData.descuentoMayoristaPorcentaje = cleanData.descuentoMayoristaPorcentaje !== null && cleanData.descuentoMayoristaPorcentaje !== '' ? Number(cleanData.descuentoMayoristaPorcentaje) : null;
     }
-    return this.prisma.producto.create({
-      data: cleanData,
+
+    return this.prisma.$transaction(async (tx) => {
+      const created = await tx.producto.create({
+        data: cleanData,
+      });
+
+      if (stockMinimo !== undefined && stockMinimo !== null) {
+        await tx.inventarioProducto.upsert({
+          where: { idProducto: created.id },
+          create: {
+            idProducto: created.id,
+            stockMinimo: Number(stockMinimo),
+            cantidadActual: 0,
+          },
+          update: {
+            stockMinimo: Number(stockMinimo),
+          },
+        });
+      }
+
+      return created;
     });
   }
 
@@ -290,9 +315,35 @@ export class ProductsRepository {
       cleanData.descuentoMayoristaPorcentaje = cleanData.descuentoMayoristaPorcentaje !== null && cleanData.descuentoMayoristaPorcentaje !== '' ? Number(cleanData.descuentoMayoristaPorcentaje) : null;
     }
 
-    return this.prisma.producto.update({
-      where: { id },
-      data: cleanData,
+    if (cleanData.costoEstimado !== undefined && cleanData.costoEstimado !== null && cleanData.costoEstimado !== '') {
+      cleanData.costoEstimado = Number(cleanData.costoEstimado);
+    } else if (cleanData.costoEstimado === '') {
+      cleanData.costoEstimado = null;
+    }
+
+    const { stockMinimo, ...finalPayload } = cleanData;
+
+    return this.prisma.$transaction(async (tx) => {
+      const updated = await tx.producto.update({
+        where: { id },
+        data: finalPayload,
+      });
+
+      if (stockMinimo !== undefined && stockMinimo !== null) {
+        await tx.inventarioProducto.upsert({
+          where: { idProducto: id },
+          create: {
+            idProducto: id,
+            stockMinimo: Number(stockMinimo),
+            cantidadActual: 0,
+          },
+          update: {
+            stockMinimo: Number(stockMinimo),
+          },
+        });
+      }
+
+      return updated;
     });
   }
 

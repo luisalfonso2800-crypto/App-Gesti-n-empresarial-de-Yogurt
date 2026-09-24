@@ -128,27 +128,54 @@ export function useProductFormState({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    handleChange(name === 'nombre' || name === 'descripcion' || name === 'observaciones' ? { target: { name, value: value.toUpperCase() } } : e);
+    if (name === 'nombre' || name === 'descripcion' || name === 'observaciones') {
+      handleChange({ target: { name, value: value.toUpperCase() } });
+    } else {
+      handleChange(e);
+    }
   };
 
   const isNombreInvalid = !formData.nombre?.trim();
   const isPresentacionInvalid = !formData.idPresentacion;
-  const isDescripcionInvalid = !formData.descripcion?.trim();
-  const isPrecioVentaInvalid = showPricingFields && (!formData.precioVenta && formData.precioVenta !== 0);
-  const isMargenObjetivoInvalid = showPricingFields && (formData.margenObjetivo === '' || formData.margenObjetivo === null || formData.margenObjetivo === undefined);
+  const isDescripcionInvalid = false; // M6: Borrador laxo
+  const isPrecioVentaInvalid = false; // M6: Permite 0 para borrador inicial
+  const isMargenObjetivoInvalid = false;
 
   const missingFields = [];
   if (isNombreInvalid) missingFields.push('Nombre');
   if (isPresentacionInvalid) missingFields.push('Presentación');
-  if (!formData.categoria) missingFields.push('Categoría');
-  if (!formData.canalVenta) missingFields.push('Canal de venta');
-  if (isDescripcionInvalid) missingFields.push('Descripción');
-  if (isPrecioVentaInvalid) missingFields.push('Precio de venta');
-  if (isMargenObjetivoInvalid) missingFields.push('Margen objetivo');
 
   const hasErrors = missingFields.length > 0;
-  const isSubmitDisabled = isSubmitting;
+  const isSubmitDisabled = isSubmitting || hasErrors;
   const submitTitle = hasSubmitted && hasErrors ? `Complete los campos obligatorios: ${missingFields.join(', ')}` : '';
+
+  // Cálculos matemáticos reactivos (M3, M4)
+  const precioVentaNum = Number(String(formData.precioVenta || '').replace(/\D/g, '')) || 0;
+  const margenObjetivoNum = Number(formData.margenObjetivo) || 0;
+  const costoEstimadoNum = Number(String(formData.costoEstimado || '').replace(/\D/g, '')) || 0;
+
+  // M3: Margen real calculado si hay costo estimado manual y precio de venta
+  const margenRealCalculado = precioVentaNum > 0 && costoEstimadoNum > 0 
+    ? Math.round(((precioVentaNum - costoEstimadoNum) / precioVentaNum) * 100) 
+    : margenObjetivoNum;
+
+  // M4: Precio sugerido automático basado en costo estimado y margen objetivo
+  const precioSugeridoCalculado = costoEstimadoNum > 0 && margenObjetivoNum > 0 && margenObjetivoNum < 100
+    ? Math.round(costoEstimadoNum / (1 - (margenObjetivoNum / 100)))
+    : 0;
+
+  const costoMaximoPermitido = precioVentaNum > 0 && margenObjetivoNum > 0 ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100))) : 0;
+  const gananciaEsperada = precioVentaNum > 0 && margenObjetivoNum > 0 ? precioVentaNum - costoMaximoPermitido : 0;
+
+  // M1: Código corto auto-generado si el usuario no especifica uno personalizado
+  const codigoCortoGenerado = useMemo(() => {
+    if (formData.codigo?.trim()) return formData.codigo.trim().toUpperCase();
+    const nombreClean = (formData.nombre || '').trim().replace(/[^a-zA-Z0-9]/g, ' ').toUpperCase();
+    const partes = nombreClean.split(/\s+/).filter(Boolean);
+    const prefijo = partes.slice(0, 2).map(p => p.slice(0, 3)).join('-');
+    const presNombre = (selectedPres?.nombre || '').replace(/\D/g, '');
+    return prefijo ? `${prefijo}${presNombre ? `-${presNombre}` : ''}` : '';
+  }, [formData.codigo, formData.nombre, selectedPres]);
 
   const onSubmit = (e) => {
     e.preventDefault();
@@ -157,13 +184,17 @@ export function useProductFormState({
     const { presentacion, ...restFormData } = formData;
     handleSubmit(e, {
       ...restFormData,
+      codigo: codigoCortoGenerado || null,
+      costoEstimado: costoEstimadoNum > 0 ? costoEstimadoNum : null,
+      unidadVenta: formData.unidadVenta || 'UND',
+      stockMinimo: Number(formData.stockMinimo) >= 0 ? Number(formData.stockMinimo) : 0,
       idPresentacion: String(formData.idPresentacion || presentacion?.id || ''),
       nombre: (formData.nombre || '').trim().toUpperCase(),
       descripcion: (formData.descripcion || '').trim().toUpperCase(),
       observaciones: (formData.observaciones || '').trim().toUpperCase(),
       canalVenta: formData.canalVenta || (isGranel ? 'USO_INTERNO' : 'AMBOS'),
       precioVenta: !showPricingFields ? 0 : cleanCurrency(formData.precioVenta),
-      margenObjetivo: !showPricingFields ? 0 : Number(formData.margenObjetivo),
+      margenObjetivo: !showPricingFields ? 0 : Number(formData.margenObjetivo || 30),
       precioMayorista: !showPricingFields || !formData.precioMayorista ? null : cleanCurrency(formData.precioMayorista),
       cantidadMinimaMayorista: !showPricingFields ? 12 : (Number(formData.cantidadMinimaMayorista) || 12),
       descuentoMayoristaPorcentaje: !showPricingFields || !formData.descuentoMayoristaPorcentaje ? null : Number(formData.descuentoMayoristaPorcentaje),
@@ -172,11 +203,6 @@ export function useProductFormState({
       precioIncluyeIva: formData.precioIncluyeIva ?? true
     });
   };
-
-  const precioVentaNum = Number(String(formData.precioVenta || '').replace(/\D/g, '')) || 0;
-  const margenObjetivoNum = Number(formData.margenObjetivo) || 0;
-  const costoMaximoPermitido = precioVentaNum > 0 && margenObjetivoNum > 0 ? Math.round(precioVentaNum * (1 - (margenObjetivoNum / 100))) : 0;
-  const gananciaEsperada = precioVentaNum > 0 && margenObjetivoNum > 0 ? precioVentaNum - costoMaximoPermitido : 0;
 
   return {
     productType,
@@ -195,6 +221,10 @@ export function useProductFormState({
     onSubmit,
     precioVentaNum,
     margenObjetivoNum,
+    costoEstimadoNum,
+    margenRealCalculado,
+    precioSugeridoCalculado,
+    codigoCortoGenerado,
     costoMaximoPermitido,
     gananciaEsperada,
     filteredPresentations,

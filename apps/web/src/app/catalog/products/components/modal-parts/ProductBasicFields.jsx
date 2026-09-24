@@ -13,6 +13,7 @@ import SmartSelect from '@/components/ui/inputs/SmartSelect';
 import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from '../product-modal.module.css';
 import { ProductPresentationSelector } from './ProductPresentationSelector';
+import { ProductInventoryIdentityFields } from './ProductInventoryIdentityFields';
 
 export function ProductBasicFields({
   formData,
@@ -120,14 +121,14 @@ export function ProductBasicFields({
             </div>
           )}
         </div>
-
-        {/* Micro-texto explicativo de Semielaborado (WIP) */}
-        {(isGranel || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL'].includes(formData.categoria)) && (
-          <div className={styles.wipConceptText}>
-            💡 <strong>¿Qué es un Semielaborado (WIP - Work in Process)?</strong> Es un producto intermedio elaborado dentro de la planta (ej. Base Blanca de yogur, jalea casera de frutos) que no se comercializa de forma directa al público, sino que se almacena temporalmente a granel (litros/kilos) para ser consumido como materia prima en las recetas de envasado final.
-          </div>
-        )}
       </div>
+
+      <ProductInventoryIdentityFields
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleChange={handleChange}
+        isGranel={isGranel}
+      />
     </>
   );
 }

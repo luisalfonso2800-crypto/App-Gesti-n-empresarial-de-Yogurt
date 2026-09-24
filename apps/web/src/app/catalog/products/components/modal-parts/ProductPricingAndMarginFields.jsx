@@ -2,6 +2,7 @@ import React from 'react';
 import { montoATextoPesos } from '@/utils/numberToWords';
 import modalStyles from '@/components/ui/SmartModal.module.css';
 import styles from '../product-modal.module.css';
+import { ProductPricingProjectionsCard } from './ProductPricingProjectionsCard';
 
 export function ProductPricingAndMarginFields({
   isGranel = false,
@@ -13,7 +14,9 @@ export function ProductPricingAndMarginFields({
   costoMaximoPermitido = 0,
   gananciaEsperada = 0,
   isPrecioVentaError = false,
-  isMargenObjetivoError = false
+  isMargenObjetivoError = false,
+  margenRealCalculado = 0,
+  precioSugeridoCalculado = 0
 }) {
   if (isGranel && !showPricingFields) {
     return (
@@ -39,7 +42,7 @@ export function ProductPricingAndMarginFields({
 
   return (
     <div className={styles.commercialPricingGrid}>
-      {/* Columna Izquierda: Precio de Venta */}
+      {/* Columna Izquierda: Precio de Venta y Precio Sugerido */}
       <div className={modalStyles.inputGroup}>
         <label className={modalStyles.label}>
           Precio de Venta ($) <span className={styles.requiredAsterisk}>*</span>
@@ -69,9 +72,25 @@ export function ProductPricingAndMarginFields({
             ✦ {montoATextoPesos(parseInt(String(formData.precioVenta).replace(/\D/g, ''), 10))}
           </span>
         )}
+
+        {precioSugeridoCalculado > 0 && (
+          <div className={styles.suggestedPriceBox}>
+            <div>
+              <span className={styles.suggestedLabel}>Sugerido: </span>
+              <strong className={styles.suggestedValue}>$ {precioSugeridoCalculado.toLocaleString('es-CO')}</strong>
+            </div>
+            <button
+              type="button"
+              className={styles.useSuggestedBtn}
+              onClick={() => handleChange({ target: { name: 'precioVenta', value: String(precioSugeridoCalculado) } })}
+            >
+              Usar este precio
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Columna Derecha: Margen Objetivo */}
+      {/* Columna Derecha: Margen Objetivo y Costo Estimado */}
       <div className={modalStyles.inputGroup}>
         <label className={modalStyles.label}>
           Margen Objetivo (%) <span className={styles.requiredAsterisk}>*</span>
@@ -84,17 +103,6 @@ export function ProductPricingAndMarginFields({
           name="margenObjetivo" 
           value={formData.margenObjetivo ?? ''} 
           onChange={handleChange} 
-          onKeyDown={(e) => {
-            if (e.key === 'ArrowUp') {
-              e.preventDefault();
-              const current = Number(formData.margenObjetivo) || 0;
-              handleChange({ target: { name: 'margenObjetivo', value: Math.min(100, Math.floor(current / 5) * 5 + 5) } });
-            } else if (e.key === 'ArrowDown') {
-              e.preventDefault();
-              const current = Number(formData.margenObjetivo) || 0;
-              handleChange({ target: { name: 'margenObjetivo', value: Math.max(0, Math.ceil(current / 5) * 5 - 5) } });
-            }
-          }}
           placeholder="Ej: 30"
           className={`${modalStyles.input} ${isMargenObjetivoError ? styles.inputErrorBorder : ''}`} 
           required 
@@ -102,43 +110,37 @@ export function ProductPricingAndMarginFields({
         {isMargenObjetivoError && (
           <span className={styles.fieldErrorText}>Este campo es requerido</span>
         )}
-      </div>
 
-      {/* Tarjeta de Proyección Financiera */}
-      <div className={styles.projectionCard}>
-        <div className={styles.projectionGuideText}>
-          💡 <strong>Margen Objetivo:</strong> Ganancia bruta esperada sobre la venta. El costo total de receta (ingredientes + envase) no debe superar el tope admisible para garantizar la utilidad del negocio.
+        <div className={styles.costWrapper}>
+          <label className={modalStyles.label}>
+            Costo Estimado Artesanal ($)
+          </label>
+          <input
+            name="costoEstimado"
+            type="text"
+            inputMode="numeric"
+            placeholder="Ej: 3.500"
+            value={formData.costoEstimado ? String(formData.costoEstimado).replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ".") : ''}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/\D/g, '');
+              handleChange({ target: { name: 'costoEstimado', value: raw } });
+            }}
+            className={modalStyles.input}
+          />
+          {margenRealCalculado !== undefined && precioVentaNum > 0 && (
+            <div className={`${styles.marginFeedback} ${margenRealCalculado >= (Number(formData.margenObjetivo) || 0) ? styles.marginGood : styles.marginBad}`}>
+              {margenRealCalculado >= (Number(formData.margenObjetivo) || 0) ? '🟢' : '🟡'} Margen Real: {margenRealCalculado}%
+            </div>
+          )}
         </div>
-
-        {Boolean(precioVentaNum > 0) && (
-          <div className={margenObjetivoNum > 0 ? styles.projectionMetricsBoxGreen : styles.projectionMetricsBoxAmber}>
-            <div className={styles.projectionMetricsGrid}>
-              <div>
-                <span className={styles.projectionMetricLabel}>Precio Venta</span>
-                <strong className={styles.projectionMetricValue}>$ {precioVentaNum.toLocaleString('es-CO')}</strong>
-              </div>
-              <div>
-                <span className={styles.projectionMetricLabel}>Costo Máx. Receta</span>
-                <strong className={styles.projectionMetricValue}>$ {costoMaximoPermitido.toLocaleString('es-CO')}</strong>
-              </div>
-              <div>
-                <span className={styles.projectionMetricLabel}>Ganancia Esperada</span>
-                <strong className={margenObjetivoNum > 0 ? styles.projectionMetricGainGreen : styles.projectionMetricGainAmber}>
-                  $ {gananciaEsperada.toLocaleString('es-CO')} ({margenObjetivoNum}%)
-                </strong>
-              </div>
-            </div>
-
-            <div className={margenObjetivoNum > 0 ? styles.projectionExplanationGreen : styles.projectionExplanationAmber}>
-              {margenObjetivoNum > 0 ? (
-                `✦ Para un valor de venta de $ ${precioVentaNum.toLocaleString('es-CO')}, se espera que el costo sea máx. $ ${costoMaximoPermitido.toLocaleString('es-CO')} para una ganancia de $ ${gananciaEsperada.toLocaleString('es-CO')}/und.`
-              ) : (
-                `⚠️ Con margen de 0%, se espera que el costo sea de $ ${precioVentaNum.toLocaleString('es-CO')} y la ganancia sea de $ 0 (venta al costo exacto de producción).`
-              )}
-            </div>
-          </div>
-        )}
       </div>
+
+      <ProductPricingProjectionsCard
+        precioVentaNum={precioVentaNum}
+        margenObjetivoNum={margenObjetivoNum}
+        costoMaximoPermitido={costoMaximoPermitido}
+        gananciaEsperada={gananciaEsperada}
+      />
     </div>
   );
 }

@@ -31,7 +31,8 @@ export function ProductModal({
     isDescripcionInvalid, isPrecioVentaInvalid, isMargenObjetivoInvalid,
     isSubmitDisabled, submitTitle, onSubmit,
     precioVentaNum, margenObjetivoNum, costoMaximoPermitido, gananciaEsperada,
-    filteredPresentations, showPricingFields
+    filteredPresentations, showPricingFields,
+    margenRealCalculado, precioSugeridoCalculado, codigoCortoGenerado
   } = useProductFormState({
     isOpen, formData, handleChange, handleSubmit,
     presentations, isSubmitting, isBaseIntermedia
@@ -71,6 +72,7 @@ export function ProductModal({
           isGranel={isGranel} showPricingFields={showPricingFields} formData={formData} handleChange={handleChange} precioVentaNum={precioVentaNum} margenObjetivoNum={margenObjetivoNum} 
           costoMaximoPermitido={costoMaximoPermitido} gananciaEsperada={gananciaEsperada}
           isPrecioVentaError={hasSubmitted && isPrecioVentaInvalid} isMargenObjetivoError={hasSubmitted && isMargenObjetivoInvalid}
+          margenRealCalculado={margenRealCalculado} precioSugeridoCalculado={precioSugeridoCalculado}
         />
         <ProductTaxFields
           formData={formData}

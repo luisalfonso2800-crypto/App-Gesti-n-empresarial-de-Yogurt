@@ -111,6 +111,9 @@ model Producto {
   densidad                      Decimal? @default(1.0) @map("Densidad") @db.Decimal(6, 4)
   imagenUrl      String?        @map("Imagen_Url")
   activo         Boolean        @default(true) @map("Activo")
+  codigo         String?        @unique @map("Codigo_Producto")
+  costoEstimado  Decimal?       @map("Costo_Estimado") @db.Decimal(12, 2)
+  unidadVenta    String         @default("UND") @map("Unidad_Venta")
   observaciones  String?        @map("Observaciones")
   recetas        Receta[]
   producciones   Produccion[]
@@ -195,6 +198,7 @@ model InventarioProducto {
   idProducto         String   @unique @map("ID_Producto")
   producto           Producto @relation(fields: [idProducto], references: [id])
   cantidadActual     Decimal  @default(0) @map("Cantidad_Actual")
+  stockMinimo        Decimal  @default(0) @map("Stock_Minimo") @db.Decimal(12, 2)
   costoPromedio      Decimal? @map("Costo_Promedio") @db.Decimal(12, 2)
   fechaActualizacion DateTime @updatedAt @map("Fecha_Actualizacion")
 

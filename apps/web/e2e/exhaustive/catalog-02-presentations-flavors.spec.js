@@ -45,7 +45,7 @@ test.describe('Catálogos: Presentaciones y Productos', () => {
     await page.goto('/catalog/products');
     await waitForLoad(page);
 
-    const btnNuevo = page.locator('button:has-text("Nuevo Producto"), button:has-text("Nuevo Producto Comercial")').first();
+    const btnNuevo = page.locator('button:has-text("Nuevo Registro"), button:has-text("Nuevo Producto"), button:has-text("Nuevo Producto Comercial")').first();
     await expect(btnNuevo).toBeVisible({ timeout: 10000 });
 
     await btnNuevo.click();
@@ -53,6 +53,10 @@ test.describe('Catálogos: Presentaciones y Productos', () => {
     const nombreIn = page.locator('input[name="nombre"]').first();
     if (await nombreIn.isVisible({ timeout: 3000 }).catch(() => false)) {
       await nombreIn.fill('YOGURT FRESA 500ML');
+    }
+    const presSelect = page.locator('select[name="idPresentacion"], select[name="presentacionId"]').first();
+    if (await presSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await presSelect.selectOption({ index: 1 }).catch(() => {});
     }
     const pvIn = page.locator('input[name="precioVenta"]').first();
     if (await pvIn.isVisible({ timeout: 2000 }).catch(() => false)) {

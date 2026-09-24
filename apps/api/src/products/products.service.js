@@ -60,7 +60,14 @@ export class ProductsService {
       cleanData.tarifaIva = Number(cleanData.tarifaIva);
     }
 
-    return this.repository.create(cleanData);
+    try {
+      return await this.repository.create(cleanData);
+    } catch (error) {
+      if (error?.code === 'P2002' && error?.meta?.target?.includes('Codigo_Producto')) {
+        throw new ConflictException(`El código de producto "${cleanData.codigo}" ya está registrado.`);
+      }
+      throw error;
+    }
   }
 
   async update(id, updateDto) {
