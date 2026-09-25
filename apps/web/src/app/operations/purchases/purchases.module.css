@@ -272,3 +272,53 @@
   margin-top: 0.5rem;
   justify-content: flex-end;
 }
+
+.paginationBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 8px 8px;
+}
+
+.paginationInfo {
+  font-size: 0.82rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.paginationBtn {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.paginationBtn:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.paginationBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.pageNumberBadge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #166534;
+  padding: 0.2rem 0.5rem;
+}

@@ -1,6 +1,6 @@
 import { Injectable, Dependencies } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
-import { toDecimal, add, sub, mul, div, toNumber } from '../common/decimal/decimal-utils.js';
+import { Decimal, toDecimal, add, sub, mul, div, toNumber } from '../common/decimal/decimal-utils.js';
 
 @Injectable()
 @Dependencies(PrismaService)
