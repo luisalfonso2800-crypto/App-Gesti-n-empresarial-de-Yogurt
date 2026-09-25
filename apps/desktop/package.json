@@ -7,7 +7,8 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win -c.npmRebuild=false"
+    "pack": "electron-builder --dir -c.npmRebuild=false -c.win.signAndEditExecutable=false",
+    "dist": "electron-builder --win -c.npmRebuild=false -c.win.signAndEditExecutable=false"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -21,12 +22,8 @@
       "output": "dist"
     },
     "win": {
-      "target": "nsis"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
+      "target": "dir",
+      "signAndEditExecutable": false
     }
   }
 }
