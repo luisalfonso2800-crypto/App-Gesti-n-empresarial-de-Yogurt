@@ -15,6 +15,7 @@ export function ProductPresentationSelector({
   formData,
   handleChange,
   isPresentacionError = false,
+  disabled = false,
   onQuickCreate
 }) {
   if (presentations.length === 0) {
@@ -29,6 +30,7 @@ export function ProductPresentationSelector({
             type="button"
             className={styles.btnQuickCreatePres}
             onClick={onQuickCreate}
+            disabled={disabled}
           >
             + Crear Formato
           </button>
@@ -41,18 +43,19 @@ export function ProductPresentationSelector({
   }
 
   return (
-    <div>
+    <div className={styles.lockedFieldWrapper}>
       <SmartSelect
         label="Presentación"
         name="idPresentacion"
         value={formData.idPresentacion ?? ''}
         onChange={handleChange}
+        disabled={disabled}
         options={presentations.map(p => ({
           id: p.id,
           label: p.nombre && p.nombre.length > 60 ? `${p.nombre.slice(0, 57)}...` : p.nombre
         }))}
         required
-        placeholder="Seleccione presentación"
+        placeholder={disabled ? '🔒 Ingrese nombre primero' : 'Seleccione presentación'}
         className={isPresentacionError ? styles.inputErrorBorder : ''}
       />
       {isPresentacionError && (

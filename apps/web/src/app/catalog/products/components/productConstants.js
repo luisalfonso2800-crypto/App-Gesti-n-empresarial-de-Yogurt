@@ -21,9 +21,13 @@ export const HINTS_CATEGORIA_WIP = {
 };
 
 export const CATEGORIAS_COMERCIALES = [
-  { id: 'LACTEOS', label: 'Lácteos Terminados (Comercial)' },
-  { id: 'POSTRES', label: 'Postres y Otros' },
-  { id: 'BEBIDAS', label: 'Bebidas' }
+  { id: 'LACTEOS', label: 'Yogurt y Lácteos Terminados' },
+  { id: 'YOGURT_GRIEGO', label: 'Yogurt Griego y Especialidades' },
+  { id: 'QUESOS_FRESCOS', label: 'Quesos Frescos y Cuajadas' },
+  { id: 'BEBIDAS_LACTEAS', label: 'Bebidas Lácteas y Kumis' },
+  { id: 'DULCES_POSTRES', label: 'Arequipes, Dulces y Postres' },
+  { id: 'POSTRES', label: 'Otros Postres y Repostería' },
+  { id: 'BEBIDAS', label: 'Bebidas Refrescantes' }
 ];
 
 export const CANALES_VENTA = [

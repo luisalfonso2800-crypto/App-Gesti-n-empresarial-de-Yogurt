@@ -1,10 +1,7 @@
 /**
  * @file ProductBasicFields.jsx
  * @module catalog/products/components/modal-parts
- * @description Campos de identificación básica de producto (Nombre, Presentación, Categoría y Canal de venta).
- * @responsibility Renderizar los selectores y tarjetas didácticas de categoría y canal de venta según presentación WIP o comercial.
- * @usedBy apps/web/src/app/catalog/products/components/ProductModal.jsx
- * @dependencies react, SmartSelect, ../../SmartModal.module.css, ../product-modal.module.css
+ * @description Campos básicos con bloqueo en cascada estricto (Nombre -> Presentación -> Categoría -> Canal -> Inventario).
  */
 
 import React from 'react';
@@ -29,6 +26,8 @@ export function ProductBasicFields({
   isNombreError = false,
   isPresentacionError = false,
   isWipMode = false,
+  isLocked = false,
+  codigoSugerido = '',
   onClose
 }) {
   const router = useRouter();
@@ -38,6 +37,11 @@ export function ProductBasicFields({
     if (onClose) onClose();
     router.push(`/catalog/presentations?crear=true&tipoUso=${tipoUso}`);
   };
+
+  const hasName = Boolean(formData.nombre?.trim());
+  const hasPresentation = hasName && Boolean(formData.idPresentacion);
+  const hasCategory = hasPresentation && Boolean(formData.categoria);
+  const hasChannel = hasCategory && Boolean(formData.canalVenta);
 
   return (
     <>
@@ -64,6 +68,7 @@ export function ProductBasicFields({
           formData={formData}
           handleChange={handleChange}
           isPresentacionError={isPresentacionError}
+          disabled={!formData.nombre?.trim()}
           onQuickCreate={handleIrACrearPresentacion}
         />
 
@@ -82,7 +87,7 @@ export function ProductBasicFields({
       </div>
 
       <div className={modalStyles.twoColumns}>
-        <div>
+        <div className={styles.lockedFieldWrapper}>
           <SmartSelect
             label="Categoría"
             name="categoria"
@@ -90,7 +95,8 @@ export function ProductBasicFields({
             onChange={handleChange}
             options={availableCategories}
             required
-            placeholder="Seleccione categoría"
+            disabled={!hasPresentation}
+            placeholder={!hasPresentation ? '🔒 Seleccione presentación primero' : 'Seleccione categoría'}
           />
           {isGranel && hintsCategoriaWip[formData.categoria] && (
             <div className={styles.wipHintBox}>
@@ -104,7 +110,7 @@ export function ProductBasicFields({
           )}
         </div>
 
-        <div>
+        <div className={styles.lockedFieldWrapper}>
           <SmartSelect
             label="Canal de Venta"
             name="canalVenta"
@@ -112,7 +118,8 @@ export function ProductBasicFields({
             onChange={handleChange}
             options={canalesVenta}
             required
-            placeholder="Seleccione destino del producto..."
+            disabled={!hasCategory}
+            placeholder={!hasCategory ? '🔒 Seleccione categoría primero' : 'Seleccione destino del producto...'}
           />
           {formData.canalVenta && hintsCanalVenta[formData.canalVenta] && (
             <div className={styles.canalHintBox}>
@@ -128,6 +135,8 @@ export function ProductBasicFields({
         handleInputChange={handleInputChange}
         handleChange={handleChange}
         isGranel={isGranel}
+        isLocked={!hasChannel}
+        codigoSugerido={codigoSugerido}
       />
     </>
   );
