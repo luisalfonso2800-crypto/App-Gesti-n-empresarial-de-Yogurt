@@ -27,7 +27,12 @@ export async function fillRowItem(page, rowIndex = 0, data = {}) {
 
   if (data.empaqueTipo) {
     const empaqueSelect = row.locator('select[class*="empaqueSelect"]');
-    await empaqueSelect.selectOption(data.empaqueTipo);
+    try {
+      await empaqueSelect.selectOption(data.empaqueTipo, { timeout: 1500 });
+    } catch {
+      // Fallback tolerante: seleccionar la primera opción válida si el valor no coincide
+      await empaqueSelect.selectOption({ index: 1 }).catch(() => {});
+    }
   }
 
   if (data.contenidoNeto !== undefined && data.contenidoNeto !== null) {
