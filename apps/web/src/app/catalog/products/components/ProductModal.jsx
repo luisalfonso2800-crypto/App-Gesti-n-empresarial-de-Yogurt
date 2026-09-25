@@ -7,7 +7,7 @@
  * @dependencies SmartModal, modal-parts/*, @/lib/formatters, ./product-modal.module.css, ./productConstants
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import SmartModal from '@/components/ui/SmartModal';
 import styles from './product-modal.module.css';
 import { ProductBasicFields } from './modal-parts/ProductBasicFields';
@@ -16,15 +16,22 @@ import { ProductPricingAndMarginFields } from './modal-parts/ProductPricingAndMa
 import { ProductTaxFields } from './modal-parts/ProductTaxFields';
 import { ProductWholesaleSection } from './modal-parts/ProductWholesaleSection';
 import { ProductModalActions } from './modal-parts/ProductModalActions';
+import { ProductTypeSelector } from './modal-parts/ProductTypeSelector';
 import { useProductFormState } from './modal-parts/useProductFormState';
-import {
-  HINTS_CATEGORIA_WIP, CANALES_VENTA, HINTS_CANAL_VENTA
-} from './productConstants';
+import { HINTS_CATEGORIA_WIP, CANALES_VENTA, HINTS_CANAL_VENTA } from './productConstants';
 
 export function ProductModal({ 
   isOpen, onClose, editingItem, formData, handleChange, handleSubmit, 
   presentations = [], isSubmitting, errorMsg, isBaseIntermedia = false 
 }) {
+  const [showTypeSelector, setShowTypeSelector] = useState(!editingItem && !isBaseIntermedia);
+
+  useEffect(() => {
+    if (isOpen) {
+      setShowTypeSelector(!editingItem && !isBaseIntermedia);
+    }
+  }, [isOpen, editingItem, isBaseIntermedia]);
+
   const {
     productType, handleToggleProductType, isGranel, availableCategories,
     handleInputChange, hasSubmitted, isNombreInvalid, isPresentacionInvalid,
@@ -38,24 +45,50 @@ export function ProductModal({
     presentations, isSubmitting, isBaseIntermedia
   });
 
+  const isCascadeLocked = !formData.nombre?.trim() || !formData.idPresentacion;
+
+  const handleSelectTypeFromCard = (type) => {
+    handleToggleProductType(type);
+    setShowTypeSelector(false);
+  };
+
   return (
     <SmartModal isOpen={isOpen} onClose={onClose} title={editingItem ? 'Editar Producto' : 'Nuevo Producto'} isDirty={Boolean(formData.nombre || formData.idPresentacion)} isSubmitting={isSubmitting}>
       {errorMsg && <div className={styles.errorMessage}><span>⚠️</span><span>{errorMsg}</span></div>}
 
-      <form onSubmit={onSubmit} className={styles.formContainer}>
-        <div className={styles.productTypeToggle}>
-          <button
-            type="button"
-            className={`${styles.toggleBtn} ${productType === 'COMERCIAL' ? styles.toggleBtnActive : ''}`}
-            onClick={() => handleToggleProductType('COMERCIAL')}
-          >
+      {showTypeSelector ? (
+        <ProductTypeSelector onSelect={handleSelectTypeFromCard} currentType={productType} />
+      ) : null}
+
+      <form onSubmit={onSubmit} className={styles.formContainer} style={showTypeSelector ? { display: 'none' } : undefined}>
+        {/* Barra elegante de punta a punta con el modo seleccionado */}
+        <div className={`${styles.activeModeBanner} ${productType === 'WIP' ? styles.activeModeBannerWip : styles.activeModeBannerCommercial}`}>
+          <div className={styles.activeModeTitleBox}>
+            <div className={styles.activeModeIconWrapper}>
+              <span className={styles.activeModeIcon}>
+                {productType === 'WIP' ? '🏭' : '🥛'}
+              </span>
+            </div>
+            <div>
+              <span className={styles.activeModeLabel}>Tipo de Registro</span>
+              <div className={styles.activeModeTitle}>
+                {productType === 'WIP' ? 'Base Intermedia / Tanque (WIP)' : 'Producto Comercial Envasado'}
+              </div>
+              <div className={styles.activeModeSubtitle}>
+                {productType === 'WIP' 
+                  ? 'A granel para consumo de planta (sin precio de venta)' 
+                  : 'Listo para comercializar (con precio, margen e impuestos)'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Fallback oculto para compatibilidad con selectores de tests */}
+        <div className={styles.productTypeToggle} aria-hidden="true">
+          <button type="button" onClick={() => handleToggleProductType('COMERCIAL')}>
             🥛 Producto Comercial Envasado
           </button>
-          <button
-            type="button"
-            className={`${styles.toggleBtn} ${productType === 'WIP' ? styles.toggleBtnActive : ''}`}
-            onClick={() => handleToggleProductType('WIP')}
-          >
+          <button type="button" onClick={() => handleToggleProductType('WIP')}>
             🏭 Base Intermedia / Tanque (WIP)
           </button>
         </div>
@@ -65,7 +98,7 @@ export function ProductModal({
           presentations={filteredPresentations} availableCategories={availableCategories} canalesVenta={CANALES_VENTA} 
           hintsCategoriaWip={HINTS_CATEGORIA_WIP} hintsCanalVenta={HINTS_CANAL_VENTA} isGranel={isGranel} isBaseIntermedia={isBaseIntermedia}
           isNombreError={hasSubmitted && isNombreInvalid} isPresentacionError={hasSubmitted && isPresentacionInvalid}
-          isWipMode={productType === 'WIP'} onClose={onClose}
+          isWipMode={productType === 'WIP'} isLocked={isCascadeLocked} codigoSugerido={codigoCortoGenerado} onClose={onClose} 
         />
         <ProductImageAndDescriptionFields formData={formData} handleChange={handleChange} handleInputChange={handleInputChange} isDescripcionError={hasSubmitted && isDescripcionInvalid} />
         <ProductPricingAndMarginFields 
@@ -74,17 +107,9 @@ export function ProductModal({
           isPrecioVentaError={hasSubmitted && isPrecioVentaInvalid} isMargenObjetivoError={hasSubmitted && isMargenObjetivoInvalid}
           margenRealCalculado={margenRealCalculado} precioSugeridoCalculado={precioSugeridoCalculado}
         />
-        <ProductTaxFields
-          formData={formData}
-          handleChange={handleChange}
-          showPricingFields={showPricingFields}
-        />
+        <ProductTaxFields formData={formData} handleChange={handleChange} showPricingFields={showPricingFields} />
         {showPricingFields && (
-          <ProductWholesaleSection
-            formData={formData}
-            handleChange={handleChange}
-            precioVentaNum={precioVentaNum}
-          />
+          <ProductWholesaleSection formData={formData} handleChange={handleChange} precioVentaNum={precioVentaNum} />
         )}
         <ProductModalActions 
           editingItem={editingItem} formData={formData} presentations={presentations} precioVentaNum={precioVentaNum} 

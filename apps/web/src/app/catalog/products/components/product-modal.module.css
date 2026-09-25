@@ -99,39 +99,105 @@
   margin-top: 0.25rem;
 }
 
-/* Selector de tipo de producto (Comercial vs WIP) */
-.productTypeToggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  background-color: #F1F5F9;
-  padding: 0.35rem;
-  border-radius: 8px;
-  border: 1px solid #E2E8F0;
+/* Banner Premium de modo activo alineado a las tarjetas iniciales */
+.activeModeBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  border: 2px solid #E2DCD0;
+  background-color: #FAF8F5;
+  box-shadow: 0 2px 8px rgba(24, 38, 34, 0.04);
+  transition: all 0.25s ease-in-out;
 }
 
-.toggleBtn {
+.activeModeBannerCommercial {
+  border-color: #166534;
+  background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 60%, #FAF8F5 100%);
+}
+
+.activeModeBannerWip {
+  border-color: #A16207;
+  background: linear-gradient(135deg, #FEFCE8 0%, #FFFFFF 60%, #FAF8F5 100%);
+}
+
+.activeModeTitleBox {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.activeModeIconWrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.55rem 0.75rem;
-  border: 1px solid transparent;
-  background: transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: #475569;
-  transition: all 0.15s ease;
+  border: 1px solid #E2DCD0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
 }
 
-.toggleBtnActive {
+.activeModeIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.activeModeLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #78716C;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.activeModeTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #182622;
+  line-height: 1.2;
+}
+
+.activeModeSubtitle {
+  font-size: 0.78rem;
+  color: #57534E;
+  margin-top: 0.15rem;
+}
+
+.activeModeChangeBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid #D6D3D1;
   background-color: #FFFFFF;
   color: #182622;
-  font-weight: 700;
-  border-color: #CBD5E1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.activeModeChangeBtn:hover {
+  background-color: #182622;
+  border-color: #182622;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(24, 38, 34, 0.12);
+}
+
+/* Selector toggle secundario (para compatibilidad de tests o fallback) */
+.productTypeToggle {
+  display: none;
 }
 
 /* Tarjeta WIP granel */
@@ -617,6 +683,118 @@
   line-height: 1.4;
 }
 
+/* Código interno protegido con divisor y acción excepcional */
+.codeProtectedContainer {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background-color: #FAF8F5;
+  border: 1px solid #D6D3D1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.codeProtectedInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.6rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #182622;
+  outline: none;
+}
+
+.codeDivider {
+  width: 1px;
+  background-color: #E2DCD0;
+  margin: 4px 0;
+}
+
+.btnEditCode {
+  background: transparent;
+  border: none;
+  padding: 0 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  color: #78716C;
+  transition: all 0.15s ease;
+}
+
+.btnEditCode:hover {
+  background-color: #F4F1EA;
+  color: #182622;
+}
+
+.codeWarningBox {
+  background-color: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #92400E;
+  line-height: 1.35;
+}
+
+.codeWarningActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.codeWarningBtnCancel {
+  background: transparent;
+  border: 1px solid #D6D3D1;
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  color: #57534E;
+}
+
+.codeWarningBtnConfirm {
+  background: #A16207;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.72rem;
+  cursor: pointer;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.fieldLockedNotice {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: #94A3B8;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.inputLocked {
+  background-color: #F8FAFC !important;
+  border-color: #E2E8F0 !important;
+  color: #94A3B8 !important;
+  cursor: not-allowed !important;
+}
+
+.lockedFieldWrapper {
+  position: relative;
+}
+
+.lockIndicator {
+  font-size: 0.8rem;
+  opacity: 0.75;
+}
+
 .taxSectionCard {
   background-color: #FAF8F5;
   border: 1px solid #E8E2D7;
@@ -645,5 +823,151 @@
   margin-top: 0.75rem;
   padding-top: 0.6rem;
   border-top: 1px solid #E2DCD0;
+}
+
+/* Pantalla didáctica previa: ProductTypeSelector */
+.typeSelectorOverlay {
+  padding: 0.5rem 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.typeSelectorHeader {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.typeSelectorHeaderTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #182622;
+  margin: 0 0 0.35rem 0;
+}
+
+.typeSelectorHeaderSubtitle {
+  font-size: 0.85rem;
+  color: #64748B;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.typeSelectorGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.typeSelectorCard {
+  border: 2px solid #E2DCD0;
+  background-color: #FAF8F5;
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.typeSelectorCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 38, 34, 0.08);
+}
+
+.typeSelectorCardCommercial:hover {
+  border-color: #166534;
+}
+
+.typeSelectorCardWip:hover {
+  border-color: #A16207;
+}
+
+.typeSelectorCardSelected {
+  border-color: #166534;
+  background-color: #F0FDF4;
+  box-shadow: 0 0 0 1px #166534;
+}
+
+.typeSelectorCardSelectedWip {
+  border-color: #A16207;
+  background-color: #FEFCE8;
+  box-shadow: 0 0 0 1px #A16207;
+}
+
+.typeSelectorIconWrapper {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #E2DCD0;
+  margin-bottom: 0.75rem;
+}
+
+.typeSelectorIcon {
+  font-size: 1.75rem;
+}
+
+.typeSelectorTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+  margin-bottom: 0.5rem;
+}
+
+.typeSelectorDescription {
+  font-size: 0.8rem;
+  color: #57534E;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+  flex-grow: 1;
+}
+
+.typeSelectorBtn {
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.typeSelectorBtnCommercial {
+  background-color: #166534;
+  color: #FFFFFF;
+}
+
+.typeSelectorBtnCommercial:hover {
+  background-color: #14532D;
+}
+
+.typeSelectorBtnWip {
+  background-color: #A16207;
+  color: #FFFFFF;
+}
+
+.typeSelectorBtnWip:hover {
+  background-color: #854D0E;
+}
+
+.typeSelectorChangeBtn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  color: #78716C;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  padding: 0;
+}
+
+.typeSelectorChangeBtn:hover {
+  color: #182622;
 }
 

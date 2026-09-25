@@ -121,6 +121,7 @@
 }
 .input, .select, .textarea {
   width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
   padding: 0.55rem 0.75rem;
   background-color: #ffffff;
@@ -129,6 +130,17 @@
   font-size: 0.875rem;
   color: #1c1917;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.select {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.select option {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
 }
 .input:focus, .select:focus, .textarea:focus {
   outline: none;
