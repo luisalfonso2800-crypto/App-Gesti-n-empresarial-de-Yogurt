@@ -1,4 +1,4 @@
-# ERP Industrial MANNÁ — Sistema Integral de Manufactura Láctea y Trazabilidad Sanitaria
+# ERP Industrial MANNÁ — Sistema Integral de Manufactura Láctea, Trazabilidad Sanitaria y Centro de Mando Táctico
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
@@ -6,131 +6,117 @@
 [![Prisma ORM](https://img.shields.io/badge/Prisma-7.10-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
 [![Electron](https://img.shields.io/badge/Electron-33-47848F?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
-[![Playwright](https://img.shields.io/badge/Playwright-100%25_Green-2EAD33?style=for-the-badge&logo=playwright)](https://playwright.dev/)
+[![Playwright](https://img.shields.io/badge/Playwright-100%25_Passing-2EAD33?style=for-the-badge&logo=playwright)](https://playwright.dev/)
 
-> **ERP Vertical Especializado de Grado Alimentario (BPM / INVIMA)** diseñado con ergonomía de planta para la gestión técnica, operativa, comercial y estratégica en la elaboración y comercialización de yogurt artesanal e industrial.
+> **ERP Vertical de Grado Alimentario (BPM / INVIMA)** diseñado con ergonomía de planta para la gestión técnica, operativa, comercial y estratégica en la elaboración y comercialización de derivados lácteos.
 
 ---
 
-## 🚀 Descarga y Ejecución en Windows (.exe)
+## 🚀 Distribución y Ejecución de Escritorio en Windows (.exe)
 
-El instalador compilado para Windows de 64 bits se encuentra disponible en la pestaña de **Releases** de este repositorio:
+El instalador para Windows de 64 bits se encuentra disponible en la pestaña de **Releases** de este repositorio:
 
 * 📦 **[Descargar MANNÁ Gestión Empresarial (Instalador .exe)](https://github.com/luisalfonso2800-crypto/App-Gesti-n-empresarial-de-Yogurt/releases)**
-* **Ejecución Local Rápida (Sin Terminales Visibles):**
-  Hacer doble clic en `lanzar-manna-oculto.vbs` o en el acceso directo del Escritorio. Windows levantará los microservicios en segundo plano y abrirá directamente la ventana nativa de Electron sin consolas emergentes.
+* **Ejecución Local Rápida (Sin Consolas Visibles):**
+  El sistema incluye un orquestador en segundo plano (`lanzar-manna-oculto.vbs`). Al ejecutarse, Windows levanta los microservicios locales y abre la ventana nativa de Electron sin terminales emergentes en pantalla.
 
 ---
 
-## 🎯 Problema Industrial que Resuelve
+## 🎯 Desafíos Industriales que Resuelve
 
-1. **Trazabilidad Sanitaria de Lote a Lote (BPM / INVIMA):**
-   * Vinculación obligatoria de lotes de insumos perecederos (leche cruda, cultivos lácticos, fruta procesada) con el lote final envasado.
-   * Auditoría de temperaturas de pasteurización, tiempos de incubación y curvas de fermentación.
+1. **Trazabilidad Sanitaria y Genealogía de Lotes (BPM / INVIMA):**
+   * Vinculación obligatoria entre el lote padre de base láctea intermedia (`idLotePadre`) y los lotes hijos envasados comercialmente.
+   * Monitoreo por etapas: temperaturas de pasteurización, curvas de fermentación y control de tiempos de maduración.
 
 2. **Gestión de Inventario Intermedio (WIP - Work in Progress):**
-   * Control preciso de tanques de incubación e inventario en proceso antes del saborizado, corte de cuajada y envasado.
-   * Separación física y lógica entre inventario de materia prima, producto en fermentación y Cava de Producto Terminado (P.T.).
+   * Control desacoplado entre materia prima en bodega, tanques de maduración a granel (`A GRANEL`) y stock final en Cava de Producto Terminado.
+   * Manejo de recirculación de inóculos y cepas vivas internas para siembra de lotes sucesivos sin depender de compras externas.
 
-3. **Cálculo de Mermas y Rendimiento Real vs. Teórico:**
-   * Motor financiero basado en `Decimal.js` con precisión matemática estricta (cero redondeos flotantes IEEE 754).
-   * Monitoreo de mermas por evaporación, restos en tubería/tanque y porcentaje de merma en empaque.
+3. **Cálculo Real de Mermas y Rendimiento Lácteo:**
+   * Motor transaccional con precisión matemática estricta (`Decimal.js`), eliminando errores de redondeo en punto flotante IEEE 754.
+   * Deducción discreta para empaques indivisibles (vasos, tapas, etiquetas) mediante redondeo entero superior y balances continuos para masa/volumen.
 
 4. **Ciclo Comercial y Cartera Poka-Yoke:**
-   * Despacho dinámico y liquidación desde Cava con validación de stock disponible en tiempo real.
-   * Facturación con cuentas por cobrar, abonos parciales, liquidación total y emisión de comprobantes.
+   * Despacho dinámico y validación de stock disponible en Cava en tiempo real.
+   * Facturación con cálculo de margen bruto en caliente, pagos parciales, liquidación total y comprobantes con máscara numérica y conversión a letras.
 
 5. **Rumbo MANNÁ (Dirección Estratégica y Fondos de Cosecha):**
-   * Panel de asignación de utilidades operativas reales para metas de expansión industrial y proyectos de bienestar familiar.
+   * Motor analítico reactivo de avance y ritmo de ejecución (*pacing*) que asigna la utilidad operativa real hacia metas de inversión de planta y proyectos familiares.
 
 ---
 
 ## 🏛️ Arquitectura del Sistema
 
-El ecosistema está estructurado como un **Monorepo gobernado con pnpm workspaces**, aplicando arquitectura limpia de tres capas en backend y componentes de responsabilidad única (SRP) en frontend.
+El ecosistema está estructurado como un **Monorepo gobernado con pnpm workspaces**, aplicando arquitectura limpia de tres capas en backend y componentes desacoplados de responsabilidad única (SRP) en frontend.
 
 ```mermaid
 graph TD
-    subgraph Cliente Desktop / Local
-        E[Electron Container<br/>apps/desktop] -->|Carga HTTP Local| W[Next.js 15 Standalone<br/>apps/web - Puerto 3000]
+    subgraph Capa de Presentación Nativa
+        E[Electron Runtime<br/>apps/desktop] -->|Carga HTTP Local| W[Next.js 15 Standalone<br/>apps/web - Puerto 3000]
     end
 
-    subgraph Frontend Arquitectura 3 Capas
-        W --> Views[Orquestadores de Vista<br/>App Router / SRP &lt; 120 lins]
-        Views --> Hooks[Custom Hooks de Dominio<br/>Lógica de Estado y Filtros]
-        Views --> Modals[SmartModals &amp; Poka-Yoke<br/>Design System MANNA]
+    subgraph Frontend Arquitectura por Capas
+        W --> Views[Orquestadores de Vista<br/>App Router / SRP &lt; 120 líneas]
+        Views --> Hooks[Custom Hooks de Dominio<br/>useRecipeForm, useProductionForm]
+        Views --> Modals[SmartModals &amp; Componentes Poka-Yoke<br/>CSS Modules / Sin Estilos Inline]
     end
 
-    subgraph Backend Micro-Modular
-        W -->|REST API v1| C[Controllers Express/NestJS<br/>apps/api - Puerto 4000]
-        C --> S[Services de Negocio<br/>Reglas de Dominio y Mermas]
+    subgraph Backend Micro-Modular NestJS
+        W -->|REST API v1| C[Controllers NestJS<br/>apps/api - Puerto 4000]
+        C --> S[Services de Dominio<br/>Lógica de Negocio y Mermas]
         S --> R[Repositories Prisma<br/>Transacciones Atómicas]
     end
 
-    subgraph Persistencia y Kárdex
+    subgraph Persistencia y Trazabilidad
         R --> DB[(PostgreSQL 16<br/>yogurt_dev)]
         R --> KDX[Movimientos_Inventario<br/>Kárdex PEPS / Entradas y Salidas]
     end
 ```
 
-### Principios de Gobernanza y Calidad
-* **Veto Anti-Blue y Design System MANNÁ:** Paleta institucional de planta (`#182622` Bosque Profundo, `#8F704A` Trigo Tostado, `#F6F4EB` Pergamino), botones accesibles, sin alertas nativas intrusivas (`no-alert`).
-* **Backend-First y Transacciones ACID:** Toda entrada de insumos, descuento de lote o despacho comercial se procesa en bloques `prisma.$transaction`.
-* **Testing Automatizado (Regla 07):** 100% de cobertura en integración API y Happy Path visual Playwright sin bucles ni dependencias de digitación manual.
+### Principios de Ingeniería y Calidad de Código
+* **Veto Anti-Blue y Design System MANNÁ:** Paleta institucional de planta (`#182622` Bosque Profundo, `#8F704A` Trigo Tostado, `#FAF8F5` Lino), cero alertas nativas (`no-alert`) y feedback contextual perimetral.
+* **Backend-First y Transacciones ACID:** Toda entrada de compras, consumo de insumos en recetas o despacho comercial se ejecuta dentro de bloques `prisma.$transaction`.
+* **Testing Automatizado Exhaustivo (Regla 07):** 100% de cobertura en suites de integración API y pruebas visuales End-to-End con Playwright, garantizando flujos deterministas sin bucles de ejecución.
+* **Guardián de Arquitectura Automatizado:** Script interno (`verify-srp.js`) que audita en cada commit que ningún componente o controlador exceda su límite de líneas (SRP $\le 120-130$).
 
 ---
 
-## 📸 Galería Visual del Sistema
+## 📸 Módulos Principales del Sistema
 
-### 1. Panel de Control y Telemetría Operativa (Dashboard)
-> Métricas en tiempo real de producción semanal, litros en fermentación, valorización de inventario en bodega y stock en Cava de Producto Terminado.
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│  MANNÁ — Panel de Control Industrial                       [Cifras: ON]│
-│  [ Producción: 1.250 L ]  [ En Cava: 840 U ]  [ Cartera: $ 4.250.000 ] │
-│  ────────────────────────────────────────────────────────────────────  │
-│  ► Tanque 1: Fermentación (42°C - 3h 15m)   ███████████░░ 78%          │
-│  ► Tanque 2: Pasteurizado (85°C - Terminado) ████████████ 100%         │
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-### 2. Diseñador de Fórmulas y Explosión de Materiales (BOM)
-> Configuración de recetas maestro-detalle con rendimientos porcentuales, densidad de insumos y parámetros críticos de temperatura y tiempo.
-
-### 3. Cierre de Lote y Liquidación a Cava con Control de Mermas
-> Conciliación entre volumen inicial procesado, unidades finales envasadas y cálculo automático de costo unitario por presentación comercial.
-
-### 4. Ciclo de Despacho Comercial y Recaudo de Cartera
-> Bitácora de ventas directas y a crédito, emisión de comprobantes y módulo de abonos con máscara Poka-Yoke y conversión a letras.
-
-### 5. Rumbo MANNÁ — Asignación de Utilidades y Metas
-> Seguimiento visual de fondos disponibles para reinversión de planta y proyectos familiares a partir de la utilidad neta auditada.
+| Módulo | Enfoque Operativo | Característica Técnica |
+| :--- | :--- | :--- |
+| **Centro de Mando (SCADA)** | Métricas en tiempo real de litros procesados, stock en Cava y telemetría de fermentación. | Canvas dinámicos de fluidos, osciloscopio y simulador táctico de producción y ganancia. |
+| **Diseñador de Fórmulas (BOM)** | Formulación de recetas por etapas técnicas (tiempos, temperaturas mín/obj/máx). | Soporte multinivel (Insumos vs Semielaborados WIP) y semáforo de rentabilidad en tiempo real. |
+| **Piso de Planta y Lotes** | Registro de órdenes de producción, consumos reales y liquidación a Cava. | Trazabilidad genealógica Lote Padre $\rightarrow$ Lote Hijo y congelación de snapshot inmutable de la receta. |
+| **Abastecimiento y Kárdex** | Control de compras asistidas por faltantes, recepción física y costeo ponderado. | Kárdex automatizado con registro de stock anterior, nuevo y costo unitario de absorción. |
+| **Ventas y Cartera** | Despacho comercial con selección de lote por caducidad (FEFO) y facturación. | Validación de existencias en Cava, abonos parciales y liquidación controlada de cuentas por cobrar. |
+| **Rumbo MANNÁ** | Planificación estratégica y siembra de metas empresariales y familiares. | Cálculo reactivo de ritmo (*pacing*) contra flujo de caja y recaudos reales del ERP. |
 
 ---
 
 ## 🛠️ Pila Tecnológica
 
-| Componente | Tecnología | Propósito |
+| Componente | Tecnología | Detalle Técnico |
 | :--- | :--- | :--- |
-| **Monorepo Manager** | pnpm 11 Workspaces | Gestión hermética de dependencias y scripts cruzados |
-| **Frontend Web** | Next.js 15 (App Router, Standalone) | Interfaz visual ergonómica para operadores y gerencia |
-| **Biblioteca UI** | React 19 + Lucide Icons + CSS Modules | Componentes reactivos modulares con cero estilos inline |
-| **Contenedor Desktop** | Electron 33 + electron-builder | Ejecución nativa para Windows con soporte offline local |
-| **Backend API** | NestJS 11 + Express | API Gateway modular, autenticación y validación de esquemas |
-| **Validación de Datos** | Zod + Decimal.js | Contratos de payload estrictos y aritmética decimal exacta |
-| **Capa de Persistencia** | Prisma ORM 7 + PostgreSQL 16 | Modelado relacional, migraciones y transacciones atómicas |
-| **Testing Automatizado** | Playwright 1.63 + Jest 29 | Pruebas de integración API HTTP y verificación visual E2E |
+| **Monorepo Manager** | pnpm 10+ Workspaces | Aislamiento de paquetes y resolución determinista de dependencias |
+| **Frontend Web** | Next.js 15 (App Router) | Servidor standalone optimizado para empaquetado de escritorio |
+| **Biblioteca de UI** | React 19 + Lucide Icons | Componentes reactivos modularizados con CSS Modules |
+| **Contenedor Desktop** | Electron 33 + electron-builder | Ventana nativa Windows con bloqueo de instancia única |
+| **Backend API** | NestJS 11 + Express Runtime | Arquitectura desacoplada Controller $\rightarrow$ Service $\rightarrow$ Repository |
+| **Modelado y Persistencia** | Prisma ORM 7 + PostgreSQL 16 | Esquema relacional con transacciones atómicas e integridad referencial |
+| **Validación Numérica** | Decimal.js + Zod | Aritmética decimal de precisión fija para transacciones contables |
+| **Testing Automatizado** | Playwright 1.50+ | Suites de integración API HTTP y pruebas visuales E2E |
 
 ---
 
-## 💻 Instalación y Desarrollo Local
+## 💻 Puesta en Marcha en Desarrollo
 
-### Requisitos Previos
+### Prerrequisitos
 * **Node.js:** `>= 20.x`
 * **pnpm:** `>= 10.x`
-* **PostgreSQL:** Base de datos activa configurada en `apps/api/.env` (`DATABASE_URL`).
+* **PostgreSQL:** Base de datos activa con la cadena de conexión configurada en `apps/api/.env`.
 
-### Pasos de Configuración
+### Instalación
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/luisalfonso2800-crypto/App-Gesti-n-empresarial-de-Yogurt.git
@@ -139,40 +125,49 @@ cd App-Gesti-n-empresarial-de-Yogurt
 # 2. Instalar dependencias del monorepo
 pnpm install
 
-# 3. Generar el cliente Prisma y sincronizar base de datos
+# 3. Sincronizar esquema y generar cliente Prisma
 pnpm --filter api build
 
-# 4. Iniciar entorno de desarrollo completo (Backend + Frontend)
+# 4. Iniciar servidores de desarrollo
 pnpm run dev
 ```
 
-* Backend disponible en: `http://localhost:4000/api/v1`
-* Frontend disponible en: `http://localhost:3000`
+* **Frontend Web:** `http://localhost:3000`
+* **Backend API Gateway:** `http://localhost:4000/api/v1`
 
 ---
 
-## 🧪 Ejecución de Pruebas Automatizadas
+## 🧪 Verificación y Suites de Pruebas
 
 ```bash
-# Validar integración arquitectural de componentes frontend (SRP < 120 líneas)
-pnpm run verify:srp
+# Auditoría de responsabilidad única (Guardián SRP en frontend y backend)
+node .agents/scripts/verify-srp.js
 
-# Ejecutar suites completas de integración API (sin navegador)
+# Integración API (sin navegador - ejecución ultrarrápida de contratos)
+pnpm --filter web test:e2e e2e/recipes/recipes-api-integration.spec.js
+pnpm --filter web test:e2e e2e/production/production-api-integration.spec.js
+pnpm --filter web test:e2e e2e/purchases/purchases-api-integration.spec.js
+pnpm --filter web test:e2e e2e/payments/payments-api-integration.spec.js
 pnpm --filter web test:e2e e2e/expenses/expenses-api-integration.spec.js
 pnpm --filter web test:e2e e2e/goals/goals-api-integration.spec.js
-pnpm --filter web test:e2e e2e/payments/payments-api-integration.spec.js
-pnpm --filter web test:e2e e2e/purchases/purchases-api-integration.spec.js
 
-# Ejecutar suites de flujo visual E2E representativo (Happy Path)
-pnpm --filter web test:e2e e2e/expenses/expenses-flow.spec.js
-pnpm --filter web test:e2e e2e/goals/goals-flow.spec.js
-pnpm --filter web test:e2e e2e/payments/payments-flow.spec.js
+# Flujos Visuales End-to-End (Happy Path en UI y modales Poka-Yoke)
+pnpm --filter web test:e2e e2e/recipes/recipes-happy-path.spec.js
+pnpm --filter web test:e2e e2e/production/production-happy-path.spec.js
 pnpm --filter web test:e2e e2e/purchases/purchases-flow.spec.js
 pnpm --filter web test:e2e e2e/sales/sales-flow.spec.js
+pnpm --filter web test:e2e e2e/payments/payments-flow.spec.js
+pnpm --filter web test:e2e e2e/expenses/expenses-flow.spec.js
+pnpm --filter web test:e2e e2e/goals/goals-flow.spec.js
+
+# Cobertura Exhaustiva de Cadena de Valor (E2E Completo)
+pnpm --filter web test:e2e e2e/exhaustive/operations-01-purchases-production.spec.js
+pnpm --filter web test:e2e e2e/exhaustive/commercial-01-orders-shipments.spec.js
+pnpm --filter web test:e2e e2e/value-chain-complete.spec.js
 ```
 
 ---
 
-## 📄 Licencia y Propiedad Intelectual
+## 📄 Licencia
 
-Desarrollado para **Lácteos MANNÁ**. Todos los derechos de propiedad intelectual y formulación técnica reservados.
+Desarrollado para **Lácteos MANNÁ**. Código abierto para propósitos de demostración técnica y evaluación de arquitectura.
