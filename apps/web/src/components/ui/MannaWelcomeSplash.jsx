@@ -9,7 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import styles from './MannaWelcomeSplash.module.css';
 
 const SESSION_KEY = 'manna_app_opened';
-const DISPLAY_DURATION_MS = 3800;
+const DISPLAY_DURATION_MS = 5800;
 
 export default function MannaWelcomeSplash() {
   const [visible, setVisible] = useState(false);
