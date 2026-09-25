@@ -74,6 +74,15 @@ export function useProductForm({ onSuccess }) {
   };
 
   const handleChange = (e) => {
+    if (e.target?.resetForm) {
+      const { resetForm, ...cleanFields } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        ...cleanFields
+      }));
+      return;
+    }
+
     const { name, value, type, checked } = e.target;
     let parsedValue = type === 'checkbox' ? checked : value;
 

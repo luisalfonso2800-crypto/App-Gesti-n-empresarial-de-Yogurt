@@ -72,23 +72,26 @@ export function useProductFormState({
 
   const handleToggleProductType = (type) => {
     setProductType(type);
-    if (type === 'WIP') {
-      const granelPres = presentations.find(p => p.tipoEnvase === 'TANQUE_GRANEL' || p.tipoEnvase === 'BALDE' || p.nombre?.toUpperCase().includes('GRANEL') || p.tipoEnvase === 'PORCIONADO_WIP');
-      if (granelPres) {
-        handleChange({ target: { name: 'idPresentacion', value: String(granelPres.id) } });
+    // Limpiar todos los inputs al cambiar de opción o ingresar a un modo nuevo
+    handleChange({
+      target: {
+        resetForm: true,
+        nombre: '',
+        idPresentacion: '',
+        categoria: '',
+        descripcion: '',
+        canalVenta: '',
+        precioVenta: type === 'WIP' ? 0 : '',
+        margenObjetivo: type === 'WIP' ? 0 : '',
+        costoEstimado: '',
+        codigo: '',
+        unidadVenta: type === 'WIP' ? 'LITRO' : 'UND',
+        stockMinimo: '5',
+        observaciones: '',
+        precioMayorista: '',
+        descuentoMayoristaPorcentaje: ''
       }
-      handleChange({ target: { name: 'categoria', value: 'INSUMO_BASE_WIP' } });
-      handleChange({ target: { name: 'canalVenta', value: 'USO_INTERNO' } });
-      handleChange({ target: { name: 'precioVenta', value: 0 } });
-      handleChange({ target: { name: 'margenObjetivo', value: 0 } });
-    } else {
-      const comPres = presentations.find(p => p.tipoEnvase !== 'BALDE' && p.tipoEnvase !== 'TANQUE_GRANEL' && !p.nombre?.toUpperCase().includes('GRANEL'));
-      if (comPres) {
-        handleChange({ target: { name: 'idPresentacion', value: String(comPres.id) } });
-      }
-      handleChange({ target: { name: 'categoria', value: 'LACTEOS' } });
-      handleChange({ target: { name: 'canalVenta', value: 'AMBOS' } });
-    }
+    });
   };
 
   useEffect(() => {
@@ -104,10 +107,6 @@ export function useProductFormState({
   useEffect(() => {
     if (!isOpen) return;
     if (isGranel) {
-      const validWipCategories = ['BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL', 'INSUMO_BASE_WIP', 'PREMEZCLAS_PLANTA'];
-      if (!formData.categoria || !validWipCategories.includes(formData.categoria)) {
-        handleChange({ target: { name: 'categoria', value: 'INSUMO_BASE_WIP' } });
-      }
       if (formData.canalVenta === 'USO_INTERNO' || formData.canalVenta === 'PLANTA') {
         if (formData.precioVenta !== 0 && formData.precioVenta !== '0') {
           handleChange({ target: { name: 'precioVenta', value: 0 } });
@@ -117,9 +116,6 @@ export function useProductFormState({
         }
       }
     } else {
-      if (!formData.categoria || ['INSUMO_BASE_WIP', 'BASES_LACTEAS', 'DULCES_JALEAS', 'TOPPING_CEREAL', 'PREMEZCLAS_PLANTA'].includes(formData.categoria)) {
-        handleChange({ target: { name: 'categoria', value: 'LACTEOS' } });
-      }
       if (formData.canalVenta === 'USO_INTERNO') {
         handleChange({ target: { name: 'canalVenta', value: 'AMBOS' } });
       }
