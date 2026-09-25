@@ -30,6 +30,7 @@
 ### 0.2. REFERENCIAS CRUZADAS NORMATIVAS (OBLIGATORIEDAD DE CONSULTA)
 
 * **Consulta Previa al Circuit Breaker:** Toda IA colaboradora debe consultar imperativamente [`.agents/rules/06-circuit-breaker-and-anti-loop.md`](file:///.agents/rules/06-circuit-breaker-and-anti-loop.md) antes de iniciar procesos de refactorización, modularización de vistas o resolución de errores de límites SRP.
+* **Consulta Previa a Pruebas y Siembra:** Toda IA colaboradora debe consultar imperativamente [`.agents/rules/07-testing-strategy-and-seeding.md`](file:///.agents/rules/07-testing-strategy-and-seeding.md) antes de crear o modificar tests y suites de datos. Queda estrictamente prohibido usar Playwright para siembra masiva por interfaz (anti-digitador).
 * **Prohibición de Bucles de Lectura:** Queda terminantemente prohibido caer en bucles de rastreo recursivo de hooks, exploraciones especulativas en capas ajenas al alcance (ej. explorar `apps/api/` cuando se trabaja en `apps/web/`) o reintentos ciegos de edición.
 
 ---

@@ -435,12 +435,64 @@
   flex-wrap: wrap;
 }
 
-.orphanGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+.orphanToolbar {
+  display: flex;
   gap: 0.75rem;
+  margin: 0.85rem 0 0.5rem 0;
+  align-items: center;
+  width: 100%;
+}
+
+.orphanSearch {
+  flex: 1;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #182622;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.orphanSearch:focus {
+  border-color: #166534;
+}
+
+.orphanFilter {
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #182622;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+
+.orphanFilter:focus {
+  border-color: #166534;
+}
+
+.orphanEmpty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-style: italic;
+  background: #f8fafc;
+  border-radius: 6px;
+  border: 1px dashed #cbd5e1;
   width: 100%;
   margin-top: 0.5rem;
+}
+
+.orphanGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 0.85rem;
+  width: 100%;
+  margin-top: 0.75rem;
 }
 
 .orphanCard {
@@ -450,9 +502,39 @@
   padding: 0.65rem 0.85rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
   box-shadow: 0 1px 3px rgba(24, 38, 34, 0.04);
   transition: all 0.15s ease-in-out;
+}
+
+.orphanCardCommercial {
+  border-left: 4px solid #166534;
+}
+
+.orphanCardWIP {
+  border-left: 4px solid #a16207;
+}
+
+.orphanBadge {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  border-radius: 9999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.orphanBadgeCommercial {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.orphanBadgeWIP {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
 .orphanCard:hover {
@@ -479,9 +561,12 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: #182622;
-  white-space: nowrap;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .orphanCardMeta {
@@ -507,6 +592,84 @@
 
 .orphanCardBtn:hover {
   background-color: #2C3E38;
+}
+
+.orphanPagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #E8E2D7;
+}
+
+.orphanPageInfo {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #57534E;
+}
+
+.orphanPageBtn {
+  background-color: #FFFFFF;
+  border: 1px solid #CAD5B5;
+  color: #182622;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all 0.15s ease-in-out;
+}
+
+.orphanPageBtn:hover:not(:disabled) {
+  background-color: #182622;
+  color: #FAF8F5;
+  border-color: #182622;
+}
+
+.orphanPageBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: #E5DFD5;
+  background-color: #F7F4EE;
+  color: #A8A29E;
+}
+
+/* Responsividad y Media Queries */
+@media (max-width: 768px) {
+  .orphanGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.65rem;
+  }
+
+  .orphanBanner {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .orphanPagination {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .orphanGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .orphanCard {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .orphanCardBtn {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.68rem;
+  }
 }
 
 .orphanBtn {
