@@ -70,9 +70,9 @@ export function useProductFormState({
     canalesConPrecio.includes(formData.canalVenta) ||
     !isGranel;
 
-  const handleToggleProductType = (type) => {
-    setProductType(type);
-    // Limpiar todos los inputs al cambiar de opción o ingresar a un modo nuevo
+  const resetFormState = (targetType = null) => {
+    if (targetType) setProductType(targetType);
+    setHasSubmitted(false);
     handleChange({
       target: {
         resetForm: true,
@@ -81,17 +81,26 @@ export function useProductFormState({
         categoria: '',
         descripcion: '',
         canalVenta: '',
-        precioVenta: type === 'WIP' ? 0 : '',
-        margenObjetivo: type === 'WIP' ? 0 : '',
+        precioVenta: targetType === 'WIP' ? 0 : '',
+        margenObjetivo: targetType === 'WIP' ? 0 : '',
         costoEstimado: '',
         codigo: '',
-        unidadVenta: type === 'WIP' ? 'LITRO' : 'UND',
+        unidadVenta: targetType === 'WIP' ? 'LITRO' : 'UND',
         stockMinimo: '5',
         observaciones: '',
         precioMayorista: '',
-        descuentoMayoristaPorcentaje: ''
+        cantidadMinimaMayorista: 12,
+        descuentoMayoristaPorcentaje: '',
+        tipoImpuesto: 'GRAVADO',
+        tarifaIva: 19,
+        precioIncluyeIva: true,
+        imagenUrl: null
       }
     });
+  };
+
+  const handleToggleProductType = (type) => {
+    resetFormState(type);
   };
 
   useEffect(() => {
@@ -224,6 +233,7 @@ export function useProductFormState({
     costoMaximoPermitido,
     gananciaEsperada,
     filteredPresentations,
-    showPricingFields
+    showPricingFields,
+    resetFormState
   };
 }

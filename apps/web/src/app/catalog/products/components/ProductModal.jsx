@@ -39,7 +39,8 @@ export function ProductModal({
     isSubmitDisabled, submitTitle, onSubmit,
     precioVentaNum, margenObjetivoNum, costoMaximoPermitido, gananciaEsperada,
     filteredPresentations, showPricingFields,
-    margenRealCalculado, precioSugeridoCalculado, codigoCortoGenerado
+    margenRealCalculado, precioSugeridoCalculado, codigoCortoGenerado,
+    resetFormState
   } = useProductFormState({
     isOpen, formData, handleChange, handleSubmit,
     presentations, isSubmitting, isBaseIntermedia
@@ -50,6 +51,11 @@ export function ProductModal({
   const handleSelectTypeFromCard = (type) => {
     handleToggleProductType(type);
     setShowTypeSelector(false);
+  };
+
+  const handleBackToTypeSelection = () => {
+    resetFormState(null);
+    setShowTypeSelector(true);
   };
 
   return (
@@ -81,6 +87,16 @@ export function ProductModal({
               </div>
             </div>
           </div>
+          {!editingItem && !isBaseIntermedia && (
+            <button 
+              type="button" 
+              onClick={handleBackToTypeSelection} 
+              className={styles.activeModeChangeBtn}
+              title="Volver a la selección de tipo de producto"
+            >
+              ← Cambiar tipo
+            </button>
+          )}
         </div>
 
         {/* Fallback oculto para compatibilidad con selectores de tests */}
