@@ -1,0 +1,157 @@
+.splashOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: radial-gradient(circle at center, #1e332d 0%, #121c19 75%, #0a110e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.splashOverlayFading {
+  opacity: 0;
+  transform: scale(1.02);
+  pointer-events: none;
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.contentWrapper {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  max-width: 580px;
+}
+
+.logoBadge {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FAF8F5 0%, #E8E2D7 100%);
+  border: 2px solid #C58A3E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 35px rgba(197, 138, 62, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  margin-bottom: 1.5rem;
+  animation: pulseGlow 3s ease-in-out infinite alternate;
+}
+
+.logoIcon {
+  font-size: 2.8rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.brandTitle {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: 0.35rem;
+  color: #FAF8F5;
+  margin: 0;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(197, 138, 62, 0.25);
+}
+
+.brandSubtitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.25rem;
+  color: #C58A3E;
+  text-transform: uppercase;
+  margin: 0.4rem 0 1.25rem 0;
+}
+
+.quoteBox {
+  padding: 0.75rem 1.5rem;
+  background: rgba(24, 38, 34, 0.65);
+  border: 1px solid rgba(197, 138, 62, 0.25);
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+  margin-bottom: 2rem;
+}
+
+.quoteText {
+  color: #E2DFD8;
+  font-size: 0.86rem;
+  font-style: italic;
+  margin: 0;
+}
+
+.progressContainer {
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progressBarTrack {
+  width: 100%;
+  height: 4px;
+  background: rgba(250, 248, 245, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.progressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #8F704A, #C58A3E, #E8C382);
+  border-radius: 9999px;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(197, 138, 62, 0.8);
+}
+
+.progressLabel {
+  color: rgba(250, 248, 245, 0.6);
+  font-size: 0.75rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+}
+
+.skipButton {
+  position: absolute;
+  bottom: 2rem;
+  right: 2.5rem;
+  background: rgba(24, 38, 34, 0.7);
+  border: 1px solid rgba(197, 138, 62, 0.3);
+  color: #FAF8F5;
+  padding: 0.45rem 1.1rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: all 0.2s ease;
+  z-index: 20;
+}
+
+.skipButton:hover {
+  background: rgba(44, 62, 56, 0.9);
+  border-color: #C58A3E;
+  color: #C58A3E;
+}
+
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 25px rgba(197, 138, 62, 0.25);
+    transform: scale(1);
+  }
+  100% {
+    box-shadow: 0 0 45px rgba(197, 138, 62, 0.55);
+    transform: scale(1.03);
+  }
+}

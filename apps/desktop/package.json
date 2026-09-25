@@ -1,11 +1,13 @@
 {
   "name": "desktop",
   "version": "1.0.0",
+  "description": "Sistema de Gestión Empresarial MANNÁ",
+  "author": "Lácteos MANNÁ",
   "private": true,
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win"
+    "dist": "electron-builder --win -c.npmRebuild=false"
   },
   "devDependencies": {
     "electron": "^33.0.0",
@@ -14,6 +16,7 @@
   "build": {
     "appId": "com.manna.yogurtmanagement",
     "productName": "MANNÁ Gestión Empresarial",
+    "npmRebuild": false,
     "directories": {
       "output": "dist"
     },
