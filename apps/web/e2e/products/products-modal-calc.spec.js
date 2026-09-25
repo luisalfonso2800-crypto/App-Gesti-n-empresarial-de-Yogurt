@@ -7,6 +7,10 @@ test.describe.serial('Productos - Modal Cálculos Financieros (C01-C05)', () => 
     const openBtn = page.getByRole('button', { name: /Nuevo (Registro|Producto)/i }).first();
     await expect(openBtn).toBeVisible({ timeout: 8000 });
     await openBtn.click();
+    const chooseCommercialBtn = page.locator('button:has-text("Elegir Comercial")').first();
+    if (await chooseCommercialBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await chooseCommercialBtn.click();
+    }
     await expect(page.locator('form')).toBeVisible({ timeout: 5000 });
   });
 

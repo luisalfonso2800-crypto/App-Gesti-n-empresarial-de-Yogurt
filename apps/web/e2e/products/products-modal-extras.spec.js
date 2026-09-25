@@ -23,6 +23,11 @@ test.describe.serial('Productos - Modal Extras y Semáforo M8 (T16-T30)', () => 
     await expect(openBtn).toBeVisible({ timeout: 8000 });
     await openBtn.click();
 
+    const chooseCommercialBtn = page.locator('button:has-text("Elegir Comercial")').first();
+    if (await chooseCommercialBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await chooseCommercialBtn.click();
+    }
+
     // Contenedor de sección de imagen y botón de subida reales del DOM
     const imageContainer = page.locator('div[class*="imageSectionContainer"], div[class*="imagePreviewBox"]').first();
     await expect(imageContainer).toBeVisible({ timeout: 5000 });

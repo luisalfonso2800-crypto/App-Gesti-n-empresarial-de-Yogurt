@@ -7,6 +7,10 @@ test.describe.serial('Productos - Modal Flow y Poka-Yoke (T01-T15)', () => {
     const openBtn = page.getByRole('button', { name: /Nuevo (Registro|Producto)/i }).first();
     await expect(openBtn).toBeVisible({ timeout: 8000 });
     await openBtn.click();
+    const chooseCommercialBtn = page.locator('button:has-text("Elegir Comercial")').first();
+    if (await chooseCommercialBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+      await chooseCommercialBtn.click();
+    }
     await expect(page.locator('form')).toBeVisible({ timeout: 5000 });
   });
 
@@ -50,11 +54,34 @@ test.describe.serial('Productos - Modal Flow y Poka-Yoke (T01-T15)', () => {
   });
 
   test('T09-T10: Código interno con placeholder orientativo y edición manual sanitizada (M1)', async ({ page }) => {
+    // Cascada: Completar pasos previos para habilitar campos de inventario
+    await page.locator('input[name="nombre"]').first().fill('YOGURT FRESA');
+    const presSelect = page.locator('select[name="idPresentacion"], select[name="presentacionId"]').first();
+    if (await presSelect.isVisible()) {
+      await presSelect.selectOption({ index: 1 }).catch(() => {});
+    }
+    const catSelect = page.locator('select[name="categoria"]').first();
+    if (await catSelect.isVisible()) {
+      await catSelect.selectOption({ index: 1 }).catch(() => {});
+    }
+    const canalSelect = page.locator('select[name="canalVenta"]').first();
+    if (await canalSelect.isVisible()) {
+      await canalSelect.selectOption({ index: 1 }).catch(() => {});
+    }
+
     const codeInput = page.locator('input[name="codigo"]').first();
     await expect(codeInput).toBeVisible();
 
     const placeholder = await codeInput.getAttribute('placeholder');
     expect(placeholder).toBeTruthy();
+
+    // Desbloquear código interno mediante botón de edición protegida
+    const editBtn = page.locator('button[title*="Editar código"]').first();
+    if (await editBtn.isVisible()) {
+      await editBtn.click();
+      const confirmBtn = page.locator('button:has-text("Entendido, Editar")').first();
+      await confirmBtn.click();
+    }
 
     await codeInput.fill('km-trad-01');
     const val = await codeInput.inputValue();
@@ -62,6 +89,21 @@ test.describe.serial('Productos - Modal Flow y Poka-Yoke (T01-T15)', () => {
   });
 
   test('T11-T14: Unidad de venta y stock mínimo con valores y restricciones (M2, M5)', async ({ page }) => {
+    // Cascada: Completar pasos previos para habilitar campos de inventario
+    await page.locator('input[name="nombre"]').first().fill('YOGURT FRESA');
+    const presSelect = page.locator('select[name="idPresentacion"], select[name="presentacionId"]').first();
+    if (await presSelect.isVisible()) {
+      await presSelect.selectOption({ index: 1 }).catch(() => {});
+    }
+    const catSelect = page.locator('select[name="categoria"]').first();
+    if (await catSelect.isVisible()) {
+      await catSelect.selectOption({ index: 1 }).catch(() => {});
+    }
+    const canalSelect = page.locator('select[name="canalVenta"]').first();
+    if (await canalSelect.isVisible()) {
+      await canalSelect.selectOption({ index: 1 }).catch(() => {});
+    }
+
     const unitSelect = page.locator('select[name="unidadVenta"]').first();
     await expect(unitSelect).toHaveValue('UND');
 
