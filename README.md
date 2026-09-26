@@ -4,20 +4,20 @@
 [![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
 [![NestJS 11](https://img.shields.io/badge/NestJS-11.0-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma-7.10-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql)](https://www.postgresql.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_Neon_Cloud-336791?style=for-the-badge&logo=postgresql)](https://neon.tech/)
 [![Electron](https://img.shields.io/badge/Electron-33-47848F?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
 [![Playwright](https://img.shields.io/badge/Playwright-100%25_Passing-2EAD33?style=for-the-badge&logo=playwright)](https://playwright.dev/)
 
-> **ERP Vertical de Grado Alimentario (BPM / INVIMA)** diseñado con ergonomía de planta para la gestión técnica, operativa, comercial y estratégica en la elaboración y comercialización de derivados lácteos.
+> **ERP Vertical de Grado Alimentario (BPM / INVIMA)** nacido para digitalizar y operar integralmente la planta de **Lácteos MANNÁ**, empresa familiar real en Santa Marta, Colombia. Reemplazó por completo la dispersión operativa de hojas de cálculo de Excel y registros manuales en papel por un sistema transaccional en la nube con trazabilidad sanitaria por lote, costeo dinámico en caliente, balance de masa y telemetría de planta.
 
 ---
 
 ## 🔗 Demo en Vivo (Producción)
 
 **Stack desplegado en la nube:**
-- 🎨 **Frontend:** [app-gesti-n-empresarial-de-yogurt-a.vercel.app](https://app-gesti-n-empresarial-de-yogurt-a.vercel.app) — Vercel
+- 🎨 **Frontend Web:** [app-gesti-n-empresarial-de-yogurt-a.vercel.app](https://app-gesti-n-empresarial-de-yogurt-a.vercel.app) — Vercel
 - ⚙️ **Backend API:** [api-production-ec9ee.up.railway.app/api/v1](https://api-production-ec9ee.up.railway.app/api/v1) — Railway
-- 💾 **Base de Datos:** PostgreSQL 16 serverless en Neon.tech (AWS us-east-2)
+- 💾 **Base de Datos:** PostgreSQL 16 serverless en Neon Cloud (AWS `us-east-2`, SSL estricto y connection pooling)
 
 ---
 
@@ -43,10 +43,10 @@ El sistema cuenta con dos vías de acceso y distribución:
    👉 **[Acceder a la Plataforma Web en Vercel](https://app-gesti-n-empresarial-de-yogurt-a.vercel.app)**
 
 2. **📦 Aplicación de Escritorio (Windows 64-bit):**  
-   Instalador `.exe` nativo disponible en la pestaña de **Releases** de este repositorio:  
-   * **[Descargar MANNÁ Gestión Empresarial (Instalador .exe)](https://github.com/luisalfonso2800-crypto/App-Gesti-n-empresarial-de-Yogurt/releases)**
-   * **Ejecución Local Rápida (Sin Consolas Visibles):**  
-     El sistema incluye un orquestador en segundo plano (`lanzar-manna-oculto.vbs`). Al ejecutarse, Windows levanta los microservicios locales y abre la ventana nativa de Electron sin terminales emergentes en pantalla.
+   Instalador `.exe` nativo disponible en la sección de **Releases** de este repositorio:  
+   * **[Descargar MANNÁ Gestión Empresarial (Instalador .exe)](https://github.com/luisalfonso2800-crypto/App-Gesti-n-empresarial-de-Yogurt/releases/latest)**
+   * **Ejecución Local Silenciosa (Sin Consolas Visibles):**  
+     El sistema incluye un orquestador en segundo plano (`lanzar-manna-oculto.vbs`). Al ejecutarse, Windows levanta los servicios locales y abre la ventana nativa de Electron sin terminales emergentes en pantalla.
 
 ---
 
@@ -62,7 +62,7 @@ El sistema cuenta con dos vías de acceso y distribución:
 
 3. **Cálculo Real de Mermas y Rendimiento Lácteo:**
    * Motor transaccional con precisión matemática estricta (`Decimal.js`), eliminando errores de redondeo en punto flotante IEEE 754.
-   * Deducción discreta para empaques indivisibles (vasos, tapas, etiquetas) mediante redondeo entero superior y balances continuos para masa/volumen.
+   * Deducción discreta para empaques indivisibles (vasos, tapas, etiquetas) mediante redondeo entero superior (`Math.ceil`) y balances continuos para masa/volumen.
 
 4. **Ciclo Comercial y Cartera Poka-Yoke:**
    * Despacho dinámico y validación de stock disponible en Cava en tiempo real.
@@ -96,7 +96,7 @@ graph TD
     end
 
     subgraph Persistencia y Trazabilidad
-        R --> DB[(PostgreSQL 16<br/>yogurt_dev)]
+        R --> DB[(PostgreSQL 16 Neon Cloud<br/>AWS us-east-2 / SSL)]
         R --> KDX[Movimientos_Inventario<br/>Kárdex PEPS / Entradas y Salidas]
     end
 ```
@@ -122,16 +122,27 @@ graph TD
 
 ---
 
+## 🤖 Metodología y Orquestación de Agentes de IA
+
+Este ERP no es producto de generación indiscriminada de código, sino de un flujo de **ingeniería asistida por agentes autónomos con gobernanza estricta (Human-in-the-Loop)**, donde el desarrollador actúa como arquitecto de sistemas, director técnico y auditor de calidad:
+
+- **Constitución Operativa (`AGENTS.md`):** Reglas deterministas que rigen a los modelos de lenguaje sobre arquitectura, patrones de concurrencia y límites estrictos de alcance.
+- **39 Reglas Maestras Modularizadas (`.agents/rules/`):** Desacople hermético entre submódulos (Backend & BD, Frontend SRP, Design System MANNÁ, Poka-Yoke en Formularios, Circuit Breaker anti-loop y Política de Consumo de Tokens).
+- **Guardián de Arquitectura Automatizado (`.agents/scripts/verify-srp.js`):** Validador estático ejecutado por CLI que bloquea la integración de componentes que violen el principio de responsabilidad única o excedan el umbral de líneas.
+- **Auditoría Forense y Diagnóstico RCA (Root Cause Analysis):** Cero parches cosméticos; ante cada incidencia operativa se analiza la causa raíz a nivel de base de datos o ciclo de vida de React antes de emitir un commit.
+
+---
+
 ## 🛠️ Pila Tecnológica
 
 | Componente | Tecnología | Detalle Técnico |
 | :--- | :--- | :--- |
 | **Monorepo Manager** | pnpm 10+ Workspaces | Aislamiento de paquetes y resolución determinista de dependencias |
-| **Frontend Web** | Next.js 15 (App Router) | Servidor standalone optimizado para empaquetado de escritorio |
+| **Frontend Web** | Next.js 15 (App Router) | Servidor standalone optimizado para empaquetado web y desktop |
 | **Biblioteca de UI** | React 19 + Lucide Icons | Componentes reactivos modularizados con CSS Modules |
 | **Contenedor Desktop** | Electron 33 + electron-builder | Ventana nativa Windows con bloqueo de instancia única |
 | **Backend API** | NestJS 11 + Express Runtime | Arquitectura desacoplada Controller $\rightarrow$ Service $\rightarrow$ Repository |
-| **Modelado y Persistencia** | Prisma ORM 7 + PostgreSQL 16 | Esquema relacional con transacciones atómicas e integridad referencial |
+| **Modelado y Persistencia** | Prisma ORM 7 + PostgreSQL 16 | Esquema relacional con transacciones atómicas en Neon Cloud (SSL) |
 | **Validación Numérica** | Decimal.js + Zod | Aritmética decimal de precisión fija para transacciones contables |
 | **Testing Automatizado** | Playwright 1.50+ | Suites de integración API HTTP y pruebas visuales E2E |
 
@@ -142,7 +153,7 @@ graph TD
 ### Prerrequisitos
 * **Node.js:** `>= 20.x`
 * **pnpm:** `>= 10.x`
-* **PostgreSQL:** Base de datos activa (local o cloud, e.g. Neon.tech). La cadena de conexión se configura en `apps/api/.env` como `DATABASE_URL`.
+* **PostgreSQL:** Base de datos activa (local o cloud, e.g. Neon Cloud). La cadena de conexión se configura en `apps/api/.env` como `DATABASE_URL`.
 
 ### Instalación
 ```bash
@@ -153,10 +164,11 @@ cd App-Gesti-n-empresarial-de-Yogurt
 # 2. Instalar dependencias del monorepo
 pnpm install
 
-# 3. Sincronizar esquema y generar cliente Prisma
+# 3. Generar cliente Prisma y compilar API
+pnpm --filter api exec prisma generate
 pnpm --filter api build
 
-# 4. Iniciar servidores de desarrollo
+# 4. Iniciar servidores de desarrollo concurrentes
 pnpm run dev
 ```
 
@@ -193,6 +205,28 @@ pnpm --filter web test:e2e e2e/exhaustive/operations-01-purchases-production.spe
 pnpm --filter web test:e2e e2e/exhaustive/commercial-01-orders-shipments.spec.js
 pnpm --filter web test:e2e e2e/value-chain-complete.spec.js
 ```
+
+---
+
+## 🗺️ Roadmap V2 (Visión de Producto y Escalabilidad)
+
+- [ ] **Multi-Tenancy y Aislamiento por Organización:** Soporte para múltiples microplantas lácteas y marcas productoras con Row-Level Security (RLS) en PostgreSQL.
+- [ ] **Telemetría e Integración IoT en Planta:** Sensores industriales ESP32 / Modbus en marmitas y cuartos fríos para captura continua de temperatura y pH en tiempo real hacia el SCADA.
+- [ ] **Planificador Predictivo de Compras Asistido por IA:** Modelos de series de tiempo para estimación de demanda estacional y compras automáticas de leche fresca basadas en la merma histórica.
+- [ ] **PWA Offline-First para Despacho Rural:** Sincronización en segundo plano para preventistas y repartidores en zonas de cobertura celular intermitente.
+
+---
+
+## 👨‍💻 Sobre el Desarrollador
+
+**Luis Alfonso Guerrero**  
+*AI-Assisted Product Builder & Software Architect*
+
+Con un perfil interdisciplinario forjado entre el diseño 3D, la construcción y el rigor estructural, traslado los principios de estabilidad, cálculo exacto de tolerancias y optimización espacial directamente a la ingeniería de software y el modelado relacional de datos. Especializado en concebir, diseñar y llevar a producción aplicaciones completas de alto impacto mediante la orquestación metodológica de agentes de inteligencia artificial y desarrollo asistido por IA.
+
+- 💼 **LinkedIn:** [linkedin.com/in/luisalfonsoguerrero](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
+- 🐙 **GitHub:** [@luisalfonso2800-crypto](https://github.com/luisalfonso2800-crypto)
+- 📧 **Contacto:** luisalfonso2800@gmail.com
 
 ---
 
