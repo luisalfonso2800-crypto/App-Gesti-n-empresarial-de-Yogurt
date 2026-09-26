@@ -136,7 +136,7 @@ graph TD
 ### Prerrequisitos
 * **Node.js:** `>= 20.x`
 * **pnpm:** `>= 10.x`
-* **PostgreSQL:** Base de datos activa con la cadena de conexión configurada en `apps/api/.env`.
+* **PostgreSQL:** Base de datos activa (local o cloud, e.g. Neon.tech). La cadena de conexión se configura en `apps/api/.env` como `DATABASE_URL`.
 
 ### Instalación
 ```bash
