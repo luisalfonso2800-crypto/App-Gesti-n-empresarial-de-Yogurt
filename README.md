@@ -1,4 +1,4 @@
-﻿# ERP Industrial MANNÁ — Sistema Integral de Manufactura Láctea, Trazabilidad Sanitaria y Centro de Mando Táctico
+# ERP Industrial MANNÁ — Sistema Integral de Manufactura Láctea, Trazabilidad Sanitaria y Centro de Mando Táctico
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
@@ -6,7 +6,7 @@
 [![Prisma ORM](https://img.shields.io/badge/Prisma-7.10-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16_Neon_Cloud-336791?style=for-the-badge&logo=postgresql)](https://neon.tech/)
 [![Electron](https://img.shields.io/badge/Electron-33-47848F?style=for-the-badge&logo=electron)](https://www.electronjs.org/)
-[![Playwright](https://img.shields.io/badge/Playwright-100%25_Passing-2EAD33?style=for-the-badge&logo=playwright)](https://playwright.dev/)
+[![Playwright](https://img.shields.io/badge/Playwright-E2E_Suites-2EAD33?style=for-the-badge&logo=playwright)](https://playwright.dev/)
 
 > **ERP Vertical de Grado Alimentario (BPM / INVIMA)** nacido para digitalizar y operar integralmente la planta de **Lácteos MANNÁ**, empresa familiar real en Santa Marta, Colombia. Reemplazó por completo la dispersión operativa de hojas de cálculo de Excel y registros manuales en papel por un sistema transaccional en la nube con trazabilidad sanitaria por lote, costeo dinámico en caliente, balance de masa y telemetría de planta.
 
@@ -105,7 +105,7 @@ graph TD
 * **Veto Anti-Blue y Design System MANNÁ:** Paleta institucional de planta (`#182622` Bosque Profundo, `#8F704A` Trigo Tostado, `#FAF8F5` Lino), cero alertas nativas (`no-alert`) y feedback contextual perimetral.
 * **Backend-First y Transacciones ACID:** Toda entrada de compras, consumo de insumos en recetas o despacho comercial se ejecuta dentro de bloques `prisma.$transaction`.
 * **Testing Automatizado Exhaustivo (Regla 07):** 100% de cobertura en suites de integración API y pruebas visuales End-to-End con Playwright, garantizando flujos deterministas sin bucles de ejecución.
-* **Guardián de Arquitectura Automatizado:** Script interno (`verify-srp.js`) que audita en cada commit que ningún componente o controlador exceda su límite de líneas (SRP $\le 120-130$).
+* **Guardián de Arquitectura Automatizado:** Script interno (`verify-srp.js`) que audita en cada commit que ningún componente o controlador exceda su límite de líneas (SRP ≤ 120-130 líneas).
 
 ---
 
@@ -115,7 +115,7 @@ graph TD
 | :--- | :--- | :--- |
 | **Centro de Mando (SCADA)** | Métricas en tiempo real de litros procesados, stock en Cava y telemetría de fermentación. | Canvas dinámicos de fluidos, osciloscopio y simulador táctico de producción y ganancia. |
 | **Diseñador de Fórmulas (BOM)** | Formulación de recetas por etapas técnicas (tiempos, temperaturas mín/obj/máx). | Soporte multinivel (Insumos vs Semielaborados WIP) y semáforo de rentabilidad en tiempo real. |
-| **Piso de Planta y Lotes** | Registro de órdenes de producción, consumos reales y liquidación a Cava. | Trazabilidad genealógica Lote Padre $\rightarrow$ Lote Hijo y congelación de snapshot inmutable de la receta. |
+| **Piso de Planta y Lotes** | Registro de órdenes de producción, consumos reales y liquidación a Cava. | Trazabilidad genealógica Lote Padre → Lote Hijo y congelación de snapshot inmutable de la receta. |
 | **Abastecimiento y Kárdex** | Control de compras asistidas por faltantes, recepción física y costeo ponderado. | Kárdex automatizado con registro de stock anterior, nuevo y costo unitario de absorción. |
 | **Ventas y Cartera** | Despacho comercial con selección de lote por caducidad (FEFO) y facturación. | Validación de existencias en Cava, abonos parciales y liquidación controlada de cuentas por cobrar. |
 | **Rumbo MANNÁ** | Planificación estratégica y siembra de metas empresariales y familiares. | Cálculo reactivo de ritmo (*pacing*) contra flujo de caja y recaudos reales del ERP. |
@@ -141,7 +141,7 @@ Este ERP no es producto de generación indiscriminada de código, sino de un flu
 | **Frontend Web** | Next.js 15 (App Router) | Servidor standalone optimizado para empaquetado web y desktop |
 | **Biblioteca de UI** | React 19 + Lucide Icons | Componentes reactivos modularizados con CSS Modules |
 | **Contenedor Desktop** | Electron 33 + electron-builder | Ventana nativa Windows con bloqueo de instancia única |
-| **Backend API** | NestJS 11 + Express Runtime | Arquitectura desacoplada Controller $\rightarrow$ Service $\rightarrow$ Repository |
+| **Backend API** | NestJS 11 + Express Runtime | Arquitectura desacoplada Controller → Service → Repository |
 | **Modelado y Persistencia** | Prisma ORM 7 + PostgreSQL 16 | Esquema relacional con transacciones atómicas en Neon Cloud (SSL) |
 | **Validación Numérica** | Decimal.js + Zod | Aritmética decimal de precisión fija para transacciones contables |
 | **Testing Automatizado** | Playwright 1.50+ | Suites de integración API HTTP y pruebas visuales E2E |
@@ -222,7 +222,7 @@ pnpm --filter web test:e2e e2e/value-chain-complete.spec.js
 **Luis Alfonso Guerrero**  
 *AI-Assisted Product Builder & Software Architect*
 
-Con un perfil interdisciplinario forjado entre el diseño 3D, la construcción y el rigor estructural, traslado los principios de estabilidad, cálculo exacto de tolerancias y optimización espacial directamente a la ingeniería de software y el modelado relacional de datos. Especializado en concebir, diseñar y llevar a producción aplicaciones completas de alto impacto mediante la orquestación metodológica de agentes de inteligencia artificial y desarrollo asistido por IA.
+Vengo del diseño 3D y la construcción, oficios que me enseñaron a medir dos veces antes de cortar y a auditar cada paso del proceso. Hoy aplico esa misma disciplina al desarrollo de software: arquitectura desacoplada, cálculos exactos con precisión decimal, y auditorías forenses para cada bug. Construí este ERP para operar la planta familiar de Lácteos MANNÁ, orquestando agentes de IA bajo reglas estrictas de ingeniería que yo defino.
 
 - 💼 **LinkedIn:** [linkedin.com/in/luisalfonsoguerrero](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
 - 🐙 **GitHub:** [@luisalfonso2800-crypto](https://github.com/luisalfonso2800-crypto)
