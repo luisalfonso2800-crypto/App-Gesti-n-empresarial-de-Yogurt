@@ -220,14 +220,18 @@ pnpm --filter web test:e2e e2e/value-chain-complete.spec.js
 ## 👨‍💻 Sobre el Desarrollador
 
 **Luis Alfonso Guerrero**  
-*AI-Assisted Product Builder & Software Architect*
+*AI-Assisted Product Builder & Software Systems Architect* — Santa Marta, Colombia
 
-Vengo del diseño 3D y la construcción, oficios que me enseñaron a medir dos veces antes de cortar y a auditar cada paso del proceso. Hoy aplico esa misma disciplina al desarrollo de software: arquitectura desacoplada, cálculos exactos con precisión decimal, y auditorías forenses para cada bug. Construí este ERP para operar la planta familiar de Lácteos MANNÁ, orquestando agentes de IA bajo reglas estrictas de ingeniería que yo defino.
+Mi camino a la ingeniería de software no vino de la academia tradicional, sino del trabajo duro y la necesidad de resolver. He sido obrero de construcción, mesero y diseñador gráfico comercial (branding, brochures y sublimación) para sacar adelante a mi familia. Esos oficios me enseñaron dos cosas fundamentales: **medir con precisión antes de cortar** y **diseñar herramientas que resistan el uso real de la gente**.
 
-- 💼 **LinkedIn:** [linkedin.com/in/luisalfonsoguerrero](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
-- 🐙 **GitHub:** [@luisalfonso2800-crypto](https://github.com/luisalfonso2800-crypto)
-- 📧 **Contacto:** luisalfonso2800@gmail.com
+Cuando nació mi primera hija y la vida exigió ejecución inmediata, aprendí a construir de forma pragmática y disciplinada. Hoy aplico esa capacidad operativa al desarrollo de software: orquesto agentes de Inteligencia Artificial bajo gobernanza técnica cerrada, asegurando modelos de datos consistentes, pruebas deterministas y arquitecturas desacopladas.
+
+Construí y desplegué este ERP para digitalizar la planta familiar de **Lácteos MANNÁ**, eliminando el caos de registros manuales y transformándolo en un sistema transaccional en producción.
+
 - 📱 **Teléfono / WhatsApp:** [+57 333 619 3281](https://wa.me/573336193281)
+- 💼 **LinkedIn:** [linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
+- 🐙 **GitHub:** [@luisalfonso2800-crypto](https://github.com/luisalfonso2800-crypto)
+- 📧 **Correo:** luisalfonso2800@gmail.com
 
 ---
 
