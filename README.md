@@ -235,7 +235,7 @@ En la construcción, el arquitecto que calcula cargas estructurales y supervisa 
 **La IA es la herramienta de ejecución; yo soy el constructor.** Estructuro datos, gobierno flujos transaccionales ACID y llevo productos complejos a producción. Ahora busco mi primer rol formal donde pueda aportar esta capacidad de ejecución y seguir aprendiendo junto a un equipo con experiencia.
 
 - 📱 **Teléfono / WhatsApp:** [+57 333 619 3281](https://wa.me/573336193281)
-- 💼 **LinkedIn:** [linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
+- 💼 **LinkedIn:** [linkedin.com/in/luisguerrero-dev](https://www.linkedin.com/in/luisguerrero-dev)
 - 🐙 **GitHub:** [@luisalfonso2800-crypto](https://github.com/luisalfonso2800-crypto)
 - 📧 **Correo:** luisalfonso2800@gmail.com
 
