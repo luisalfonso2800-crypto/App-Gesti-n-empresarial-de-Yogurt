@@ -220,13 +220,19 @@ pnpm --filter web test:e2e e2e/value-chain-complete.spec.js
 ## 👨‍💻 Sobre el Desarrollador
 
 **Luis Alfonso Guerrero**  
-*AI-Assisted Product Builder & Software Systems Architect* — Santa Marta, Colombia
+*AI-Assisted Product Builder & Systems Architect* — Santa Marta, Colombia
 
-Mi camino a la ingeniería de software no vino de la academia tradicional, sino del trabajo duro y la necesidad de resolver. He sido obrero de construcción, mesero y diseñador gráfico comercial (branding, brochures y sublimación) para sacar adelante a mi familia. Esos oficios me enseñaron dos cosas fundamentales: **medir con precisión antes de cortar** y **diseñar herramientas que resistan el uso real de la gente**.
+Mi camino a la ingeniería de software no vino de la academia, sino del trabajo real: construcción, diseño 3D y la necesidad de resolver problemas concretos. Esos oficios me enseñaron a **medir con precisión antes de cortar** y a **diseñar herramientas que resistan el uso real de la gente**. Hoy aplico esa misma disciplina al desarrollo de software.
 
-Cuando nació mi primera hija y la vida exigió ejecución inmediata, aprendí a construir de forma pragmática y disciplinada. Hoy aplico esa capacidad operativa al desarrollo de software: orquesto agentes de Inteligencia Artificial bajo gobernanza técnica cerrada, asegurando modelos de datos consistentes, pruebas deterministas y arquitecturas desacopladas.
+**¿Qué hago exactamente?** Diseño, orquesto y despliego sistemas completos.
 
-Construí y desplegué este ERP para digitalizar la planta familiar de **Lácteos MANNÁ**, eliminando el caos de registros manuales y transformándolo en un sistema transaccional en producción.
+En la construcción, el arquitecto que calcula cargas estructurales y supervisa planos no pega físicamente cada ladrillo — pero la casa se sostiene o se cae por su criterio. En el desarrollo de software con IA ocurre lo mismo:
+
+- **La IA no sabe qué construir:** El modelo de negocio lácteo (trazabilidad INVIMA, formulación BOM/WIP, precisión decimal con `Decimal.js`) salió de mi cabeza y de las necesidades operativas de Lácteos MANNÁ.
+- **La IA no tiene criterio de ingeniería:** La constitución operativa (`AGENTS.md`), las 39 reglas modulares (`.agents/rules/`), el guardián de responsabilidad única (`verify-srp.js`) y las suites de Playwright fueron diseñados por mí.
+- **La IA no resuelve infraestructura:** El monorepo pnpm, la sincronización con Prisma, la base de datos Neon Cloud bajo SSL, los despliegues en Vercel y Railway, y el binario `.exe` de Electron — todo eso lo orquesté yo.
+
+**La IA es la herramienta de ejecución; yo soy el constructor.** Estructuro datos, gobierno flujos transaccionales ACID y llevo productos complejos a producción. Ahora busco mi primer rol formal donde pueda aportar esta capacidad de ejecución y seguir aprendiendo junto a un equipo con experiencia.
 
 - 📱 **Teléfono / WhatsApp:** [+57 333 619 3281](https://wa.me/573336193281)
 - 💼 **LinkedIn:** [linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
