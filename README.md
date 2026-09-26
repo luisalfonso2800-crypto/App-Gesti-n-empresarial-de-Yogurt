@@ -34,13 +34,19 @@
 
 ---
 
-## 🚀 Distribución y Ejecución de Escritorio en Windows (.exe)
+## 🚀 Distribución y Modalidades de Acceso
 
-El instalador para Windows de 64 bits se encuentra disponible en la pestaña de **Releases** de este repositorio:
+El sistema cuenta con dos vías de acceso y distribución:
 
-* 📦 **[Descargar MANNÁ Gestión Empresarial (Instalador .exe)](https://github.com/luisalfonso2800-crypto/App-Gesti-n-empresarial-de-Yogurt/releases)**
-* **Ejecución Local Rápida (Sin Consolas Visibles):**
-  El sistema incluye un orquestador en segundo plano (`lanzar-manna-oculto.vbs`). Al ejecutarse, Windows levanta los microservicios locales y abre la ventana nativa de Electron sin terminales emergentes en pantalla.
+1. **🌐 Aplicación Web (Recomendado):**  
+   Demo en vivo y en producción desplegada en la nube:  
+   👉 **[Acceder a la Plataforma Web en Vercel](https://app-gesti-n-empresarial-de-yogurt-a.vercel.app)**
+
+2. **📦 Aplicación de Escritorio (Windows 64-bit):**  
+   Instalador `.exe` nativo disponible en la pestaña de **Releases** de este repositorio:  
+   * **[Descargar MANNÁ Gestión Empresarial (Instalador .exe)](https://github.com/luisalfonso2800-crypto/App-Gesti-n-empresarial-de-Yogurt/releases)**
+   * **Ejecución Local Rápida (Sin Consolas Visibles):**  
+     El sistema incluye un orquestador en segundo plano (`lanzar-manna-oculto.vbs`). Al ejecutarse, Windows levanta los microservicios locales y abre la ventana nativa de Electron sin terminales emergentes en pantalla.
 
 ---
 
