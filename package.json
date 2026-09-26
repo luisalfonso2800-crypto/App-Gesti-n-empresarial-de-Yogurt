@@ -13,5 +13,6 @@
     "verify:srp": "node .agents/scripts/verify-srp.js",
     "test:e2e:select": "node .agents/scripts/run-e2e-selector.js",
     "dev": "pnpm --filter api start:dev & pnpm --filter web dev"
-  }
+  },
+  "packageManager": "pnpm@12.3.4"
 }
