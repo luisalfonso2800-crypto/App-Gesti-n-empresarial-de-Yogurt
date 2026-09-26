@@ -12,6 +12,28 @@
 
 ---
 
+## 🔗 Demo en Vivo (Producción)
+
+**Stack desplegado en la nube:**
+- 🎨 **Frontend:** [app-gesti-n-empresarial-de-yogurt-a.vercel.app](https://app-gesti-n-empresarial-de-yogurt-a.vercel.app) — Vercel
+- ⚙️ **Backend API:** [api-production-ec9ee.up.railway.app/api/v1](https://api-production-ec9ee.up.railway.app/api/v1) — Railway
+- 💾 **Base de Datos:** PostgreSQL 16 serverless en Neon.tech (AWS us-east-2)
+
+---
+
+## 📸 Vista Previa del Sistema
+
+### Centro de Mando SCADA (Dashboard Principal)
+![Dashboard MANNÁ](docs/screenshots/04-app-funcionando.png)
+
+### Infraestructura y Despliegue
+
+| Frontend (Vercel) | Backend (Railway) | Database (Neon) |
+|:---:|:---:|:---:|
+| ![Vercel](docs/screenshots/01-vercel-frontend.png) | ![Railway](docs/screenshots/02-railway-backend.png) | ![Neon](docs/screenshots/03-neon-database.png) |
+
+---
+
 ## 🚀 Distribución y Ejecución de Escritorio en Windows (.exe)
 
 El instalador para Windows de 64 bits se encuentra disponible en la pestaña de **Releases** de este repositorio:
