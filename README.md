@@ -227,6 +227,7 @@ Vengo del diseño 3D y la construcción, oficios que me enseñaron a medir dos v
 - 💼 **LinkedIn:** [linkedin.com/in/luisalfonsoguerrero](https://www.linkedin.com/in/luis-alfonso-guerrero-m-8869a8385/)
 - 🐙 **GitHub:** [@luisalfonso2800-crypto](https://github.com/luisalfonso2800-crypto)
 - 📧 **Contacto:** luisalfonso2800@gmail.com
+- 📱 **Teléfono / WhatsApp:** [+57 333 619 3281](https://wa.me/573336193281)
 
 ---
 
