@@ -1,4 +1,4 @@
-# ERP Industrial MANNÁ — Sistema Integral de Manufactura Láctea, Trazabilidad Sanitaria y Centro de Mando Táctico
+﻿# ERP Industrial MANNÁ — Sistema Integral de Manufactura Láctea, Trazabilidad Sanitaria y Centro de Mando Táctico
 
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react)](https://react.dev/)
@@ -24,13 +24,13 @@
 ## 📸 Vista Previa del Sistema
 
 ### Centro de Mando SCADA (Dashboard Principal)
-![Dashboard MANNÁ](docs/screenshots/04-app-funcionando.png)
+![Dashboard MANNÁ](docs/qa-testing/screenshots/04-app-funcionando.png)
 
 ### Infraestructura y Despliegue
 
 | Frontend (Vercel) | Backend (Railway) | Database (Neon) |
 |:---:|:---:|:---:|
-| ![Vercel](docs/screenshots/01-vercel-frontend.png) | ![Railway](docs/screenshots/02-railway-backend.png) | ![Neon](docs/screenshots/03-neon-database.png) |
+| ![Vercel](docs/qa-testing/screenshots/01-vercel-frontend.png) | ![Railway](docs/qa-testing/screenshots/02-railway-backend.png) | ![Neon](docs/qa-testing/screenshots/03-neon-database.png) |
 
 ---
 
