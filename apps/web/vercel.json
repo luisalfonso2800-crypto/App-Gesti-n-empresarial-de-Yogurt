@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm --filter web build --no-lint",
+  "installCommand": "pnpm install",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}
