@@ -321,3 +321,185 @@
   border: 1px solid #FECACA;
 }
 
+/* ==========================================================
+   VISTA DUAL RESPONSIVA (MAN-UI-002)
+   ========================================================== */
+
+.tableResponsiveWrapper {
+  width: 100%;
+}
+
+.desktopTableContainer {
+  display: block;
+}
+
+.mobileCardsContainer {
+  display: none;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.mobileCard {
+  background: #ffffff;
+  border: 1px solid #E8E2D7;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.15s ease;
+}
+
+.mobileCard:hover {
+  border-color: #CAD5B5;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+.mobileCardSelected {
+  border-color: #182622;
+  background-color: #FAF8F5;
+  box-shadow: 0 0 0 1px #182622;
+}
+
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mobileCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.mobileProductInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileProductTitle {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #182622;
+}
+
+.mobileProductSub {
+  font-size: 0.75rem;
+  color: #78716C;
+}
+
+.mobileCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid #F4F1EA;
+  border-bottom: 1px solid #F4F1EA;
+}
+
+.mobileDataRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.mobileDataLabel {
+  color: #78716C;
+}
+
+.mobileDataValue {
+  font-weight: 600;
+  color: #182622;
+}
+
+.mobilePriceValue {
+  font-weight: 800;
+  font-size: 0.9375rem;
+  color: #182622;
+}
+
+.mobileCardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.btnActionActivate {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #BBF7D0;
+  background-color: #F0FDF4;
+  color: #166534;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.btnActionDeactivate {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #FDE68A;
+  background-color: #FEF3C7;
+  color: #92400E;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.btnActionEdit {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #E8E2D7;
+  background-color: #FAF8F5;
+  color: #182622;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.btnActionDelete {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0.45rem;
+  border-radius: 6px;
+  border: 1px solid #FECACA;
+  background-color: #FEF2F2;
+  color: #991B1B;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 767px) {
+  .desktopTableContainer {
+    display: none;
+  }
+  .mobileCardsContainer {
+    display: flex;
+  }
+}
+

@@ -16,6 +16,21 @@ export class SuppliesRepository {
           where: { activo: true },
           take: 1,
           orderBy: { fechaRegistro: 'desc' }
+        },
+        inventario: {
+          select: {
+            cantidadActual: true
+          }
+        },
+        _count: {
+          select: {
+            detallesCompra: true,
+            movimientos: true,
+            detallesReceta: true,
+            detallesProduccion: true,
+            lotes: true,
+            ordenCompraItems: true
+          }
         }
       }
     });

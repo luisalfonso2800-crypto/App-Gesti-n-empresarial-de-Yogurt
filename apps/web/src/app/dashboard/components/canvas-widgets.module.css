@@ -27,8 +27,24 @@
   overflow: hidden;
 }
 
+.siloCanvasWrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
 .canvasBlock {
   display: block;
+}
+
+.siloCanvasInteractive {
+  display: block;
+  cursor: pointer;
 }
 
 .radarWrapper {

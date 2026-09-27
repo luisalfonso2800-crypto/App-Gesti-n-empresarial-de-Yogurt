@@ -4,6 +4,7 @@
  * @description Fila individual del listado de productos terminados con semáforo M8.
  */
 import React from 'react';
+import { Pencil, Trash2, Power } from 'lucide-react';
 import { TR, TD } from '@/components/ui/Table';
 import { resolveProductImage } from '@/lib/presetImages';
 import { formatCurrency } from '@/lib/formatters';
@@ -31,9 +32,8 @@ const CHANNEL_MAP = {
 
 const getEstadoProducto = (producto, numPrice) => {
   if (producto.activo === false) return { label: 'DESACTIVADO', className: styles.statusRed, dot: '🔴' };
-  const hasPresentation = Boolean(producto.idPresentacion || producto.presentacionId || producto.presentacion?.id);
-  if (numPrice > 0 && hasPresentation) return { label: 'LISTO', className: styles.statusGreen, dot: '🟢' };
-  return { label: 'INCOMPLETO', className: styles.statusYellow, dot: '🟡' };
+  const hasPres = Boolean(producto.idPresentacion || producto.presentacionId || producto.presentacion?.id);
+  return numPrice > 0 && hasPres ? { label: 'LISTO', className: styles.statusGreen, dot: '🟢' } : { label: 'INCOMPLETO', className: styles.statusYellow, dot: '🟡' };
 };
 
 export function ProductTableRow({
@@ -43,6 +43,7 @@ export function ProductTableRow({
   isHovered = false,
   onHoverProduct,
   onEdit,
+  onToggleActive,
   onDelete
 }) {
   const categoryConfig = CATEGORY_MAP[item.categoria] || { label: item.categoria || 'Sin Categoría', className: styles.catDefault };
@@ -53,9 +54,7 @@ export function ProductTableRow({
   const statusConfig = getEstadoProducto(item, numPrice);
 
   const handleDoubleClick = (e) => {
-    // Evitar disparar si se hizo doble clic dentro de un botón o input
-    if (e.target.closest('button') || e.target.closest('input')) return;
-    onToggleSelect?.(item.id);
+    if (!e.target.closest('button') && !e.target.closest('input')) onToggleSelect?.(item.id);
   };
 
   return (
@@ -66,46 +65,25 @@ export function ProductTableRow({
       title="Doble clic para seleccionar / deseleccionar"
     >
       <TD className={styles.checkboxCell}>
-        <input
-          type="checkbox"
-          className={styles.rowCheckbox}
-          checked={isSelected}
-          onChange={() => onToggleSelect && onToggleSelect(item.id)}
-          aria-label={`Seleccionar ${item.nombre}`}
-        />
+        <input type="checkbox" className={styles.rowCheckbox} checked={isSelected} onChange={() => onToggleSelect && onToggleSelect(item.id)} aria-label={`Seleccionar ${item.nombre}`} />
       </TD>
       <TD className={styles.imageCell}>
         <div className={styles.avatarWrapper}>
-          <ProductAvatar
-            src={resolveProductImage(item)}
-            alt={item.nombre}
-            name={item.nombre}
-            size={48}
-          />
+          <ProductAvatar src={resolveProductImage(item)} alt={item.nombre} name={item.nombre} size={48} />
         </div>
       </TD>
       <TD className={styles.productNameCell}>
         <div className={styles.productName}>{item.nombre}</div>
-        {presentationText && (
-          <div className={styles.productSubtitle}>{presentationText}</div>
-        )}
+        {presentationText && <div className={styles.productSubtitle}>{presentationText}</div>}
       </TD>
       <TD className={styles.categoryCell}>
-        <span className={`${styles.categoryChip} ${categoryConfig.className}`}>
-          {categoryConfig.label}
-        </span>
+        <span className={`${styles.categoryChip} ${categoryConfig.className}`}>{categoryConfig.label}</span>
       </TD>
       <TD className={styles.categoryCell}>
-        <span className={`${styles.channelChip} ${channelConfig.className}`}>
-          {channelConfig.label}
-        </span>
+        <span className={`${styles.channelChip} ${channelConfig.className}`}>{channelConfig.label}</span>
       </TD>
       <TD className={styles.priceCell}>
-        {numPrice > 0 ? (
-          <span className={styles.priceText}>{formatCurrency(numPrice)}</span>
-        ) : (
-          <span className={styles.internalCostPrice}>$0 (Costo Interno)</span>
-        )}
+        {numPrice > 0 ? <span className={styles.priceText}>{formatCurrency(numPrice)}</span> : <span className={styles.internalCostPrice}>$0 (Costo Interno)</span>}
       </TD>
       <TD className={styles.statusCell}>
         <span className={`${styles.statusBadge} ${statusConfig.className}`}>
@@ -115,12 +93,26 @@ export function ProductTableRow({
       </TD>
       <TD className={styles.actionsCell}>
         <div className={styles.actions}>
+          {onToggleActive && (
+            <button
+              type="button"
+              className={item.activo === false ? styles.btnToggleInactive : styles.btnToggleActive}
+              onClick={() => onToggleActive(item)}
+              title={item.activo === false ? 'Activar producto' : 'Pausar producto'}
+              aria-label={item.activo === false ? 'Activar producto' : 'Pausar producto'}
+            >
+              <Power size={14} />
+            </button>
+          )}
           <button
             type="button"
             className={styles.btnEdit}
             onClick={() => onEdit(item)}
+            title="Editar producto"
+            aria-label={`Editar ${item.nombre}`}
           >
-            Editar
+            <Pencil size={14} />
+            <span>Editar</span>
           </button>
           {onDelete && (
             <button
@@ -130,7 +122,7 @@ export function ProductTableRow({
               title="Eliminar producto"
               aria-label={`Eliminar ${item.nombre}`}
             >
-              🗑️
+              <Trash2 size={14} />
             </button>
           )}
         </div>

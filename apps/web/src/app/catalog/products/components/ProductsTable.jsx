@@ -11,6 +11,7 @@ import { Table, THead, TBody, TR, TH } from '@/components/ui/Table';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { ProductTableRow } from './ProductTableRow';
+import { ProductMobileCard } from './ProductMobileCard';
 import styles from './products-table.module.css';
 
 export function ProductsTable({
@@ -47,42 +48,63 @@ export function ProductsTable({
   const someSelected = items.some(item => selectedIds.includes(item.id));
 
   return (
-    <Table>
-      <THead>
-        <TR>
-          <TH className={styles.checkboxCell}>
-            <input
-              type="checkbox"
-              className={styles.rowCheckbox}
-              checked={allSelected}
-              ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
-              onChange={() => onToggleSelectAll && onToggleSelectAll(items)}
-              aria-label="Seleccionar todos los productos de esta página"
-            />
-          </TH>
-          <TH>Imagen</TH>
-          <TH>Nombre</TH>
-          <TH>Categoría</TH>
-          <TH>Canal</TH>
-          <TH>Precio Venta</TH>
-          <TH>Estado</TH>
-          <TH className={styles.actionsHeader}>Acciones</TH>
-        </TR>
-      </THead>
-      <TBody>
+    <div className={styles.tableResponsiveWrapper}>
+      {/* Vista Móvil: Tarjetas Fluidas (MAN-UI-002) */}
+      <div className={styles.mobileCardsContainer}>
         {items.map((item) => (
-          <ProductTableRow
+          <ProductMobileCard
             key={item.id}
             item={item}
             isSelected={selectedIds.includes(item.id)}
             onToggleSelect={onToggleSelect}
-            isHovered={String(hoveredProductId) === String(item.id)}
-            onHoverProduct={onHoverProduct}
             onEdit={onEdit}
             onDelete={onDelete}
+            onToggleActive={onToggleActive}
           />
         ))}
-      </TBody>
-    </Table>
+      </div>
+
+      {/* Vista Desktop: Tabla Tabular */}
+      <div className={styles.desktopTableContainer}>
+        <Table>
+          <THead>
+            <TR>
+              <TH className={styles.checkboxCell}>
+                <input
+                  type="checkbox"
+                  className={styles.rowCheckbox}
+                  checked={allSelected}
+                  ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                  onChange={() => onToggleSelectAll && onToggleSelectAll(items)}
+                  aria-label="Seleccionar todos los productos de esta página"
+                />
+              </TH>
+              <TH>Imagen</TH>
+              <TH>Nombre</TH>
+              <TH>Categoría</TH>
+              <TH>Canal</TH>
+              <TH>Precio Venta</TH>
+              <TH>Estado</TH>
+              <TH className={styles.actionsHeader}>Acciones</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {items.map((item) => (
+              <ProductTableRow
+                key={item.id}
+                item={item}
+                isSelected={selectedIds.includes(item.id)}
+                onToggleSelect={onToggleSelect}
+                isHovered={String(hoveredProductId) === String(item.id)}
+                onHoverProduct={onHoverProduct}
+                onEdit={onEdit}
+                onToggleActive={onToggleActive}
+                onDelete={onDelete}
+              />
+            ))}
+          </TBody>
+        </Table>
+      </div>
+    </div>
   );
 }

@@ -13,8 +13,8 @@ if (!GOT_LOCK) {
 }
 
 let mainWindow = null;
-const FRONTEND_URL = process.env.DESKTOP_WEB_URL || 'http://localhost:3000';
-const API_URL = process.env.DESKTOP_API_URL || 'http://localhost:4000/api/v1';
+const FRONTEND_URL = process.env.DESKTOP_WEB_URL || 'https://app-gesti-n-empresarial-de-yogurt-a.vercel.app';
+const API_URL = process.env.DESKTOP_API_URL || 'https://api-production-ec9ee.up.railway.app/api/v1';
 
 function checkService(url, timeoutMs = 1500) {
   return new Promise((resolve) => {

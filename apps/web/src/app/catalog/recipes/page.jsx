@@ -2,9 +2,6 @@
  * @file page.jsx
  * @module catalog/recipes
  * @description Orquestador principal del módulo de recetas técnicas (SRP <120 líneas, 0 inline styles).
- * @responsibility Centralizar estado e inyectarlo a la cabecera, lista y modal de edición.
- * @usedBy Next.js App Router
- * @dependencies React, Link, RecipesHeader, RecipesList, RecipeModal, ./recipes.module.css, ./hooks/useRecipesPageManager
  */
 'use client';
 
@@ -13,10 +10,12 @@ import Link from 'next/link';
 import { RecipesHeader } from './components/RecipesHeader';
 import { RecipesList } from './components/RecipesList';
 import { RecipeModal } from './components/RecipeModal';
-import { OrphanProductsBanner } from './components/OrphanProductsBanner';
 import { ConfirmDeleteRecipeModal } from './components/ConfirmDeleteRecipeModal';
+import { RecipesMetrics } from './components/RecipesMetrics';
+import { RecipesMetricsDetailModal } from './components/RecipesMetricsDetailModal';
+import { RecipesFilterBar } from './components/RecipesFilterBar';
+import { RecipesPagination } from './components/RecipesPagination';
 import styles from './recipes.module.css';
-
 import { useRecipesPageManager } from './hooks/useRecipesPageManager';
 
 function RecipesContent() {
@@ -27,8 +26,11 @@ function RecipesContent() {
     removeDetalle, handleSubmit, calculateCost, getCostRollup, handleToggleActive,
     recipeToDelete, isDeleting, deleteError,
     handleOpenDelete, handleCloseDelete, handleConfirmDelete,
-    notice, clearNotice,
-    canCreate, hasProducts, hasSupplies, disabledTooltip
+    notice, clearNotice, canCreate, hasProducts, hasSupplies, disabledTooltip,
+    filterSearch, setFilterSearch, filterProduct, setFilterProduct,
+    filterStatus, setFilterStatus, hasFilters, clearFilters, filteredCount,
+    paginatedRecipes, currentPage, setCurrentPage, totalPages, PAGE_SIZE,
+    globalMetrics, orphanProducts, activeMetricDetail, setActiveMetricDetail
   } = useRecipesPageManager();
 
   if (isEditing) {
@@ -45,60 +47,50 @@ function RecipesContent() {
   }
 
   return (
-    <div>
-      <RecipesHeader 
-        onNewRecipe={handleOpenEditor} 
-        canCreate={canCreate} 
-        disabledTooltip={disabledTooltip} 
-      />
-
+    <div className={styles.pageContainer}>
+      <RecipesHeader onNewRecipe={handleOpenEditor} canCreate={canCreate} disabledTooltip={disabledTooltip} />
       {notice && (
         <div className={styles.noticeBanner}>
           <div>⚠️ {notice}</div>
-          <button type="button" className={styles.noticeBannerClose} onClick={clearNotice} aria-label="Cerrar advertencia">
-            ✕
-          </button>
+          <button type="button" className={styles.noticeBannerClose} onClick={clearNotice} aria-label="Cerrar advertencia">✕</button>
         </div>
       )}
-
-      {!loading && !hasProducts && (
+      {!loading && (!hasProducts || !hasSupplies) && (
         <div className={styles.prereqBanner}>
-          <div><strong>Prerrequisito requerido:</strong> Debe registrar al menos un Producto antes de formular recetas.</div>
-          <Link href="/catalog/products" className={styles.prereqLink}>Ir a Productos</Link>
+          <div><strong>Prerrequisito:</strong> Debe registrar {!hasProducts ? 'Productos' : 'Insumos'} antes de formular recetas.</div>
+          <Link href={!hasProducts ? '/catalog/products' : '/catalog/supplies'} className={styles.prereqLink}>Ir a {!hasProducts ? 'Productos' : 'Insumos'}</Link>
         </div>
       )}
-
-      {!loading && !hasSupplies && (
-        <div className={styles.prereqBanner}>
-          <div><strong>Prerrequisito requerido:</strong> Debe registrar al menos un Insumo antes de formular recetas.</div>
-          <Link href="/catalog/supplies" className={styles.prereqLink}>Ir a Insumos</Link>
-        </div>
-      )}
-
-      {/* Selector en tarjetas de Productos Huérfanos sin Receta Técnica (Estilo MANNÁ) */}
-      {!loading && hasProducts && (
-        <OrphanProductsBanner
-          orphanProducts={products.filter(p => !items.some(r => String(r.idProducto) === String(p.id)))}
-          onSelectProduct={(productId) => handleOpenEditor(null, productId)}
+      <RecipesMetrics metrics={globalMetrics} loading={loading} onCardClick={setActiveMetricDetail} />
+      <RecipesFilterBar
+        filterSearch={filterSearch} setFilterSearch={setFilterSearch}
+        filterProduct={filterProduct} setFilterProduct={setFilterProduct}
+        filterStatus={filterStatus} setFilterStatus={setFilterStatus}
+        products={products} hasFilters={hasFilters} clearFilters={clearFilters}
+      />
+      <RecipesList 
+        items={paginatedRecipes} loading={loading} error={error}
+        onEdit={handleOpenEditor} onToggleActive={handleToggleActive}
+        onDelete={handleOpenDelete} onNewRecipe={handleOpenEditor}
+        canCreate={canCreate} disabledTooltip={disabledTooltip}
+      />
+      {!loading && filteredCount > 0 && (
+        <RecipesPagination
+          currentPage={currentPage} totalPages={totalPages}
+          totalItems={filteredCount} itemsPerPage={PAGE_SIZE}
+          onPageChange={setCurrentPage}
         />
       )}
-
-      
-      <RecipesList 
-        items={items} loading={loading} error={error}
-        onEdit={handleOpenEditor} onToggleActive={handleToggleActive}
-        onDelete={handleOpenDelete}
-        onNewRecipe={handleOpenEditor} canCreate={canCreate}
-        disabledTooltip={disabledTooltip}
-      />
-
       <ConfirmDeleteRecipeModal
-        isOpen={Boolean(recipeToDelete)}
-        item={recipeToDelete}
-        isDeleting={isDeleting}
-        errorMessage={deleteError}
-        onConfirm={handleConfirmDelete}
-        onClose={handleCloseDelete}
+        isOpen={Boolean(recipeToDelete)} item={recipeToDelete}
+        isDeleting={isDeleting} errorMessage={deleteError}
+        onConfirm={handleConfirmDelete} onClose={handleCloseDelete}
+      />
+      <RecipesMetricsDetailModal
+        isOpen={Boolean(activeMetricDetail)} onClose={() => setActiveMetricDetail(null)}
+        detailType={activeMetricDetail} metrics={globalMetrics} orphanProducts={orphanProducts}
+        onFilterByStatus={setFilterStatus} onNewRecipe={() => handleOpenEditor(null)}
+        onSelectOrphan={(prodId) => handleOpenEditor(null, prodId)}
       />
     </div>
   );

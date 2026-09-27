@@ -1,10 +1,7 @@
 /**
  * @file page.jsx
  * @module operations/purchases
- * @description Orquestador principal del módulo de compras, historial y gestión de listas (SRP + CSS Modules).
- * @responsibility Orquestar cabecera, órdenes en ruta, historial consolidado y modales auxiliares.
- * @usedBy Next.js App Router
- * @dependencies Next.js, lucide-react, @/components/ui/Button, ./hooks/usePurchasesPageData, ./components/PurchasesActiveOrdersSection, ./components/PurchasesHistoryTable, ./components/PurchasesModals
+ * @description Orquestador principal del módulo de compras, historial y gestión de listas (SRP < 120 líneas).
  */
 'use client';
 
@@ -20,19 +17,27 @@ import { usePurchasesPageData } from './hooks/usePurchasesPageData';
 import PurchasesActiveOrdersSection from './components/PurchasesActiveOrdersSection';
 import PurchasesHistoryTable from './components/PurchasesHistoryTable';
 import PurchasesModals from './components/PurchasesModals';
+import { PurchasesMetrics } from './components/PurchasesMetrics';
+import { PurchasesMetricsDetailModal } from './components/PurchasesMetricsDetailModal';
+import { PurchasesFilterBar } from './components/PurchasesFilterBar';
+import { PurchasesPagination } from './components/PurchasesPagination';
 
 export default function PurchasesPage() {
   const router = useRouter();
   const {
     purchases, loading, error, activeOrders, expandedId, isMergingMode, selectedForMerge,
     deleteModalOpen, deleteError, isSubmittingDelete, editNameModalOpen, editNameValue,
-    editNameError, isSubmittingEditName, groupedPurchases, toggleRow, handleToggleMergeSelection,
+    editNameError, isSubmittingEditName, toggleRow, handleToggleMergeSelection,
     executeMerge, handleEditNameSubmit, executeDelete, setIsMergingMode, setSelectedForMerge,
-    setDeleteModalOpen, setDeleteError, setEditNameModalOpen, setEditNameValue, setEditNameError
+    setDeleteModalOpen, setDeleteError, setEditNameModalOpen, setEditNameValue, setEditNameError,
+    filterSearch, setFilterSearch, filterSupplier, setFilterSupplier,
+    filterStatus, setFilterStatus, hasFilters, clearFilters, filteredCount,
+    paginatedPurchases, currentPage, setCurrentPage, totalPages, PAGE_SIZE,
+    globalMetrics, suppliersList, activeMetricDetail, setActiveMetricDetail
   } = usePurchasesPageData();
 
   return (
-    <div>
+    <div className={styles.pageContainer}>
       <ContextBanner
         title="Concepto Técnico"
         description="Aquí se documenta la llegada de insumos. Registra listas en ruta, consolida compras finalizadas y permite unificar órdenes."
@@ -47,41 +52,43 @@ export default function PurchasesPage() {
           </div>
         }
       />
-
+      <PurchasesMetrics metrics={globalMetrics} loading={loading} onCardClick={setActiveMetricDetail} />
       <PurchasesActiveOrdersSection
-        activeOrders={activeOrders}
-        isMergingMode={isMergingMode}
-        selectedForMerge={selectedForMerge}
-        setIsMergingMode={setIsMergingMode}
-        setSelectedForMerge={setSelectedForMerge}
-        executeMerge={executeMerge}
-        handleToggleMergeSelection={handleToggleMergeSelection}
-        setEditNameValue={setEditNameValue}
-        setEditNameModalOpen={setEditNameModalOpen}
-        setDeleteModalOpen={setDeleteModalOpen}
+        activeOrders={activeOrders} isMergingMode={isMergingMode}
+        selectedForMerge={selectedForMerge} setIsMergingMode={setIsMergingMode}
+        setSelectedForMerge={setSelectedForMerge} executeMerge={executeMerge}
+        handleToggleMergeSelection={handleToggleMergeSelection} setEditNameValue={setEditNameValue}
+        setEditNameModalOpen={setEditNameModalOpen} setDeleteModalOpen={setDeleteModalOpen}
       />
-
+      <PurchasesFilterBar
+        filterSearch={filterSearch} setFilterSearch={setFilterSearch}
+        filterSupplier={filterSupplier} setFilterSupplier={setFilterSupplier}
+        filterStatus={filterStatus} setFilterStatus={setFilterStatus}
+        suppliers={suppliersList} hasFilters={hasFilters} clearFilters={clearFilters}
+      />
       {loading ? (
         <LoadingState />
       ) : error ? (
         <ErrorState error={error} />
       ) : purchases.length === 0 ? (
         <AssistedEmptyState
-          icon="🛒"
-          title="Comienza registrando tu primera Compra"
+          icon="🛒" title="Comienza registrando tu primera Compra"
           description="Registra entradas de insumos a bodega para abastecer la planta y actualizar Kardex."
-          actionLabel="+ Nueva Compra"
-          onAction={() => router.push('/operations/purchases/new?mode=direct')}
+          actionLabel="+ Nueva Compra" onAction={() => router.push('/operations/purchases/new?mode=direct')}
           topButtonLabel="Nueva Compra Directa"
         />
       ) : (
-        <PurchasesHistoryTable
-          groupedPurchases={groupedPurchases}
-          expandedId={expandedId}
-          toggleRow={toggleRow}
-        />
+        <>
+          <PurchasesHistoryTable groupedPurchases={paginatedPurchases} expandedId={expandedId} toggleRow={toggleRow} />
+          {filteredCount > 0 && (
+            <PurchasesPagination
+              currentPage={currentPage} totalPages={totalPages}
+              totalItems={filteredCount} itemsPerPage={PAGE_SIZE}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
-
       <PurchasesModals
         editNameModalOpen={editNameModalOpen} setEditNameModalOpen={setEditNameModalOpen}
         editNameValue={editNameValue} setEditNameValue={setEditNameValue}
@@ -91,7 +98,13 @@ export default function PurchasesPage() {
         deleteError={deleteError} setDeleteError={setDeleteError}
         isSubmittingDelete={isSubmittingDelete} executeDelete={executeDelete}
       />
+      <PurchasesMetricsDetailModal
+        isOpen={Boolean(activeMetricDetail)} onClose={() => setActiveMetricDetail(null)}
+        detailType={activeMetricDetail} metrics={globalMetrics} suppliersList={suppliersList}
+        onFilterBySupplier={setFilterSupplier} onFilterByStatus={setFilterStatus}
+        onNewPurchase={() => router.push('/operations/purchases/new?mode=direct')}
+        onNewOrder={() => router.push('/catalog/supplier-prices')}
+      />
     </div>
   );
 }
-

@@ -13,7 +13,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import shellStyles from './shell.module.css';
 import styles from './header.module.css';
 import { ShoppingCartIcon } from '@/components/ui/icons';
-import { Layers, PlusCircle } from 'lucide-react';
+import { Layers, PlusCircle, Menu } from 'lucide-react';
 import { OnboardingWizardWidget } from './OnboardingWizardWidget';
 import { PlantToolsModal } from '@/components/common/tools/PlantToolsModal';
 import { useHeaderCart } from './parts/useHeaderCart';
@@ -21,7 +21,7 @@ import HeaderCartDropdown from './parts/HeaderCartDropdown';
 import HeaderCartModals from './parts/HeaderCartModals';
 import { getModuleInfo } from './parts/headerModuleTitles';
 
-export function Header() {
+export function Header({ onToggleMobile }) {
   const router = useRouter();
   const pathname = usePathname();
   const { title: moduleTitle, subtitle: moduleSubtitle } = getModuleInfo(pathname);
@@ -34,18 +34,28 @@ export function Header() {
     }
   };
 
+  const cartState = useHeaderCart();
   const {
     lists, activeListId, activeList, cartCount, isSyncing,
-    isCartOpen, setIsCartOpen, cartRef, listToDelete, setListToDelete,
-    deleteError, setDeleteError, isSubmittingDelete,
-    editNameModalOpen, setEditNameModalOpen, editNameValue, setEditNameValue,
-    editNameError, setEditNameError, isSubmittingEditName, isCreatingList,
+    isCartOpen, setIsCartOpen, cartRef, isCreatingList,
     createList, setActiveList, removeFromCart, clearCart, proceedToPurchase,
-    handleEditNameSubmit, handleDeleteList, showNotification
-  } = useHeaderCart();
+    setEditNameValue, setEditNameModalOpen, setListToDelete, showNotification
+  } = cartState;
 
   return (
     <header className={shellStyles.header}>
+      {onToggleMobile && (
+        <button
+          type="button"
+          onClick={onToggleMobile}
+          className={shellStyles.mobileMenuBtn}
+          aria-label="Abrir menú lateral"
+          title="Menú"
+        >
+          <Menu size={20} strokeWidth={2} />
+        </button>
+      )}
+
       <div className={styles.moduleTitleGroup}>
         <h1 className={styles.moduleTitle}>{moduleTitle}</h1>
         {moduleSubtitle && <p className={styles.moduleSubtitle}>{moduleSubtitle}</p>}
@@ -68,10 +78,16 @@ export function Header() {
         <OnboardingWizardWidget />
 
         {activeList && (
-          <div className={styles.activeListBadge} title={`Lista Activa: ${activeList.customName}`}>
+          <button
+            type="button"
+            className={styles.activeListBadge}
+            onClick={() => setIsCartOpen((prev) => !prev)}
+            title={`Lista Activa: ${activeList.customName} (Clic para ver/cambiar)`}
+            aria-label={`Lista de compra activa: ${activeList.customName}. Abrir menú`}
+          >
             <Layers size={16} /> 
             <span className={styles.responsiveBtnText}>Lista: {activeList.customName}</span>
-          </div>
+          </button>
         )}
 
         <button
@@ -117,22 +133,7 @@ export function Header() {
         </div>
       </div>
 
-      <HeaderCartModals
-        editNameModalOpen={editNameModalOpen}
-        setEditNameModalOpen={setEditNameModalOpen}
-        editNameValue={editNameValue}
-        setEditNameValue={setEditNameValue}
-        editNameError={editNameError}
-        setEditNameError={setEditNameError}
-        isSubmittingEditName={isSubmittingEditName}
-        handleEditNameSubmit={handleEditNameSubmit}
-        listToDelete={listToDelete}
-        setListToDelete={setListToDelete}
-        deleteError={deleteError}
-        setDeleteError={setDeleteError}
-        isSubmittingDelete={isSubmittingDelete}
-        handleDeleteList={handleDeleteList}
-      />
+      <HeaderCartModals cartModals={cartState} />
     </header>
   );
 }

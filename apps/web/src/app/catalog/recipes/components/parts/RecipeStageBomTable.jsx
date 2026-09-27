@@ -44,7 +44,8 @@ export function RecipeStageBomTable({
           No se han asignado insumos ni materiales a esta fase.
         </div>
       ) : (
-        <table className={styles.bomTable}>
+        <div className={styles.bomTableResponsive}>
+          <table className={styles.bomTable}>
           <thead>
             <tr>
               <th>Ingrediente / Base</th>
@@ -133,6 +134,7 @@ export function RecipeStageBomTable({
             })}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

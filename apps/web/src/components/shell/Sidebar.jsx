@@ -1,82 +1,45 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Leaf, 
-  LayoutDashboard, 
-  Bell,
-  Box, 
-  Layers, 
-  Truck, 
-  DollarSign, 
-  Package, 
-  BookOpen,
-  ShoppingCart,
-  Boxes,
-  Factory,
-  QrCode,
-  Users,
-  TrendingUp,
-  CreditCard,
-  Receipt,
-  Sprout,
-  Settings
-} from 'lucide-react';
+import { Leaf, Settings } from 'lucide-react';
 import { SidebarCollapseButton } from './parts/SidebarCollapseButton';
 import { SidebarNavItem } from './parts/SidebarNavItem';
+import { SIDEBAR_NAV_ITEMS } from './parts/sidebarNavConfig';
 import InvoiceSettingsModal from '@/components/settings/InvoiceSettingsModal';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { useAlarmsCount } from '@/hooks/useAlarmsCount';
 import { isRouteUnlocked } from '@/lib/onboarding-unlock-rules';
 import styles from './shell.module.css';
 
-const navItems = [
-  {
-    group: 'GENERAL',
-    items: [
-      { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { name: 'Alarmas SCADA', path: '/dashboard?channel=ALARMS', icon: Bell, badge: '3' },
-    ]
-  },
-  {
-    group: 'CATÁLOGOS',
-    items: [
-      { name: 'Presentaciones', path: '/catalog/presentations', icon: Box },
-      { name: 'Insumos', path: '/catalog/supplies', icon: Layers },
-      { name: 'Proveedores', path: '/catalog/suppliers', icon: Truck },
-      { name: 'Precios de Prov.', path: '/catalog/supplier-prices', icon: DollarSign },
-      { name: 'Productos', path: '/catalog/products', icon: Package },
-      { name: 'Recetas', path: '/catalog/recipes', icon: BookOpen },
-    ]
-  },
-  {
-    group: 'OPERACIONES',
-    items: [
-      { name: 'Compras', path: '/operations/purchases', icon: ShoppingCart },
-      { name: 'Inventario', path: '/operations/inventory', icon: Boxes },
-      { name: 'Producción', path: '/operations/production', icon: Factory },
-      { name: 'Lotes', path: '/operations/lots', icon: QrCode },
-    ]
-  },
-  {
-    group: 'COMERCIAL',
-    items: [
-      { name: 'Clientes', path: '/commercial/clients', icon: Users },
-      { name: 'Ventas', path: '/commercial/sales', icon: TrendingUp },
-      { name: 'Pagos/Cobros', path: '/commercial/payments', icon: CreditCard },
-      { name: 'Gastos', path: '/commercial/expenses', icon: Receipt },
-      { name: 'Rumbo MANNÁ', path: '/commercial/goals', icon: Sprout },
-    ]
-  }
-];
-
-export function Sidebar({ collapsed = false, onToggle }) {
+export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, onCloseMobile }) {
   const pathname = usePathname();
   const { data: onboardingData } = useOnboardingStatus();
+  const { totalAlarms } = useAlarmsCount();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
+  const handleCollapseToggle = () => {
+    // Si estamos en viewport móvil (< 1024px) y el drawer está abierto, colapsar/plegar cierra el drawer
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      if (onCloseMobile) onCloseMobile();
+      return;
+    }
+    if (onToggle) onToggle();
+  };
+
   return (
-    <aside className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`} aria-label="Navegación ERP MANNÁ">
-      <SidebarCollapseButton collapsed={collapsed} onToggle={onToggle} />
+    <>
+      {mobileOpen && (
+        <div
+          className={styles.sidebarBackdrop}
+          onClick={onCloseMobile}
+          aria-hidden="true"
+        />
+      )}
+      <aside
+        className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''} ${mobileOpen ? styles.sidebarOpenMobile : ''}`}
+        aria-label="Navegación ERP MANNÁ"
+      >
+        <SidebarCollapseButton collapsed={collapsed} onToggle={handleCollapseToggle} />
 
       <div className={styles.sidebarContentWrapper}>
         <div className={styles.brandWrapper}>
@@ -86,7 +49,7 @@ export function Sidebar({ collapsed = false, onToggle }) {
         </div>
         
         <nav className={styles.navList}>
-          {navItems.map((group) => (
+          {SIDEBAR_NAV_ITEMS.map((group) => (
             <div key={group.group} className={styles.navGroup}>
               <div className={styles.groupTitle}>{group.group}</div>
               {group.items.map((item) => {
@@ -96,14 +59,20 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 
                 const { isUnlocked, requiredStepText } = isRouteUnlocked(item.path, onboardingData);
 
+                // Inyección dinámica de badge si hay alarmas activas reales
+                const dynamicItem = item.name === 'Alarmas SCADA'
+                  ? { ...item, badge: totalAlarms > 0 ? String(totalAlarms) : null }
+                  : item;
+
                 return (
                   <SidebarNavItem
                     key={item.path}
-                    item={item}
+                    item={dynamicItem}
                     isActive={isActive}
                     isUnlocked={isUnlocked}
                     requiredStepText={requiredStepText}
                     collapsed={collapsed}
+                    onNavigate={onCloseMobile}
                   />
                 );
               })}
@@ -135,5 +104,6 @@ export function Sidebar({ collapsed = false, onToggle }) {
         onClose={() => setIsSettingsOpen(false)}
       />
     </aside>
+    </>
   );
 }

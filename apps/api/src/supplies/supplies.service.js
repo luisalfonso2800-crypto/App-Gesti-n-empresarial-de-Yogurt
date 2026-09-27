@@ -38,7 +38,13 @@ export class SuppliesService {
   }
 
   async remove(id) {
-    await this.findOne(id);
+    const supply = await this.findOne(id);
+
+    if (supply.activo) {
+      throw new ConflictException(
+        'El insumo se encuentra activo. Solo puede eliminar un insumo si primero lo desactiva y no cuenta con trazabilidad.'
+      );
+    }
 
     const relCounts = await this.repository.countDependencies(id);
     const counts = relCounts?._count || {};
@@ -48,12 +54,11 @@ export class SuppliesService {
       (counts.detallesReceta || 0) +
       (counts.detallesProduccion || 0) +
       (counts.lotes || 0) +
-      (counts.ordenCompraItems || 0) +
-      (counts.precios || 0);
+      (counts.ordenCompraItems || 0);
 
     if (totalDependencies > 0) {
       throw new ConflictException(
-        'El insumo cuenta con historial de compras, inventario o recetas y no puede ser eliminado. Manténgalo desactivado.'
+        'El insumo cuenta con historial de compras, inventario, recetas o producción (trazabilidad) y no puede ser eliminado. Debe mantenerse desactivado para preservar la integridad contable.'
       );
     }
 

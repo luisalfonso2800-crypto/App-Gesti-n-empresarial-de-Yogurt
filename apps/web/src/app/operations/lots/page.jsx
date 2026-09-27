@@ -1,104 +1,102 @@
 /**
  * @file page.jsx
  * @module operations/lots
- * @description Vista principal de trazabilidad de lotes en cava (SRP <120 líneas, 0 inline styles).
+ * @description Vista principal de trazabilidad de lotes en cava (SRP < 120 líneas, 0 inline styles).
  */
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
+import React from 'react';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Package, RefreshCw, Trash2 } from 'lucide-react';
+import { RefreshCw, Package } from 'lucide-react';
 import styles from './lots.module.css';
 import { useLotsData } from './hooks/useLotsData';
-
-function renderGenBadge(gen) {
-  const g = Number(gen) || 0;
-  if (g === 0) return <span className={styles.badgeF0}>F0 (Madre)</span>;
-  if (g >= 4) return <span className={styles.badgeF4}>F4 (Fin de Línea)</span>;
-  return <span className={styles.badgeF13}>Pase {g}/4 (F{g})</span>;
-}
+import { LotsMetrics } from './components/LotsMetrics';
+import { LotsMetricsDetailModal } from './components/LotsMetricsDetailModal';
+import { LotsFilterBar } from './components/LotsFilterBar';
+import { LotsHistoryTable } from './components/LotsHistoryTable';
+import { DiscardLotModal } from './components/DiscardLotModal';
 
 export default function LotsPage() {
-  const { lots, loading, error, fetchLots, handleDiscard, getStatus } = useLotsData();
-  const [tab, setTab] = useState('EXISTENCIA');
-
-  const { counts, displayedLots } = useMemo(() => {
-    const act = lots.filter(l => Number(l.cantidadDisponible) > 0);
-    const cep = lots.filter(l => (l.tipoLote === 'SEMIELABORADO_WIP' || Boolean(l.idLotePadre)) && Number(l.cantidadDisponible) > 0);
-    const ago = lots.filter(l => Number(l.cantidadDisponible) <= 0 || l.estado === 'AGOTADO' || l.estado === 'DESCARTADO');
-    const filtered = tab === 'EXISTENCIA' ? act : tab === 'CEPAS' ? cep : tab === 'AGOTADOS' ? ago : lots;
-    return { counts: { act: act.length, cep: cep.length, ago: ago.length, all: lots.length }, displayedLots: filtered };
-  }, [lots, tab]);
+  const lotsState = useLotsData();
+  const {
+    lots, loading, error, fetchLots, getStatus,
+    tab, setTab, tabCounts,
+    filterSearch, setFilterSearch,
+    filterType, setFilterType,
+    filterStatus, setFilterStatus,
+    hasFilters, clearFilters,
+    currentPage, setCurrentPage, totalPages, pageSize,
+    filteredLotsCount, paginatedLots,
+    globalMetrics, metricsModalOpen, selectedMetricType,
+    openMetricsModal, closeMetricsModal,
+    discardModalOpen, selectedLotForDiscard, discardSubmitting,
+    openDiscardModal, closeDiscardModal, confirmDiscard
+  } = lotsState;
 
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
 
   return (
     <div className={styles.container}>
-      <div className={styles.tabsBar}>
-        <div className={styles.tabsGroup}>
-          <button type="button" className={`${styles.tabBtn} ${tab === 'EXISTENCIA' ? styles.tabBtnActive : ''}`} onClick={() => setTab('EXISTENCIA')}>🟢 En Existencia ({counts.act})</button>
-          <button type="button" className={`${styles.tabBtn} ${tab === 'CEPAS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('CEPAS')}>🧫 Cepas Disponibles ({counts.cep})</button>
-          <button type="button" className={`${styles.tabBtn} ${tab === 'AGOTADOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('AGOTADOS')}>📁 Archivo / Agotados ({counts.ago})</button>
-          <button type="button" className={`${styles.tabBtn} ${tab === 'TODOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('TODOS')}>Ver Todos ({counts.all})</button>
+      <div className={styles.header}>
+        <div className={styles.titleWrapper}>
+          <Package className={styles.icon} size={28} />
+          <div>
+            <h1 className={styles.title}>Bitácora de Lotes y Cava</h1>
+            <p className={styles.subtitle}>Trazabilidad de producción, cepas semielaboradas y control FEFO.</p>
+          </div>
         </div>
-        <Button variant="secondary" onClick={fetchLots}><RefreshCw size={16}/> Actualizar</Button>
+        <div className={styles.headerActions}>
+          <Button variant="secondary" onClick={fetchLots}><RefreshCw size={16} /> Actualizar</Button>
+        </div>
       </div>
 
-      {displayedLots.length === 0 ? (
-        <AssistedEmptyState icon="🏷️" title="No hay lotes en esta categoría" description="Monitorea las existencias, cepas vivas y lotes históricos de la planta." topButtonLabel="Actualizar" />
-      ) : (
-        <Table>
-          <THead>
-            <TR>
-              <TH>Lote / ID</TH><TH>Linaje</TH><TH>Producto / Tipo</TH><TH>Fabricación</TH><TH>Vencimiento</TH>
-              <TH className={styles.textRight}>Unidades Restantes</TH><TH className={styles.textRight}>Costo U.</TH><TH>Estado (FEFO)</TH><TH>Acciones</TH>
-            </TR>
-          </THead>
-          <TBody>
-            {displayedLots.map(lote => {
-              const status = getStatus(lote.fechaVencimiento);
-              const isInoculo = lote.tipoLote === 'SEMIELABORADO_WIP' || Boolean(lote.idLotePadre);
-              const rawUMed = (lote.unidad || '').trim();
-              const uMed = (rawUMed.toLowerCase() === 'ml' && lote.tipoLote !== 'SEMIELABORADO_WIP') ? 'UND' : (lote.unidad || (isInoculo ? 'Litros' : 'UND'));
-              const costoFormateado = `$ ${Math.round(Number(lote.costoUnitario) || 0).toLocaleString('es-CO')}`;
-              const codLote = lote.codigoLote || lote.id.split('-')[0].toUpperCase();
-              const linajeNodes = Array.isArray(lote.linaje) && lote.linaje.length > 0 ? lote.linaje : ['COMERCIAL'];
-              const saldoPositivo = Number(lote.cantidadDisponible) > 0;
+      <LotsMetrics metrics={globalMetrics} loading={loading} onCardClick={openMetricsModal} />
 
-              return (
-                <TR key={lote.id}>
-                  <TD>
-                    <span className={styles.monoStrong}>{codLote}</span>
-                    <div className={styles.lineageBreadcrumb}>
-                      {linajeNodes.map((nodo, idx) => (
-                        <React.Fragment key={idx}>
-                          <span className={styles.lineageNode}>{nodo}</span>
-                          <span className={styles.lineageArrow}>➔</span>
-                        </React.Fragment>
-                      ))}
-                      <span className={`${styles.lineageNode} ${styles.lineageCurrent}`}>{codLote}</span>
-                    </div>
-                  </TD>
-                  <TD>{renderGenBadge(lote.generacion)}</TD>
-                  <TD><div>{lote.producto ? lote.producto.nombre : 'Insumo Interno'}</div>{isInoculo && <span className={styles.badgeInoculum}>🧫 INICIADOR</span>}</TD>
-                  <TD>{new Date(lote.fechaProduccion).toLocaleDateString()}</TD>
-                  <TD><span className={status.days <= 0 ? styles.textDanger : ''}>{lote.fechaVencimiento ? new Date(lote.fechaVencimiento).toLocaleDateString() : '-'}</span></TD>
-                  <TD className={styles.textRight}><strong>{Number(lote.cantidadDisponible)}</strong> / {Number(lote.cantidadInicial)} {uMed}</TD>
-                  <TD className={styles.textRight}>{costoFormateado}</TD>
-                  <TD><Badge status={status.color}>{status.text} {status.days !== undefined ? `(${status.days}d)` : ''}</Badge></TD>
-                  <TD>{saldoPositivo ? (<Button variant="danger" size="sm" onClick={() => handleDiscard(lote.id, lote.cantidadDisponible)}><Trash2 size={14} className={styles.btnIcon} /> Descartar</Button>) : (<span className={styles.textMutedSm}>Agotado</span>)}</TD>
-                </TR>
-              );
-            })}
-          </TBody>
-        </Table>
+      <div className={styles.tabsBar}>
+        <div className={styles.tabsGroup}>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'EXISTENCIA' ? styles.tabBtnActive : ''}`} onClick={() => setTab('EXISTENCIA')}>🟢 En Existencia ({tabCounts.act})</button>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'CEPAS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('CEPAS')}>🧫 Cepas Disponibles ({tabCounts.cep})</button>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'AGOTADOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('AGOTADOS')}>📁 Archivo / Agotados ({tabCounts.ago})</button>
+          <button type="button" className={`${styles.tabBtn} ${tab === 'TODOS' ? styles.tabBtnActive : ''}`} onClick={() => setTab('TODOS')}>Ver Todos ({tabCounts.all})</button>
+        </div>
+      </div>
+
+      <LotsFilterBar
+        filterSearch={filterSearch} setFilterSearch={setFilterSearch}
+        filterType={filterType} setFilterType={setFilterType}
+        filterStatus={filterStatus} setFilterStatus={setFilterStatus}
+        hasFilters={hasFilters} clearFilters={clearFilters}
+      />
+
+      {paginatedLots.length === 0 ? (
+        <AssistedEmptyState
+          icon="🏷️"
+          title="No hay lotes en esta vista"
+          description={hasFilters ? "No se encontraron lotes coincidentes con los filtros aplicados." : "Monitorea las existencias, cepas vivas y lotes históricos de la planta."}
+          topButtonLabel={hasFilters ? "Limpiar Filtros" : "Actualizar"}
+          onTopButtonClick={hasFilters ? clearFilters : fetchLots}
+        />
+      ) : (
+        <LotsHistoryTable
+          paginatedLots={paginatedLots} totalLotsCount={filteredLotsCount}
+          currentPage={currentPage} totalPages={totalPages} pageSize={pageSize}
+          onPageChange={setCurrentPage} getStatus={getStatus} onOpenDiscard={openDiscardModal}
+        />
       )}
+
+      <LotsMetricsDetailModal
+        isOpen={metricsModalOpen} onClose={closeMetricsModal}
+        type={selectedMetricType} metrics={globalMetrics} lots={lots}
+        getStatus={getStatus} onSelectTab={setTab}
+      />
+
+      <DiscardLotModal
+        isOpen={discardModalOpen} onClose={closeDiscardModal}
+        lot={selectedLotForDiscard} onConfirm={confirmDiscard} submitting={discardSubmitting}
+      />
     </div>
   );
 }
-

@@ -1,23 +1,72 @@
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.title { font-size: 1.5rem; font-weight: bold; color: #111827; margin: 0; }
-.actions { display: flex; gap: 1rem; }
-.form { display: flex; flex-direction: column; gap: 1rem; }
-.formActions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+/**
+ * @file presentations.module.css
+ * @module catalog/presentations
+ * @description Estilos del módulo de presentaciones (Paleta MANNÁ, Responsivo MAN-UI-002, WCAG táctil).
+ */
 
-.headerTitle { display: flex; flex-direction: column; }
-.subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+.header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 1.5rem; 
+}
 
-/* Thumbnail preview in table - Replicando visualización de productos */
+.title { 
+  font-size: 1.5rem; 
+  font-weight: bold; 
+  color: #182622; 
+  margin: 0; 
+}
+
+.actions { 
+  display: flex; 
+  gap: 0.5rem; 
+  align-items: center;
+}
+
+.actionsHeader {
+  min-width: 170px;
+}
+
+.headerTitle { 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.subtitle { 
+  font-size: 0.875rem; 
+  color: #57534E; 
+  margin-top: 0.25rem; 
+  font-weight: 400; 
+}
+
+.presentationsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Vista Desktop */
+.desktopTableContainer {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
 .thumbnailHeader {
-  width: 78px;
+  width: 68px;
   vertical-align: middle;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .thumbnailCell {
-  width: 78px;
+  width: 68px;
   vertical-align: middle;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .avatarWrapper {
@@ -30,6 +79,66 @@
   align-items: center;
   justify-content: center;
   border: 1px solid #E8E2D7;
+  flex-shrink: 0;
+}
+
+.nameCellWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  max-width: 260px;
+}
+
+.presentationNameText {
+  font-weight: 600;
+  color: #182622;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.presentationNotesText {
+  font-size: 0.75rem;
+  color: #78716C;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tipoEnvaseBadge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  background-color: #F3F4F6;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+.capacityText {
+  font-size: 0.825rem;
+  color: #1C3F35;
+}
+
+.specValueBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  background-color: #F7F4EE;
+  color: #8F704A;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 4px;
+  border: 1px solid #E8E2D7;
+  text-transform: uppercase;
+}
+
+.tapillaText {
+  font-size: 0.8125rem;
+  color: #57534E;
 }
 
 .granelBadge {
@@ -43,3 +152,320 @@
   border: 1px solid #CBD5E1;
 }
 
+/* Vista Móvil (Oculta por defecto en desktop) */
+.mobileCardsContainer {
+  display: none;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+.mobileCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  box-shadow: 0 1px 3px rgba(24, 38, 34, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mobileCard:active {
+  background-color: #FAF8F5;
+}
+
+.mobileCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.mobileCardMainInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.mobileCardBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.mobileCardTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.mobileCardSpecsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 0.75rem;
+  background-color: #FAF8F5;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #E8E2D7;
+}
+
+.mobileSpecItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.specItemFull {
+  grid-column: span 2;
+}
+
+.specLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #798D80;
+}
+
+.specValue {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #182622;
+}
+
+.specText {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #57534E;
+  line-height: 1.3;
+}
+
+.mobileCardActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid #F0ECE4;
+}
+
+.mobileActionBtn {
+  flex: 1;
+  min-height: 40px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+}
+
+/* Botones de Acción Elegantes (Paleta MANNÁ) */
+.actionBtnEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #182622;
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnEdit:hover {
+  background-color: #F4F0E6;
+  border-color: #D6CDBF;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.actionBtnEdit:active {
+  transform: translateY(0);
+}
+
+.actionBtnActivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #15803D;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnActivate:hover {
+  background-color: #DCFCE7;
+  border-color: #86EFAC;
+  transform: translateY(-1px);
+}
+
+.actionBtnActivate:active {
+  transform: translateY(0);
+}
+
+.actionBtnDeactivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #C2410C;
+  background-color: #FFF7ED;
+  border: 1px solid #FED7AA;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnDeactivate:hover {
+  background-color: #FFEDD5;
+  border-color: #FDBA74;
+  transform: translateY(-1px);
+}
+
+.actionBtnDeactivate:active {
+  transform: translateY(0);
+}
+
+.actionBtnDelete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #DC2626;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  min-width: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnDelete:hover {
+  background-color: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #B91C1C;
+  transform: translateY(-1px);
+}
+
+.actionBtnDelete:active {
+  transform: translateY(0);
+}
+
+/* Paginación MANNÁ */
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 0.5rem;
+  border-top: 1px solid #E8E2D7;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.paginationInfo {
+  font-size: 0.8125rem;
+  color: #57534E;
+}
+
+.paginationControls {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.pageBtn {
+  background: transparent;
+  border: 1px solid #E8E2D7;
+  color: #182622;
+  padding: 0.35rem 0.65rem;
+  min-height: 36px;
+  min-width: 36px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background-color: #F7F4EE;
+  border-color: #D6D3D1;
+  color: #182622;
+}
+
+.pageBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: #E5E7EB;
+}
+
+.pageBtnActive {
+  background-color: #CAD5B5 !important;
+  border-color: #97AB82 !important;
+  color: #182622 !important;
+  font-weight: 700;
+}
+
+/* Reglas Responsivas (MAN-UI-002) */
+@media (max-width: 767px) {
+  .desktopTableContainer {
+    display: none;
+  }
+
+  .mobileCardsContainer {
+    display: flex;
+  }
+
+  .paginationContainer {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .paginationControls {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pageBtn {
+    min-height: 40px;
+    padding: 0.4rem 0.75rem;
+  }
+}

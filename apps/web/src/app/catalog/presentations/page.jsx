@@ -2,7 +2,7 @@
 /**
  * @file page.jsx
  * @module catalog/presentations
- * @description Vista principal que orquesta presentaciones de productos.
+ * @description Vista principal que orquesta presentaciones de productos con paginación estricta y diseño responsivo.
  * @responsibility Carga de datos base y coordinación de componentes de presentación.
  * @usedBy Next.js App Router
  * @dependencies Hooks y Componentes locales.
@@ -18,7 +18,20 @@ import { ConfirmDeletePresentationModal } from './components/ConfirmDeletePresen
 
 function PresentationsContent() {
   const searchParams = useSearchParams();
-  const { presentations, loading, error, fetchPresentations, handleToggleActive, deletePresentation } = usePresentationsData();
+  const { 
+    presentations, 
+    totalItems, 
+    currentPage, 
+    totalPages, 
+    pageSize, 
+    setCurrentPage, 
+    loading, 
+    error, 
+    fetchPresentations, 
+    handleToggleActive, 
+    deletePresentation 
+  } = usePresentationsData();
+
   const form = usePresentationForm({ onSuccess: fetchPresentations });
 
   useEffect(() => {
@@ -60,16 +73,30 @@ function PresentationsContent() {
     <div>
       <PresentationsHeader onNew={() => form.handleOpenModal(null)} />
       <PresentationsTable 
-        presentations={presentations} loading={loading} error={error}
-        onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        presentations={presentations}
+        totalItems={totalItems}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        loading={loading}
+        error={error}
+        onEdit={form.handleOpenModal}
+        onToggleActive={handleToggleActive}
         onDelete={handleOpenDelete}
         onNew={() => form.handleOpenModal(null)}
       />
       <PresentationModal 
-        isOpen={form.isModalOpen} onClose={form.handleCloseModal}
-        isEditing={form.isEditing} editingItem={form.editingItem} formData={form.formData}
-        setFormData={form.setFormData} handleChange={form.handleChange} handleSubmit={form.handleSubmit}
-        isSubmitting={form.isSubmitting} errorMsg={form.errorMsg}
+        isOpen={form.isModalOpen}
+        onClose={form.handleCloseModal}
+        isEditing={form.isEditing}
+        editingItem={form.editingItem}
+        formData={form.formData}
+        setFormData={form.setFormData}
+        handleChange={form.handleChange}
+        handleSubmit={form.handleSubmit}
+        isSubmitting={form.isSubmitting}
+        errorMsg={form.errorMsg}
       />
       <ConfirmDeletePresentationModal
         isOpen={Boolean(deletingItem)}
@@ -90,4 +117,3 @@ export default function PresentationsPage() {
     </Suspense>
   );
 }
-

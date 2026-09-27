@@ -1,13 +1,13 @@
 /**
  * @file page.jsx
  * @module catalog/suppliers
- * @description Orquestador de la vista del directorio de proveedores.
- * @responsibility Instanciar la vista de la tabla y centralizar hooks de datos.
+ * @description Orquestador de la vista del directorio de proveedores con búsqueda, filtros y paginación.
+ * @responsibility Instanciar la vista de la tabla, filtros y modal de creación/edición.
  * @usedBy Next.js App Router
  * @dependencies Hooks y Componentes locales.
  */
 'use client';
-import React from 'react';
+import React, { useState } from 'react';
 import { useSuppliersData } from './hooks/useSuppliersData';
 import { useSupplierForm } from './hooks/useSupplierForm';
 import { SuppliersHeader } from './components/SuppliersHeader';
@@ -18,17 +18,39 @@ export default function SuppliersPage() {
   const { items, loading, error, fetchItems, handleToggleActive } = useSuppliersData();
   const form = useSupplierForm({ onSuccess: fetchItems });
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+
+  const handleResetFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('');
+  };
+
   return (
     <div>
-      <SuppliersHeader onNew={form.handleOpenModal} />
+      <SuppliersHeader 
+        onNew={form.handleOpenModal} 
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onResetFilters={handleResetFilters}
+      />
       <SuppliersTable 
-        items={items} loading={loading} error={error}
-        onEdit={form.handleOpenModal} onToggleActive={handleToggleActive}
+        items={items} 
+        loading={loading} 
+        error={error}
+        searchTerm={searchTerm}
+        statusFilter={statusFilter}
+        onEdit={form.handleOpenModal} 
+        onToggleActive={handleToggleActive}
         onNew={() => form.handleOpenModal(null)}
       />
       <SupplierModal 
-        isOpen={form.isModalOpen} onClose={form.handleCloseModal}
-        editingItem={form.editingItem} onSuccess={fetchItems}
+        isOpen={form.isModalOpen} 
+        onClose={form.handleCloseModal}
+        editingItem={form.editingItem} 
+        onSuccess={fetchItems}
       />
     </div>
   );

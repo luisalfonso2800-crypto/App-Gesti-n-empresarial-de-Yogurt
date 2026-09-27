@@ -28,13 +28,20 @@ export function useRecipesData() {
         apiClient.get('/supplier-prices/active')
       ]);
       setItems(recipesData);
-      // Preservar productos maestros limpios con su id intacto y agregar semielaborados/inóculos
-      const combined = [...(productsData || [])];
-      const seenItemKeys = new Set(combined.map(p => p.id));
+      // Preservar productos maestros limpios con su id intacto y agregar semielaborados/inóculos deduplicados
+      const combined = [];
+      const seenIds = new Set();
+      for (const p of (productsData || [])) {
+        const id = p.id || p.idItem;
+        if (id && !seenIds.has(String(id))) {
+          seenIds.add(String(id));
+          combined.push(p);
+        }
+      }
       for (const item of (intermediatesData || [])) {
-        const key = item.idItem || item.id;
-        if (!seenItemKeys.has(key)) {
-          seenItemKeys.add(key);
+        const id = item.id || item.idItem;
+        if (id && !seenIds.has(String(id))) {
+          seenIds.add(String(id));
           combined.push(item);
         }
       }
