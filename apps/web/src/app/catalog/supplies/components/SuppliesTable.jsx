@@ -1,18 +1,21 @@
 /**
  * @file SuppliesTable.jsx
  * @module catalog/supplies/components
- * @description Tabla de catálogo de insumos.
- * @responsibility Dibujar matriz de inventario y acciones CRUD.
+ * @description Tabla de catálogo enriquecida y responsiva de insumos con paginación de 10 ítems (SRP < 150 líneas).
+ * @responsibility Filtrado de búsqueda/categoría, paginación estricta y orquestación desktop/móvil.
  * @usedBy apps/web/src/app/catalog/supplies/page.jsx
- * @dependencies @/components/ui/Table, Badge, Button, States
+ * @dependencies @/components/ui/Table, States, AssistedEmptyState, SupplyTableRow, SupplyMobileCard, SuppliesPagination
  */
-import React from 'react';
-import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Table, THead, TBody, TR, TH } from '@/components/ui/Table';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
+import { SupplyTableRow } from './SupplyTableRow';
+import { SupplyMobileCard } from './SupplyMobileCard';
+import { SuppliesPagination } from './SuppliesPagination';
 import styles from '../supplies.module.css';
+
+const PAGE_SIZE = 10;
 
 export function SuppliesTable({
   items,
@@ -25,6 +28,43 @@ export function SuppliesTable({
   onDelete,
   onNew
 }) {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const generateCode = (item) => {
+    if (item.codigo) return item.codigo;
+    if (item.code) return item.code;
+    return item.id ? item.id.substring(0, 8).toUpperCase() : 'N/A';
+  };
+
+  const filteredItems = useMemo(() => {
+    return items.filter(item => {
+      const code = generateCode(item);
+      const matchesSearch = item.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            code.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = categoryFilter ? item.categoria === categoryFilter : true;
+      return matchesSearch && matchesCategory;
+    });
+  }, [items, searchTerm, categoryFilter]);
+
+  const totalItems = filteredItems.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [totalPages, currentPage]);
+
+  // Si cambia la búsqueda o el filtro, reiniciar a la página 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter]);
+
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredItems.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredItems, currentPage]);
+
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
   if (items.length === 0) {
@@ -40,78 +80,61 @@ export function SuppliesTable({
     );
   }
 
-  const generateCode = (item) => {
-    if (item.codigo) return item.codigo;
-    if (item.code) return item.code;
-    return item.id ? item.id.substring(0, 8).toUpperCase() : 'N/A';
-  };
-
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          generateCode(item).toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter ? item.categoria === categoryFilter : true;
-    return matchesSearch && matchesCategory;
-  });
-
   return (
-    <Table>
-      <THead>
-        <TR>
-          <TH>Código</TH>
-          <TH>Nombre</TH>
-          <TH>Categoría</TH>
-          <TH>Subcategoría</TH>
-          <TH>Marca</TH>
-          <TH>Unidad Base</TH>
-          <TH>Stock Mínimo</TH>
-          <TH>Costo Ref. (Base)</TH>
-          <TH>Estado</TH>
-          <TH>Acciones</TH>
-        </TR>
-      </THead>
-      <TBody>
-        {filteredItems.map((item) => (
-          <TR key={item.id}>
-            <TD>{generateCode(item)}</TD>
-            <TD>{item.nombre}</TD>
-            <TD>{item.categoria}</TD>
-            <TD>{item.subcategoria || 'N/A'}</TD>
-            <TD>{item.marca || 'N/A'}</TD>
-            <TD>{item.unidadBase}</TD>
-            <TD>
-              <div className={styles.stockMinContainer}>
-                {(() => {
-                  const stockActual = Number(item.stockActual !== undefined ? item.stockActual : (item.inventario?.cantidadActual ?? item.stock ?? 0));
-                  const stockMinimo = Number(item.stockMinimo || 0);
-                  const isOut = stockActual <= 0;
-                  const isLow = stockActual > 0 && stockActual <= stockMinimo;
-                  const dotClass = isOut ? styles.dotDanger : isLow ? styles.dotWarning : styles.dotSuccess;
-                  const title = isOut ? 'Agotado (0)' : isLow ? `Bajo Mínimo (Stock: ${stockActual})` : `En Rango (Stock: ${stockActual})`;
-                  return <span className={`${styles.stockStatusDot} ${dotClass}`} title={title} />;
-                })()}
-                <span>{item.stockMinimo}</span>
-              </div>
-            </TD>
-            <TD>$ {Number(item.costoBase || 0).toLocaleString('es-CO')}</TD>
-            <TD>
-              <Badge status={item.activo ? 'active' : 'inactive'}>{item.activo ? 'Activo' : 'Inactivo'}</Badge>
-            </TD>
-            <TD>
-              <div className={styles.actions}>
-                <Button variant="secondary" onClick={() => onEdit(item)}>Editar</Button>
-                <Button variant={item.activo ? 'danger' : 'primary'} onClick={() => onToggleActive(item)}>
-                  {item.activo ? 'Desactivar' : 'Activar'}
-                </Button>
-                {!item.activo && onDelete && (
-                  <Button variant="danger" onClick={() => onDelete(item)}>
-                    Eliminar Definitivamente
-                  </Button>
-                )}
-              </div>
-            </TD>
-          </TR>
+    <div className={styles.suppliesWrapper}>
+      {/* Vista Móvil: Tarjetas Fluidas (MAN-UI-002) */}
+      <div className={styles.mobileCardsContainer}>
+        {paginatedItems.map((item) => (
+          <SupplyMobileCard
+            key={item.id}
+            item={item}
+            code={generateCode(item)}
+            onEdit={onEdit}
+            onToggleActive={onToggleActive}
+            onDelete={onDelete}
+          />
         ))}
-      </TBody>
-    </Table>
+      </div>
+
+      {/* Vista Desktop: Tabla Enriquecida */}
+      <div className={styles.desktopTableContainer}>
+        <Table>
+          <THead>
+            <TR>
+              <TH>Código</TH>
+              <TH>Nombre y Detalle</TH>
+              <TH>Categoría</TH>
+              <TH>Unidad / Densidad</TH>
+              <TH>Stock Actual / Mínimo</TH>
+              <TH>Costo Ref.</TH>
+              <TH>Trazabilidad</TH>
+              <TH>Estado</TH>
+              <TH className={styles.actionsHeader}>Acciones</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {paginatedItems.map((item) => (
+              <SupplyTableRow
+                key={item.id}
+                item={item}
+                code={generateCode(item)}
+                onEdit={onEdit}
+                onToggleActive={onToggleActive}
+                onDelete={onDelete}
+              />
+            ))}
+          </TBody>
+        </Table>
+      </div>
+
+      {/* Paginación fija de 10 elementos */}
+      <SuppliesPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={PAGE_SIZE}
+        onPageChange={setCurrentPage}
+      />
+    </div>
   );
 }
