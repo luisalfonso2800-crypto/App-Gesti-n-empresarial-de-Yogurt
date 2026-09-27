@@ -1,15 +1,17 @@
 /**
  * @file usePurchasesPageData.js
  * @module operations/purchases/hooks
- * @description Hook orquestador de datos para PurchasesPage: compras históricas, órdenes activas, fusión y eliminación.
- * @responsibility Cargar datos del backend, calcular agrupaciones y administrar estados de modales auxiliares.
+ * @description Hook orquestador de datos para PurchasesPage: compras históricas, órdenes activas, filtros, KPIs y paginación.
+ * @responsibility Cargar datos del backend, calcular agrupaciones, métricas, filtros reactivos y paginación (10/pág).
  * @usedBy apps/web/src/app/operations/purchases/page.jsx
  * @dependencies react, @/lib/api-client, @/context/NotificationContext, @/context/CartContext
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { useNotification } from '@/context/NotificationContext';
 import { useCart } from '@/context/CartContext';
+
+const PAGE_SIZE = 10;
 
 export function usePurchasesPageData() {
   const { showNotification } = useNotification();
@@ -31,13 +33,20 @@ export function usePurchasesPageData() {
   const [editNameError, setEditNameError] = useState(null);
   const [isSubmittingEditName, setIsSubmittingEditName] = useState(false);
 
+  // Estados de filtrado, métricas y paginación
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterSupplier, setFilterSupplier] = useState('');
+  const [filterStatus, setFilterStatus] = useState('TODOS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeMetricDetail, setActiveMetricDetail] = useState(null);
+
   const [groupedPurchases, setGroupedPurchases] = useState([]);
 
   const fetchPurchases = async () => {
     setLoading(true);
     try {
       const data = await apiClient.get('/purchases');
-      setPurchases(data);
+      setPurchases(data || []);
       setError(null);
     } catch (err) {
       setError(err.message || 'Error al cargar compras históricas');
@@ -106,6 +115,113 @@ export function usePurchasesPageData() {
     setGroupedPurchases(grouped);
   }, [purchases]);
 
+  // Reset de página al cambiar filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterSearch, filterSupplier, filterStatus]);
+
+  // Lista única de proveedores para el filtro
+  const suppliersList = useMemo(() => {
+    const seen = new Set();
+    const list = [];
+    groupedPurchases.forEach(g => {
+      g.detalles?.forEach(d => {
+        const provName = d.proveedor?.nombre || d.idProveedor;
+        if (provName && !seen.has(String(provName))) {
+          seen.add(String(provName));
+          list.push({ nombre: String(provName), nit: d.proveedor?.nit || '' });
+        }
+      });
+    });
+    return list.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  }, [groupedPurchases]);
+
+  // Métricas globales del módulo de compras
+  const globalMetrics = useMemo(() => {
+    const totalPurchases = groupedPurchases.length;
+    let totalSpent = 0;
+    let completedPurchasesCount = 0;
+
+    groupedPurchases.forEach(g => {
+      totalSpent += Number(g.total) || 0;
+      const orden = g.orden;
+      let isCompleted = true;
+      if (g.isGrouped && orden) {
+        const totalItemsInOrder = orden.items ? orden.items.length : 0;
+        const conseguidosCount = g.detalles.length;
+        if (totalItemsInOrder > conseguidosCount) {
+          isCompleted = false;
+        }
+      }
+      if (isCompleted) completedPurchasesCount++;
+    });
+
+    return {
+      totalPurchases,
+      totalSpent,
+      completedPurchasesCount,
+      activeOrdersCount: activeOrders.length,
+      uniqueSuppliersCount: suppliersList.length
+    };
+  }, [groupedPurchases, activeOrders, suppliersList]);
+
+  // Filtrado reactivo de compras
+  const filteredPurchases = useMemo(() => {
+    return groupedPurchases.filter(group => {
+      const orden = group.orden;
+      let isCompleted = true;
+      if (group.isGrouped && orden) {
+        const totalItemsInOrder = orden.items ? orden.items.length : 0;
+        const conseguidosCount = group.detalles.length;
+        if (totalItemsInOrder > conseguidosCount) {
+          isCompleted = false;
+        }
+      }
+
+      // 1. Filtro Estado
+      if (filterStatus === 'COMPLETADA' && !isCompleted) return false;
+      if (filterStatus === 'PARCIAL' && isCompleted) return false;
+
+      // 2. Filtro Proveedor
+      if (filterSupplier) {
+        const hasSupplier = group.detalles?.some(d => {
+          const provName = d.proveedor?.nombre || d.idProveedor;
+          return String(provName) === String(filterSupplier);
+        });
+        if (!hasSupplier) return false;
+      }
+
+      // 3. Filtro Búsqueda
+      if (filterSearch) {
+        const term = filterSearch.toLowerCase().trim();
+        const title = group.isGrouped && orden ? `${orden.codigo} ${orden.nombre}` : `Compra Directa ${group.id}`;
+        const matchTitle = title.toLowerCase().includes(term);
+        const matchDetail = group.detalles?.some(d => {
+          const insName = d.insumo?.nombre || d.idInsumo || '';
+          const provName = d.proveedor?.nombre || d.idProveedor || '';
+          return String(insName).toLowerCase().includes(term) || String(provName).toLowerCase().includes(term);
+        });
+        if (!matchTitle && !matchDetail) return false;
+      }
+
+      return true;
+    });
+  }, [groupedPurchases, filterStatus, filterSupplier, filterSearch]);
+
+  // Paginación fija de 10 elementos
+  const totalPages = Math.max(1, Math.ceil(filteredPurchases.length / PAGE_SIZE));
+  const paginatedPurchases = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredPurchases.slice(start, start + PAGE_SIZE);
+  }, [filteredPurchases, currentPage]);
+
+  const hasFilters = Boolean(filterSearch || filterSupplier || filterStatus !== 'TODOS');
+  const clearFilters = () => {
+    setFilterSearch('');
+    setFilterSupplier('');
+    setFilterStatus('TODOS');
+  };
+
   const toggleRow = (id) => {
     setExpandedId(prev => (prev === id ? null : id));
   };
@@ -169,32 +285,21 @@ export function usePurchasesPageData() {
   };
 
   return {
-    purchases,
-    loading,
-    error,
-    activeOrders,
-    expandedId,
-    isMergingMode,
-    selectedForMerge,
-    deleteModalOpen,
-    deleteError,
-    isSubmittingDelete,
-    editNameModalOpen,
-    editNameValue,
-    editNameError,
-    isSubmittingEditName,
-    groupedPurchases,
-    toggleRow,
-    handleToggleMergeSelection,
-    executeMerge,
-    handleEditNameSubmit,
-    executeDelete,
-    setIsMergingMode,
-    setSelectedForMerge,
-    setDeleteModalOpen,
-    setDeleteError,
-    setEditNameModalOpen,
-    setEditNameValue,
-    setEditNameError
+    purchases, loading, error, activeOrders, expandedId, isMergingMode, selectedForMerge,
+    deleteModalOpen, deleteError, isSubmittingDelete, editNameModalOpen, editNameValue,
+    editNameError, isSubmittingEditName, groupedPurchases, toggleRow, handleToggleMergeSelection,
+    executeMerge, handleEditNameSubmit, executeDelete, setIsMergingMode, setSelectedForMerge,
+    setDeleteModalOpen, setDeleteError, setEditNameModalOpen, setEditNameValue, setEditNameError,
+    // Nuevas propiedades de filtrado, KPIs y paginación
+    filterSearch, setFilterSearch,
+    filterSupplier, setFilterSupplier,
+    filterStatus, setFilterStatus,
+    hasFilters, clearFilters,
+    filteredCount: filteredPurchases.length,
+    paginatedPurchases,
+    currentPage, setCurrentPage,
+    totalPages, PAGE_SIZE,
+    globalMetrics, suppliersList,
+    activeMetricDetail, setActiveMetricDetail
   };
 }
