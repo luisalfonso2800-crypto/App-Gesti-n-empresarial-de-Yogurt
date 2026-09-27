@@ -42,6 +42,11 @@
   display: block;
 }
 
+.siloCanvasInteractive {
+  display: block;
+  cursor: pointer;
+}
+
 .radarWrapper {
   position: relative;
   width: 100%;

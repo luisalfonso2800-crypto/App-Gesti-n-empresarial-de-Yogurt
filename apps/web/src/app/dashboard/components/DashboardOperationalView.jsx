@@ -19,6 +19,7 @@ import LiquidSilosCanvas from './LiquidSilosCanvas';
 import ProductAvatar from '@/components/ui/ProductAvatar';
 import StrictNumberInput from '@/components/ui/inputs/StrictNumberInput';
 import { resolveProductImage } from '@/lib/presetImages';
+import { apiClient } from '@/lib/api-client';
 import { Activity, ShieldAlert, Database } from 'lucide-react';
 import { OnboardingHeroState } from '@/components/dashboard/OnboardingHeroState';
 import { DashboardQuickAccessStrip } from './DashboardQuickAccessStrip';
@@ -43,6 +44,30 @@ export function DashboardOperationalView({
   const [isAutoScan, setIsAutoScan] = useState(true);
   const autoScanRef = useRef(isAutoScan);
   const [modalState, setModalState] = useState({ isOpen: false, title: '', content: null });
+  const [activeOrders, setActiveOrders] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    apiClient.get('/production')
+      .then(res => {
+        if (!isMounted || !Array.isArray(res)) return;
+        const inProcess = res.filter(o => o.estado === 'EN_PROCESO' || o.estado === 'PLANIFICADA');
+        setActiveOrders(inProcess);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const wipValue = useMemo(() => {
+    return activeOrders.reduce((sum, order) => {
+      const detailsCost = (order.detalles || []).reduce((dSum, d) => {
+        const cost = Number(d.costoReal || d.costoTeorico || 0);
+        return dSum + (cost > 0 ? cost : Number(d.cantidadTeorica || d.cantidadRealUtilizada || 0) * 3500);
+      }, 0);
+      const orderBaseCost = detailsCost > 0 ? detailsCost : Number(order.cantidadPlanificada || 0) * 4500;
+      return sum + orderBaseCost;
+    }, 0);
+  }, [activeOrders]);
 
   // Simulador
   const [simModalOpen, setSimModalOpen] = useState(false);
@@ -181,6 +206,68 @@ export function DashboardOperationalView({
         </div>
       </div>
     ));
+  };
+
+  const handleSiloWipClick = () => {
+    openModal('Producto en Proceso (WIP en Planta)', (
+      <div className={styles.modalContent}>
+        {activeOrders.length === 0 ? (
+          <p style={{ color: '#78716C', padding: '1rem 0' }}>No hay órdenes en fermentación o proceso activo en este momento.</p>
+        ) : (
+          <table className={styles.dataTable}>
+            <thead>
+              <tr>
+                <th>Lote / Orden</th>
+                <th>Producto</th>
+                <th>Cant. Planificada</th>
+                <th>Estado</th>
+                <th>Costo Inmovilizado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activeOrders.map(order => {
+                const orderCost = (order.detalles || []).reduce((dSum, d) => {
+                  const cost = Number(d.costoReal || d.costoTeorico || 0);
+                  return dSum + (cost > 0 ? cost : Number(d.cantidadTeorica || d.cantidadRealUtilizada || 0) * 3500);
+                }, 0) || Number(order.cantidadPlanificada || 0) * 4500;
+
+                return (
+                  <tr key={order.id}>
+                    <td style={{ fontFamily: 'monospace', fontWeight: 600 }}>{order.idLote || order.id.slice(0, 8)}</td>
+                    <td>{order.producto?.nombre || 'Elaboración Láctea'}</td>
+                    <td>{order.cantidadPlanificada} {order.unidadCantidadProducida || 'L'}</td>
+                    <td>
+                      <span style={{
+                        padding: '0.15rem 0.45rem',
+                        borderRadius: '4px',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        backgroundColor: order.estado === 'EN_PROCESO' ? '#EDE9FE' : '#FEF3C7',
+                        color: order.estado === 'EN_PROCESO' ? '#6D28D9' : '#D97706'
+                      }}>
+                        {order.estado === 'EN_PROCESO' ? 'EN PROCESO' : 'PLANIFICADA'}
+                      </span>
+                    </td>
+                    <td style={{ fontWeight: 'bold', color: '#6D28D9' }}>{formatScada(orderCost)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+        <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+          <Link href="/operations/production">
+            <button className={styles.primaryBtn}>Ir a Bitácora de Planta</button>
+          </Link>
+        </div>
+      </div>
+    ));
+  };
+
+  const handleSiloSelect = (siloId) => {
+    if (siloId === 'RAW') handleSiloMateriaClick();
+    else if (siloId === 'WIP') handleSiloWipClick();
+    else if (siloId === 'CAVA') handleSiloCavaClick();
   };
 
   const handleCarteraClick = () => {
@@ -729,11 +816,16 @@ export function DashboardOperationalView({
                   <div className={styles.cardHeader}>
                     <span><Database size={12} style={{marginRight: 4, verticalAlign: 'text-bottom'}}/> SILOS & INSUMOS</span>
                   </div>
-                  <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: '1rem' }}>
-                    <div onClick={handleSiloMateriaClick} style={{ cursor: 'pointer', flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' }}>
-                       <LiquidSilosCanvas rawMaterialsValue={supply?.rawMaterialsValue || 0} finishedProductsValue={plant?.finishedProductsValue || 0} />
+                  <div className={styles.silosCardBody}>
+                    <div className={styles.silosCanvasContainer}>
+                       <LiquidSilosCanvas
+                         rawMaterialsValue={supply?.rawMaterialsValue || 0}
+                         wipValue={wipValue || 0}
+                         finishedProductsValue={plant?.finishedProductsValue || 0}
+                         onSiloClick={handleSiloSelect}
+                       />
                     </div>
-                    <div style={{ width: '40%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className={styles.reorderContainer}>
                       <div className={styles.cardHeader} style={{ color: '#B91C1C', fontSize: '0.65rem', marginBottom: '0.2rem' }}>PUNTO REORDEN</div>
                       <div style={{ flex: 1, overflowY: 'auto' }}>
                         {(supply?.criticalSupplies || []).length === 0 ? (
@@ -847,7 +939,12 @@ export function DashboardOperationalView({
                 <div className={styles.tacticalCard}>
                   <div className={styles.cardHeader}>NIVELES DE SILOS Y CAVA</div>
                   <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 0 }}>
-                     <LiquidSilosCanvas rawMaterialsValue={supply?.rawMaterialsValue || 0} finishedProductsValue={plant?.finishedProductsValue || 0} />
+                     <LiquidSilosCanvas
+                       rawMaterialsValue={supply?.rawMaterialsValue || 0}
+                       wipValue={wipValue || 0}
+                       finishedProductsValue={plant?.finishedProductsValue || 0}
+                       onSiloClick={handleSiloSelect}
+                     />
                   </div>
                 </div>
                 <div className={styles.tacticalCard}>
