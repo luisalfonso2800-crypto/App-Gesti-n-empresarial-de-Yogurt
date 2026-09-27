@@ -1,15 +1,17 @@
 /**
  * @file useRecipesPageManager.js
  * @module catalog/recipes/hooks
- * @description Hook orquestador de datos, formularios y eventos globales para el catálogo de recetas.
- * @responsibility Integrar useRecipesData, useRecipeForm, sincronización con URL y eventos de onboarding.
+ * @description Hook orquestador de datos, formularios, filtrado, métricas y paginación para el catálogo de recetas.
+ * @responsibility Integrar datos, filtrado reactivo, métricas de catálogo, paginación (10/pág) y modales.
  * @usedBy apps/web/src/app/catalog/recipes/page.jsx
  * @dependencies React, next/navigation, ./useRecipesData, ./useRecipeForm
  */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRecipesData } from './useRecipesData';
 import { useRecipeForm } from './useRecipeForm';
+
+const PAGE_SIZE = 10;
 
 export function useRecipesPageManager() {
   const {
@@ -21,6 +23,13 @@ export function useRecipesPageManager() {
   const [recipeToDelete, setRecipeToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
+
+  // Estados de filtrado y paginación
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterProduct, setFilterProduct] = useState('');
+  const [filterStatus, setFilterStatus] = useState('TODOS');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeMetricDetail, setActiveMetricDetail] = useState(null);
 
   const handleOpenDelete = (item) => {
     setDeleteError(null);
@@ -102,6 +111,79 @@ export function useRecipesPageManager() {
     };
   }, [canCreate, handleOpenEditor, handleCloseEditor]);
 
+  // Reset de página al cambiar filtros
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterSearch, filterProduct, filterStatus]);
+
+  // Lista de productos huérfanos sin receta
+  const orphanProducts = useMemo(() => {
+    if (!products.length) return [];
+    return products.filter(p => !items.some(r => String(r.idProducto) === String(p.id)));
+  }, [products, items]);
+
+  // Métricas globales del catálogo de recetas
+  const globalMetrics = useMemo(() => {
+    const totalRecipes = items.length;
+    const activeCount = items.filter(r => r.activo).length;
+    const inactiveCount = totalRecipes - activeCount;
+    const orphanProductsCount = orphanProducts.length;
+
+    let totalStagesCount = 0;
+    items.forEach(r => {
+      const stages = r.etapas?.filter(e => e.activo !== false) || [];
+      totalStagesCount += stages.length;
+    });
+    const averageStages = totalRecipes > 0 ? (totalStagesCount / totalRecipes).toFixed(1) : 0;
+
+    return {
+      totalRecipes,
+      activeCount,
+      inactiveCount,
+      orphanProductsCount,
+      averageStages,
+      totalStagesAll: totalStagesCount
+    };
+  }, [items, orphanProducts]);
+
+  // Filtrado reactivo multicriterio
+  const filteredRecipes = useMemo(() => {
+    return items.filter(recipe => {
+      // 1. Filtro Producto
+      if (filterProduct && String(recipe.idProducto) !== String(filterProduct)) {
+        return false;
+      }
+      // 2. Filtro Estado
+      if (filterStatus === 'ACTIVO' && !recipe.activo) return false;
+      if (filterStatus === 'INACTIVO' && recipe.activo) return false;
+
+      // 3. Filtro Búsqueda
+      if (filterSearch) {
+        const term = filterSearch.toLowerCase().trim();
+        const matchName = recipe.nombre?.toLowerCase().includes(term);
+        const matchProd = recipe.producto?.nombre?.toLowerCase().includes(term);
+        const matchCode = recipe.codigo?.toLowerCase().includes(term);
+        if (!matchName && !matchProd && !matchCode) return false;
+      }
+
+      return true;
+    });
+  }, [items, filterProduct, filterStatus, filterSearch]);
+
+  // Paginación fija de 10 elementos
+  const totalPages = Math.max(1, Math.ceil(filteredRecipes.length / PAGE_SIZE));
+  const paginatedRecipes = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredRecipes.slice(start, start + PAGE_SIZE);
+  }, [filteredRecipes, currentPage]);
+
+  const hasFilters = Boolean(filterSearch || filterProduct || filterStatus !== 'TODOS');
+  const clearFilters = () => {
+    setFilterSearch('');
+    setFilterProduct('');
+    setFilterStatus('TODOS');
+  };
+
   let disabledTooltip = '';
   if (!canCreate) {
     if (!hasProducts && !hasSupplies) {
@@ -121,7 +203,17 @@ export function useRecipesPageManager() {
     recipeToDelete, isDeleting, deleteError,
     handleOpenDelete, handleCloseDelete, handleConfirmDelete,
     notice, clearNotice: () => setNotice(null),
-    canCreate, hasProducts, hasSupplies, disabledTooltip
+    canCreate, hasProducts, hasSupplies, disabledTooltip,
+    // Filtros, métricas y paginación
+    filterSearch, setFilterSearch,
+    filterProduct, setFilterProduct,
+    filterStatus, setFilterStatus,
+    hasFilters, clearFilters,
+    filteredCount: filteredRecipes.length,
+    paginatedRecipes,
+    currentPage, setCurrentPage,
+    totalPages, PAGE_SIZE,
+    globalMetrics, orphanProducts,
+    activeMetricDetail, setActiveMetricDetail
   };
 }
-

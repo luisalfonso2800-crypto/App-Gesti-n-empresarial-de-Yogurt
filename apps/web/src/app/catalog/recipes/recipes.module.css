@@ -869,3 +869,750 @@
   cursor: not-allowed;
 }
 
+
+/* ==========================================================================
+   ESTÁNDAR MANNÁ: MÉTRICAS, FILTROS, PAGINACIÓN Y TARJETAS MÓVILES
+   ========================================================================== */
+
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* 1. Tarjetas Métricas Superiores */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.metricCardInteractive {
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.metricCardInteractive:hover {
+  border-color: #182622;
+  background-color: #FFFFFF;
+  box-shadow: 0 6px 16px rgba(24, 38, 34, 0.08);
+  transform: translateY(-2px);
+}
+
+.metricIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: #F4EFEA;
+  flex-shrink: 0;
+}
+
+.metricIconForest {
+  color: #182622;
+}
+
+.metricIconGold {
+  color: #854d0e;
+}
+
+.metricInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.metricLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #78716C;
+}
+
+.metricValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.metricValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #182622;
+  line-height: 1;
+}
+
+.metricBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #F4EFEA;
+  color: #78716C;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.metricBadgeSuccess {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.metricBadgeGold {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #fefce8;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.metricHint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #182622;
+  opacity: 0.7;
+}
+
+/* 2. Barra de Filtros con Limpieza Individual */
+.filterBar {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.5fr auto;
+  gap: 0.85rem;
+  align-items: flex-end;
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #78716C;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.filterSelectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.filterSelect {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background-color: #ffffff;
+  color: #182622;
+  transition: border-color 0.15s ease;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #182622;
+  box-shadow: 0 0 0 2px rgba(24, 38, 34, 0.12);
+}
+
+.filterSelectWithClear {
+  width: 100%;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+  border: 1px solid #182622;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background-color: #ffffff;
+  color: #182622;
+  font-weight: 500;
+}
+
+.filterSelectWithClear:focus {
+  outline: none;
+  border-color: #182622;
+  box-shadow: 0 0 0 2px rgba(24, 38, 34, 0.15);
+}
+
+.clearFilterBtn {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0.2rem 0.35rem 0.2rem 0.45rem;
+  border-left: 1.5px solid #E8E2D7;
+  color: #78716C;
+  cursor: pointer;
+  height: 65%;
+  transition: all 0.15s ease;
+}
+
+.clearFilterBtn:hover {
+  color: #dc2626;
+  border-left-color: #dc2626;
+}
+
+.searchInputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.65rem;
+  color: #78716C;
+  pointer-events: none;
+}
+
+.filterInputWithIcon {
+  width: 100%;
+  padding: 0.5rem 1.8rem 0.5rem 2rem;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background-color: #ffffff;
+  color: #182622;
+}
+
+.filterInputWithIcon:focus {
+  outline: none;
+  border-color: #182622;
+  box-shadow: 0 0 0 2px rgba(24, 38, 34, 0.15);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  color: #78716C;
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+.clearSearchBtn:hover {
+  color: #dc2626;
+}
+
+.filterResetWrapper {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.btnClearFilters {
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  color: #78716C;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btnClearFilters:hover {
+  background-color: #F4EFEA;
+  color: #182622;
+  border-color: #182622;
+}
+
+/* 3. Paginación */
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.15rem;
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.paginationInfo {
+  font-size: 0.8125rem;
+  color: #78716C;
+  font-weight: 500;
+}
+
+.paginationControls {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.pageBtn {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid #E8E2D7;
+  background: #ffffff;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #182622;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: #182622;
+  background-color: #FAF8F5;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageBtnActive {
+  background-color: #182622 !important;
+  color: #ffffff !important;
+  border-color: #182622 !important;
+}
+
+/* 4. Vista Dual: Desktop vs Móvil */
+.recipesListWrapper {
+  width: 100%;
+}
+
+.desktopTableContainer {
+  display: block;
+}
+
+.mobileCardsContainer {
+  display: none;
+}
+
+.recipeNameText {
+  font-weight: 700;
+  color: #182622;
+  font-size: 0.875rem;
+}
+
+/* Tarjeta Móvil */
+.mobileCard {
+  background-color: #ffffff;
+  border: 1px solid #E8E2D7;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.mobileCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.mobileCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.mobileAvatarPlaceholder {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F4EFEA;
+  border-radius: 8px;
+  font-size: 1.25rem;
+}
+
+.mobileProductInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileProductTitle {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: #182622;
+}
+
+.mobileProductSub {
+  font-size: 0.75rem;
+  color: #78716C;
+}
+
+.mobileCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0;
+  border-top: 1px solid #F4F1EA;
+  border-bottom: 1px solid #F4F1EA;
+}
+
+.mobileDataRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.mobileDataLabel {
+  color: #78716C;
+}
+
+.mobileDataValue {
+  font-weight: 600;
+  color: #182622;
+}
+
+.statusGreen {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  white-space: nowrap;
+}
+
+.statusRed {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  white-space: nowrap;
+}
+
+.mobileCardActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.mobileBtnBom {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #E8E2D7;
+  background-color: #FAF8F5;
+  color: #182622;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.mobileBtnBom:hover {
+  background-color: #F4EFEA;
+  border-color: #182622;
+}
+
+.mobileBtnActivate {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #a7f3d0;
+  background-color: #ecfdf5;
+  color: #047857;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.mobileBtnDeactivate {
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  background-color: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  justify-content: center;
+}
+
+.mobileBtnDelete {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0.45rem;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  background-color: #ffffff;
+  color: #b91c1c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.mobileBtnDelete:hover:not(:disabled) {
+  background-color: #fef2f2;
+}
+
+/* 5. Modal de Detalle de Métricas */
+.modalDetailContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detailStatsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.detailStatBox {
+  background: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detailStatNum {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #182622;
+}
+
+.detailStatNumSuccess {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #047857;
+}
+
+.detailStatNumGold {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #854d0e;
+}
+
+.detailStatLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #78716C;
+  text-transform: uppercase;
+}
+
+.detailExplanation {
+  font-size: 0.85rem;
+  color: #57534E;
+  line-height: 1.5;
+  background: #FAF8F5;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #182622;
+  margin: 0;
+}
+
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.detailListHeader {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #182622;
+  margin-bottom: 0.25rem;
+}
+
+.detailListItemBtn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid #E8E2D7;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.detailListItemBtn:hover {
+  background: #FAF8F5;
+  border-color: #182622;
+  transform: translateX(2px);
+}
+
+.detailItemText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.detailItemTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #182622;
+}
+
+.detailItemSub {
+  font-size: 0.75rem;
+  color: #78716C;
+}
+
+.detailArrow {
+  color: #78716C;
+  flex-shrink: 0;
+}
+
+.detailOrphanAction {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #047857;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.detailModalActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.detailActionBtnPrimary {
+  background-color: #182622;
+  color: #FAF8F5;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detailActionBtnPrimary:hover {
+  background-color: #243832;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(24, 38, 34, 0.15);
+}
+
+/* ==========================================================================
+   MEDIA QUERIES (MAN-UI-002)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filterBar {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .filterBar {
+    grid-template-columns: 1fr;
+  }
+
+  .desktopTableContainer {
+    display: none;
+  }
+
+  .mobileCardsContainer {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .paginationContainer {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+  }
+}
