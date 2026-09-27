@@ -14,6 +14,7 @@
   width: 240px;
   min-width: 240px;
   height: 100vh;
+  height: 100dvh;
   background-color: #182622; /* Verde bosque profundo */
   color: #F7F4EE;
   display: flex;
@@ -23,7 +24,8 @@
   box-sizing: border-box;
   border-right: 1px solid #233732;
   user-select: none;
-  transition: width 0.2s ease, min-width 0.2s ease, padding 0.2s ease;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.2s ease;
+  z-index: var(--z-sidebar, 100);
 }
 
 /* Botón toggle estilo panel Gemini */
@@ -201,9 +203,10 @@
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  padding: 6px 0.85rem;
+  padding: 8px 0.85rem;
+  min-height: 40px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: #A3B5AA;
   text-decoration: none;
@@ -337,6 +340,32 @@
   justify-content: space-between;
   padding: 0 1.5rem;
   box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  gap: 0.5rem;
+}
+
+/* Botón Hamburguesa móvil para abrir Sidebar (oculto en desktop) */
+.mobileMenuBtn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  background: transparent;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  color: #182622;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mobileMenuBtn:hover {
+  background-color: #F7F4EE;
+  color: #8F704A;
+}
+
+.mobileMenuBtn:active {
+  transform: scale(0.96);
 }
 
 .scadaInstrumentation {
@@ -412,12 +441,91 @@
 .cartItemRemove:hover { color: #ef4444; background-color: #fee2e2; }
 .cartFooter { padding: 1rem; border-top: 1px solid #e5e7eb; background-color: #f9fafb; display: flex; justify-content: space-between; gap: 1rem; }
 
-@media (max-width: 1024px) {
+/* Backdrop para móvil y tablet al abrir drawer */
+.sidebarBackdrop {
+  display: none;
+}
+
+/* ==========================================================
+   ADAPTACIONES RESPONSIVAS SHELL (MAN-UI-002)
+   ========================================================== */
+
+/* Móvil y Tablet pequeña (< 1024px) */
+@media (max-width: 1023px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    max-width: 85vw;
+    height: 100dvh;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
+  }
+
+  /* Cuando en móvil se descolapsa (abierto) */
+  .sidebarOpenMobile {
+    transform: translateX(0);
+  }
+
+  /* En móvil, el modo colapsado por defecto está oculto fuera de pantalla */
+  .sidebarCollapsed {
+    width: 280px;
+    min-width: 280px;
+    transform: translateX(-100%);
+    padding: 1.25rem 1rem 1.1rem 1rem;
+  }
+
+  .sidebarCollapsed .brandTitle,
+  .sidebarCollapsed .brandSubtitle,
+  .sidebarCollapsed .groupTitle,
+  .sidebarCollapsed .navItemText,
+  .sidebarCollapsed .alarmBadge,
+  .sidebarCollapsed .lockIcon,
+  .sidebarCollapsed .footerQuote,
+  .sidebarCollapsed .footerSubQuote {
+    display: initial;
+  }
+
+  .sidebarCollapsed .navItem {
+    justify-content: flex-start;
+    padding: 8px 0.85rem;
+    gap: 0.85rem;
+  }
+
+  .sidebarBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(10, 16, 14, 0.65);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+
+  .header {
+    padding: 0 0.85rem;
+  }
+
+  .mobileMenuBtn {
+    display: inline-flex;
+  }
+
   .scadaClock,
   .scadaOperator,
   .scadaStatusText {
     display: none !important;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media print {

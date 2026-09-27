@@ -8,7 +8,7 @@ import styles from '../shell.module.css';
  * @module components/shell/parts
  * @description Renglón individual de navegación del Sidebar con soporte de desbloqueo progresivo.
  */
-export function SidebarNavItem({ item, isActive, isUnlocked, requiredStepText, collapsed }) {
+export function SidebarNavItem({ item, isActive, isUnlocked, requiredStepText, collapsed, onNavigate }) {
   const Icon = item.icon;
 
   if (!isUnlocked) {
@@ -31,6 +31,9 @@ export function SidebarNavItem({ item, isActive, isUnlocked, requiredStepText, c
   const handleClick = () => {
     if (item.path === '/catalog/recipes' && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('reset-recipe-modal'));
+    }
+    if (onNavigate) {
+      onNavigate();
     }
   };
 

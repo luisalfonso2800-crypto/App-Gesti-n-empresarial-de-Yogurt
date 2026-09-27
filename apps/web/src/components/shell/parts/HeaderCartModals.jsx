@@ -12,20 +12,21 @@ import { Button } from '@/components/ui/Button';
 import styles from '../header.module.css';
 
 export default function HeaderCartModals({
-  editNameModalOpen,
-  setEditNameModalOpen,
-  editNameValue,
-  setEditNameValue,
-  editNameError,
-  setEditNameError,
-  isSubmittingEditName,
-  handleEditNameSubmit,
-  listToDelete,
-  setListToDelete,
-  deleteError,
-  setDeleteError,
-  isSubmittingDelete,
-  handleDeleteList
+  cartModals,
+  editNameModalOpen = cartModals?.editNameModalOpen,
+  setEditNameModalOpen = cartModals?.setEditNameModalOpen,
+  editNameValue = cartModals?.editNameValue,
+  setEditNameValue = cartModals?.setEditNameValue,
+  editNameError = cartModals?.editNameError,
+  setEditNameError = cartModals?.setEditNameError,
+  isSubmittingEditName = cartModals?.isSubmittingEditName,
+  handleEditNameSubmit = cartModals?.handleEditNameSubmit,
+  listToDelete = cartModals?.listToDelete,
+  setListToDelete = cartModals?.setListToDelete,
+  deleteError = cartModals?.deleteError,
+  setDeleteError = cartModals?.setDeleteError,
+  isSubmittingDelete = cartModals?.isSubmittingDelete,
+  handleDeleteList = cartModals?.handleDeleteList
 }) {
   return (
     <>

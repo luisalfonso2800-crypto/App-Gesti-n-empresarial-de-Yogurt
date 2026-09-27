@@ -8,6 +8,7 @@ import styles from './shell.module.css';
 
 export function Shell({ children }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [isServerOffline, setIsServerOffline] = useState(false);
 
   useEffect(() => {
@@ -36,12 +37,25 @@ export function Shell({ children }) {
     setCollapsed(prev => !prev);
   };
 
+  const handleToggleMobile = () => {
+    setMobileOpen(prev => !prev);
+  };
+
+  const handleCloseMobile = () => {
+    setMobileOpen(false);
+  };
+
   return (
     <div className={styles.layoutContainer}>
-      <Sidebar collapsed={collapsed} onToggle={handleToggle} />
+      <Sidebar
+        collapsed={collapsed}
+        onToggle={handleToggle}
+        mobileOpen={mobileOpen}
+        onCloseMobile={handleCloseMobile}
+      />
 
       <div className={styles.mainContent}>
-        <Header />
+        <Header onToggleMobile={handleToggleMobile} />
         <main className={styles.content}>
           {isServerOffline ? (
             <ServerOfflineCanvas
