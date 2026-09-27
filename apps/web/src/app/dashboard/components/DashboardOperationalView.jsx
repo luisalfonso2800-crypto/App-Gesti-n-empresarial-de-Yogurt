@@ -74,10 +74,13 @@ export function DashboardOperationalView({
   const [simProduct, setSimProduct] = useState('');
   const [simLiters, setSimLiters] = useState('');
 
+  const [pauseSecondsLeft, setPauseSecondsLeft] = useState(0);
+
   useEffect(() => {
     autoScanRef.current = isAutoScan;
   }, [isAutoScan]);
 
+  // Rotación automática cada 10s cuando autoScan está activo
   useEffect(() => {
     const channels = ['ALL', 'FINANCE', 'PLANT', 'SUPPLY'];
     const interval = setInterval(() => {
@@ -90,6 +93,21 @@ export function DashboardOperationalView({
     }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Cuenta regresiva de 5 minutos (300s) cuando se pausa
+  useEffect(() => {
+    if (isAutoScan || pauseSecondsLeft <= 0) return;
+    const timer = setInterval(() => {
+      setPauseSecondsLeft(prev => {
+        if (prev <= 1) {
+          setIsAutoScan(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isAutoScan, pauseSecondsLeft]);
 
   const [currentProductIdx, setCurrentProductIdx] = useState(0);
   const [isProductAutoPlay, setIsProductAutoPlay] = useState(true);
@@ -129,8 +147,27 @@ export function DashboardOperationalView({
     setIsProductAutoPlay((prev) => !prev);
   };
 
+  const handleToggleAutoScan = () => {
+    if (isAutoScan) {
+      setIsAutoScan(false);
+      setPauseSecondsLeft(300); // 5 minutos de pausa
+    } else {
+      setIsAutoScan(true);
+      setPauseSecondsLeft(0);
+    }
+  };
+
   const handleInteraction = () => {
-    if (isAutoScan) setIsAutoScan(false);
+    if (isAutoScan) {
+      setIsAutoScan(false);
+      setPauseSecondsLeft(300); // Pausar por 5 minutos ante interacción del usuario
+    }
+  };
+
+  const formatCountdown = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   const openModal = (title, content) => {
@@ -452,18 +489,18 @@ export function DashboardOperationalView({
         <nav className={styles.channelNavigation} aria-label="Selector de Canales">
           <button
             type="button"
-            onClick={() => setIsAutoScan(!isAutoScan)}
+            onClick={handleToggleAutoScan}
             className={`${styles.scanToggleBtn} ${isAutoScan ? styles.scanActive : styles.scanPaused}`}
-            title={isAutoScan ? "Pausar rotación automática" : "Reanudar auto-escaneo"}
+            title={isAutoScan ? "Pausar rotación automática por 5 minutos" : "Reanudar auto-escaneo inmediato"}
           >
             <span className={styles.statusLed} />
-            {isAutoScan ? "AUTO-SCAN 10s" : "PAUSADO / MANUAL"}
+            {isAutoScan ? "AUTO-SCAN 10s" : `PAUSA ${formatCountdown(pauseSecondsLeft)}`}
           </button>
 
           <div className={styles.segmentedControl}>
             <button
               type="button"
-              onClick={() => { setActiveChannel('ALL'); setIsAutoScan(false); }}
+              onClick={() => { setActiveChannel('ALL'); handleInteraction(); }}
               className={`${styles.channelTab} ${activeChannel === 'ALL' ? styles.channelTabActive : ''}`}
             >
               PANORAMA 4X
@@ -471,7 +508,7 @@ export function DashboardOperationalView({
 
             <button
               type="button"
-              onClick={() => { setActiveChannel('FINANCE'); setIsAutoScan(false); }}
+              onClick={() => { setActiveChannel('FINANCE'); handleInteraction(); }}
               className={`${styles.channelTab} ${activeChannel === 'FINANCE' ? styles.channelTabActive : ''}`}
             >
               <span className={styles.channelCode}>CH-01</span> FINANZAS
@@ -479,7 +516,7 @@ export function DashboardOperationalView({
 
             <button
               type="button"
-              onClick={() => { setActiveChannel('PLANT'); setIsAutoScan(false); }}
+              onClick={() => { setActiveChannel('PLANT'); handleInteraction(); }}
               className={`${styles.channelTab} ${activeChannel === 'PLANT' ? styles.channelTabActive : ''}`}
             >
               <span className={styles.channelCode}>CH-02</span> PLANTA / FEFO
@@ -487,7 +524,7 @@ export function DashboardOperationalView({
 
             <button
               type="button"
-              onClick={() => { setActiveChannel('SUPPLY'); setIsAutoScan(false); }}
+              onClick={() => { setActiveChannel('SUPPLY'); handleInteraction(); }}
               className={`${styles.channelTab} ${activeChannel === 'SUPPLY' ? styles.channelTabActive : ''}`}
             >
               <span className={styles.channelCode}>CH-03</span> SUMINISTROS
