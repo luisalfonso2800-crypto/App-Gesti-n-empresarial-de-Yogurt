@@ -1,18 +1,18 @@
 /**
  * @file PresentationsTable.jsx
  * @module catalog/presentations/components
- * @description Tabla de las presentaciones disponibles en catálogo.
- * @responsibility Renderizar las configuraciones de formato/volumen.
+ * @description Tabla de catálogo enriquecida y responsiva para presentaciones comerciales (SRP < 150 líneas).
+ * @responsibility Orquestar vista de tabla desktop y tarjetas móviles, con paginación de 10 elementos.
  * @usedBy apps/web/src/app/catalog/presentations/page.jsx
- * @dependencies @/components/ui/Table, Badge, Button, States, ProductAvatar
+ * @dependencies @/components/ui/Table, States, AssistedEmptyState, PresentationMobileCard, PresentationTableRow, PresentationsPagination
  */
 import React from 'react';
-import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/Table';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { Table, THead, TBody, TR, TH } from '@/components/ui/Table';
 import { LoadingState, ErrorState } from '@/components/ui/States';
 import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
-import ProductAvatar from '@/components/ui/ProductAvatar';
+import { PresentationMobileCard } from './PresentationMobileCard';
+import { PresentationTableRow } from './PresentationTableRow';
+import { PresentationsPagination } from './PresentationsPagination';
 import styles from '../presentations.module.css';
 
 function resolveImageUrl(url) {
@@ -22,10 +22,23 @@ function resolveImageUrl(url) {
   return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
-export function PresentationsTable({ presentations, loading, error, onEdit, onToggleActive, onDelete, onNew }) {
+export function PresentationsTable({ 
+  presentations, 
+  totalItems, 
+  currentPage, 
+  totalPages, 
+  pageSize, 
+  onPageChange,
+  loading, 
+  error, 
+  onEdit, 
+  onToggleActive, 
+  onDelete, 
+  onNew 
+}) {
   if (loading) return <LoadingState />;
   if (error) return <ErrorState error={error} />;
-  if (presentations.length === 0) {
+  if (totalItems === 0) {
     return (
       <AssistedEmptyState
         icon="🧴"
@@ -39,72 +52,59 @@ export function PresentationsTable({ presentations, loading, error, onEdit, onTo
   }
 
   return (
-    <Table>
-      <THead>
-        <TR>
-          <TH className={styles.thumbnailHeader}>Envase / Vista</TH>
-          <TH>Nombre</TH>
-          <TH>Volumen (Oz/Ml)</TH>
-          <TH>Envase</TH>
-          <TH>Estado</TH>
-          <TH>Acciones</TH>
-        </TR>
-      </THead>
-      <TBody>
-        {presentations.map((item) => {
-          const rawImg = item.imagenUrl || item.imageUrl || item.image;
-          const imageSrc = resolveImageUrl(rawImg);
+    <div className={styles.presentationsWrapper}>
+      {/* Vista Móvil: Tarjetas Fluidas (MAN-UI-002) */}
+      <div className={styles.mobileCardsContainer}>
+        {presentations.map((item) => (
+          <PresentationMobileCard
+            key={item.id}
+            item={item}
+            imageSrc={resolveImageUrl(item.imagenUrl || item.imageUrl || item.image)}
+            onEdit={onEdit}
+            onToggleActive={onToggleActive}
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
 
-          return (
-            <TR key={item.id}>
-              <TD className={styles.thumbnailCell}>
-                <div className={styles.avatarWrapper}>
-                  <ProductAvatar
-                    src={imageSrc}
-                    alt={item.nombre || 'Envase'}
-                    name={item.nombre || 'Envase'}
-                    size={58}
-                  />
-                </div>
-              </TD>
-              <TD>{item.nombre}</TD>
-              <TD>
-                {item.tipoEnvase === 'BALDE' || item.tipoEnvase === 'TANQUE_GRANEL' || item.nombre?.toUpperCase().includes('GRANEL') ? (
-                  <span className={styles.granelBadge}>A Granel / Tanque (WIP)</span>
-                ) : (
-                  `${item.cantidadOz} oz / ${item.cantidadMl} ml`
-                )}
-              </TD>
-              <TD>{item.tipoEnvase}</TD>
-              <TD>
-                <Badge status={item.activo ? 'active' : 'inactive'}>
-                  {item.activo ? 'Activo' : 'Inactivo'}
-                </Badge>
-              </TD>
-              <TD>
-                <div className={styles.actions}>
-                  <Button variant="secondary" onClick={() => onEdit(item)}>Editar</Button>
-                  <Button 
-                    variant={item.activo ? 'danger' : 'primary'} 
-                    onClick={() => onToggleActive(item)}
-                  >
-                    {item.activo ? 'Desactivar' : 'Activar'}
-                  </Button>
-                  {!item.activo && onDelete && (
-                    <Button 
-                      variant="danger" 
-                      onClick={() => onDelete(item)}
-                      title="Eliminar definitivamente esta presentación"
-                    >
-                      🗑 Eliminar
-                    </Button>
-                  )}
-                </div>
-              </TD>
+      {/* Vista Desktop / Tablet: Tabla Enriquecida */}
+      <div className={styles.desktopTableContainer}>
+        <Table>
+          <THead>
+            <TR>
+              <TH className={styles.thumbnailHeader}>Vista</TH>
+              <TH>Nombre y Detalle</TH>
+              <TH>Tipo de Envase</TH>
+              <TH>Capacidad (Oz / Ml)</TH>
+              <TH>Unidad</TH>
+              <TH>Tapilla</TH>
+              <TH>Estado</TH>
+              <TH className={styles.actionsHeader}>Acciones</TH>
             </TR>
-          );
-        })}
-      </TBody>
-    </Table>
+          </THead>
+          <TBody>
+            {presentations.map((item) => (
+              <PresentationTableRow
+                key={item.id}
+                item={item}
+                imageSrc={resolveImageUrl(item.imagenUrl || item.imageUrl || item.image)}
+                onEdit={onEdit}
+                onToggleActive={onToggleActive}
+                onDelete={onDelete}
+              />
+            ))}
+          </TBody>
+        </Table>
+      </div>
+
+      {/* Paginación estricta (máximo 10 items por página) */}
+      <PresentationsPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={onPageChange}
+      />
+    </div>
   );
 }
