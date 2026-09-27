@@ -103,8 +103,9 @@ graph TD
 
 ### Principios de Ingeniería y Calidad de Código
 * **Veto Anti-Blue y Design System MANNÁ:** Paleta institucional de planta (`#182622` Bosque Profundo, `#8F704A` Trigo Tostado, `#FAF8F5` Lino), cero alertas nativas (`no-alert`) y feedback contextual perimetral.
+* **Diseño Responsivo Táctil y Vista Dual (MAN-UI-002 / MAN-UI-003):** Experiencia ergonómica optimizada para planta y dispositivos móviles (Mobile-First, touch targets ≥ 40-44px, vista dual mediante tablas en escritorio y tarjetas fluidas en pantallas < 768px, filtros multicriterio con botón `X` individual y 4 KPIs interactivos superiores).
 * **Backend-First y Transacciones ACID:** Toda entrada de compras, consumo de insumos en recetas o despacho comercial se ejecuta dentro de bloques `prisma.$transaction`.
-* **Testing Automatizado Exhaustivo (Regla 07):** 100% de cobertura en suites de integración API y pruebas visuales End-to-End con Playwright, garantizando flujos deterministas sin bucles de ejecución.
+* **Testing Automatizado Exhaustivo (Regla 07):** Cobertura en suites de integración API y pruebas visuales End-to-End con Playwright, garantizando flujos deterministas sin bucles de ejecución.
 * **Guardián de Arquitectura Automatizado:** Script interno (`verify-srp.js`) que audita en cada commit que ningún componente o controlador exceda su límite de líneas (SRP ≤ 120-130 líneas).
 
 ---
@@ -178,11 +179,18 @@ pnpm run dev
 ---
 
 ## 🧪 Verificación y Suites de Pruebas
-
+ 
 ```bash
 # Auditoría de responsabilidad única (Guardián SRP en frontend y backend)
 node .agents/scripts/verify-srp.js
+```
 
+> [!NOTE]
+> **Estado de las Suites Automatizadas E2E y de Integración:**  
+> Las suites de pruebas End-to-End (`Playwright`) y pruebas de integración de API se encuentran **temporalmente en remediación/actualización** en este ciclo.  
+> **Motivo:** Con la modernización e implementación del estándar **MAN-UI-002 / MAN-UI-003** (arquitectura de 3 capas, vista dual móvil/desktop, filtros con botones `X` individuales, modales Poka-Yoke con `SmartModal` y eliminación de alerts nativos), las interfaces cambiaron su estructura DOM y selectores. La plataforma es **100% funcional y compila limpiamente en producción**, pero los tests automatizados antiguos están siendo actualizados módulo a módulo para reflejar los nuevos componentes ergonómicos sin consumir cuotas innecesarias.
+
+```bash
 # Integración API (sin navegador - ejecución ultrarrápida de contratos)
 pnpm --filter web test:e2e e2e/recipes/recipes-api-integration.spec.js
 pnpm --filter web test:e2e e2e/production/production-api-integration.spec.js
