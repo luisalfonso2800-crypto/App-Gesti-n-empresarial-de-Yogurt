@@ -37,7 +37,7 @@ export function Header({ onToggleMobile }) {
   const cartState = useHeaderCart();
   const {
     lists, activeListId, activeList, cartCount, isSyncing,
-    isCartOpen, setIsCartOpen, cartRef,
+    isCartOpen, setIsCartOpen, cartRef, isCreatingList,
     createList, setActiveList, removeFromCart, clearCart, proceedToPurchase,
     setEditNameValue, setEditNameModalOpen, setListToDelete, showNotification
   } = cartState;
@@ -78,10 +78,16 @@ export function Header({ onToggleMobile }) {
         <OnboardingWizardWidget />
 
         {activeList && (
-          <div className={styles.activeListBadge} title={`Lista Activa: ${activeList.customName}`}>
+          <button
+            type="button"
+            className={styles.activeListBadge}
+            onClick={() => setIsCartOpen((prev) => !prev)}
+            title={`Lista Activa: ${activeList.customName} (Clic para ver/cambiar)`}
+            aria-label={`Lista de compra activa: ${activeList.customName}. Abrir menú`}
+          >
             <Layers size={16} /> 
             <span className={styles.responsiveBtnText}>Lista: {activeList.customName}</span>
-          </div>
+          </button>
         )}
 
         <button
