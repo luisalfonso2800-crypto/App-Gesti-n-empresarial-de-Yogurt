@@ -1,0 +1,184 @@
+/* ============================================
+   MANNÁ ERP - SISTEMA RESPONSIVO OFICIAL
+   Versión: 1.0
+   Cumple: MAN-UI-002
+   ============================================ */
+
+/* ------------------------------------------
+   1. BREAKPOINTS OFICIALES (Referencia)
+   ------------------------------------------ */
+/*
+  XS: 0-374px     - Móvil ultra-pequeño
+  SM: 375-767px   - Móvil estándar (BASE)
+  MD: 768-1023px  - Tablet vertical
+  LG: 1024-1279px - Tablet horizontal / Laptop pequeña
+  XL: 1280-1535px - Desktop estándar
+  2XL: 1536-1919px - Desktop grande
+  3XL: 1920px+    - 4K / Ultra-wide
+*/
+
+/* ------------------------------------------
+   2. VARIABLES GLOBALES RESPONSIVAS
+   ------------------------------------------ */
+:root {
+  /* Breakpoints */
+  --bp-xs: 0px;
+  --bp-sm: 375px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl: 1536px;
+  --bp-3xl: 1920px;
+  
+  /* Tipografía Escalable (Móvil First) */
+  --fs-xs: 0.75rem;    /* 12px - solo etiquetas */
+  --fs-sm: 0.875rem;   /* 14px - texto secundario */
+  --fs-base: 1rem;     /* 16px - texto principal / base touch */
+  --fs-lg: 1.125rem;   /* 18px - subtítulos */
+  --fs-xl: 1.25rem;    /* 20px - títulos h3 */
+  --fs-2xl: 1.5rem;    /* 24px - títulos h2 */
+  --fs-3xl: 1.875rem;  /* 30px - títulos h1 */
+  --fs-4xl: 2.25rem;   /* 36px - hero / indicadores */
+  
+  /* Espaciado Escalable */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  
+  /* Colores Fundamentales MANNÁ */
+  --color-bosque: #182622;
+  --color-trigo: #8F704A;
+  --color-lino: #FAF8F5;
+  
+  /* Z-index Escalafonario */
+  --z-base: 1;
+  --z-sticky: 10;
+  --z-sidebar: 100;
+  --z-modal-backdrop: 900;
+  --z-modal: 1000;
+  --z-toast: 2000;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-3xl: 2.25rem;  /* 36px en tablet */
+    --fs-4xl: 2.5rem;   /* 40px en tablet */
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --fs-3xl: 2.5rem;   /* 40px en desktop */
+    --fs-4xl: 3rem;     /* 48px en desktop */
+  }
+}
+
+/* ------------------------------------------
+   3. RESET Y BASE ERGONÓMICA
+   ------------------------------------------ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--color-lino);
+  color: var(--color-bosque);
+}
+
+/* ------------------------------------------
+   4. UTILIDADES RESPONSIVAS
+   ------------------------------------------ */
+.container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 var(--space-lg);
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+    padding: 0 var(--space-xl);
+  }
+}
+
+/* Grid adaptativo oficial */
+.gridResponsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+}
+
+@media (min-width: 768px) {
+  .gridResponsive {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+}
+
+@media (min-width: 1280px) {
+  .gridResponsive {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-xl);
+  }
+}
+
+/* ------------------------------------------
+   5. ACCESIBILIDAD Y ÁREA TÁCTIL (WCAG 2.1 AA)
+   ------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus accesible universal */
+*:focus-visible {
+  outline: 2px solid var(--color-trigo);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Área táctil mínima ergonomía de planta */
+button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ------------------------------------------
+   6. PRINT / EXPORTACIÓN
+   ------------------------------------------ */
+@media print {
+  .sidebar,
+  .no-print,
+  button,
+  .toast {
+    display: none !important;
+  }
+  
+  body {
+    background: white;
+    color: black;
+    font-size: 12pt;
+  }
+}

@@ -26,6 +26,7 @@ import { SidebarCollapseButton } from './parts/SidebarCollapseButton';
 import { SidebarNavItem } from './parts/SidebarNavItem';
 import InvoiceSettingsModal from '@/components/settings/InvoiceSettingsModal';
 import { useOnboardingStatus } from '@/hooks/useOnboardingStatus';
+import { useAlarmsCount } from '@/hooks/useAlarmsCount';
 import { isRouteUnlocked } from '@/lib/onboarding-unlock-rules';
 import styles from './shell.module.css';
 
@@ -34,7 +35,7 @@ const navItems = [
     group: 'GENERAL',
     items: [
       { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-      { name: 'Alarmas SCADA', path: '/dashboard?channel=ALARMS', icon: Bell, badge: '3' },
+      { name: 'Alarmas SCADA', path: '/dashboard?channel=ALARMS', icon: Bell },
     ]
   },
   {
@@ -72,6 +73,7 @@ const navItems = [
 export function Sidebar({ collapsed = false, onToggle }) {
   const pathname = usePathname();
   const { data: onboardingData } = useOnboardingStatus();
+  const { totalAlarms } = useAlarmsCount();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
   return (
@@ -96,10 +98,15 @@ export function Sidebar({ collapsed = false, onToggle }) {
                 
                 const { isUnlocked, requiredStepText } = isRouteUnlocked(item.path, onboardingData);
 
+                // Inyección dinámica de badge si hay alarmas activas reales
+                const dynamicItem = item.name === 'Alarmas SCADA'
+                  ? { ...item, badge: totalAlarms > 0 ? String(totalAlarms) : null }
+                  : item;
+
                 return (
                   <SidebarNavItem
                     key={item.path}
-                    item={item}
+                    item={dynamicItem}
                     isActive={isActive}
                     isUnlocked={isUnlocked}
                     requiredStepText={requiredStepText}

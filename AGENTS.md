@@ -19,6 +19,7 @@ Antes de intervenir cualquier módulo o ejecutar tareas, consulta el submódulo 
 | **6. Circuit Breaker y Anti-Loop** | [`.agents/rules/06-circuit-breaker-and-anti-loop.md`](file:///.agents/rules/06-circuit-breaker-and-anti-loop.md) | Circuit Breaker (1, 2, 3, 4) | Tope 2 reintentos, umbral 135 líneas, aislamiento hermético frontend/backend, bloqueo anti-bucle. |
 | **7. Estrategia de Pruebas y Siembra** | [`.agents/rules/07-testing-strategy-and-seeding.md`](file:///.agents/rules/07-testing-strategy-and-seeding.md) | Regla 07 (1, 2, 3) | Anti-digitador en UI, siembra desacoplada Prisma/API, pirámide de pruebas (80% API, 20% Happy Path). |
 | **8. Eficiencia de Tokens y Presupuesto** | [`.agents/rules/07-token-efficiency-and-tool-budget.md`](file:///.agents/rules/07-token-efficiency-and-tool-budget.md) | Regla 08 (1, 2, 3, 4, 5) | Máximo 1 lectura por archivo, restricción de barridos ciegos, presupuesto 4-6 lecturas, ejecución quirúrgica y cierre inmediato. |
+| **9. Manual de Diseño Responsivo** | [`.agents/rules/08-responsive-design-manual.md`](file:///.agents/rules/08-responsive-design-manual.md) | MAN-UI-002 (Reglas 1 a 10) | Breakpoints (375/768/1024/1280), Mobile-First, unidades relativas, táctil WCAG 2.1 AA y viewport. |
 
 ---
 
