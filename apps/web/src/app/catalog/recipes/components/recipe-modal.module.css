@@ -1577,3 +1577,117 @@
 
 
 
+
+
+/* ==========================================================================
+   ADAPTACIONES RESPONSIVAS DEL EDITOR DE RECETAS (MAN-UI-002)
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .grid3 {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .headerCollapsedBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .headerCollapsedToggleBtn {
+    width: 100%;
+    justify-content: center;
+    min-height: 40px;
+  }
+
+  .balanceBar {
+    padding: 1rem;
+    align-items: stretch;
+  }
+
+  .balanceInfoCol {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .balanceSubtextRow,
+  .balanceCostBreakdownRow {
+    justify-content: flex-start;
+  }
+
+  .balanceMetricsRow {
+    justify-content: space-between;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .headerTitle .title {
+    font-size: 1.25rem;
+  }
+
+  .editorContainer {
+    padding: 0.85rem;
+    border-radius: 8px;
+    gap: 1rem;
+  }
+
+  .input, .select {
+    min-height: 44px;
+    font-size: 1rem; /* Previene auto-zoom en iOS */
+  }
+
+  .balanceBar {
+    position: static;
+    box-shadow: none;
+    margin-top: 1rem;
+    border-radius: 8px;
+    padding: 0.85rem;
+    gap: 1rem;
+  }
+
+  .balanceMetricsRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .balanceMetricBlock,
+  .balanceMetricBlockWithBorder {
+    text-align: left;
+    border-left: none;
+    padding-left: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #E5DFD5;
+    padding-bottom: 0.5rem;
+  }
+
+  .headerActions {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .btnCancelHeader,
+  .btnSummarizeHeader {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+}

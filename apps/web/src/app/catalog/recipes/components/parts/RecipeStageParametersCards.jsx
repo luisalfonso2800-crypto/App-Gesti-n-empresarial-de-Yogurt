@@ -51,7 +51,7 @@ export function RecipeStageParametersCards({ etapa, stageIndex, onUpdateEtapa })
             <span className={styles.inputSuffix}>min</span>
           </div>
           <div className={`${styles.inputGroupPrefix} ${styles.inputPrimaryTarget} ${isTimeInvalid ? styles.inputErrorBorder : ''}`}>
-            <span className={`${styles.inputPrefix} ${styles.inputPrefixTarget}`}>🎯 Objetivo</span>
+            <span className={`${styles.inputPrefix} ${styles.inputPrefixTarget}`}>🎯 Obj</span>
             <input
               className={styles.inputInner}
               type="number"
@@ -102,7 +102,7 @@ export function RecipeStageParametersCards({ etapa, stageIndex, onUpdateEtapa })
             <span className={styles.inputSuffix}>°C</span>
           </div>
           <div className={`${styles.inputGroupPrefix} ${styles.inputPrimaryTarget} ${isTempInvalid ? styles.inputErrorBorder : ''}`}>
-            <span className={`${styles.inputPrefix} ${styles.inputPrefixTarget}`}>🎯 Objetivo</span>
+            <span className={`${styles.inputPrefix} ${styles.inputPrefixTarget}`}>🎯 Obj</span>
             <input
               className={styles.inputInner}
               type="number"
