@@ -9,7 +9,18 @@ export class SuppliersRepository {
   }
 
   async findAll() {
-    return this.prisma.proveedor.findMany();
+    return this.prisma.proveedor.findMany({
+      orderBy: { nombre: 'asc' },
+      include: {
+        _count: {
+          select: {
+            compras: true,
+            precios: true,
+            ordenCompraItems: true
+          }
+        }
+      }
+    });
   }
 
   async findActive() {

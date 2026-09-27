@@ -1,8 +1,555 @@
-.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-.title { font-size: 1.5rem; font-weight: bold; color: #111827; margin: 0; }
-.actions { display: flex; gap: 1rem; }
-.form { display: flex; flex-direction: column; gap: 1rem; }
-.formActions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+/**
+ * @file suppliers.module.css
+ * @module catalog/suppliers
+ * @description Estilos del catálogo de proveedores (Paleta MANNÁ, Responsivo MAN-UI-002, Iconografía Lucide).
+ */
 
-.headerTitle { display: flex; flex-direction: column; }
-.subtitle { font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem; font-weight: 400; }
+.headerSection {
+  margin-bottom: 1.25rem;
+}
+
+.filtersBar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.searchInputWrapper {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 0.75rem;
+  color: #798D80;
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 0.45rem 2rem 0.45rem 2.2rem;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  background-color: #FFFFFF;
+  color: #182622;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #1C3F35;
+  box-shadow: 0 0 0 2px rgba(28, 63, 53, 0.12);
+}
+
+.clearInputBtn {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.15s ease;
+}
+
+.clearInputBtn:hover {
+  color: #182622;
+}
+
+.filterSelect {
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #E8E2D7;
+  background-color: #FFFFFF;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #182622;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #1C3F35;
+}
+
+.btnResetFilters {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #E8E2D7;
+  background-color: #F7F4EE;
+  color: #182622;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnResetFilters:hover {
+  background-color: #E8E2D7;
+}
+
+.suppliersWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* Vista Desktop */
+.desktopTableContainer {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.supplierIdentityWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: 280px;
+}
+
+.supplierIconWrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: #F7F4EE;
+  border: 1px solid #E8E2D7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.supplierIcon {
+  color: #1C3F35;
+}
+
+.supplierNameGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.supplierNameText {
+  font-weight: 600;
+  color: #182622;
+  font-size: 0.875rem;
+  line-height: 1.25;
+}
+
+.supplierNotesText {
+  font-size: 0.72rem;
+  color: #78716C;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nitCell {
+  white-space: nowrap;
+}
+
+.nitBadge {
+  font-family: monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1C3F35;
+  background-color: #F7F4EE;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid #E8E2D7;
+}
+
+.contactCellGroup,
+.locationCellGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.contactNameText {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #182622;
+}
+
+.contactLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #166534;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.contactLink:hover {
+  text-decoration: underline;
+  color: #14532D;
+}
+
+.addressText {
+  font-size: 0.72rem;
+  color: #78716C;
+  line-height: 1.2;
+}
+
+.textMuted {
+  font-size: 0.72rem;
+  color: #A8A29E;
+}
+
+.textMutedBadge {
+  font-size: 0.72rem;
+  color: #A8A29E;
+  background-color: #F5F5F4;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #E7E5E4;
+}
+
+.purchasesBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #065F46;
+  background-color: #D1FAE5;
+  border: 1px solid #A7F3D0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.actions { 
+  display: flex; 
+  gap: 0.35rem; 
+  align-items: center;
+}
+
+.actionsHeader {
+  min-width: 160px;
+}
+
+/* Botones de Acción Elegantes (Paleta MANNÁ) */
+.actionBtnEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #182622;
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnEdit:hover {
+  background-color: #F4F0E6;
+  border-color: #D6CDBF;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.actionBtnEdit:active {
+  transform: translateY(0);
+}
+
+.actionBtnActivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #15803D;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnActivate:hover {
+  background-color: #DCFCE7;
+  border-color: #86EFAC;
+  transform: translateY(-1px);
+}
+
+.actionBtnActivate:active {
+  transform: translateY(0);
+}
+
+.actionBtnDeactivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #C2410C;
+  background-color: #FFF7ED;
+  border: 1px solid #FED7AA;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnDeactivate:hover {
+  background-color: #FFEDD5;
+  border-color: #FDBA74;
+  transform: translateY(-1px);
+}
+
+.actionBtnDeactivate:active {
+  transform: translateY(0);
+}
+
+/* Vista Móvil (Oculta en desktop) */
+.mobileCardsContainer {
+  display: none;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+.mobileCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E8E2D7;
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  box-shadow: 0 1px 3px rgba(24, 38, 34, 0.05);
+}
+
+.mobileCardTopRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.35rem;
+}
+
+.mobileCardBadges {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.mobileCardTitle {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #182622;
+  line-height: 1.3;
+}
+
+.mobileNotesText {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.75rem;
+  color: #78716C;
+  line-height: 1.3;
+}
+
+.mobileCardSpecsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 0.75rem;
+  background-color: #FAF8F5;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #E8E2D7;
+}
+
+.mobileSpecItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.specItemFull {
+  grid-column: span 2;
+}
+
+.specLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #798D80;
+}
+
+.specValue {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #182622;
+}
+
+.contactLinkHighlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #166534;
+  text-decoration: none;
+}
+
+.specText {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #57534E;
+  line-height: 1.3;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.inlineIcon {
+  color: #798D80;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.mobileCardActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid #F0ECE4;
+}
+
+.mobileActionBtn {
+  flex: 1;
+  min-height: 40px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+}
+
+/* Paginación MANNÁ */
+.paginationContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 0.5rem;
+  border-top: 1px solid #E8E2D7;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.paginationInfo {
+  font-size: 0.8125rem;
+  color: #57534E;
+}
+
+.paginationControls {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.pageBtn {
+  background: transparent;
+  border: 1px solid #E8E2D7;
+  color: #182622;
+  padding: 0.35rem 0.65rem;
+  min-height: 36px;
+  min-width: 36px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background-color: #F7F4EE;
+  border-color: #D6D3D1;
+  color: #182622;
+}
+
+.pageBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: #E5E7EB;
+}
+
+.pageBtnActive {
+  background-color: #CAD5B5 !important;
+  border-color: #97AB82 !important;
+  color: #182622 !important;
+  font-weight: 700;
+}
+
+/* Reglas Responsivas (MAN-UI-002) */
+@media (max-width: 767px) {
+  .desktopTableContainer {
+    display: none;
+  }
+
+  .mobileCardsContainer {
+    display: flex;
+  }
+
+  .paginationContainer {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .paginationControls {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .pageBtn {
+    min-height: 40px;
+    padding: 0.4rem 0.75rem;
+  }
+}
