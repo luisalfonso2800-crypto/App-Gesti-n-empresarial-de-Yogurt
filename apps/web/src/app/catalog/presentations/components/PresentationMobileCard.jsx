@@ -2,13 +2,13 @@
  * @file PresentationMobileCard.jsx
  * @module catalog/presentations/components
  * @description Tarjeta responsiva para visualizar todos los datos de una presentación en móviles (SRP < 110 líneas).
- * @responsibility Presentar imagen, nombre, capacidad, tipo, observaciones y acciones con ergonomía táctil.
+ * @responsibility Presentar imagen, nombre, capacidad, tipo, observaciones y acciones con ergonomía táctil e íconos.
  * @usedBy apps/web/src/app/catalog/presentations/components/PresentationsTable.jsx
- * @dependencies react, @/components/ui/Badge, @/components/ui/Button, @/components/ui/ProductAvatar, ../presentations.module.css
+ * @dependencies react, lucide-react, @/components/ui/Badge, @/components/ui/ProductAvatar, ../presentations.module.css
  */
 import React from 'react';
+import { Pencil, Power, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import ProductAvatar from '@/components/ui/ProductAvatar';
 import styles from '../presentations.module.css';
 
@@ -70,25 +70,37 @@ export function PresentationMobileCard({ item, imageSrc, onEdit, onToggleActive,
       </div>
 
       <div className={styles.mobileCardActions}>
-        <Button variant="secondary" onClick={() => onEdit(item)} className={styles.mobileActionBtn}>
-          ✏️ Editar
-        </Button>
-        <Button
-          variant={item.activo ? 'danger' : 'primary'}
-          onClick={() => onToggleActive(item)}
-          className={styles.mobileActionBtn}
+        <button
+          type="button"
+          onClick={() => onEdit(item)}
+          className={`${styles.mobileActionBtn} ${styles.actionBtnEdit}`}
+          aria-label="Editar presentación"
         >
-          {item.activo ? 'Desactivar' : 'Activar'}
-        </Button>
+          <Pencil size={15} strokeWidth={2} />
+          <span>Editar</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onToggleActive(item)}
+          className={`${styles.mobileActionBtn} ${item.activo ? styles.actionBtnDeactivate : styles.actionBtnActivate}`}
+          aria-label={item.activo ? 'Desactivar presentación' : 'Activar presentación'}
+        >
+          <Power size={15} strokeWidth={2} />
+          <span>{item.activo ? 'Desactivar' : 'Activar'}</span>
+        </button>
+
         {!item.activo && onDelete && (
-          <Button
-            variant="danger"
+          <button
+            type="button"
             onClick={() => onDelete(item)}
             title="Eliminar definitivamente esta presentación"
-            className={styles.mobileActionBtn}
+            className={`${styles.mobileActionBtn} ${styles.actionBtnDelete}`}
+            aria-label="Eliminar definitivamente"
           >
-            🗑 Eliminar
-          </Button>
+            <Trash2 size={15} strokeWidth={2} />
+            <span>Eliminar</span>
+          </button>
         )}
       </div>
     </article>

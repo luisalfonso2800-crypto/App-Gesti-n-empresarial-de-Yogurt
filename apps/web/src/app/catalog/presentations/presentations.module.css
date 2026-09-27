@@ -251,17 +251,129 @@
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  padding-top: 0.25rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #F0ECE4;
 }
 
 .mobileActionBtn {
   flex: 1;
-  min-height: 38px;
+  min-height: 40px;
   font-size: 0.8125rem;
+  font-weight: 600;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
+  border-radius: 8px;
+}
+
+/* Botones de Acción Elegantes (Paleta MANNÁ) */
+.actionBtnEdit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #182622;
+  background-color: #FAF8F5;
+  border: 1px solid #E8E2D7;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnEdit:hover {
+  background-color: #F4F0E6;
+  border-color: #D6CDBF;
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.actionBtnEdit:active {
+  transform: translateY(0);
+}
+
+.actionBtnActivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #15803D;
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnActivate:hover {
+  background-color: #DCFCE7;
+  border-color: #86EFAC;
+  transform: translateY(-1px);
+}
+
+.actionBtnActivate:active {
+  transform: translateY(0);
+}
+
+.actionBtnDeactivate {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #C2410C;
+  background-color: #FFF7ED;
+  border: 1px solid #FED7AA;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnDeactivate:hover {
+  background-color: #FFEDD5;
+  border-color: #FDBA74;
+  transform: translateY(-1px);
+}
+
+.actionBtnDeactivate:active {
+  transform: translateY(0);
+}
+
+.actionBtnDelete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #DC2626;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  cursor: pointer;
+  min-height: 32px;
+  min-width: 32px;
+  transition: all 0.15s ease;
+}
+
+.actionBtnDelete:hover {
+  background-color: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #B91C1C;
+  transform: translateY(-1px);
+}
+
+.actionBtnDelete:active {
+  transform: translateY(0);
 }
 
 /* Paginación MANNÁ */

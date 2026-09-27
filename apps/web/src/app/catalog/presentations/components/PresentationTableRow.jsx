@@ -2,14 +2,14 @@
  * @file PresentationTableRow.jsx
  * @module catalog/presentations/components
  * @description Fila individual enriquecida para la tabla desktop de presentaciones (SRP < 90 líneas).
- * @responsibility Renderizar avatar, nombre, volumen, tipo, tapilla, estado y botones de acción.
+ * @responsibility Renderizar avatar, nombre, volumen, tipo, tapilla, estado y botones de acción con íconos vectoriales.
  * @usedBy apps/web/src/app/catalog/presentations/components/PresentationsTable.jsx
- * @dependencies react, @/components/ui/Table, @/components/ui/Badge, @/components/ui/Button, @/components/ui/ProductAvatar
+ * @dependencies react, lucide-react, @/components/ui/Table, @/components/ui/Badge
  */
 import React from 'react';
+import { Pencil, Power, Trash2 } from 'lucide-react';
 import { TR, TD } from '@/components/ui/Table';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
 import ProductAvatar from '@/components/ui/ProductAvatar';
 import styles from '../presentations.module.css';
 
@@ -63,23 +63,36 @@ export function PresentationTableRow({ item, imageSrc, onEdit, onToggleActive, o
       </TD>
       <TD>
         <div className={styles.actions}>
-          <Button variant="secondary" onClick={() => onEdit(item)} size="sm">Editar</Button>
-          <Button 
-            variant={item.activo ? 'danger' : 'primary'} 
-            onClick={() => onToggleActive(item)}
-            size="sm"
+          <button 
+            type="button"
+            className={styles.actionBtnEdit}
+            onClick={() => onEdit(item)}
+            title="Editar presentación"
+            aria-label="Editar presentación"
           >
-            {item.activo ? 'Desactivar' : 'Activar'}
-          </Button>
+            <Pencil size={14} strokeWidth={2} />
+            <span>Editar</span>
+          </button>
+          <button 
+            type="button"
+            className={item.activo ? styles.actionBtnDeactivate : styles.actionBtnActivate}
+            onClick={() => onToggleActive(item)}
+            title={item.activo ? 'Desactivar presentación' : 'Activar presentación'}
+            aria-label={item.activo ? 'Desactivar' : 'Activar'}
+          >
+            <Power size={14} strokeWidth={2} />
+            <span>{item.activo ? 'Desactivar' : 'Activar'}</span>
+          </button>
           {!item.activo && onDelete && (
-            <Button 
-              variant="danger" 
+            <button 
+              type="button"
+              className={styles.actionBtnDelete}
               onClick={() => onDelete(item)}
               title="Eliminar definitivamente esta presentación"
-              size="sm"
+              aria-label="Eliminar definitivamente"
             >
-              🗑
-            </Button>
+              <Trash2 size={14} strokeWidth={2} />
+            </button>
           )}
         </div>
       </TD>
