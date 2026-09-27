@@ -2,9 +2,9 @@
  * @file SuppliesTable.jsx
  * @module catalog/supplies/components
  * @description Tabla de catálogo enriquecida y responsiva de insumos con paginación de 10 ítems (SRP < 150 líneas).
- * @responsibility Filtrado de búsqueda/categoría, paginación estricta y orquestación desktop/móvil.
+ * @responsibility Filtrado avanzado multidimensional, paginación estricta y orquestación desktop/móvil.
  * @usedBy apps/web/src/app/catalog/supplies/page.jsx
- * @dependencies @/components/ui/Table, States, AssistedEmptyState, SupplyTableRow, SupplyMobileCard, SuppliesPagination
+ * @dependencies @/components/ui/Table, States, AssistedEmptyState, SupplyTableRow, SupplyMobileCard, SuppliesPagination, ../utils/supplyFilters
  */
 import React, { useState, useMemo, useEffect } from 'react';
 import { Table, THead, TBody, TR, TH } from '@/components/ui/Table';
@@ -13,6 +13,7 @@ import { AssistedEmptyState } from '@/components/ui/AssistedEmptyState';
 import { SupplyTableRow } from './SupplyTableRow';
 import { SupplyMobileCard } from './SupplyMobileCard';
 import { SuppliesPagination } from './SuppliesPagination';
+import { filterSupplies } from '../utils/supplyFilters';
 import styles from '../supplies.module.css';
 
 const PAGE_SIZE = 10;
@@ -21,8 +22,7 @@ export function SuppliesTable({
   items,
   loading,
   error,
-  searchTerm,
-  categoryFilter,
+  filters,
   onEdit,
   onToggleActive,
   onDelete,
@@ -37,14 +37,8 @@ export function SuppliesTable({
   };
 
   const filteredItems = useMemo(() => {
-    return items.filter(item => {
-      const code = generateCode(item);
-      const matchesSearch = item.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            code.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = categoryFilter ? item.categoria === categoryFilter : true;
-      return matchesSearch && matchesCategory;
-    });
-  }, [items, searchTerm, categoryFilter]);
+    return filterSupplies(items, filters);
+  }, [items, filters]);
 
   const totalItems = filteredItems.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
@@ -55,10 +49,9 @@ export function SuppliesTable({
     }
   }, [totalPages, currentPage]);
 
-  // Si cambia la búsqueda o el filtro, reiniciar a la página 1
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter]);
+  }, [filters]);
 
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
