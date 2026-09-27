@@ -17,6 +17,15 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, onClo
   const { totalAlarms } = useAlarmsCount();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
+  const handleCollapseToggle = () => {
+    // Si estamos en viewport móvil (< 1024px) y el drawer está abierto, colapsar/plegar cierra el drawer
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      if (onCloseMobile) onCloseMobile();
+      return;
+    }
+    if (onToggle) onToggle();
+  };
+
   return (
     <>
       {mobileOpen && (
@@ -30,7 +39,7 @@ export function Sidebar({ collapsed = false, onToggle, mobileOpen = false, onClo
         className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''} ${mobileOpen ? styles.sidebarOpenMobile : ''}`}
         aria-label="Navegación ERP MANNÁ"
       >
-        <SidebarCollapseButton collapsed={collapsed} onToggle={onToggle} />
+        <SidebarCollapseButton collapsed={collapsed} onToggle={handleCollapseToggle} />
 
       <div className={styles.sidebarContentWrapper}>
         <div className={styles.brandWrapper}>

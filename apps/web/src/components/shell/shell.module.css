@@ -466,10 +466,10 @@
 
   /* Cuando en móvil se descolapsa (abierto) */
   .sidebarOpenMobile {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
 
-  /* En móvil, el modo colapsado por defecto está oculto fuera de pantalla */
+  /* En móvil, el modo colapsado por defecto está oculto fuera de pantalla si no está mobileOpen */
   .sidebarCollapsed {
     width: 280px;
     min-width: 280px;
